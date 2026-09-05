@@ -1,0 +1,22 @@
+# Расписание планировщика (решение §11). Время — в timezone ниже, cron из 5 полей.
+timezone: Europe/Samara
+
+jobs:
+  discovery:
+    cron: "0 6 * * mon"
+    description: Еженедельный поиск кандидатов
+  remeasure:
+    cron: "0 22 * * sun"
+    description: Еженедельное переизмерение стратегий
+  rebalance_proposal:
+    cron: "30 22 * * sun"
+    description: Предложение перелива излишка рисковых веток (G05)
+  morning_report:
+    cron: "0 9 * * *"
+    description: Утренний отчёт в Telegram
+  reconcile:
+    cron: "0 4 * * *"
+    description: Сверка ордеров и балансов с площадками
+  backup:
+    cron: "0 3 * * *"
+    description: Резервная копия базы в BACKUP_DIR

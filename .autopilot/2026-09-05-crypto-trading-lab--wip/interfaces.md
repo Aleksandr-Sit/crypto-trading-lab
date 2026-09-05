@@ -92,3 +92,15 @@ class Strategy(Protocol):  # manifest: StrategyManifest; on_bar; on_event
 ## Что построили тикеты
 
 _(заполняется по мере сдачи тикетов: фактические сигнатуры, отклонения от плана, D##)_
+
+## Из таска 01 — каркас
+
+- `lab.contracts`: типы `OrderIntent, Signal, Costs(.total), Health, KeyRights(trade, withdraw), Order, Fill, Position, Balance, Candle, Trade, Book, Event, StopSpec, StrategyManifest(slug, branch, venue, source_kind, source_ref, instruments, timeframe, params, can_backtest, stop, valid_until, description)`; enums `Branch, Rung, Status, Mode, MeasureMode, SignalOutcome, CandidateDecision, OrderState`; протоколы `Feed, Executor(rights/place/cancel/positions/fills/balance/health), Strategy, NftMarket(upcoming/floor/mint/estimate_costs/health)`.
+- `lab.core.registry.Registry(session)`: `add(spec|StrategyManifest) -> Strategy`, `get(id)`, `list(branch=, status=, rung=, venue=)`, `retire(id, reason)`, `enqueue_candidate(kind, ref, payload=None) -> Candidate`, `candidates(decision=None)`; исключения `DuplicateStrategy(existing_id)`, `IncompleteManifest(fields, draft_id)`, `StrategyNotFound`. id = `<branch>-<source_kind>-<slug>`; отпечаток = sha256(branch, venue, source_kind, source_ref, instruments, timeframe, params, stop).
+- `lab.executors.registry`: `register(name, factory, replace=False)`, `get(name)`, `all() -> dict[str, factory]`, `unregister(name)`; `lab.executors.FakeExecutor(mark_price, start_balance, quote_asset)`. **Каждый новый исполнитель регистрируется здесь — контрактный тест `tests/contracts/test_executor_contract.py` параметризован по `all()`.**
+- `lab.config`: `load_config(path, Model)`, `load_limits/load_threshold/load_schedule()`, `LimitsConfig(.group_of(branch), .for_branch(branch), .real_capital_cap_usd)`, `ThresholdConfig`, `ScheduleConfig`, `ConfigError`, `venues_report(env=None, rights=None) -> [VenueStatus]`, `environment()`, `load_dotenv(path)`, `VENUE_ENV`, `DATA_ENV`.
+- `lab.db`: `Base`, `make_engine(url=None)`, `make_session_factory(engine)`, `session_scope(factory)`, `database_url()`; модели `lab.db.models.*Row` (16 таблиц по схеме спецификации). Миграции — Alembic, владелец схемы — таск 01; новые таблицы — новой миграцией в `migrations/versions/`.
+- CLI: `python -m lab venues | strategy add/list/retire | candidate add | service worker|bot|web [--once]`.
+- Тесты: `uv run pytest -q`; один файл — `uv run pytest -q tests/<path>`; база тестов — локальный Postgres 16 (`TEST_DATABASE_URL`, роль `lab`/`lab`, база `lab_test`); фикстуры `session`, `migrated_engine`, `db_url`; `tests.fixtures.synthetic.synthetic_candles(n, kind, drift_pct, noise_pct, seed, tf, start)`.
+- Зависимости, добавленные сверх списка: `psycopg[binary]`, `pyyaml`. `.env` читается своим парсером `lab.config.env.load_dotenv` — не добавляй python-dotenv.
+- Docker-демона в среде сборки нет: compose проверен только `config`; сервисы worker/bot/web — заглушки с heartbeat-файлом.

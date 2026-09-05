@@ -7,7 +7,15 @@
 
 ## Команды
 
-_Пока не определены — появятся, когда встанет стек._
+| Что | Команда |
+|---|---|
+| Установка | `uv sync` |
+| Тесты | `uv run pytest -q` |
+| Один файл | `uv run pytest -q tests/<path>` |
+| Линт | `uv run ruff check .` |
+| Миграции | `uv run alembic upgrade head` |
+| CLI | `uv run python -m lab <команда>` |
+| Запуск | `docker compose -f deploy/docker-compose.yml up -d` |
 
 ## Как здесь работает Autopilot
 

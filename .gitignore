@@ -8,3 +8,10 @@ __pycache__/
 data/raw/
 *.duckdb
 .venv/
+
+# python / uv
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/

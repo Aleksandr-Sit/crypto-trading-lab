@@ -1,0 +1,96 @@
+# Запуск: docker compose -f deploy/docker-compose.yml up -d  (из корня репозитория)
+# Секреты — из ../.env по именам .env.example. Данные Postgres — в volume lab_pgdata.
+name: crypto-trading-lab
+
+x-lab-service: &lab-service
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  env_file:
+    - path: ../.env
+      required: false
+  environment:
+    DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://lab:${POSTGRES_PASSWORD:-lab}@db:5432/lab}
+  volumes:
+    - ../config:/app/config:ro
+    - lab_data:/app/data
+    - lab_backups:/app/backups
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lab
+      POSTGRES_DB: lab
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lab}
+    volumes:
+      - lab_pgdata:/var/lib/postgresql/data
+    ports:
+      - "${DB_BIND:-127.0.0.1:5432}:5432"   # CLI с хоста: DATABASE_URL=...@localhost:5432/lab
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lab -d lab"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  migrate:
+    <<: *lab-service
+    command: ["uv", "run", "alembic", "upgrade", "head"]
+    restart: "no"
+
+  worker:
+    <<: *lab-service
+    command: ["uv", "run", "python", "-m", "lab", "service", "worker"]
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(cat /tmp/lab/worker.heartbeat) )) -lt 60"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+  bot:
+    <<: *lab-service
+    command: ["uv", "run", "python", "-m", "lab", "service", "bot"]
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(cat /tmp/lab/bot.heartbeat) )) -lt 60"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+  web:
+    <<: *lab-service
+    command: ["uv", "run", "python", "-m", "lab", "service", "web"]
+    ports:
+      - "${WEB_BIND:-127.0.0.1:8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(cat /tmp/lab/web.heartbeat) )) -lt 60"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  lab_pgdata:
+  lab_data:
+  lab_backups:

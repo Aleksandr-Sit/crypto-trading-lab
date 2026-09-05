@@ -1,0 +1,18 @@
+# Порог прохождения ступени (правило В12):
+#   ≥ min_trades сделок, EV > min_ev_after_costs после издержек,
+#   MaxDD в лимите ветки, результат лучше бенчмарка за тот же период.
+min_trades: 30
+min_ev_after_costs: 0
+benchmark: BTC-buy-and-hold
+
+# Допустимая максимальная просадка замера по группам веток, % (совпадает с limits.yaml).
+max_dd_pct:
+  cex: 5
+  copy: 5
+  meme: 20
+  nft: 30
+  prediction: 20
+
+# Бутстрап доверительного интервала EV.
+bootstrap_samples: 1000
+confidence: 0.95

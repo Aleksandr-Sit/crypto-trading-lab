@@ -1,0 +1,17 @@
+# Пример манифеста стратегии для `uv run python -m lab strategy add --file examples/strategy.yaml`.
+# Идентификатор собирается реестром: <branch>-<source_kind>-<slug> → cex-spot-preset-ema-cross-v1
+slug: ema-cross-v1
+branch: cex-spot          # cex-spot | cex-perp | dex-perp | copy | meme | nft | prediction | rh
+venue: bybit
+source_kind: preset       # preset | copy | author | external | discovery ...
+source_ref: null          # адрес кошелька / канал автора / ссылка на проект — если есть
+instruments: [BTC/USDT]
+timeframe: 1h
+params:
+  fast: 12
+  slow: 26
+can_backtest: true
+stop:                     # стоп стратегии (G04), поверх лимитов ветки
+  max_dd_pct: 10
+  daily_pct: 3
+description: Пересечение EMA 12/26 на часовиках — тестовый пресет

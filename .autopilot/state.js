@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-05T22:32:43+04:00",
+  "updatedAt": "2026-09-05T22:52:45+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -53,7 +53,8 @@ window.STATE =
     },
     {
       "id": "review",
-      "status": "pending"
+      "status": "active",
+      "startedAt": "2026-09-05T22:45:47+04:00"
     },
     {
       "id": "final",
@@ -90,10 +91,14 @@ window.STATE =
         "migrations/",
         "config/"
       ],
-      "status": "pending",
+      "status": "repair",
       "retries": 0,
-      "repairs": 0,
-      "handoffs": 0
+      "repairs": 1,
+      "handoffs": 0,
+      "startedAt": "2026-09-05T22:33:12+04:00",
+      "repairFindings": [
+        "CLI не читает DATABASE_URL из .env; README без пути для compose — R01"
+      ]
     },
     {
       "id": "02",
@@ -442,10 +447,24 @@ window.STATE =
     "extra": 9,
     "acted": "2 missing → истории 94a–94b, ветка dex-perp; 5 half → таблица лимитов, R23.2–R23.3, R24.2, G08 v0/v1, G01.2; extra → A05 помечен, личные детали убраны, остальное — craft"
   },
-  "concerns": [],
+  "concerns": [
+    "T01 src/lab/core/registry.py:193 — can_backtest=False всё равно стартует на ступени backtest; начальную ступень должен выставлять ladder (T03)",
+    "T01 src/lab/core/registry.py:49 — lab.core.registry.Strategy одноимённа протоколу lab.contracts.Strategy",
+    "T01 src/lab/core/registry.py:173 — черновик неполного манифеста сохраняется только если вызывающий сам коммитит",
+    "T01 .env.example — BUDGET_MONTH_USD, CHAINS_ENABLED, BACKUP_DIR назначены за будущие таски; Mode дублирует ModeLiteral; StopSpec.max_position_pct и data_keys_report не используются",
+    "T01 compose требует -f deploy/docker-compose.yml, спецификация обещала docker compose up -d из корня",
+    "T01 config/limits.yaml:12 — real_capital_cap выставлен в 1000 без пометки «впиши своё»",
+    "T01 tests/config/test_configs.py:110 — отказ по withdraw=True проверен только на чистой функции, путь старта права не получает",
+    "T01 tests/contracts/test_executor_contract.py — cancel пропускается через skip; ассерт OPEN|PARTIAL при требуемом FILLED; venue='fake' захардкожен",
+    "T01 tests/core/test_registry.py:61 — черновик читается напрямую из CandidateRow вместо Registry.candidates()",
+    "T01 src/lab/cli.py — ветки CLI (пустой реестр, add, дубликат, неполный) без тестов",
+    "T01 src/lab/db/engine.py:11 — DEFAULT_URL lab:lab в коде против докстринга; URL продублирован в alembic.ini и conftest",
+    "T01 src/lab/executors/fake.py:142 — entry_price при доливке = последний филл, не средневзвешенная",
+    "T01 registry.py:171 + config/loader.py:29 — дублирование преобразования ValidationError"
+  ],
   "reviewers": {
-    "manifestSpec": null,
-    "craft": null
+    "manifestSpec": "afea90f146a601738",
+    "craft": "a992ce8aebc6e8b4b"
   },
   "blind": null
 }
