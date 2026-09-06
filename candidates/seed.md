@@ -31,19 +31,19 @@ branch: cex-spot
 source_url: https://t.me/s/pifagortrade
 found_at: 2026-09-06
 priority: user
-note: "Pifagor Trade (Дима). 86,2 тыс. подписчиков; 19 индикаторов на pifagor.trade, скрипты не публичны. Разбор — docs/research/indicators/pifagor.md. Имя/канал требуют подтверждения пользователем."
+note: "Подтверждено пользователем 2026-09-06: Pifagor = Дмитрий Енин, https://t.me/pifagortrade — один из его каналов. 86,2 тыс. подписчиков; 19 индикаторов на pifagor.trade, скрипты не публичны. Разбор — docs/research/indicators/pifagor.md."
 ```
 
 ```yaml
 kind: channel
-ref: "@coinmetrika"
+ref: "@CoinMetrika"
 venue: telegram
 chain: null
 branch: cex-spot
-source_url: https://t.me/s/coinmetrika
+source_url: https://t.me/CoinMetrika
 found_at: 2026-09-06
 priority: user
-note: "Coin Metrika (Вадим — по обзорщику cryptorussia.ru). 36,9 тыс. подписчиков; «13+ индикаторов TradingView» в закрытой подписке coinmetrika.capital. Разбор — docs/research/indicators/coinmetrika.md. Требует подтверждения пользователем."
+note: "Подтверждено пользователем 2026-09-06: Coinmetrika = Вадим, https://t.me/CoinMetrika — один из его каналов. 36,9 тыс. подписчиков; 8 индикаторов известны по названиям со скриншотов пользователя (user-inputs/). Разбор — docs/research/indicators/coinmetrika.md."
 ```
 
 ```yaml
@@ -55,7 +55,7 @@ branch: copy
 source_url: null
 found_at: 2026-09-06
 priority: user
-note: "Не найдено публично (2026-09-06): поиск «CryptosMX» по Telegram/X/YouTube/TradingView дал только нерелевантные совпадения (cryptosx.io — биржа security-токенов, не то). Нужна ссылка от пользователя — см. config/authors.yaml [ССЫЛКА — впиши]."
+note: "Назван пользователем (подтверждено 2026-09-06), но ссылка не дана и публично не найдена: поиск «CryptosMX» по Telegram/X/YouTube/TradingView дал только нерелевантные совпадения (cryptosx.io — биржа security-токенов, не то). Нужна ссылка от пользователя — см. config/authors.yaml [ССЫЛКА — впиши]."
 ```
 
 ## Трейдеры — OKX copy-trading (kind: trader)
