@@ -1,0 +1,39 @@
+# Модель издержек по площадкам (решение §4). Версия модели попадает в снимок замера.
+# Тарифы — базовые уровни без VIP-скидок (09.2026); bps = 0.01%.
+# Проскальзывание: по стакану — проход по уровням от мида; без стакана — spread/2 +
+# impact_bps * (оборот / глубина); по пулу — константный продукт x*y=k.
+version: 1
+
+cex:
+  bybit:       {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8}
+  okx:         {taker_bps: 10,  maker_bps: 8,  funding_interval_h: 8}
+  binance:     {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8}
+  hyperliquid: {taker_bps: 4.5, maker_bps: 1.5, funding_interval_h: 1}
+  fake:        {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8}
+
+# DEX-свопы: fee пула + приоритетная fee + газ (USD, оценка).
+dex:
+  jupiter:  {pool_fee_bps: 30, priority_fee_usd: 0.02, gas_usd: 0.01, chain: solana}
+  raydium:  {pool_fee_bps: 25, priority_fee_usd: 0.02, gas_usd: 0.01, chain: solana}
+  pumpfun:  {pool_fee_bps: 100, priority_fee_usd: 0.05, gas_usd: 0.01, chain: solana}
+  uniswap:  {pool_fee_bps: 30, priority_fee_usd: 0.50, gas_usd: 2.00, chain: evm}
+  pancake:  {pool_fee_bps: 25, priority_fee_usd: 0.05, gas_usd: 0.10, chain: bnb}
+  stonfi:   {pool_fee_bps: 30, priority_fee_usd: 0.01, gas_usd: 0.05, chain: ton}
+
+# NFT: комиссия площадки + роялти (по умолчанию, если коллекция не задаёт) + газ.
+nft:
+  magiceden: {marketplace_fee_pct: 2, default_royalty_pct: 5, gas_usd: 0.01}
+  tensor:    {marketplace_fee_pct: 1.5, default_royalty_pct: 5, gas_usd: 0.01}
+  opensea:   {marketplace_fee_pct: 2.5, default_royalty_pct: 5, gas_usd: 2.00}
+  zora:      {marketplace_fee_pct: 0, default_royalty_pct: 5, gas_usd: 0.50}
+
+# Прочие площадки: prediction / брокер.
+other:
+  polymarket: {taker_bps: 0, maker_bps: 0, gas_usd: 0.05}
+  robinhood:  {taker_bps: 0, maker_bps: 0, spread_bps: 60}
+
+# Проскальзывание без стакана/пула (оценка).
+slippage:
+  default_spread_bps: 5
+  impact_bps_per_depth_share: 100   # 100 bps на каждые 100% глубины
+  default_depth_usd: 100000

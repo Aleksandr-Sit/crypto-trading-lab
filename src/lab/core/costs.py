@@ -1,0 +1,314 @@
+"""core.costs — модели издержек по площадкам (решение §4).
+
+Выставляет: `estimate(venue, intent, book|pool) -> Costs`, `actual(fill, ...) -> Costs`.
+Прячет: тарифы (config/costs.yaml) и формулы проскальзывания.
+
+Все суммы — Decimal в валюте котировки (USD/USDT/USDC считаются равными валюте учёта).
+Версия модели (`CostModel.version`) = `costs-v<version>@<sha256 конфига>` — идёт в снимок замера.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import dataclass
+from decimal import Decimal
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from lab.config import CONFIG_DIR, load_config
+from lab.contracts import Book, Costs, Fill, OrderIntent, Side
+
+_BPS = Decimal(10_000)
+_QUOTE_ASSETS = {"USD", "USDT", "USDC", "BUSD", "FDUSD", "DAI"}
+
+
+class _Cfg(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class CexTariff(_Cfg):
+    taker_bps: Decimal = Field(ge=0)
+    maker_bps: Decimal = Field(ge=0)
+    funding_interval_h: int = Field(ge=1, default=8)
+
+
+class DexTariff(_Cfg):
+    pool_fee_bps: Decimal = Field(ge=0)
+    priority_fee_usd: Decimal = Field(ge=0)
+    gas_usd: Decimal = Field(ge=0)
+    chain: str
+
+
+class NftTariff(_Cfg):
+    marketplace_fee_pct: Decimal = Field(ge=0)
+    default_royalty_pct: Decimal = Field(ge=0)
+    gas_usd: Decimal = Field(ge=0)
+
+
+class OtherTariff(_Cfg):
+    taker_bps: Decimal = Field(ge=0, default=Decimal(0))
+    maker_bps: Decimal = Field(ge=0, default=Decimal(0))
+    gas_usd: Decimal = Field(ge=0, default=Decimal(0))
+    spread_bps: Decimal | None = None
+
+
+class SlippageDefaults(_Cfg):
+    default_spread_bps: Decimal = Field(ge=0)
+    impact_bps_per_depth_share: Decimal = Field(ge=0)
+    default_depth_usd: Decimal = Field(gt=0)
+
+
+class CostsConfig(_Cfg):
+    version: int = Field(ge=1)
+    cex: dict[str, CexTariff]
+    dex: dict[str, DexTariff]
+    nft: dict[str, NftTariff]
+    other: dict[str, OtherTariff] = Field(default_factory=dict)
+    slippage: SlippageDefaults
+
+    def kind_of(self, venue: str) -> str:
+        for kind in ("cex", "dex", "nft", "other"):
+            if venue in getattr(self, kind):
+                return kind
+        raise KeyError(f"площадка {venue!r} не описана в costs.yaml")
+
+
+def load_costs(path: Path | None = None) -> CostsConfig:
+    return load_config(path or CONFIG_DIR / "costs.yaml", CostsConfig)
+
+
+@dataclass(frozen=True)
+class Pool:
+    """Ликвидность пула константного продукта: резерв котировки и спот-цена."""
+
+    liquidity_quote: Decimal
+    price: Decimal
+    fee_bps: Decimal | None = None  # переопределяет тариф площадки
+
+
+@dataclass(frozen=True)
+class Depth:
+    """Глубина без стакана: спред и глубина в USD (для оценки по формуле impact)."""
+
+    depth_usd: Decimal
+    spread_bps: Decimal | None = None
+
+
+def _ref_price(intent: OrderIntent, book: Book | None, pool: Pool | None) -> Decimal:
+    if book is not None and book.bids and book.asks:
+        return (book.bids[0].price + book.asks[0].price) / 2
+    if pool is not None:
+        return pool.price
+    if intent.price is not None:
+        return intent.price
+    raise ValueError("нет референсной цены: передай book, pool или intent.price")
+
+
+def _walk_book(book: Book, side: Side, qty: Decimal) -> tuple[Decimal, Decimal]:
+    """VWAP исполнения по стакану и исполненный объём (остаток — за пределами глубины)."""
+    levels = book.asks if side == "buy" else book.bids
+    remaining = qty
+    notional = Decimal(0)
+    filled = Decimal(0)
+    for level in levels:
+        take = min(remaining, level.qty)
+        notional += take * level.price
+        filled += take
+        remaining -= take
+        if remaining <= 0:
+            break
+    if filled == 0:
+        raise ValueError("пустой стакан")
+    return notional / filled, filled
+
+
+def _crosses(intent: OrderIntent, book: Book) -> bool:
+    if intent.order_type == "market" or intent.price is None:
+        return True
+    if intent.side == "buy":
+        return bool(book.asks) and intent.price >= book.asks[0].price
+    return bool(book.bids) and intent.price <= book.bids[0].price
+
+
+class CostModel:
+    def __init__(self, config: CostsConfig | None = None) -> None:
+        self.config = config or load_costs()
+        payload = json.dumps(self.config.model_dump(mode="json"), sort_keys=True)
+        digest = hashlib.sha256(payload.encode()).hexdigest()[:12]
+        self.version = f"costs-v{self.config.version}@{digest}"
+
+    # -- оценка до сделки ------------------------------------------------------
+
+    def estimate(
+        self,
+        venue: str,
+        intent: OrderIntent,
+        book: Book | None = None,
+        pool: Pool | None = None,
+        depth: Depth | None = None,
+        *,
+        royalty_pct: Decimal | None = None,
+    ) -> Costs:
+        kind = self.config.kind_of(venue)
+        if kind == "cex":
+            return self._estimate_cex(self.config.cex[venue], intent, book, depth)
+        if kind == "dex":
+            return self._estimate_dex(self.config.dex[venue], intent, pool, book, depth)
+        if kind == "nft":
+            return self._estimate_nft(self.config.nft[venue], intent, royalty_pct)
+        return self._estimate_other(self.config.other[venue], intent, book, depth)
+
+    def _slip_and_vwap(
+        self, intent: OrderIntent, book: Book | None, depth: Depth | None
+    ) -> tuple[Decimal, Decimal, bool]:
+        """(проскальзывание, цена исполнения, тейкер?)"""
+        ref = _ref_price(intent, book, None)
+        if book is not None and book.bids and book.asks:
+            if not _crosses(intent, book):
+                return Decimal(0), intent.price or ref, False
+            vwap, filled = _walk_book(book, intent.side, intent.qty)
+            unfilled = intent.qty - filled
+            # непокрытый стаканом остаток — по формуле impact от последней цены
+            extra = Decimal(0)
+            if unfilled > 0:
+                extra = self._impact(unfilled * vwap, depth) * unfilled * vwap / _BPS
+            slip = abs(vwap - ref) * filled + extra
+            return slip, vwap, True
+        if intent.order_type == "limit":
+            return Decimal(0), intent.price or ref, False
+        notional = intent.qty * ref
+        s = self.config.slippage
+        spread = depth.spread_bps if depth and depth.spread_bps is not None else None
+        spread = s.default_spread_bps if spread is None else spread
+        bps = spread / 2 + self._impact(notional, depth)
+        slip = notional * bps / _BPS
+        sign = 1 if intent.side == "buy" else -1
+        return slip, ref * (1 + sign * bps / _BPS), True
+
+    def _impact(self, notional: Decimal, depth: Depth | None) -> Decimal:
+        s = self.config.slippage
+        d = depth.depth_usd if depth is not None else s.default_depth_usd
+        return s.impact_bps_per_depth_share * notional / d
+
+    def _estimate_cex(
+        self, tariff: CexTariff, intent: OrderIntent, book: Book | None, depth: Depth | None
+    ) -> Costs:
+        slip, px, taker = self._slip_and_vwap(intent, book, depth)
+        rate = tariff.taker_bps if taker else tariff.maker_bps
+        return Costs(fee=intent.qty * px * rate / _BPS, slippage=slip)
+
+    def _estimate_other(
+        self, tariff: OtherTariff, intent: OrderIntent, book: Book | None, depth: Depth | None
+    ) -> Costs:
+        if tariff.spread_bps is not None and depth is None:
+            depth = Depth(self.config.slippage.default_depth_usd, tariff.spread_bps)
+        slip, px, taker = self._slip_and_vwap(intent, book, depth)
+        rate = tariff.taker_bps if taker else tariff.maker_bps
+        return Costs(fee=intent.qty * px * rate / _BPS, slippage=slip, gas=tariff.gas_usd)
+
+    def _estimate_dex(
+        self,
+        tariff: DexTariff,
+        intent: OrderIntent,
+        pool: Pool | None,
+        book: Book | None,
+        depth: Depth | None,
+    ) -> Costs:
+        fee_bps = pool.fee_bps if pool and pool.fee_bps is not None else tariff.pool_fee_bps
+        if pool is not None:
+            notional = intent.qty * pool.price
+            # x*y=k: покупка на dx котировки даёт y*dx/(x+dx) базы; потеря = dx * dx/(x+dx)
+            slip = notional * notional / (pool.liquidity_quote + notional)
+        else:
+            slip, px, _ = self._slip_and_vwap(intent, book, depth)
+            notional = intent.qty * px
+        return Costs(
+            fee=notional * fee_bps / _BPS,
+            slippage=slip,
+            priority_fee=tariff.priority_fee_usd,
+            gas=tariff.gas_usd,
+        )
+
+    def _estimate_nft(
+        self, tariff: NftTariff, intent: OrderIntent, royalty_pct: Decimal | None
+    ) -> Costs:
+        if intent.price is None:
+            raise ValueError("для NFT нужна цена (intent.price)")
+        notional = intent.qty * intent.price
+        royalty = tariff.default_royalty_pct if royalty_pct is None else royalty_pct
+        return Costs(
+            fee=notional * tariff.marketplace_fee_pct / 100,
+            royalty=notional * royalty / 100,
+            gas=tariff.gas_usd,
+        )
+
+    # -- факт по филлу ---------------------------------------------------------
+
+    def actual(
+        self,
+        fill: Fill,
+        *,
+        side: Side,
+        ref_price: Decimal | None = None,
+        funding: Decimal = Decimal(0),
+        gas: Decimal = Decimal(0),
+        priority_fee: Decimal = Decimal(0),
+        royalty: Decimal = Decimal(0),
+    ) -> Costs:
+        """Издержки по факту: комиссия из филла (в котировке), проскальзывание относительно
+        референсной цены на момент решения (мид/котировка), остальное — как передано."""
+        fee = fill.fee if fill.fee_asset.upper() in _QUOTE_ASSETS else fill.fee * fill.price
+        slippage = Decimal(0)
+        if ref_price is not None:
+            diff = fill.price - ref_price if side == "buy" else ref_price - fill.price
+            slippage = diff * fill.qty
+        return Costs(
+            fee=fee,
+            slippage=slippage,
+            funding=funding,
+            gas=gas,
+            priority_fee=priority_fee,
+            royalty=royalty,
+        )
+
+    def funding_interval_h(self, venue: str) -> int | None:
+        tariff = self.config.cex.get(venue)
+        return tariff.funding_interval_h if tariff else None
+
+
+_default: CostModel | None = None
+
+
+def default_model() -> CostModel:
+    global _default
+    if _default is None:
+        _default = CostModel()
+    return _default
+
+
+def estimate(
+    venue: str,
+    intent: OrderIntent,
+    book: Book | None = None,
+    pool: Pool | None = None,
+    **kw: object,
+) -> Costs:
+    return default_model().estimate(venue, intent, book, pool, **kw)  # type: ignore[arg-type]
+
+
+def actual(fill: Fill, *, side: Side, ref_price: Decimal | None = None, **kw: Decimal) -> Costs:
+    return default_model().actual(fill, side=side, ref_price=ref_price, **kw)
+
+
+__all__ = [
+    "CostModel",
+    "CostsConfig",
+    "Depth",
+    "Pool",
+    "actual",
+    "default_model",
+    "estimate",
+    "load_costs",
+]

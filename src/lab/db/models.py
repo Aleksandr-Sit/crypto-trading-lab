@@ -118,6 +118,9 @@ class FillRow(Base):
     fee: Mapped[Money]
     fee_asset: Mapped[str] = mapped_column(String(16))
     ts: Mapped[Ts]
+    # таск 02 (миграция 0002): референсная цена на момент решения и издержки по компонентам
+    ref_price: Mapped[MoneyOpt]
+    costs_json: Mapped[Json] = mapped_column(default=dict)
 
 
 class TradeRow(Base):
@@ -137,6 +140,16 @@ class TradeRow(Base):
     pnl_net: Mapped[Money]
     opened_at: Mapped[Ts]
     closed_at: Mapped[TsOpt]
+    # таск 02 (миграция 0002): FIFO-связывание частичных объёмов
+    instrument: Mapped[str] = mapped_column(String(64), default="")
+    venue: Mapped[str] = mapped_column(String(64), default="")
+    mode: Mapped[Code] = mapped_column(default="paper")
+    side: Mapped[Code] = mapped_column(default="long")
+    qty: Mapped[Money] = mapped_column(default=Decimal(0))
+    entry_price: Mapped[Money] = mapped_column(default=Decimal(0))
+    exit_price: Mapped[MoneyOpt]
+
+    __table_args__ = (Index("ix_trades_strategy_closed", "strategy_id", "closed_at"),)
 
 
 class RungTransitionRow(Base):
@@ -266,6 +279,29 @@ class OutboxRow(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[Ts] = mapped_column(default=utcnow)
     delivered_at: Mapped[TsOpt]
+
+
+class ConfigChangeRow(Base):
+    """Журнал изменений конфига (R30i.4, миграция 0003): кто, когда, какой файл, diff."""
+
+    __tablename__ = "config_changes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    who: Mapped[str] = mapped_column(String(64))
+    ts: Mapped[Ts] = mapped_column(default=utcnow)
+    path: Mapped[str] = mapped_column(String(256))
+    diff: Mapped[Json] = mapped_column(default=dict)
+
+
+class SystemFlagRow(Base):
+    """Флаги системы, общие для процессов (миграция 0003): например «стоп всё» (G04.1)."""
+
+    __tablename__ = "system_flags"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[Json] = mapped_column(default=dict)
+    updated_by: Mapped[str] = mapped_column(String(64), default="system")
+    updated_at: Mapped[Ts] = mapped_column(default=utcnow, onupdate=utcnow)
 
 
 ALL_TABLES: tuple[str, ...] = tuple(Base.metadata.tables)

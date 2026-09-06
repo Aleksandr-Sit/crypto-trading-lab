@@ -12,6 +12,7 @@ from lab.contracts.enums import (
     Status,
 )
 from lab.contracts.protocols import Executor, Feed, NftMarket, Strategy
+from lab.contracts.timeframes import TIMEFRAMES, parse_tf
 from lab.contracts.types import (
     Balance,
     Book,
@@ -38,6 +39,8 @@ from lab.contracts.types import (
 )
 
 __all__ = [
+    "TIMEFRAMES",
+    "parse_tf",
     "RUNG_ORDER",
     "Balance",
     "Book",
