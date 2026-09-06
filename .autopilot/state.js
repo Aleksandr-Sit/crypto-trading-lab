@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-05T23:21:28+04:00",
+  "updatedAt": "2026-09-06T10:43:38+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -50,13 +50,13 @@ window.STATE =
       "id": "build",
       "status": "active",
       "startedAt": "2026-09-05T22:32:43+04:00",
-      "note": "1 из 14 тасков готов"
+      "note": "3 из 14 тасков готовы · пауза по просьбе пользователя"
     },
     {
       "id": "review",
       "status": "active",
       "startedAt": "2026-09-05T22:45:47+04:00",
-      "note": "проверено 1 из 14"
+      "note": "проверено 3 из 14; таск 13 ждёт ревью"
     },
     {
       "id": "final",
@@ -65,8 +65,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 45,
-    "done": 7,
-    "inTicket": 37,
+    "done": 18,
+    "inTicket": 26,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 1,
@@ -130,11 +130,20 @@ window.STATE =
         "src/lab/core/measure/",
         "src/lab/data/"
       ],
-      "status": "review",
+      "status": "done",
       "retries": 0,
-      "repairs": 0,
+      "repairs": 1,
       "handoffs": 0,
-      "startedAt": "2026-09-05T22:56:01+04:00"
+      "startedAt": "2026-09-05T22:56:01+04:00",
+      "finishedAt": "2026-09-06T10:43:38+04:00",
+      "tests": {
+        "passed": 103,
+        "failed": 0
+      },
+      "commit": "5a9b2a5",
+      "repairFindings": [
+        "ветка из strategy_id ломалась на cex-spot/cex-perp/dex-perp — R11"
+      ]
     },
     {
       "id": "03",
@@ -155,11 +164,17 @@ window.STATE =
         "src/lab/core/risk/",
         "src/lab/core/ladder/"
       ],
-      "status": "review",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-05T22:56:01+04:00"
+      "startedAt": "2026-09-05T22:56:01+04:00",
+      "finishedAt": "2026-09-06T10:43:38+04:00",
+      "tests": {
+        "passed": 103,
+        "failed": 0
+      },
+      "commit": "50d7ea6"
     },
     {
       "id": "13",
@@ -180,7 +195,7 @@ window.STATE =
         "candidates/",
         "config/authors.yaml"
       ],
-      "status": "in-progress",
+      "status": "review",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
@@ -445,7 +460,7 @@ window.STATE =
   ],
   "singlePass": null,
   "tests": {
-    "passed": 38,
+    "passed": 103,
     "failed": 0
   },
   "debt": {
@@ -489,7 +504,19 @@ window.STATE =
     "T01 src/lab/db/engine.py:11 — DEFAULT_URL lab:lab в коде против докстринга; URL продублирован в alembic.ini и conftest",
     "T01 src/lab/executors/fake.py:142 — entry_price при доливке = последний филл, не средневзвешенная",
     "T01 registry.py:171 + config/loader.py:29 — дублирование преобразования ValidationError",
-    "T01 .env.example — DB_BIND не описан"
+    "T01 .env.example — DB_BIND не описан",
+    "T03 [БЕЗОПАСНОСТЬ, чинить первым при возобновлении] src/lab/core/risk/engine.py:107-176 — reduce_only проверяется после стопов: при пробитом стопе закрывающий ордер получает Deny(strategy_stop_*) — позицию нельзя закрыть; условие: reduce_only → Allow до проверок стопов, degraded не блокирует закрытие",
+    "T03 engine.py:196-204 — потолок реального капитала считается по марже, при 5× номинал может впятеро превысить $1000 (История 94a)",
+    "T03 machine.py:181-210 — promote/demote/breach не проверяют retired/degraded",
+    "T03 machine.py:35 — ThresholdFn не совпадает с сигнатурой measure.threshold (kw-only rung), адаптера нет",
+    "T03 limits.yaml maintenance_margin_pct=0.5 — величина площадки без пометки «оценка»",
+    "T03 machine.py:246 — ttl_s читается из params_json, в манифесте поля нет",
+    "T03 engine.py:227 — max_position_pct используется и как доля капитала, и как дистанция до ликвидации",
+    "T03 tests — коды unknown_strategy, no_price без тестов; strategy_inactive только для degraded; DbHaltSwitch тест на одной сессии",
+    "T03 machine.py:139-147 — evaluate вызывает start(); провал на нижней ступени не пишет переход; demote с backtest молча None",
+    "T03 engine.py:243 — available_usd от базы, лимиты от current_usd",
+    "T02 runner.py code_version() = unknown в образе без .git; record_fill не проверяет decided_at < ts; тест воспроизводимости сравнивает с кэшем; extra_metrics с опечаткой молча отбрасывается; threshold() читает yaml на каждый вызов; journal reconcile checked считает общие дважды; signal_id = inputs_hash в симуляторе; FIFO-матчер продублирован в journal и simulator",
+    "T02 R10: measure_cost/can_backtest не прикреплены к кандидату — очередь (T12) вызывает measure_plan на лету"
   ],
   "reviewers": {
     "manifestSpec": "afea90f146a601738",
