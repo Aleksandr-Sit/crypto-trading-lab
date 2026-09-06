@@ -344,3 +344,60 @@ def test_maintenance_margin_from_limits_yaml_sets_liquidation_distance(engine, p
     deny(e.check(intent(leverage="5")), "liquidation")
     deny(e.check(intent(leverage="4")), "liquidation")  # 24.5 % < 25 %
     assert e.check(intent(leverage="3")) == Allow()  # 32.83 % > 25 %
+
+
+# --- reduce_only: закрыть позицию после пробоя можно всегда (История 10) --------------------
+
+
+def test_reduce_only_is_allowed_after_stop_breach_but_opening_is_not(engine, portfolio):
+    portfolio.stats["cex-perp-hl-trend"] = StrategyStats(pnl_day_pct=D("-3.5"), dd_pct=D(12))
+    deny(engine.check(intent()), "strategy_stop_daily")
+    assert engine.check(intent(qty="5", reduce_only=True)) == Allow()
+    portfolio.branches["cex-perp"] = BranchState(current_usd=D(3_500), pnl_day_pct=D("-6"))
+    assert engine.check(intent(qty="5", reduce_only=True)) == Allow()
+
+
+def test_reduce_only_is_allowed_for_degraded_but_not_for_retired(portfolio):
+    strategies = dict(STRATEGIES)
+    strategies["cex-perp-hl-trend"] = STRATEGIES["cex-perp-hl-trend"].model_copy(
+        update={"status": Status.DEGRADED}
+    )
+    engine = RiskEngine(strategies.get, portfolio)
+    deny(engine.check(intent()), "strategy_inactive")
+    assert engine.check(intent(reduce_only=True)) == Allow()
+
+    strategies["cex-perp-hl-trend"] = STRATEGIES["cex-perp-hl-trend"].model_copy(
+        update={"status": Status.RETIRED}
+    )
+    deny(engine.check(intent(reduce_only=True)), "strategy_inactive")
+
+
+def test_reduce_only_bypasses_exactly_these_rules(portfolio):
+    """Обходит: rung_mode, stop_missing, strategy_stop_daily, strategy_stop_dd, branch_stop,
+    no_price, leverage, max_trade, branch_share, real_capital_cap, liquidation, degraded.
+    Не обходит: halted, unknown_strategy, retired, venue_unavailable."""
+    strategies = dict(STRATEGIES)
+    strategies["cex-perp-hl-trend"] = STRATEGIES["cex-perp-hl-trend"].model_copy(
+        update={"stop": None, "status": Status.DEGRADED}
+    )
+    strategies["nft-me-mint"] = STRATEGIES["nft-me-mint"].model_copy(update={"stop": None})
+    portfolio.stats["cex-perp-hl-trend"] = StrategyStats(pnl_day_pct=D(-9), dd_pct=D(50))
+    portfolio.branches["cex-perp"] = BranchState(
+        current_usd=D(100), exposure_usd=D(4_000), pnl_day_pct=D(-9)
+    )
+    portfolio.live_deployed = D(5_000)
+    portfolio.marks = {}
+    portfolio.liq["BTC-USDT"] = D("99.9")
+    engine = RiskEngine(strategies.get, portfolio)
+    closing = intent(qty="1000", price=None, leverage="50", mode="live", reduce_only=True)
+    assert engine.check(closing) == Allow()
+    assert engine.check(intent("nft-me-mint", mode="live", reduce_only=True)) == Allow()
+
+    engine.halt_switch.halt(by="operator")
+    deny(engine.check(closing), "halted")
+    engine.halt_switch.resume(by="operator")
+    portfolio.venues_down.add("hyperliquid")
+    deny(engine.check(closing), "venue_unavailable")
+    portfolio.venues_down.clear()
+    unknown = closing.model_copy(update={"strategy_id": "nope"})
+    deny(engine.check(unknown), "unknown_strategy")

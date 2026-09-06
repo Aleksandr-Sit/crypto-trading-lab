@@ -8,6 +8,7 @@ from lab.core.ladder.machine import (
     OperatorRequired,
     ThresholdFn,
     Transition,
+    default_threshold_fn,
     metrics_snapshot,
 )
 from lab.core.ladder.rules import (
@@ -35,6 +36,7 @@ __all__ = [
     "OperatorRequired",
     "ThresholdFn",
     "Transition",
+    "default_threshold_fn",
     "initial_rung",
     "metrics_snapshot",
     "next_rung",

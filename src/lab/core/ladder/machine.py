@@ -88,6 +88,16 @@ class Transition(BaseModel):
         )
 
 
+def default_threshold_fn() -> ThresholdFn:
+    """Адаптер к настоящему `core.measure.threshold(m, branch, *, rung=)` под интерфейс лестницы."""
+    from lab.core.measure import threshold as measure_threshold
+
+    def fn(metrics: Metrics, branch: Branch, rung: Rung) -> ThresholdResult:
+        return measure_threshold(metrics, branch, rung=rung)
+
+    return fn
+
+
 def metrics_snapshot(metrics: Metrics | None, result: ThresholdResult | None) -> dict[str, Any]:
     """Цифры, вызвавшие переход (R02.3/R02.4): ключевые метрики + критерии порога.
     JSON-совместимо."""
@@ -181,7 +191,7 @@ class Ladder:
     def promote(
         self, strategy_id: str, by: By, reason: str = "", snapshot: dict[str, Any] | None = None
     ) -> Transition:
-        row = self._row(strategy_id)
+        row = self._movable(strategy_id)
         rung = Rung(row.rung)
         target = next_rung(rung, by=by)
         if target is None:
@@ -202,7 +212,7 @@ class Ladder:
         by: By = "system",
         snapshot: dict[str, Any] | None = None,
     ) -> Transition | None:
-        row = self._row(strategy_id)
+        row = self._movable(strategy_id)
         rung = Rung(row.rung)
         target = DEMOTE_PREV[rung]
         if target is None:
@@ -214,7 +224,7 @@ class Ladder:
     ) -> Transition:
         """Пробой стопа стратегии (G04): статус `degraded`, её ордера отменяются,
         ступень не меняется."""
-        row = self._row(strategy_id)
+        row = self._movable(strategy_id)
         snap = dict(snapshot or {})
         snap["cancelled_orders"] = self._cancel(strategy_id) if self._cancel else 0
         rung = Rung(row.rung)
@@ -274,6 +284,12 @@ class Ladder:
         row = self.s.get(StrategyRow, strategy_id)
         if row is None:
             raise StrategyNotFound(f"стратегия {strategy_id} не найдена")
+        return row
+
+    def _movable(self, strategy_id: str) -> StrategyRow:
+        row = self._row(strategy_id)
+        if row.status == Status.RETIRED:
+            raise LadderError(f"{strategy_id} в статусе retired: ступень не меняется")
         return row
 
     def _move(

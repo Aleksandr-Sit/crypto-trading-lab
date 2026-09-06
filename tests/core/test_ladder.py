@@ -222,3 +222,34 @@ def test_pending_signal_on_signal_rung_expires_by_manifest_ttl(session, registry
     assert ladder.expire_signals(now=T0 + timedelta(seconds=300)) == []
     assert ladder.expire_signals(now=T0 + timedelta(seconds=601)) == [sig.id]
     assert journal.signal(sig.id).outcome == SignalOutcome.EXPIRED
+
+
+def test_retired_strategy_cannot_be_moved(registry, ladder):
+    from lab.core.ladder import LadderError
+
+    s = registry.add(manifest())
+    ladder.evaluate(s.id, make_metrics())
+    registry.retire(s.id, "устарела")
+    with pytest.raises(LadderError):
+        ladder.promote(s.id, by="operator")
+    with pytest.raises(LadderError):
+        ladder.demote(s.id, "вниз")
+    with pytest.raises(LadderError):
+        ladder.breach(s.id, "стоп")
+    assert registry.get(s.id).rung == Rung.PAPER and registry.get(s.id).status == Status.RETIRED
+    assert len(ladder.history(s.id)) == 1
+
+
+def test_default_threshold_adapter_uses_real_measure_threshold(session, registry):
+    from lab.core.ladder import default_threshold_fn
+
+    ladder = Ladder(session, threshold=default_threshold_fn(), halt=MemoryHaltSwitch())
+    s = registry.add(manifest())
+    # 40 сделок, EV 1.5 > 0, MaxDD 3 % ≤ 5 % (cex), vs_btc +2 % → порог В12 пройден
+    t = ladder.evaluate(s.id, make_metrics())
+    assert t is not None and t.to_rung == Rung.PAPER
+    names = {c["name"] for c in t.metrics_snapshot["threshold"]["criteria"]}
+    assert {"n_trades", "ev_per_trade", "max_dd_pct", "vs_btc"} <= names
+    # MaxDD 8 % > лимита 5 % группы cex → провал → назад на backtest
+    t = ladder.evaluate(s.id, make_metrics(max_dd="8"))
+    assert t is not None and t.to_rung == Rung.BACKTEST and "max_dd_pct" in t.reason

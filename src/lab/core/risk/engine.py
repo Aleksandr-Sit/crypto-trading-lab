@@ -5,8 +5,10 @@
   strategy_stop_daily · strategy_stop_dd · branch_stop · no_price · leverage · max_trade ·
   branch_share · real_capital_cap · liquidation.
 
-Ордер `reduce_only` (закрытие) проходит только первые шесть: закрыть позицию после пробоя стопа
-можно всегда. Размер считается от текущего капитала ветки (R30i.3); доля ветки — по занятой марже
+Ордер `reduce_only` (закрытие) проходит только halted · unknown_strategy · retired ·
+venue_unavailable: закрыть позицию после пробоя стопа и в статусе `degraded` можно всегда
+(История 10). `strategy_inactive` для `degraded` — только на открытие; `retired` запрещает всё.
+Размер считается от текущего капитала ветки (R30i.3); доля ветки — по занятой марже
 (`exposure_usd` + `notional / leverage`) против `share_pct × банк`; макс. на сделку — по номиналу.
 Недоступная площадка → Deny для её ордеров, но капитал ветки остаётся последним известным (R30i.5).
 """
@@ -41,7 +43,6 @@ StrategyLookup = Callable[[str], StrategyInfo | None]
 
 _HUNDRED = Decimal(100)
 _LIVE_RUNGS = frozenset(RUNG_ORDER[RUNG_ORDER.index(Rung.MICRO) :])
-_INACTIVE = frozenset({Status.DEGRADED, Status.RETIRED})
 
 
 def _fmt(x: Decimal) -> str:
@@ -109,9 +110,12 @@ class RiskEngine:
                 reason=f"Стратегия {intent.strategy_id} не найдена в реестре",
                 rule="unknown_strategy",
             )
-        if strategy.status in _INACTIVE:
+        if strategy.status == Status.RETIRED or (
+            strategy.status == Status.DEGRADED and not intent.reduce_only
+        ):
+            what = "закрытие позиций" if strategy.status == Status.RETIRED else "открытие позиций"
             return Deny(
-                reason=f"Стратегия {strategy.id} в статусе {strategy.status}: ордера запрещены",
+                reason=f"Стратегия {strategy.id} в статусе {strategy.status}: {what} запрещено",
                 rule="strategy_inactive",
             )
         if not self._portfolio.venue_available(intent.venue):
@@ -120,6 +124,8 @@ class RiskEngine:
                 "считается по последнему известному балансу",
                 rule="venue_unavailable",
             )
+        if intent.reduce_only:
+            return Allow()  # закрыть позицию можно всегда — и после пробоя стопа (История 10)
         if intent.mode == Mode.LIVE and strategy.rung not in _LIVE_RUNGS:
             return Deny(
                 reason=f"Ступень {strategy.rung} не допускает реальных ордеров — только бумага",
@@ -157,9 +163,6 @@ class RiskEngine:
                 f"при лимите −{_fmt(limits.stop.loss_pct)} % — стратегии ветки стоят",
                 rule="branch_stop",
             )
-
-        if intent.reduce_only:
-            return Allow()
 
         price = intent.price or self._portfolio.mark_price(intent.venue, intent.instrument)
         if price is None or price <= 0:
