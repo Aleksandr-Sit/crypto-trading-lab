@@ -5,6 +5,8 @@
 # max_trade_base: bank   — процент от всего банка
 #                 branch — процент от капитала ветки
 # max_leverage: 1 — без плеча.
+# maintenance_margin_pct: поддерживающая маржа площадки, % — расстояние до ликвидации
+#                 считается как 100/плечо − эта величина (R20.1); по умолчанию 0.5.
 # Изменения применяются без рестарта и пишутся в журнал (R30i.4, тикет ops).
 
 # Потолок реального капитала первой фазы, USD (В1: $500–1 000). Переопределяется
@@ -18,6 +20,7 @@ groups:
     max_trade_pct: 2
     max_trade_base: bank
     max_leverage: 5
+    maintenance_margin_pct: 0.5
     stop: {loss_pct: 5, period: day}
 
   copy:
@@ -27,6 +30,7 @@ groups:
     max_trade_base: bank
     max_leverage: 5
     leverage_follows_leader: true
+    maintenance_margin_pct: 0.5
     stop: {loss_pct: 5, period: day}
 
   meme:

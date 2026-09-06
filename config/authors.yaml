@@ -1,0 +1,41 @@
+# Авторы для форвард-журнала публичных сигналов (R06.2, G08.1). Читает тикет 08/12.
+# Поля: name, aliases, kind (indicator | signals | education), channels: [{platform, url}],
+#       verified_at — когда ссылка проверена; url «[ССЫЛКА — впиши]» — публично не найдено, впишет пользователь.
+# platform: telegram | youtube | tradingview | x | web. Чтение Telegram — Telethon или t.me/s/<канал> (фолбэк).
+version: 1
+authors:
+  - id: pifagor
+    name: "Pifagor Trade (Дима)"
+    aliases: ["Pifagor", "Пифагор", "Дима Пифагор", "dimapifagor", "Indicator Dima"]
+    kind: indicator
+    note: "Совпадение с пользовательским «Дима» требует подтверждения. Разбор: docs/research/indicators/pifagor.md"
+    channels:
+      - {platform: telegram, url: "https://t.me/pifagortrade", verified_at: 2026-09-06}
+      - {platform: telegram, url: "https://t.me/piftwit", verified_at: 2026-09-06, note: "второй канал, указан в описании основного"}
+      - {platform: telegram, url: "https://t.me/Pifagor_Indicator_bot", verified_at: 2026-09-06, note: "бот выдачи индикаторов, не для журнала"}
+      - {platform: youtube, url: "https://www.youtube.com/@Pifagortrade", verified_at: 2026-09-06}
+      - {platform: tradingview, url: "https://ru.tradingview.com/u/Pifagor_trade/", verified_at: 2026-09-06, note: "0 публичных скриптов/идей"}
+      - {platform: web, url: "https://www.pifagor.trade/indicators.html", verified_at: 2026-09-06}
+      - {platform: x, url: "[ССЫЛКА — впиши]"}
+
+  - id: coinmetrika
+    name: "Coin Metrika (Вадим)"
+    aliases: ["Coinmetrika", "Коинметрика", "CoinMetrika", "metrikanec"]
+    kind: indicator
+    note: "Имя «Вадим» — только по обзорщику cryptorussia.ru; требует подтверждения. Разбор: docs/research/indicators/coinmetrika.md"
+    channels:
+      - {platform: telegram, url: "https://t.me/coinmetrika", verified_at: 2026-09-06}
+      - {platform: youtube, url: "https://www.youtube.com/c/CoinMetrika", verified_at: 2026-09-06, note: "ссылка из описания канала, страница не открывалась"}
+      - {platform: x, url: "https://x.com/coinmetrika", verified_at: 2026-09-06, note: "ссылка с coinmetrika.capital, страница не открывалась"}
+      - {platform: web, url: "https://coinmetrika.capital/", verified_at: 2026-09-06, note: "закрытая подписка, набор завершён"}
+      - {platform: tradingview, url: "[ССЫЛКА — впиши]"}
+
+  - id: cryptosmx
+    name: "CryptosMX"
+    aliases: ["Cryptos MX", "cryptosmx"]
+    kind: signals
+    note: "Не найдено публично (2026-09-06). Пользователь впишет канал; до этого журнал по автору не ведётся."
+    channels:
+      - {platform: telegram, url: "[ССЫЛКА — впиши]"}
+      - {platform: x, url: "[ССЫЛКА — впиши]"}
+      - {platform: youtube, url: "[ССЫЛКА — впиши]"}

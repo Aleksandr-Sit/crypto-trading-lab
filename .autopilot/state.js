@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-05T22:52:45+04:00",
+  "updatedAt": "2026-09-05T23:21:28+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -49,12 +49,14 @@ window.STATE =
     {
       "id": "build",
       "status": "active",
-      "startedAt": "2026-09-05T22:32:43+04:00"
+      "startedAt": "2026-09-05T22:32:43+04:00",
+      "note": "1 из 14 тасков готов"
     },
     {
       "id": "review",
       "status": "active",
-      "startedAt": "2026-09-05T22:45:47+04:00"
+      "startedAt": "2026-09-05T22:45:47+04:00",
+      "note": "проверено 1 из 14"
     },
     {
       "id": "final",
@@ -63,8 +65,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 45,
-    "done": 2,
-    "inTicket": 42,
+    "done": 7,
+    "inTicket": 37,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 1,
@@ -91,14 +93,20 @@ window.STATE =
         "migrations/",
         "config/"
       ],
-      "status": "repair",
+      "status": "done",
       "retries": 0,
       "repairs": 1,
       "handoffs": 0,
       "startedAt": "2026-09-05T22:33:12+04:00",
       "repairFindings": [
         "CLI не читает DATABASE_URL из .env; README без пути для compose — R01"
-      ]
+      ],
+      "finishedAt": "2026-09-05T22:56:01+04:00",
+      "tests": {
+        "passed": 38,
+        "failed": 0
+      },
+      "commit": "ff1ebac"
     },
     {
       "id": "02",
@@ -122,10 +130,11 @@ window.STATE =
         "src/lab/core/measure/",
         "src/lab/data/"
       ],
-      "status": "pending",
+      "status": "review",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-05T22:56:01+04:00"
     },
     {
       "id": "03",
@@ -146,10 +155,11 @@ window.STATE =
         "src/lab/core/risk/",
         "src/lab/core/ladder/"
       ],
-      "status": "pending",
+      "status": "review",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-05T22:56:01+04:00"
     },
     {
       "id": "13",
@@ -170,10 +180,11 @@ window.STATE =
         "candidates/",
         "config/authors.yaml"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-05T22:56:01+04:00"
     },
     {
       "id": "04",
@@ -433,11 +444,28 @@ window.STATE =
     }
   ],
   "singlePass": null,
-  "tests": null,
+  "tests": {
+    "passed": 38,
+    "failed": 0
+  },
   "debt": {
-    "placeholders": [],
+    "placeholders": [
+      "R29i.1 — проверка прав ключа (withdraw) через API площадки — в тикетах коннекторов"
+    ],
     "assumptions": [],
-    "emptyEnv": []
+    "emptyEnv": [
+      "DATABASE_URL",
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_ADMIN_ID",
+      "BYBIT_API_KEY",
+      "OKX_API_KEY",
+      "BINANCE_API_KEY",
+      "HYPERLIQUID_PRIVATE_KEY",
+      "HELIUS_API_KEY",
+      "ALCHEMY_API_KEY",
+      "WEB_USER",
+      "WEB_PASSWORD"
+    ]
   },
   "additions": [],
   "coverage": {
@@ -460,7 +488,8 @@ window.STATE =
     "T01 src/lab/cli.py — ветки CLI (пустой реестр, add, дубликат, неполный) без тестов",
     "T01 src/lab/db/engine.py:11 — DEFAULT_URL lab:lab в коде против докстринга; URL продублирован в alembic.ini и conftest",
     "T01 src/lab/executors/fake.py:142 — entry_price при доливке = последний филл, не средневзвешенная",
-    "T01 registry.py:171 + config/loader.py:29 — дублирование преобразования ValidationError"
+    "T01 registry.py:171 + config/loader.py:29 — дублирование преобразования ValidationError",
+    "T01 .env.example — DB_BIND не описан"
   ],
   "reviewers": {
     "manifestSpec": "afea90f146a601738",

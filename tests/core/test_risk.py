@@ -1,0 +1,346 @@
+"""Шов core.risk.check (спецификация, «Швы для тестов»). Портфель и реестр — фейки.
+
+Числа — из таблицы лимитов веток (В9а): банк 10 000 USD → cex 40 % = 4 000,
+сделка ≤ 2 % банка = 200, плечо ≤ 5; meme 20 % = 2 000, сделка ≤ 10 % ветки, без плеча,
+стоп ветки −20 %/день; nft стоп −30 %/неделя. Потолок реального капитала — 1 000 USD.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from lab.contracts import Branch, OrderIntent, Rung, Status, StopSpec
+from lab.core.risk import (
+    Allow,
+    BranchState,
+    Deny,
+    MemoryHaltSwitch,
+    RiskEngine,
+    StrategyInfo,
+    StrategyStats,
+)
+
+D = Decimal
+ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass
+class FakePortfolio:
+    bank: Decimal = D(10_000)
+    branches: dict[str, BranchState] = field(default_factory=dict)
+    venues_down: set[str] = field(default_factory=set)
+    stats: dict[str, StrategyStats] = field(default_factory=dict)
+    live_deployed: Decimal = D(0)
+    marks: dict[str, Decimal] = field(default_factory=lambda: {"BTC-USDT": D(100)})
+    liq: dict[str, Decimal] = field(default_factory=dict)
+
+    def bank_usd(self) -> Decimal:
+        return self.bank
+
+    def branch(self, branch: Branch | str) -> BranchState:
+        return self.branches.get(str(branch), BranchState(current_usd=D(0)))
+
+    def venue_available(self, venue: str) -> bool:
+        return venue not in self.venues_down
+
+    def strategy_stats(self, strategy_id: str) -> StrategyStats:
+        return self.stats.get(strategy_id, StrategyStats())
+
+    def live_deployed_usd(self) -> Decimal:
+        return self.live_deployed
+
+    def mark_price(self, venue: str, instrument: str) -> Decimal | None:
+        return self.marks.get(instrument)
+
+    def liquidation_price(self, intent: OrderIntent) -> Decimal | None:
+        return self.liq.get(intent.instrument)
+
+
+STRATEGIES: dict[str, StrategyInfo] = {
+    "cex-perp-hl-trend": StrategyInfo(
+        id="cex-perp-hl-trend",
+        branch=Branch.CEX_PERP,
+        venue="hyperliquid",
+        rung=Rung.MICRO,
+        status=Status.PASSED,
+        stop=StopSpec(daily_pct=D(3), max_dd_pct=D(10), max_position_pct=D(10)),
+    ),
+    "meme-sol-early": StrategyInfo(
+        id="meme-sol-early",
+        branch=Branch.MEME,
+        venue="jupiter",
+        rung=Rung.MICRO,
+        status=Status.PASSED,
+        stop=StopSpec(daily_pct=D(5)),
+    ),
+    "nft-me-mint": StrategyInfo(
+        id="nft-me-mint",
+        branch=Branch.NFT,
+        venue="magiceden",
+        rung=Rung.PAPER,
+        status=Status.MEASURING,
+        stop=StopSpec(daily_pct=D(5)),
+    ),
+}
+
+
+def intent(
+    strategy_id: str = "cex-perp-hl-trend",
+    *,
+    qty: str = "1",
+    price: str | None = "100",
+    leverage: str = "1",
+    mode: str = "paper",
+    reduce_only: bool = False,
+    venue: str | None = None,
+) -> OrderIntent:
+    s = STRATEGIES[strategy_id]
+    return OrderIntent(
+        strategy_id=strategy_id,
+        venue=venue or s.venue,
+        instrument="BTC-USDT",
+        side="buy",
+        qty=D(qty),
+        price=None if price is None else D(price),
+        order_type="market" if price is None else "limit",
+        leverage=D(leverage),
+        reduce_only=reduce_only,
+        mode=mode,  # type: ignore[arg-type]
+        signal_id="sig-1",
+        client_order_id="coid-1",
+    )
+
+
+@pytest.fixture
+def portfolio() -> FakePortfolio:
+    return FakePortfolio(
+        branches={
+            "cex-perp": BranchState(current_usd=D(4_000)),
+            "meme": BranchState(current_usd=D(2_000)),
+            "nft": BranchState(current_usd=D(1_000)),
+        }
+    )
+
+
+@pytest.fixture
+def engine(portfolio: FakePortfolio) -> RiskEngine:
+    return RiskEngine(STRATEGIES.get, portfolio, halt=MemoryHaltSwitch())
+
+
+def deny(verdict: Allow | Deny, rule: str) -> Deny:
+    assert isinstance(verdict, Deny), verdict
+    assert verdict.rule == rule
+    assert verdict.reason and verdict.reason[0].isupper() or verdict.reason[0].isalpha()
+    return verdict
+
+
+# --- доля ветки и размер --------------------------------------------------------------
+
+
+def test_branch_share_is_capped_at_40_percent_of_bank(engine, portfolio):
+    portfolio.branches["cex-perp"] = BranchState(current_usd=D(4_000), exposure_usd=D(3_900))
+    # 3 900 + 200 = 4 100 > 4 000 (40 % от 10 000)
+    deny(engine.check(intent(qty="2")), "branch_share")
+
+    portfolio.branches["cex-perp"] = BranchState(current_usd=D(4_000), exposure_usd=D(3_700))
+    assert engine.check(intent(qty="2")) == Allow()
+
+
+def test_max_trade_is_2_percent_of_bank_for_cex(engine):
+    deny(engine.check(intent(qty="2.5")), "max_trade")  # 250 > 200
+    assert engine.check(intent(qty="2")) == Allow()
+
+
+def test_deny_carries_russian_reason_and_rule_code(engine):
+    verdict = engine.check(intent(qty="2.5"))
+    assert isinstance(verdict, Deny)
+    assert verdict.rule == "max_trade"
+    assert "250" in verdict.reason and "200" in verdict.reason
+    assert any("а" <= ch <= "я" for ch in verdict.reason.lower())
+
+
+def test_size_is_from_current_branch_capital_not_base(engine, portfolio):
+    # meme: 10 % от текущего капитала ветки. База 2 000 → 200, но ветка просела до 1 500 → 150.
+    portfolio.branches["meme"] = BranchState(current_usd=D(1_500))
+    deny(engine.check(intent("meme-sol-early", qty="1.8")), "max_trade")  # 180 > 150
+    assert engine.check(intent("meme-sol-early", qty="1.5")) == Allow()
+
+
+def test_strategy_max_position_is_stricter_than_branch_limit(engine, portfolio):
+    # У стратегии max_position_pct=10 → 10 % от 4 000 = 400; лимит ветки 200 строже — действует 200
+    portfolio.branches["cex-perp"] = BranchState(current_usd=D(1_000))  # 10 % → 100 строже 200
+    deny(engine.check(intent(qty="1.5")), "max_trade")  # 150 > 100
+    assert engine.check(intent(qty="1")) == Allow()
+
+
+# --- плечо и ликвидация ---------------------------------------------------------------
+
+
+def test_leverage_above_branch_limit_is_denied(engine):
+    deny(engine.check(intent(leverage="6")), "leverage")
+    deny(engine.check(intent("meme-sol-early", leverage="2")), "leverage")  # meme — без плеча
+    assert engine.check(intent(leverage="5")) == Allow()
+
+
+def test_liquidation_closer_than_strategy_stop_is_denied(engine, portfolio):
+    # 5× → до ликвидации 100/5 − 0.5 = 19.5 %; стоп стратегии на позицию 10 % → допустимо
+    assert engine.check(intent(leverage="5")) == Allow()
+    # площадка сообщает цену ликвидации 92 при входе 100 → 8 % < стопа 10 %
+    portfolio.liq["BTC-USDT"] = D(92)
+    deny(engine.check(intent(leverage="5")), "liquidation")
+    # без плеча ликвидации нет — правило не применяется
+    assert engine.check(intent(leverage="1")) == Allow()
+
+
+# --- стопы ----------------------------------------------------------------------------
+
+
+def test_strategy_daily_stop_and_drawdown_stop(engine, portfolio):
+    portfolio.stats["cex-perp-hl-trend"] = StrategyStats(pnl_day_pct=D("-3.2"))
+    deny(engine.check(intent()), "strategy_stop_daily")
+    portfolio.stats["cex-perp-hl-trend"] = StrategyStats(pnl_day_pct=D("-2.9"), dd_pct=D("10"))
+    deny(engine.check(intent()), "strategy_stop_dd")
+    portfolio.stats["cex-perp-hl-trend"] = StrategyStats(pnl_day_pct=D("-2.9"), dd_pct=D("9.9"))
+    assert engine.check(intent()) == Allow()
+
+
+def test_branch_stop_day_for_cex_and_week_for_nft(engine, portfolio):
+    portfolio.branches["cex-perp"] = BranchState(current_usd=D(3_800), pnl_day_pct=D("-5"))
+    deny(engine.check(intent()), "branch_stop")
+    portfolio.branches["nft"] = BranchState(
+        current_usd=D(700), pnl_day_pct=D("-2"), pnl_week_pct=D("-30")
+    )
+    deny(engine.check(intent("nft-me-mint", qty="1")), "branch_stop")
+    portfolio.branches["nft"] = BranchState(current_usd=D(800), pnl_week_pct=D("-20"))
+    assert engine.check(intent("nft-me-mint", qty="1")) == Allow()
+
+
+def test_reduce_only_passes_size_rules_but_not_halt_or_venue(engine, portfolio):
+    portfolio.branches["cex-perp"] = BranchState(current_usd=D(4_000), exposure_usd=D(4_000))
+    assert engine.check(intent(qty="5", reduce_only=True)) == Allow()
+    portfolio.venues_down.add("hyperliquid")
+    deny(engine.check(intent(qty="5", reduce_only=True)), "venue_unavailable")
+
+
+# --- потолок реального капитала, площадка, halt, стоп в манифесте ------------------------
+
+
+def test_real_capital_cap_applies_to_live_only(engine, portfolio, monkeypatch):
+    monkeypatch.delenv("REAL_CAPITAL_CAP", raising=False)
+    portfolio.live_deployed = D(950)
+    deny(engine.check(intent(qty="1", mode="live")), "real_capital_cap")  # 950 + 100 > 1 000
+    assert engine.check(intent(qty="1", mode="paper")) == Allow()
+    monkeypatch.setenv("REAL_CAPITAL_CAP", "1200")
+    assert engine.check(intent(qty="1", mode="live")) == Allow()
+
+
+def test_live_orders_need_micro_or_higher(engine):
+    deny(engine.check(intent("nft-me-mint", mode="live")), "rung_mode")  # paper-ступень
+
+
+def test_unavailable_venue_denies_but_keeps_last_known_capital(engine, portfolio):
+    portfolio.venues_down.add("hyperliquid")
+    portfolio.branches["cex-perp"] = BranchState(
+        current_usd=D(3_500), exposure_usd=D(500), stale=True
+    )
+    deny(engine.check(intent()), "venue_unavailable")
+    alloc = engine.allocation(Branch.CEX_PERP)
+    assert alloc.current_usd == D(3_500) and alloc.stale is True
+    assert alloc.base_usd == D(4_000) and alloc.available_usd == D(3_500)
+    assert alloc.max_trade_usd == D(200)
+
+
+def test_halt_denies_everything_until_resume(engine):
+    engine.halt_switch.halt(by="operator")
+    deny(engine.check(intent()), "halted")
+    deny(engine.check(intent("meme-sol-early", qty="0.1", reduce_only=True)), "halted")
+    engine.halt_switch.resume(by="operator")
+    assert engine.check(intent()) == Allow()
+
+
+def test_strategy_without_stop_on_micro_is_denied(portfolio):
+    strategies = dict(STRATEGIES)
+    strategies["cex-perp-hl-trend"] = STRATEGIES["cex-perp-hl-trend"].model_copy(
+        update={"stop": None}
+    )
+    strategies["nft-me-mint"] = STRATEGIES["nft-me-mint"].model_copy(update={"stop": None})
+    engine = RiskEngine(strategies.get, portfolio)
+    deny(engine.check(intent()), "stop_missing")
+    assert engine.check(intent("nft-me-mint")) == Allow()  # на paper стоп ещё не обязателен
+
+
+def test_degraded_strategy_cannot_trade(portfolio):
+    strategies = dict(STRATEGIES)
+    strategies["cex-perp-hl-trend"] = STRATEGIES["cex-perp-hl-trend"].model_copy(
+        update={"status": Status.DEGRADED}
+    )
+    deny(RiskEngine(strategies.get, portfolio).check(intent()), "strategy_inactive")
+
+
+# --- reload --------------------------------------------------------------------------
+
+
+def test_reload_applies_valid_config_and_records_change(portfolio, tmp_path):
+    from lab.core.risk import MemoryConfigLog
+
+    path = tmp_path / "limits.yaml"
+    path.write_text((ROOT / "config" / "limits.yaml").read_text())
+    log = MemoryConfigLog()
+    engine = RiskEngine(STRATEGIES.get, portfolio, limits_path=path, change_log=log)
+    assert engine.check(intent(qty="2")) == Allow()
+
+    text = path.read_text().replace("max_trade_pct: 2\n", "max_trade_pct: 1\n")
+    path.write_text(text)
+    result = engine.reload(by="alex")
+    assert result.applied and result.change is not None
+    assert result.change.who == "alex"
+    assert result.change.diff == {"groups.cex.max_trade_pct": {"old": "2", "new": "1"}}
+    assert log.changes == [result.change]
+    deny(engine.check(intent(qty="2")), "max_trade")  # теперь максимум 100
+
+    path.write_text(text.replace("share_pct: 40", "share_pct: 50"))  # сумма долей ≠ 100
+    bad = engine.reload(by="alex")
+    assert bad.applied is False and bad.error and "100" in bad.error
+    assert engine.limits.for_branch("cex-perp").share_pct == D(40)  # старый конфиг остался
+    assert len(log.changes) == 1
+
+
+# --- общее состояние между процессами (миграция 0003) ----------------------------------
+
+
+def test_db_halt_switch_and_config_log_are_shared_through_postgres(session, portfolio):
+    from datetime import UTC, datetime
+
+    from lab.core.risk import ConfigChange, DbConfigLog, DbHaltSwitch
+
+    bot_side, worker_side = DbHaltSwitch(session), DbHaltSwitch(session)
+    engine = RiskEngine(STRATEGIES.get, portfolio, halt=worker_side)
+    assert engine.check(intent()) == Allow()
+    bot_side.halt(by="operator")
+    deny(engine.check(intent()), "halted")
+    bot_side.resume(by="operator")
+    assert engine.check(intent()) == Allow()
+
+    log = DbConfigLog(session)
+    when = datetime(2026, 9, 5, 12, 0, tzinfo=UTC)
+    change = ConfigChange(
+        who="alex", when=when, path="config/limits.yaml", diff={"x": {"old": 1, "new": 2}}
+    )
+    log.record(change)
+    assert log.changes("config/limits.yaml") == [change]
+
+
+def test_maintenance_margin_from_limits_yaml_sets_liquidation_distance(engine, portfolio):
+    assert engine.limits.for_branch("cex-perp").maintenance_margin_pct == D("0.5")
+    # 5× → 19.5 % до ликвидации; стоп стратегии на позицию 25 % → ликвидация ближе стопа
+    wide = STRATEGIES["cex-perp-hl-trend"].model_copy(
+        update={"stop": StopSpec(daily_pct=D(3), max_position_pct=D(25))}
+    )
+    e = RiskEngine({"cex-perp-hl-trend": wide}.get, portfolio)
+    deny(e.check(intent(leverage="5")), "liquidation")
+    deny(e.check(intent(leverage="4")), "liquidation")  # 24.5 % < 25 %
+    assert e.check(intent(leverage="3")) == Allow()  # 32.83 % > 25 %

@@ -26,6 +26,8 @@ class BranchGroupLimits(_Cfg):
     max_trade_base: Literal["bank", "branch"]
     max_leverage: Decimal = Field(ge=1)
     leverage_follows_leader: bool = False
+    # Поддерживающая маржа площадки, %: расстояние до ликвидации ≈ 100/плечо − эта величина (R20.1).
+    maintenance_margin_pct: Decimal = Field(ge=0, lt=100, default=Decimal("0.5"))
     stop: BranchStop
 
 
