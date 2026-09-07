@@ -460,7 +460,7 @@ def run(
             # Без этой пометки снимок читается неверно: цифры обрываются на пробое стопа,
             # а по метрикам это выглядит как «стратегия просто перестала торговать».
             extra_metrics = dict(extra_metrics or {})
-            extra_metrics["stopped_at"] = result.stopped_at.isoformat()
+            extra_metrics["stopped_at"] = result.stopped_at
             extra_metrics["stop_rule"] = result.stop_rule
             extra_metrics["blocked_signals"] = result.blocked_signals
     except IncompleteData as err:

@@ -39,6 +39,9 @@ _NA = {
     "mint_cost_failed": NotApplicable(reason="только для стратегий nft-mint-*"),
 }
 
+# Факты о ходе прогона: не метрики ветки, но часть снимка — иначе их некуда положить.
+_OUTCOME_KEYS = ("stopped_at", "stop_rule", "blocked_signals")
+
 
 def _d(value: float | int | Decimal) -> Decimal:
     if isinstance(value, Decimal):
@@ -179,9 +182,14 @@ def metrics(
         bh = None
 
     values: dict[str, object] = dict(_NA)
+    outcome: dict[str, object] = {}
     for key, val in (extra or {}).items():
         if key in values:
             values[key] = val
+        elif key in _OUTCOME_KEYS:
+            # Не ветко-специфичная метрика, а факт о ходе прогона (сработал стоп стратегии).
+            # Без этой ветки такие ключи молча терялись: `values` принимает только имена из `_NA`.
+            outcome[key] = val
 
     return Metrics(
         n_trades=n,
@@ -207,6 +215,7 @@ def metrics(
         capital=capital,
         window_from=window[0],
         window_to=window[1],
+        **outcome,  # type: ignore[arg-type]
         **values,  # type: ignore[arg-type]
     )
 

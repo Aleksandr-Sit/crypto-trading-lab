@@ -103,6 +103,11 @@ class Metrics(_Model):
     capital: Decimal
     window_from: datetime
     window_to: datetime
+    # Стоп стратегии в симуляции (G04): без этих полей обрыв цифр на пробое читался бы
+    # как «стратегия сама перестала торговать», а не «её остановили по правилу».
+    stopped_at: datetime | None = None
+    stop_rule: str = ""
+    blocked_signals: int = 0
 
 
 class Criterion(_Model):
