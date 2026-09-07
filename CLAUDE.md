@@ -25,4 +25,24 @@
 
 Если работа продолжается — скажи «продолжи автопилот»: состояние поднимется
 из `.autopilot/state.js`, переспрашивать ничего не нужно.
+
+## Эксплуатация
+
+| Что | Команда |
+|---|---|
+| Развернуть на VPS | `docker compose -f deploy/docker-compose.yml up -d --build` |
+| Обновить | `git pull && docker compose -f deploy/docker-compose.yml up -d --build` (миграции автоматом) |
+| Логи сервиса | `docker compose -f deploy/docker-compose.yml logs -f worker` (или `bot`, `web`) |
+| Доступность площадок | `uv run python -m lab ops status` |
+| Источники: квоты, здоровье, бюджет | `uv run python -m lab ops feeds` |
+| Резервная копия сейчас | `uv run python -m lab ops backup [--dest DIR] [--keep-days N]` |
+| Восстановление | `scripts/restore.sh backups/lab-ГГГГ-ММ-ДД.tar.gz "postgresql://lab:…@localhost:5432/lab"` |
+| Перезагрузить конфиги | `uv run python -m lab ops reload` или `docker compose ... kill -s HUP worker` |
+| Запустить сервис | `uv run python -m lab service worker` (или `bot`, `web`; `--once` — проверка) |
+
+Расписание — `config/schedule.yaml` (Europe/Samara): бэкап 03:00, сверка с площадками
+04:00, утренний отчёт 09:00, поиск кандидатов пн 06:00, переизмерение вс 22:00.
+Watchdog шлёт `alert` в Telegram, если сервис молчит 5 минут. Развёртывание на VPS,
+`.env`, обновление и восстановление — `deploy/README.md`.
+
 <!-- autopilot:end -->

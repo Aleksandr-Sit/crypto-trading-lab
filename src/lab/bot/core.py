@@ -252,6 +252,7 @@ class TraderBot:
             queued = len(self._outbox(s).pending(now=self.now()))
             # ветки, где торговля закрыта для нашего IP/аккаунта (таск 11: Polymarket, Robinhood)
             closed_branches = branch_status_lines(s)
+        self._arm_seed_reminder()  # таск 14 (G10): напоминание «дополни список» взводится один раз
         halted = "ДА" if ladder.halted else "нет"
         by_rung: dict[str, list[str]] = {}
         for r in rows:
@@ -264,6 +265,15 @@ class TraderBot:
         lines.extend(closed_branches)
         lines.append(f"ждут решения: {len(pending)} · в очереди на отправку: {queued}")
         return Reply(text="\n".join(lines))
+
+    def _arm_seed_reminder(self) -> None:
+        """G10: первый заход в `/status` взводит одноразовое напоминание о списке кандидатов."""
+        try:
+            from lab.ops.jobs import SeedReminder
+
+            SeedReminder(self._session, bot=self).arm()
+        except Exception:  # noqa: BLE001 — напоминание не должно ломать команду
+            log.debug("SeedReminder не взведён", exc_info=True)
 
     async def cmd_halt(self, args: list[str]) -> Reply:
         def run(s: Session) -> str:

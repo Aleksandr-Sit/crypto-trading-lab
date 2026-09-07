@@ -92,14 +92,79 @@ def cmd_candidate_add(args: argparse.Namespace) -> int:
 
 
 def cmd_service(args: argparse.Namespace) -> int:
-    print_startup_banner(args.name)
-    if args.name == "web":  # таск 06: uvicorn на WEB_BIND, остальное — в lab.web
-        from lab.web import serve
+    from lab.db.engine import DatabaseUrlMissing
 
-        return serve(_session_factory, once=args.once)
-    if args.name == "bot":  # таск 05
-        return cmd_service_bot(args)
-    return cmd_service_worker(args)  # таск 05: планировщик
+    print_startup_banner(args.name)
+    try:
+        if args.name == "web":
+            return cmd_service_web(args)
+        if args.name == "bot":
+            return cmd_service_bot(args)
+        return cmd_service_worker(args)
+    except DatabaseUrlMissing as err:  # сервисы без базы не поднимаются — скажем это по-русски
+        print(f"Сервис {args.name} не поднят: {err}", file=sys.stderr)
+        return 2
+
+
+def _scope():
+    """Фабрика контекста сессии: `with scope() as session`. Её ждут модули `lab.ops`."""
+    factory = _session_factory()
+    return lambda: session_scope(factory)
+
+
+def _feeds_registry(scope):
+    """Реестр источников: квоты, здоровье, бюджет. Он же — источник для `/feeds` и отчёта."""
+    from lab.ops.feeds_registry import FeedsRegistry
+
+    try:
+        return FeedsRegistry(session_factory=scope)
+    except Exception as err:  # noqa: BLE001 — без базы реестр не поднимется, сервис живёт
+        print(f"Реестр источников не поднят: {err}", file=sys.stderr)
+        return None
+
+
+def _db_beat(scope, service: str, period_s: int = 30):
+    """Фоновый heartbeat сервиса: файл (healthcheck контейнера) и база (watchdog, R32i.2)."""
+    import threading
+
+    from lab.ops.watchdog import beat as db_beat
+
+    _, tick = _heartbeat(service)
+
+    def loop() -> None:
+        while True:
+            tick()
+            try:
+                with scope() as session:
+                    db_beat(session, service)
+            except Exception:  # noqa: BLE001 — обрыв базы не должен ронять сервис
+                pass
+            time.sleep(period_s)
+
+    threading.Thread(target=loop, daemon=True, name=f"heartbeat-{service}").start()
+
+
+def cmd_service_web(args: argparse.Namespace) -> int:
+    """Веб-экран (таск 06) с подключённым реестром источников на `/feeds`."""
+    from lab.web import bind_address, create_app, credentials_from_env
+
+    beat, tick = _heartbeat("web")
+    tick()
+    auth = credentials_from_env(None)
+    if auth is None:
+        print("WEB_USER и WEB_PASSWORD не заданы в .env — веб не поднимаю", file=sys.stderr)
+        return 2
+    host, port = bind_address(None)
+    scope = _scope()
+    app = create_app(scope, feeds=_feeds_registry(scope), auth=auth)
+    print(f"Веб-экран: http://{host}:{port}/ (пользователь {auth[0]}); heartbeat → {beat}")
+    if args.once:
+        return 0
+    _db_beat(scope, "web")
+    import uvicorn
+
+    uvicorn.run(app, host=host, port=port, log_level="info")
+    return 0
 
 
 def _heartbeat(name: str):
@@ -113,7 +178,11 @@ def _heartbeat(name: str):
 
 
 def _trader_bot(env: dict[str, str]):
-    """Тикет 05: TraderBot на aiogram-транспорте; None (с причиной), если нет токена/админа."""
+    """Тикет 05: TraderBot на aiogram-транспорте; None (с причиной), если нет токена/админа.
+
+    Здесь же — швы таска 14: `/feeds` и утренний отчёт читают реестр источников, а
+    подтверждение сигнала (`on_confirm`) уходит в исполнение через риск-ядро (`ops.worker`).
+    """
     from lab.bot import TraderBot
     from lab.bot.telegram import TelegramTransport, make_aiogram_bot
     from lab.core.ladder import Ladder, default_threshold_fn
@@ -124,12 +193,25 @@ def _trader_bot(env: dict[str, str]):
         return None, None, "TELEGRAM_BOT_TOKEN/TELEGRAM_ADMIN_ID не заданы в .env"
     aio = make_aiogram_bot(token)
     factory = _session_factory()
+    scope = lambda: session_scope(factory)  # noqa: E731
+    feeds = _feeds_registry(scope)
+    worker = None
+    try:
+        from lab.ops.worker import Worker
+
+        worker = Worker(scope, env=env)
+    except Exception as err:  # noqa: BLE001 — без исполнения бот всё равно нужен
+        print(f"Исполнение сигналов недоступно: {err}", file=sys.stderr)
     bot = TraderBot(
         session_factory=factory,
         admin_id=int(admin),
         transport=TelegramTransport(aio),
         ladder_factory=lambda s: Ladder(s, threshold=default_threshold_fn(), halt=DbHaltSwitch(s)),
+        feeds_status=feeds,
+        on_confirm=(worker.place_signal if worker is not None else None),
     )
+    if worker is not None:
+        worker.bot = bot
     return bot, aio, None
 
 
@@ -154,29 +236,86 @@ def cmd_service_bot(args: argparse.Namespace) -> int:
 
 
 def cmd_service_worker(args: argparse.Namespace) -> int:
-    """Worker: APScheduler с расписанием из schedule.yaml. Задания ядра (фиды, замеры,
-    сверка, бэкап) регистрируют свои тикеты через `ops.scheduler.register(job)`;
-    здесь — только запуск планировщика и heartbeat."""
-    from lab.ops.scheduler import default_scheduler
+    """Worker (решение §11): доступность площадок при старте, восстановление ордеров,
+    планировщик со всеми заданиями, фиды с квотами, сверка, бэкап, watchdog."""
+    from lab.ops.worker import Worker
 
     beat, tick = _heartbeat("worker")
-    sched = default_scheduler()
     tick()
-    print(
-        f"Сервис worker: планировщик {sched.tz.key}, заданий: {len(sched.jobs())}; "
-        f"heartbeat → {beat}"
-    )
-    if args.once:
+    scope = _scope()
+    bot, _aio, why = _trader_bot(environment())
+    if bot is None:
+        print(f"Карточки в Telegram отключены: {why}", file=sys.stderr)
+    worker = Worker(scope, env=environment(), bot=bot)
+    print(f"Сервис worker: планировщик {worker.scheduler.tz.key}; heartbeat → {beat}")
+    if not args.once:
+        _db_beat(scope, "worker")
+    return worker.run(once=args.once)
+
+
+def cmd_ops(args: argparse.Namespace) -> int:
+    """Эксплуатация: разовый бэкап, перезагрузка конфигов, состояние источников."""
+    scope = _scope()
+    if args.action == "backup":
+        from lab.ops.backup import backup
+
+        result = backup(dest=args.dest, keep_days=args.keep_days)
+        if not result.ok:
+            print(f"Бэкап не сделан: {result.error}", file=sys.stderr)
+            return 1
+        print(
+            f"Копия: {result.path} ({result.size_bytes} байт);"
+            f" удалено старых: {len(result.rotated)}"
+        )
         return 0
-    sched.start()
-    try:
-        while True:
-            tick()
-            time.sleep(10)
-    except KeyboardInterrupt:
+    if args.action == "reload":
+        from lab.ops.reload import ConfigReloader
+
+        reloader = ConfigReloader(config_dir=None, session_factory=scope)
+        reloader.reload(by="operator")  # снимок
+        report = reloader.reload(by=args.by)
+        if not report.applied:
+            print(f"Конфиги не применены: {report.error}", file=sys.stderr)
+            return 1
+        changed = f": {', '.join(report.changed)}" if report.changed else ""
+        print("Конфиги перезагружены" + changed)
         return 0
-    finally:
-        sched.shutdown()
+    if args.action == "feeds":
+        registry = _feeds_registry(scope)
+        if registry is None:
+            return 1
+        for row in registry.status():
+            quota = (
+                f"{row.quota_used}/{row.quota_limit} за {row.quota_period}"
+                if row.quota_limit
+                else "без лимита"
+            )
+            forecast = f", кончится {row.exhausted_at:%d.%m %H:%M}" if row.exhausted_at else ""
+            print(f"{row.id:<18} {row.health:<9} {quota}{forecast}")
+        b = registry.budget()
+        print(
+            f"Бюджет: {b.spent_usd:.2f} из {b.month_limit_usd:.2f} USD,"
+            f" прогноз {b.forecast_usd:.2f}"
+        )
+        return 0
+    if args.action == "status":
+        from lab.ops.availability import (
+            check_all,
+            default_access_checks,
+            default_probes,
+            format_availability,
+        )
+
+        registry = _feeds_registry(scope)
+        with scope() as session:
+            rows = check_all(
+                default_probes(quota=registry),
+                session=session,
+                access_checks=default_access_checks(),
+            )
+        print(format_availability(rows))
+        return 0
+    return 2
 
 
 def cmd_data_backfill(args: argparse.Namespace) -> int:
@@ -258,6 +397,15 @@ def build_parser() -> argparse.ArgumentParser:
     bf.add_argument("--days", type=int, default=365)
     bf.add_argument("--root", default="data", help="корень Parquet-хранилища")
     bf.set_defaults(func=cmd_data_backfill)
+
+    ops = sub.add_parser("ops", help="эксплуатация: бэкап, перезагрузка конфигов, источники")
+    ops.add_argument(
+        "action", choices=["backup", "reload", "feeds", "status"], help="что сделать"
+    )
+    ops.add_argument("--dest", help="каталог копий (по умолчанию BACKUP_DIR)")
+    ops.add_argument("--keep-days", type=int, default=14, help="сколько суток хранить копии")
+    ops.add_argument("--by", default="operator", help="кто перезагружает конфиги")
+    ops.set_defaults(func=cmd_ops)
 
     svc = sub.add_parser("service", help="запуск сервиса worker|bot|web")
     svc.add_argument("name", choices=["worker", "bot", "web"])

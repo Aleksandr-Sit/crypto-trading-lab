@@ -1,0 +1,153 @@
+# Реестр источников (решение §12): квота (лимит/период), счётчик, health-check,
+# приоритет и запасной источник. Бюджетомер (A01) суммирует `cost_month` подписок
+# и фактические траты pay-per-use; лимит — `budget_month_usd` (В3: $50), поверх —
+# переменная окружения BUDGET_MONTH_USD.
+#
+# quota_period: second | minute | hour | day | month. quota_limit: null — лимита нет
+# (или он по частоте, а не по объёму) — тогда счётчик ведётся, прогноз не строится.
+# priority: меньше — предпочтительнее при выборе источника одного вида.
+# fallback: id запасного источника, на который уходим при исчерпании квоты или отказе.
+
+budget_month_usd: 50
+warn_pct: 80          # первое предупреждение бюджетомера, % от лимита
+
+feeds:
+  # --- биржи (CEX) и Hyperliquid ------------------------------------------------
+  bybit:
+    name: Bybit REST
+    kind: cex
+    quota_limit: 600
+    quota_period: minute
+    priority: 10
+    fallback: binance
+  okx:
+    name: OKX REST
+    kind: cex
+    quota_limit: 1200
+    quota_period: minute
+    priority: 20
+    fallback: binance
+  binance:
+    name: Binance REST
+    kind: cex
+    quota_limit: 6000
+    quota_period: minute
+    priority: 30
+  hyperliquid:
+    name: Hyperliquid info API
+    kind: cex
+    quota_limit: 1200       # вес 1200/мин на IP; вызов info — вес 20
+    quota_period: minute
+    priority: 10
+
+  # --- сети (см. config/chains.yaml — там же ключи и веса) ----------------------
+  solana:
+    name: Helius (Solana)
+    kind: chain
+    quota_limit: 1000000    # free: 1M кредитов/мес
+    quota_period: month
+    priority: 10
+  evm:
+    name: Alchemy / Etherscan V2 (EVM, BNB)
+    kind: chain
+    quota_limit: 30000000   # free: 30M CU/мес
+    quota_period: month
+    priority: 10
+  ton:
+    name: tonapi.io
+    kind: chain
+    quota_limit: null       # без ключа лимит по частоте (0.25 rps), не по объёму
+    quota_period: second
+    priority: 10
+  hyperliquid_user:
+    name: Hyperliquid userFills
+    kind: chain
+    quota_limit: 1200
+    quota_period: minute
+    priority: 10
+  stonfi:
+    name: STON.fi (цены TON)
+    kind: dex
+    quota_limit: null
+    quota_period: minute
+    priority: 20
+
+  # --- мем-коины и DEX ----------------------------------------------------------
+  dexscreener:
+    name: DEX Screener
+    kind: dex
+    quota_limit: 300
+    quota_period: minute
+    priority: 10
+    fallback: pumpportal
+  pumpportal:
+    name: PumpPortal
+    kind: dex
+    quota_limit: null
+    quota_period: minute
+    priority: 20
+
+  # --- NFT ----------------------------------------------------------------------
+  magiceden:
+    name: Magic Eden
+    kind: nft
+    quota_limit: 120
+    quota_period: minute
+    priority: 10
+    fallback: opensea
+  opensea:
+    name: OpenSea
+    kind: nft
+    quota_limit: 240
+    quota_period: minute
+    priority: 20
+  tensor:
+    name: Tensor
+    kind: nft
+    quota_limit: null
+    quota_period: minute
+    priority: 30
+  blur:
+    name: Blur
+    kind: nft
+    quota_limit: null
+    quota_period: minute
+    priority: 30
+  zora:
+    name: Zora
+    kind: nft
+    quota_limit: null
+    quota_period: minute
+    priority: 30
+  alchemy_nft:
+    name: Alchemy NFT API
+    kind: nft
+    quota_limit: 30000000
+    quota_period: month
+    priority: 20
+
+  # --- предсказания и акции -----------------------------------------------------
+  polymarket:
+    name: Polymarket Gamma/CLOB
+    kind: prediction
+    quota_limit: null
+    quota_period: minute
+    priority: 10
+  polymarket_data:
+    name: Polymarket Data API
+    kind: prediction
+    quota_limit: 6000       # 1000 req/10 с сведены к весам (см. DATA_ENDPOINT_LIMITS)
+    quota_period: minute
+    priority: 10
+  robinhood:
+    name: Robinhood Crypto API
+    kind: stocks
+    quota_limit: 6000
+    quota_period: hour
+    priority: 10
+  alphavantage:
+    name: Alpha Vantage (свечи акций)
+    kind: stocks
+    quota_limit: 25         # free: 25 запросов в сутки
+    quota_period: day
+    priority: 20
