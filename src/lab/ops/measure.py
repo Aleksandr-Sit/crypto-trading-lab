@@ -213,14 +213,47 @@ def _benchmark(
 def _edge_candles(
     store: Any, venue: str, instrument: str, tf: str, window: tuple[datetime, datetime]
 ) -> list[Candle]:
-    """Первая и последняя свеча окна, без чтения середины."""
+    """Первая и последняя свеча окна, без чтения середины.
+
+    Границы спрашиваем у хранилища запросом (min/max ts), а не «первые 500 баров»: ряд
+    бенчмарка может начинаться сильно позже левой границы окна или обрываться задолго
+    до правой — тогда поиск по краям вернул бы пусто, и сравнение с BTC потерялось бы
+    на ровном месте. Хранилище без `query` (фейки в тестах) читается как раньше, целиком.
+    """
     step = parse_tf(tf)
-    first = _from_store(store, venue, instrument, tf, (window[0], window[0] + step * EDGE_BARS))
-    last_from = max(window[0], window[1] - step * EDGE_BARS)
-    last = _from_store(store, venue, instrument, tf, (last_from, window[1]))
+    edges = _edge_ts(store, venue, instrument, tf, window)
+    if edges is None:
+        rows = _from_store(store, venue, instrument, tf, window)
+        return [rows[0], rows[-1]] if rows else []
+    first_ts, last_ts = edges
+    first = _from_store(store, venue, instrument, tf, (first_ts, first_ts + step))
+    last = _from_store(store, venue, instrument, tf, (last_ts, last_ts + step))
     if not first or not last:
         return []
     return [first[0], last[-1]]
+
+
+def _edge_ts(
+    store: Any, venue: str, instrument: str, tf: str, window: tuple[datetime, datetime]
+) -> tuple[datetime, datetime] | None:
+    """Время первой и последней свечи в окне; None — если хранилище не умеет запросы."""
+    if not hasattr(store, "query"):
+        return None
+    try:
+        rows = store.query(
+            "select min(ts) as first_ts, max(ts) as last_ts from {candles} "
+            "where ts >= ? and ts < ?",
+            venue,
+            instrument,
+            tf,
+            params=[window[0], window[1]],
+        )
+    except Exception as err:  # noqa: BLE001 — битое хранилище не роняет замер
+        log.info("Границы ряда %s %s %s: %s", venue, instrument, tf, err)
+        return None
+    if not rows or rows[0].get("first_ts") is None:
+        return None
+    return rows[0]["first_ts"], rows[0]["last_ts"]
 
 
 def _feed_source(venue: str, feed_factory: Callable[[str], Any] | None):
