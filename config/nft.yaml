@@ -18,6 +18,11 @@ markets:
     weight: 1
     key_env: OPENSEA_API_KEY
     key_ttl_days: 7           # ключ обновляется автоматически до истечения
+    enabled: false            # 07.09.2026: OpenSea выдаёт ключи только одобренным аккаунтам
+                              # («account is not approved for API key creation»). Без ключа
+                              # v2 отвечает 401, поэтому источник выключен: Ethereum закрывают
+                              # alchemy_nft (ключ есть) и blur (on-chain через тот же Alchemy).
+                              # Одобрят — вписать OPENSEA_API_KEY, поставить true, lab ops reload
   zora:
     feed_id: zora
     chain: base
