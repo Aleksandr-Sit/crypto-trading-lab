@@ -14,6 +14,7 @@ P&L сделки считается по референсным ценам (ми
 
 from __future__ import annotations
 
+from collections import deque
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -273,38 +274,55 @@ class SimResult:
     blocked_signals: int = 0
 
 
-def _stop_breach(
-    stop: StopSpec | None,
-    capital: Decimal,
-    closed: Sequence[ClosedTrade],
-    now: datetime,
-) -> str:
-    """Пробит ли стоп стратегии — теми же формулами, что у живого риск-ядра.
+class _StopTracker:
+    """Следит за стопом стратегии по мере закрытия сделок — теми же формулами, что риск-ядро.
 
     Просадка: кривая по ЗАКРЫТЫМ сделкам, глубина от пика в % от капитала
-    (`ops.portfolio._drawdown_pct`). Дневной: сумма pnl_net за последние сутки в % от него же
+    (`ops.portfolio._drawdown_pct`). Дневной: сумма `pnl_net` за последние сутки в % от него же
     (`LivePortfolio.strategy_stats`). Совпадение формул тут важнее краткости: разойдутся —
     и бэктест снова начнёт обещать не то, что сделает живая система.
+
+    Считает НАКОПИТЕЛЬНО, а не пересчётом всей кривой на каждом баре: у сеточных стратегий
+    тысячи сделок и сотни тысяч баров, и полный пересчёт превращал замер в часы работы
+    процессора при простаивающей сети.
     """
-    if stop is None or capital <= 0 or not closed:
-        return ""
-    if stop.daily_pct is not None:
-        edge = now - timedelta(days=1)
-        day = sum(
-            (t.pnl_net for t in closed if t.closed_at is not None and t.closed_at >= edge),
-            Decimal(0),
-        )
-        if -(day * 100 / capital) >= stop.daily_pct:
-            return "strategy_stop_daily"
-    if stop.max_dd_pct is not None:
-        equity = peak = worst = Decimal(0)
-        for t in closed:
-            equity += t.pnl_net
-            peak = max(peak, equity)
-            worst = min(worst, equity - peak)
-        if (-worst * 100 / capital) >= stop.max_dd_pct:
+
+    def __init__(self, stop: StopSpec | None, capital: Decimal) -> None:
+        self.stop = stop
+        self.capital = capital
+        self.active = stop is not None and capital > 0
+        self._seen = 0
+        self._equity = Decimal(0)
+        self._peak = Decimal(0)
+        self._worst = Decimal(0)
+        self._day: deque[tuple[datetime, Decimal]] = deque()
+        self._day_sum = Decimal(0)
+
+    def breach(self, closed: Sequence[ClosedTrade], now: datetime) -> str:
+        if not self.active:
+            return ""
+        for trade in closed[self._seen :]:
+            self._equity += trade.pnl_net
+            self._peak = max(self._peak, self._equity)
+            self._worst = min(self._worst, self._equity - self._peak)
+            if trade.closed_at is not None:
+                self._day.append((trade.closed_at, trade.pnl_net))
+                self._day_sum += trade.pnl_net
+        self._seen = len(closed)
+
+        stop = self.stop
+        assert stop is not None  # active == stop is not None
+        if stop.daily_pct is not None:
+            edge = now - timedelta(days=1)
+            while self._day and self._day[0][0] < edge:
+                self._day_sum -= self._day.popleft()[1]
+            if -(self._day_sum * 100 / self.capital) >= stop.daily_pct:
+                return "strategy_stop_daily"
+        if stop.max_dd_pct is not None and (
+            (-self._worst * 100 / self.capital) >= stop.max_dd_pct
+        ):
             return "strategy_stop_dd"
-    return ""
+        return ""
 
 
 def _opens_exposure(position: Decimal, signal: Signal) -> bool:
@@ -333,6 +351,7 @@ def simulate(
     stopped_at: datetime | None = None
     stop_rule = ""
     blocked = 0
+    tracker = _StopTracker(stop, capital)
     for bar in candles:
         if prev is not None and bar.ts - prev.ts != engine.step:
             raise IncompleteData(
@@ -343,7 +362,7 @@ def simulate(
         seen += 1
         engine.on_bar(bar)
         if stopped_at is None:
-            stop_rule = _stop_breach(stop, capital, engine.closed, bar.ts)
+            stop_rule = tracker.breach(engine.closed, bar.ts)
             if stop_rule:
                 stopped_at = bar.ts
         for signal in strategy.on_bar(bar):
