@@ -314,7 +314,15 @@ def cmd_service_bot(args: argparse.Namespace) -> int:
     tick()
     if bot is None:
         print(f"Сервис bot: {why}; heartbeat → {beat}")
-        return 0 if args.once else 1
+        if args.once:
+            return 0
+        # Опрашивать Telegram нечем, но выходить нельзя: под `restart: unless-stopped`
+        # это карусель перезапусков (17 за четыре минуты), лог забит стартовыми
+        # сообщениями, healthcheck мигает. Стоим живыми с heartbeat'ом, пока в .env
+        # не появится токен и сервис не перезапустят — так это и описано в README.
+        while True:
+            tick()
+            time.sleep(30)
     if args.once:
         print(f"Сервис bot готов: админ {bot.admin_id}; heartbeat → {beat}")
         return 0
