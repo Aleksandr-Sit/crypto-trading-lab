@@ -174,6 +174,12 @@
   `executors.polymarket`.
 - **Docker-демона здесь нет** — проверяется только `docker compose ... config`, `up` не
   запускается. Сервисы отлаживать через `lab service <s> --once`.
+- **Compose читает `.env` рядом с собой, то есть `deploy/.env`, а не корневой.** Подстановки
+  `${WEB_BIND}`, `${DB_BIND}`, `${POSTGRES_PASSWORD}` без ссылки `deploy/.env → ../.env`
+  молча уезжают в умолчания: веб встаёт на `127.0.0.1:8080`, пароль базы становится `lab`.
+  Отказ тихий — `up` проходит, просто не тот порт. Ссылку делает `deploy/setup.sh`; проверка —
+  `docker compose -f deploy/docker-compose.yml config | grep published`. На env_file внутри
+  сервисов это не влияет: в контейнеры `../.env` попадает и без ссылки.
 - **Два «registry» и два «ladder».** `strategies.registry` ≠ `core.registry`;
   `core.ladder` (ступени) ≠ `strategies.meme.ladder` (лесенка продаж). Смотри импорт.
 

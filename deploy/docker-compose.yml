@@ -1,5 +1,10 @@
 # Запуск: docker compose -f deploy/docker-compose.yml up -d  (из корня репозитория)
 # Секреты — из ../.env по именам .env.example. Данные Postgres — в volume lab_pgdata.
+#
+# ВАЖНО: подстановки ${WEB_BIND}, ${DB_BIND}, ${POSTGRES_PASSWORD} ниже compose берёт
+# не из env_file, а из .env РЯДОМ С ЭТИМ ФАЙЛОМ, то есть из deploy/.env. Поэтому
+# deploy/setup.sh делает ссылку deploy/.env → ../.env. Если ставите руками — сделайте её
+# сами (ln -s ../.env deploy/.env), иначе порт веба и пароль базы молча уедут в умолчания.
 name: crypto-trading-lab
 
 x-lab-service: &lab-service

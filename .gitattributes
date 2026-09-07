@@ -1,0 +1,11 @@
+# Проект уезжает в Linux-контейнеры, а собирается на Windows. Без этого файла
+# git archive кладёт в архив CRLF (core.autocrlf=true), и на сервере bash-скрипты
+# падают с "$'\r': command not found", а Dockerfile ломается на середине строки.
+# Отказ тихий: архив собирается, копируется и распаковывается — валится только запуск.
+* text=auto eol=lf
+
+*.png  binary
+*.jpg  binary
+*.gz   binary
+*.duckdb binary
+*.parquet binary

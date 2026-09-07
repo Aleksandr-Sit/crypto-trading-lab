@@ -41,8 +41,14 @@ bash deploy/setup.sh --help            # что он делает
 ```bash
 git clone <репозиторий> crypto-trading-lab && cd crypto-trading-lab
 cp .env.example .env                   # копия работает как есть
+ln -s ../.env deploy/.env              # без ссылки compose не увидит WEB_BIND и пароль базы
 nano .env                              # вписать секреты: без них система идёт в режиме замера
 ```
+
+Про ссылку: подстановки `${WEB_BIND}`, `${DB_BIND}`, `${POSTGRES_PASSWORD}` compose берёт
+из `.env` рядом с compose-файлом, то есть из `deploy/.env`, а не из корневого. Без ссылки
+эти три значения молча заменяются умолчаниями — веб встанет на `127.0.0.1:8080`, даже если
+в `.env` указан другой порт. `deploy/setup.sh` делает ссылку сам.
 
 Дальше — `.env` (раздел 2) и первый запуск руками (раздел 3).
 
@@ -59,7 +65,7 @@ nano .env                              # вписать секреты: без �
 | `DATABASE_URL` | в compose не используется (compose подставляет `…@db:5432/lab` сам); значение из `.env.example` — для запуска CLI и alembic с хоста |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID` | бот и единственный админ, от кого принимаются команды |
 | `WEB_USER`, `WEB_PASSWORD` | HTTP Basic веб-экрана; не заданы — пароль генерируется при каждом старте и печатается в лог |
-| `WEB_BIND` | адрес:порт веба, по умолчанию `127.0.0.1:8080` |
+| `WEB_BIND` | адрес:порт веба, по умолчанию `127.0.0.1:8080`; если 8080 на сервере уже занят другим проектом — поставить свободный, например `127.0.0.1:8090` |
 | `BACKUP_DIR` | каталог копий внутри контейнера (том `lab_backups`, по умолчанию `/app/backups`) |
 | `BUDGET_MONTH_USD` | лимит на платные источники, по умолчанию 50 |
 | `REAL_CAPITAL_CAP` | потолок реального капитала первой фазы |
@@ -149,3 +155,5 @@ docker compose -f deploy/docker-compose.yml kill -s HUP worker
 | `bot` пишет «TELEGRAM_… не заданы» | пустые `TELEGRAM_BOT_TOKEN`/`TELEGRAM_ADMIN_ID` |
 | площадка `гео-блок` в `ops status` | биржа закрыта для IP сервера — ветка живёт в режиме замера |
 | `migrate` упал | `docker compose ... run --rm migrate uv run alembic upgrade head` и смотреть вывод |
+| `port is already allocated` при старте `web` или `db` | порт занят соседним проектом: `ss -tlnp \| grep 8080`, потом свободный порт в `WEB_BIND` (или `DB_BIND`) и `up -d` заново |
+| поменял `WEB_BIND`, а веб всё равно на 8080 | нет ссылки `deploy/.env` → `../.env` (раздел 1.2); проверить `docker compose -f deploy/docker-compose.yml config \| grep published` |
