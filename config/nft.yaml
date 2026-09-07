@@ -18,11 +18,15 @@ markets:
     weight: 1
     key_env: OPENSEA_API_KEY
     key_ttl_days: 7           # ключ обновляется автоматически до истечения
-    enabled: false            # 07.09.2026: OpenSea выдаёт ключи только одобренным аккаунтам
-                              # («account is not approved for API key creation»). Без ключа
-                              # v2 отвечает 401, поэтому источник выключен: Ethereum закрывают
-                              # alchemy_nft (ключ есть) и blur (on-chain через тот же Alchemy).
-                              # Одобрят — вписать OPENSEA_API_KEY, поставить true, lab ops reload
+    enabled: true             # 07.09.2026: обычные API-ключи OpenSea даёт только одобренным
+                              # аккаунтам, но Scoped Token из кабинета работает ЧАСТИЧНО:
+                              # /collections и /collections/{c}/stats — 200,
+                              # /listings/... и /events/... — 401 (нет таких прав у токена).
+                              # То есть отсюда берём снимок коллекции и пол, а листинги и
+                              # продажи — из alchemy_nft и blur. Дадут полный ключ — 401 уйдут
+                              # сами, менять ничего не нужно.
+                              # Проверять только через httpx: urllib Cloudflare режет с 403
+                              # (error 1010, «подпись клиента»), и это НЕ проблема ключа.
   zora:
     feed_id: zora
     chain: base
