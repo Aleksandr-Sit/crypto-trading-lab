@@ -257,14 +257,24 @@ def _edge_ts(
 
 
 def _feed_source(venue: str, feed_factory: Callable[[str], Any] | None):
-    """`(instrument, tf, from, to) -> candles` поверх фида площадки; отказ → `incomplete`."""
+    """`(instrument, tf, from, to) -> candles` поверх фида площадки; отказ → `incomplete`.
+
+    Фид создаётся ОДИН раз на замер и переиспользуется: `core.measure.run` спрашивает окно
+    кусками, а сборка клиента ccxt тянет список рынков площадки (мегабайты). С новым клиентом
+    на каждый кусок замер на минутках растягивался с минут до десятков минут.
+    """
     factory = feed_factory or _default_feed_factory
+    cached: list[Any] = []
 
     def source(instrument: str, tf: str, from_ts: datetime, to_ts: datetime) -> Sequence[Candle]:
-        try:
-            feed = factory(venue)
-        except Exception as err:  # noqa: BLE001
-            raise ConnectionError(f"фид {venue} не собран: {err}") from err
+        if cached:
+            feed = cached[0]
+        else:
+            try:
+                feed = factory(venue)
+            except Exception as err:  # noqa: BLE001
+                raise ConnectionError(f"фид {venue} не собран: {err}") from err
+            cached.append(feed)
         if feed is None:
             raise ConnectionError(
                 f"нет свечей {venue} {instrument} {tf} в хранилище и фид недоступен — "
