@@ -60,7 +60,7 @@
 | `feeds.polymarket` | рынки, история цен, лидерборд, позиции | `PolymarketFeed`, `pm_position_payload` (инструмент = `token_id`, не рынок) |
 | `feeds.robinhood` | крипта Robinhood, подпись Ed25519 | `RobinhoodFeed`, `Ed25519Signer`, `FakeRhTransport` |
 | `feeds.stocks` | дневные свечи акций | `StockFeed`, `make_stock_provider` (`STOCK_DATA_PROVIDER`) |
-| `feeds.social` | Telegram-каналы авторов, парсер сигналов | читалка Telethon (лениво), `parser`, журнал `signals_public` |
+| `feeds.social` | Telegram-каналы авторов, парсер сигналов | `make_reader` (без ключей — `TmePreviewReader` через `t.me/s/`, с `TELEGRAM_API_ID/HASH` — `TelegramReader` на Telethon), `ChannelMessage`, `parser`, журнал `signals_public` |
 | `feeds.quota` | шов квот для всех фидов | `FeedsRegistry.use(feed_id, n)`, `NullQuota`, `MemoryFeedsRegistry` |
 | `executors.*` | ордера: `cex`, `dex`, `nft` (+минт), `polymarket`, `robinhood` | контракт `Executor`; `executors.registry.register/get/all`; `executors.access.branch_mode` |
 | `strategies` | правила | `Strategy` (`on_bar/on_event -> [Signal]`), `strategies.registry.build/manifest/all`, `inputs_hash` |
