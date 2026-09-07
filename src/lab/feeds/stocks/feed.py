@@ -1,7 +1,8 @@
 """Провайдеры дневных свечей акций и фид поверх `CandleStore`.
 
 - `YfinanceProvider` — без ключа (`yfinance`, импорт ленивый; `download=` подменяется в тестах);
-- `AlphaVantageProvider(api_key, fetch=)` — `TIME_SERIES_DAILY` (бесплатный тариф: 25 запросов/день);
+- `AlphaVantageProvider(api_key, fetch=)` — `TIME_SERIES_DAILY`
+  (бесплатный тариф: 25 запросов/день);
 - `NoStockProvider` — «недоступен» с причиной, не падает.
 Выбор — `make_stock_provider(env)` по `STOCK_DATA_PROVIDER` (yfinance | alphavantage)."""
 
@@ -128,9 +129,18 @@ class YfinanceProvider:
         for idx, row in frame.iterrows():
             ts = idx.to_pydatetime()
             ts = ts.replace(tzinfo=UTC) if ts.tzinfo is None else ts.astimezone(UTC)
-            get = (
-                (lambda k: row[(k, ticker)]) if hasattr(row.index, "levels") else (lambda k: row[k])
-            )
+            # `row` связывается значением по умолчанию: иначе замыкание смотрит на
+            # переменную цикла и при отложенном вызове отдаёт последнюю строку фрейма.
+            if hasattr(row.index, "levels"):
+
+                def get(k: str, _row=row):  # noqa: ANN001, ANN202
+                    return _row[(k, ticker)]
+
+            else:
+
+                def get(k: str, _row=row):  # noqa: ANN001, ANN202
+                    return _row[k]
+
             out.append(
                 Candle(
                     instrument=ticker,

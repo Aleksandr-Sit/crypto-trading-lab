@@ -1,9 +1,11 @@
 """Интерфейс индикатора (G08): `Indicator.compute(frame) -> frame`.
 
 v0 — по публичным описаниям; v1 — по скрипту пользователя: v1 наследует тот же класс, меняет
-`version = "v1"` и логику `compute`, тест `tests/strategies/test_indicators.py::test_indicator_reference_values`
+`version = "v1"` и логику `compute`, тест
+`tests/strategies/test_indicators.py::test_indicator_reference_values`
 сверяет с эталоном (`tests/strategies/fixtures/indicator_reference.csv`).
-Где логика неизвестна — `compute` поднимает `IndicatorNotPorted` с меткой `[ИНДИКАТОР — нужен скрипт]`.
+Где логика неизвестна — `compute` поднимает `IndicatorNotPorted`
+с меткой `[ИНДИКАТОР — нужен скрипт]`.
 """
 
 from __future__ import annotations

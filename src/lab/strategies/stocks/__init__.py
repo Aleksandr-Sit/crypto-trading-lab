@@ -1,5 +1,6 @@
 """Сигналы по акциям (G01.2, История 85a): те же стратегии с правилами на дневных свечах акций,
-`asset_class: stock`, ветка `rh`, площадка `stocks` — сигнал без исполнения (ступень `signal` навсегда,
+`asset_class: stock`, ветка `rh`, площадка `stocks` — сигнал без исполнения
+(ступень `signal` навсегда,
 исполнение оператором вручную, отметка кнопкой в боте)."""
 
 from __future__ import annotations
@@ -71,7 +72,8 @@ def make_stock_strategy(
     params: dict[str, Any] | None = None,
     timeframe: str = "1d",
 ) -> StockSignalStrategy:
-    """Стратегия каталога на акциях: `cex-spot-indicator-x` → `rh-indicator-x` с `asset_class: stock`."""
+    """Стратегия каталога на акциях: `cex-spot-indicator-x` → `rh-indicator-x`
+    с `asset_class: stock`."""
     cls = registry.klass(strategy_id)
     manifest = stock_manifest(
         registry.manifest(strategy_id), tickers, params=params, timeframe=timeframe

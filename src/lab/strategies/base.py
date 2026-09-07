@@ -69,7 +69,8 @@ class Strategy:
         return self.manifest.params
 
     def reset(self) -> None:
-        """Сброс внутреннего состояния (walk-forward создаёт свежие экземпляры, но и это пригодится)."""
+        """Сброс внутреннего состояния (walk-forward создаёт свежие экземпляры,
+        но и это пригодится)."""
 
     def on_bar(self, bar: Candle) -> list[Signal]:
         return []

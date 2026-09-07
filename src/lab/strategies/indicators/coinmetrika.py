@@ -144,7 +144,8 @@ class MonthlyTrendFlip(BaseIndicator):
     «пользовательский RSI» — две сглаженные линии с зонами 80/20. Гипотеза: Supertrend(10, 3)
     (или EMA(3)/EMA(10)) на месячных свечах + EMA(3)/EMA(8) от RSI(14). BUY = флип тренда вверх,
     подтверждённый выходом быстрого RSI из зоны oversold в окне ±window месяцев.
-    Вход — дневной фрейм. Колонки: `trend` (+1/−1), `rsi_fast`, `rsi_slow`, `signal_buy`, `signal_sell`."""
+    Вход — дневной фрейм. Колонки: `trend` (+1/−1), `rsi_fast`, `rsi_slow`,
+    `signal_buy`, `signal_sell`."""
 
     name: ClassVar[str] = "monthly-trend-flip"
     source: ClassVar[str] = SCREENSHOTS + "coinmetrika-2-btc-1m-trend-rsi.png"
@@ -201,7 +202,8 @@ class MonthlyTrendFlip(BaseIndicator):
         cols = {
             name: frame.expand_from(m, name, "1M") for name in ("trend", "rsi_fast", "rsi_slow")
         }
-        # сигнал месяца становится известен в первый день следующего месяца — ставим его там один раз
+        # сигнал месяца становится известен в первый день следующего месяца —
+        # ставим его там один раз
         for name in ("signal_buy", "signal_sell"):
             expanded = np.nan_to_num(frame.expand_from(m, name, "1M"))
             first = np.zeros(len(frame))
@@ -218,7 +220,8 @@ def _month(t) -> tuple[int, int]:
 
 class CycleMomentum(BaseIndicator):
     """Скриншот 3: «Cycle Momentum CoinMetrika» — гистограмма, шкала −25…125, уровни 0/25/75/100.
-    Гипотеза формы: (RSI(period) − 50)·2.5 — шкала −125…125, зелёные столбцы > 0. Формула неизвестна."""
+    Гипотеза формы: (RSI(period) − 50)·2.5 — шкала −125…125, зелёные столбцы > 0.
+    Формула неизвестна."""
 
     name: ClassVar[str] = "cycle-momentum"
     source: ClassVar[str] = SCREENSHOTS + "coinmetrika-3-tradingview-indicators-list.png"

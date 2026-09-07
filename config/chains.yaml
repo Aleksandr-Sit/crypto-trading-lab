@@ -1,0 +1,59 @@
+# Сети (G07, История 64). Включение — флагом CHAINS_ENABLED (список через запятую);
+# порядок здесь, а не во флаге: Solana → Ethereum/Base → BNB → TON, HL-user последним.
+order: [solana, evm, bnb, ton, hyperliquid_user]
+
+chains:
+  solana:
+    feed_id: solana
+    networks: [solana]
+    weight: 1
+    quota_limit: 1000000        # Helius free: 1M кредитов/мес, 2 RPS на Enhanced
+    quota_period: month
+    key_env: HELIUS_API_KEY
+    note: "Helius RPC + Enhanced Transactions (парсинг свопов по кошельку)"
+  evm:
+    feed_id: evm
+    networks: [ethereum, base]
+    weight: 1
+    quota_limit: 30000000       # Alchemy free: 30M CU/мес; Etherscan V2 — 5 rps
+    quota_period: month
+    key_env: ETHERSCAN_API_KEY
+    note: "Alchemy RPC + Etherscan V2 (один ключ на 60+ сетей, сеть — chainid)"
+  bnb:
+    feed_id: evm
+    networks: [bnb]
+    weight: 1
+    quota_limit: 30000000
+    quota_period: month
+    key_env: ETHERSCAN_API_KEY
+    note: "BNB Chain через тот же Etherscan V2 (chainid 56) и публичный RPC"
+  ton:
+    feed_id: ton
+    networks: [ton]
+    weight: 1
+    quota_limit: null           # tonapi без ключа — 0.25 rps, лимит по частоте, не по объёму
+    quota_period: second
+    key_env: TONAPI_KEY
+    note: "tonapi.io /v2/accounts/{addr}/events + цены STON.fi"
+  hyperliquid_user:
+    feed_id: hyperliquid
+    networks: [hyperliquid]
+    weight: 20                  # вес запроса HL из таска 04
+    quota_limit: 1200           # 1200 weight/мин на IP
+    quota_period: minute
+    key_env: null
+    note: "userFills / userFillsByTime (не более 10 000 последних филлов)"
+
+# Пороги отбора кошельков (Истории 57–59, 63). Меняются здесь, не в коде.
+wallets:
+  min_trades: 30                # порог В12 — меньше сделок нечего мерить
+  min_win_rate_pct: 45
+  max_dd_pct: 50
+  min_age_days: 30              # моложе — флаг too_young
+  min_survived_pct: 30          # доля токенов, доживших до конца окна
+  wash_round_trip_s: 300        # покупка и продажа того же токена внутри окна — подозрение на wash
+  wash_share_pct: 20            # доля таких пар от всех сделок
+  own_token_share_pct: 50       # доля объёма в одном токене, где кошелёк — ранний держатель
+  single_luck_share_pct: 60     # доля лучшей сделки в суммарной прибыли
+  lag_delays_s: [5, 30, 120]    # задержки для copy_lag_cost (История 59)
+  leader_min_score_pct: 0       # переизмерение: EV ниже — копирование снимается

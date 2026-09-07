@@ -41,7 +41,8 @@ def channel_slug(url: str) -> str | None:
 
 
 def channels_from_authors(path: Path | str | None = None) -> list[tuple[str, str]]:
-    """[(author_id, channel_slug)] — только telegram-каналы с реальной ссылкой; боты не включаются."""
+    """[(author_id, channel_slug)] — только telegram-каналы с реальной ссылкой;
+    боты не включаются."""
     raw = (
         yaml.safe_load(Path(path or CONFIG_DIR / "authors.yaml").read_text(encoding="utf-8")) or {}
     )

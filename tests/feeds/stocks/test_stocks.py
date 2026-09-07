@@ -1,4 +1,5 @@
-"""Свечи акций (G01.2, История 85a): провайдер по `STOCK_DATA_PROVIDER`, тикеры из `config/stocks.yaml`,
+"""Свечи акций (G01.2, История 85a): провайдер по `STOCK_DATA_PROVIDER`,
+тикеры из `config/stocks.yaml`,
 свечи в Parquet через `CandleStore`; стратегия `asset_class: stock` — сигнал без исполнения."""
 
 import json
@@ -88,3 +89,72 @@ def test_stock_strategy_emits_signal_only_without_execution():
         and signals[-1].meta["asset_class"] == "stock"
         and signals[-1].meta["execution"] == "manual"
     )
+
+
+class _Idx:
+    """Подделка под `pandas.Index`; `levels` есть только у мультииндекса колонок."""
+
+    def __init__(self, multi: bool) -> None:
+        if multi:
+            self.levels = [["Open"], ["AAPL"]]
+
+
+class _Row:
+    def __init__(self, values: dict, *, multi: bool, ticker: str = "AAPL") -> None:
+        self._values = values
+        self._multi = multi
+        self._ticker = ticker
+        self.index = _Idx(multi)
+
+    def __getitem__(self, key):
+        if self._multi:
+            field, ticker = key
+            assert ticker == self._ticker
+            return self._values[field]
+        return self._values[key]
+
+
+class _Ts:
+    def __init__(self, ts: datetime) -> None:
+        self._ts = ts
+
+    def to_pydatetime(self) -> datetime:
+        return self._ts
+
+
+class _Frame:
+    def __init__(self, rows: list[tuple[datetime, dict]], *, multi: bool) -> None:
+        self._rows = rows
+        self._multi = multi
+
+    def iterrows(self):
+        for ts, values in self._rows:
+            yield _Ts(ts), _Row(values, multi=self._multi)
+
+
+def _bar(close: float) -> dict:
+    return {
+        "Open": close - 1,
+        "High": close + 1,
+        "Low": close - 2,
+        "Close": close,
+        "Volume": 1000,
+    }
+
+
+def test_yfinance_rows_keep_their_own_values() -> None:
+    """Каждая свеча берёт значения своей строки фрейма, а не последней (B023)."""
+    from lab.feeds.stocks.feed import YfinanceProvider
+
+    t0 = datetime(2026, 9, 1, tzinfo=UTC)
+    rows = [
+        (t0, _bar(100.0)),
+        (t0 + timedelta(days=1), _bar(200.0)),
+        (t0 + timedelta(days=2), _bar(300.0)),
+    ]
+    for multi in (False, True):
+        frame = _Frame(rows, multi=multi)
+        provider = YfinanceProvider(download=lambda *a, _frame=frame, **k: _frame)
+        candles = provider.candles("AAPL", "1d", t0, t0 + timedelta(days=3))
+        assert [c.close for c in candles] == [Decimal("100"), Decimal("200"), Decimal("300")]
+        assert [c.open for c in candles] == [Decimal("99"), Decimal("199"), Decimal("299")]
