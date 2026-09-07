@@ -5,7 +5,7 @@ source_kind: bot_preset
 source_ref: https://www.freqtrade.io/en/stable/stoploss/
 can_backtest: true
 timeframe: 15m
-instruments: [BTCUSDT-PERP, ETHUSDT-PERP, SOLUSDT-PERP]
+instruments: [BTC/USDT:USDT, ETH/USDT:USDT, SOL/USDT:USDT]
 venue: bybit
 regime: trend
 status: hypothesis

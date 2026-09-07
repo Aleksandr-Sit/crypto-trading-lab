@@ -5,7 +5,7 @@ source_kind: book
 source_ref: https://oxfordstrat.com/coasdfASD32/uploads/2016/01/turtle-rules.pdf
 can_backtest: true
 timeframe: 1d
-instruments: [BTCUSDT-PERP, ETHUSDT-PERP, SOLUSDT-PERP, BNBUSDT-PERP, XRPUSDT-PERP]
+instruments: [BTC/USDT:USDT, ETH/USDT:USDT, SOL/USDT:USDT, BNB/USDT:USDT, XRP/USDT:USDT]
 venue: binance
 regime: trend
 status: hypothesis

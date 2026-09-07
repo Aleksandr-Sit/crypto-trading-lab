@@ -5,7 +5,7 @@ source_kind: bot_preset
 source_ref: https://www.binance.com/en/support/faq/what-is-futures-grid-trading-f4c453bab89648beb722aa26634120c3
 can_backtest: true
 timeframe: 1m
-instruments: [BTCUSDT-PERP, ETHUSDT-PERP]
+instruments: [BTC/USDT:USDT, ETH/USDT:USDT]
 venue: binance
 regime: range
 status: hypothesis
