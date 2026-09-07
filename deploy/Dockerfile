@@ -9,6 +9,12 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 TZ=UTC UV_NO_SYNC=1
 WORKDIR /app
 
+# Версия кода для снимка замера (`core.measure.runner.code_version`). Внутри контейнера
+# .git нет, поэтому git rev-parse там не работает — значение передаёт deploy/update.sh
+# через build-arg. Не передали — замер запишет "unknown" и не будет притворяться.
+ARG LAB_CODE_VERSION=""
+ENV LAB_CODE_VERSION=${LAB_CODE_VERSION}
+
 COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 

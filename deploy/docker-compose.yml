@@ -11,6 +11,11 @@ x-lab-service: &lab-service
   build:
     context: ..
     dockerfile: deploy/Dockerfile
+    args:
+      # Версия кода попадает в снимок каждого замера (data_hash + code_version + costs_version).
+      # В образе нет .git, поэтому git rev-parse внутри контейнера не сработает — значение
+      # передаёт deploy/update.sh. Пусто — замер честно запишет "unknown".
+      LAB_CODE_VERSION: ${LAB_CODE_VERSION:-}
   env_file:
     - path: ../.env
       required: false

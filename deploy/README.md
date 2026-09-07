@@ -100,7 +100,7 @@ docker compose -f deploy/docker-compose.yml exec worker uv run python -m lab ops
 ## 4. Обновление
 
 ```bash
-git pull && docker compose -f deploy/docker-compose.yml up -d --build
+bash deploy/update.sh          # git pull + пересборка + версия кода в снимок + ожидание healthy
 ```
 
 Данные не теряются: база и Parquet лежат в томах `lab_pgdata` / `lab_data`, миграции
