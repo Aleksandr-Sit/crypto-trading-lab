@@ -407,11 +407,15 @@ def run(
                     factory(),
                     _stream(candles, source, instrument, tf, f.is_from, f.is_to),
                     engine=engine(),
+                    stop=manifest.stop,
+                    capital=capital,
                 )
                 oos_r = simulate(
                     factory(),
                     _stream(candles, source, instrument, tf, f.oos_from, f.oos_to),
                     engine=engine(),
+                    stop=manifest.stop,
+                    capital=capital,
                 )
                 folds.append(
                     f.model_copy(
@@ -438,15 +442,27 @@ def run(
         # Отпечаток данных считается по ходу единственного прохода: второй раз ряд не читаем,
         # иначе живой источник опрашивался бы дважды. Поэтому и сохранённый снимок ищется
         # ПОСЛЕ прогона — раньше отпечатка просто нет.
+        # Стоп стратегии из манифеста действует и в симуляции: иначе бэктест показывает
+        # то, чего живая система никогда не сделает — она бы остановилась на первом пробое
+        # (`RiskEngine` → `strategy_stop_dd|daily`, `StopWatch` → degraded).
         result = simulate(
             inst,
             hasher.wrap(_stream(candles, source, instrument, tf, window_from, window_to)),
             engine=engine(),
+            stop=manifest.stop,
+            capital=capital,
         )
         dh = hasher.digest(bench_rows)
         cached = _lookup(session, base, dh)
         if cached is not None:
             return cached
+        if result.stopped_at is not None:
+            # Без этой пометки снимок читается неверно: цифры обрываются на пробое стопа,
+            # а по метрикам это выглядит как «стратегия просто перестала торговать».
+            extra_metrics = dict(extra_metrics or {})
+            extra_metrics["stopped_at"] = result.stopped_at.isoformat()
+            extra_metrics["stop_rule"] = result.stop_rule
+            extra_metrics["blocked_signals"] = result.blocked_signals
     except IncompleteData as err:
         return _incomplete(base, session, str(err), hasher.digest(bench_rows))
     except (OSError, ConnectionError, TimeoutError) as err:

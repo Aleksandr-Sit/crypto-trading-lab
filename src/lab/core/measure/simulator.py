@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from itertools import count
 
-from lab.contracts import Branch, Candle, Costs, Fill, OrderIntent, Signal
+from lab.contracts import Branch, Candle, Costs, Fill, OrderIntent, Signal, StopSpec
 from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.types import ClosedTrade, IncompleteData, LookaheadError
@@ -268,6 +268,49 @@ class SimResult:
     fills: list[Fill]
     open_position: Decimal
     expired_signals: int
+    stopped_at: datetime | None = None
+    stop_rule: str = ""
+    blocked_signals: int = 0
+
+
+def _stop_breach(
+    stop: StopSpec | None,
+    capital: Decimal,
+    closed: Sequence[ClosedTrade],
+    now: datetime,
+) -> str:
+    """Пробит ли стоп стратегии — теми же формулами, что у живого риск-ядра.
+
+    Просадка: кривая по ЗАКРЫТЫМ сделкам, глубина от пика в % от капитала
+    (`ops.portfolio._drawdown_pct`). Дневной: сумма pnl_net за последние сутки в % от него же
+    (`LivePortfolio.strategy_stats`). Совпадение формул тут важнее краткости: разойдутся —
+    и бэктест снова начнёт обещать не то, что сделает живая система.
+    """
+    if stop is None or capital <= 0 or not closed:
+        return ""
+    if stop.daily_pct is not None:
+        edge = now - timedelta(days=1)
+        day = sum(
+            (t.pnl_net for t in closed if t.closed_at is not None and t.closed_at >= edge),
+            Decimal(0),
+        )
+        if -(day * 100 / capital) >= stop.daily_pct:
+            return "strategy_stop_daily"
+    if stop.max_dd_pct is not None:
+        equity = peak = worst = Decimal(0)
+        for t in closed:
+            equity += t.pnl_net
+            peak = max(peak, equity)
+            worst = min(worst, equity - peak)
+        if (-worst * 100 / capital) >= stop.max_dd_pct:
+            return "strategy_stop_dd"
+    return ""
+
+
+def _opens_exposure(position: Decimal, signal: Signal) -> bool:
+    """Увеличивает ли сигнал позицию: после пробоя стопа закрывать можно, открывать нет."""
+    delta = signal.size if signal.side == "buy" else -signal.size
+    return abs(position + delta) > abs(position)
 
 
 def simulate(
@@ -275,6 +318,8 @@ def simulate(
     candles: Iterable[Candle],
     *,
     engine: PaperEngine,
+    stop: StopSpec | None = None,
+    capital: Decimal = Decimal(10_000),
 ) -> SimResult:
     """Прогон стратегии по свечам: сначала исполняются ожидающие сигналы по бару,
     потом стратегия видит бар и решает — её сигналы исполнятся не раньше следующего бара.
@@ -285,6 +330,9 @@ def simulate(
     """
     prev: Candle | None = None
     seen = 0
+    stopped_at: datetime | None = None
+    stop_rule = ""
+    blocked = 0
     for bar in candles:
         if prev is not None and bar.ts - prev.ts != engine.step:
             raise IncompleteData(
@@ -294,7 +342,17 @@ def simulate(
         prev = bar
         seen += 1
         engine.on_bar(bar)
+        if stopped_at is None:
+            stop_rule = _stop_breach(stop, capital, engine.closed, bar.ts)
+            if stop_rule:
+                stopped_at = bar.ts
         for signal in strategy.on_bar(bar):
+            # После пробоя стратегия ведёт себя как `degraded` у живого риск-ядра:
+            # закрывающие сигналы проходят, открывающие — нет. Сама стратегия об этом
+            # не знает и продолжает считать: так же, как в бою.
+            if stopped_at is not None and _opens_exposure(engine.position, signal):
+                blocked += 1
+                continue
             engine.submit(signal)
     if seen == 0:
         raise IncompleteData("нет свечей в окне")
@@ -303,4 +361,7 @@ def simulate(
         fills=list(engine.fills),
         open_position=engine.position,
         expired_signals=len(engine.expired),
+        stopped_at=stopped_at,
+        stop_rule=stop_rule,
+        blocked_signals=blocked,
     )

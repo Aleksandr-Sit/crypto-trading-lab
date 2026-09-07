@@ -151,6 +151,17 @@ def format_measurement(m, *, window=None) -> str:
         value = getattr(mt, name, None)
         if value is not None:
             lines.append(f"  {name}: {value}")
+    extra = getattr(mt, "extra", None) or {}
+    if extra.get("stopped_at"):
+        rule = {
+            "strategy_stop_dd": "по просадке",
+            "strategy_stop_daily": "дневной",
+        }.get(str(extra.get("stop_rule")), str(extra.get("stop_rule")))
+        blocked = extra.get("blocked_signals", 0)
+        lines.append(
+            f"  СТОП стратегии сработал ({rule}) {str(extra['stopped_at'])[:16]}: "
+            f"дальше открытия запрещены, пропущено сигналов {blocked}"
+        )
     if m.threshold is not None:
         failed = ", ".join(m.threshold.failed_names()) or "—"
         lines.append(f"  порог: {m.threshold.status} (не прошло: {failed})")
