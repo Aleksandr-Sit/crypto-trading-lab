@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-07T11:28:56+04:00",
+  "updatedAt": "2026-09-07T12:17:00+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -50,13 +50,13 @@ window.STATE =
       "id": "build",
       "status": "active",
       "startedAt": "2026-09-05T22:32:43+04:00",
-      "note": "12 из 14 готовы · волна 6: 12, затем 14"
+      "note": "14 из 15 · таск 15 (связка) в полёте"
     },
     {
       "id": "review",
       "status": "active",
       "startedAt": "2026-09-05T22:45:47+04:00",
-      "note": "проверено 12 из 14"
+      "note": "проверено 14 из 14"
     },
     {
       "id": "final",
@@ -65,10 +65,10 @@ window.STATE =
   ],
   "requirements": {
     "total": 45,
-    "done": 40,
-    "inTicket": 4,
+    "done": 44,
+    "inTicket": 0,
     "inSpec": 0,
-    "placeholder": 0,
+    "placeholder": 1,
     "deferred": 1,
     "dropped": 0
   },
@@ -483,11 +483,17 @@ window.STATE =
         "src/lab/discovery/",
         "src/lab/ops/jobs/"
       ],
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-07T11:28:56+04:00"
+      "startedAt": "2026-09-07T11:28:56+04:00",
+      "commit": "4b905d8",
+      "finishedAt": "2026-09-07T12:06:15+04:00",
+      "tests": {
+        "passed": 479,
+        "failed": 0
+      }
     },
     {
       "id": "14",
@@ -516,7 +522,40 @@ window.STATE =
         "deploy/",
         "scripts/"
       ],
-      "status": "pending",
+      "status": "done",
+      "retries": 0,
+      "repairs": 0,
+      "handoffs": 0,
+      "commit": "5682281",
+      "finishedAt": "2026-09-07T12:06:15+04:00",
+      "tests": {
+        "passed": 505,
+        "failed": 0
+      }
+    },
+    {
+      "id": "15",
+      "title": "Связка: замер запускается сам; .env читается как обещано",
+      "requirements": [
+        "R12",
+        "R11",
+        "R14",
+        "R10",
+        "R13",
+        "R32i"
+      ],
+      "blockedBy": [
+        "14"
+      ],
+      "wave": 7,
+      "zone": [
+        "src/lab/ops/worker.py",
+        "src/lab/cli.py",
+        "src/lab/config/env.py",
+        ".env.example"
+      ],
+      "status": "in-progress",
+      "startedAt": "2026-09-07T12:17:00+04:00",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0
@@ -524,7 +563,7 @@ window.STATE =
   ],
   "singlePass": null,
   "tests": {
-    "passed": 446,
+    "passed": 505,
     "failed": 0
   },
   "debt": {
@@ -604,11 +643,26 @@ window.STATE =
     "T10 R24.2 confirm_latency_ms только на минте — у сделки придёт из живого клиента",
     "T10 индекс внимания: mentions_growth требует адаптера к feeds/social",
     "T11 py-clob-client не добавлен (25 пакетов + python-dotenv) — чтение и бумага на httpx",
-    "T11 правил 3 строки в src/lab/bot/core.py (зона T05) ради /status"
+    "T11 правил 3 строки в src/lab/bot/core.py (зона T05) ради /status",
+    "T12 кнопка «позже» у карточки кандидата не нарисована (зона bot/cards.py)",
+    "T12 G10: SeedReminder.arm() подключён T14 из /status",
+    "T14 связка worker/cli покрыта только смоуком --once, юнит-тестов нет",
+    "T14 задание remeasure не регистрируется — нужен measure= в worker",
+    "T14 фандинг пишется прямо в trades.funding, не через Journal.record_fill",
+    "T14 lab.web.serve не принимает feeds= — service web собирает приложение сам"
   ],
   "reviewers": {
     "manifestSpec": "afea90f146a601738",
     "craft": "a992ce8aebc6e8b4b"
   },
-  "blind": null
+  "blind": {
+    "checked": "2026-09-07T12:17:00+04:00",
+    "drift": [
+      "R12/R11: манифест — done, слепая приёмка — частично: движок замера рабочий, но система его не вызывает (remeasure не регистрируется, бот не меряет, CLI-команды нет) → таск 15",
+      "R32i: сценарий из README (cp .env.example .env) ломает систему — хвостовые комментарии попадают в значения; lab service web не читает .env → таск 15",
+      "R10: measure_cost считается, но очередь сортируется по id → таск 15"
+    ],
+    "confirmed": "плечо, спот, лимиты веток, стоп стратегии, бюджет $50, потолок капитала $1000, сети, NFT-ветка, минт-варианты, Polymarket/RH, только свои боты, вне рамок — подтверждены",
+    "not_run": "живой сбор с бирж и Telegram не проверены — сеть песочницы закрыта, токена бота нет"
+  }
 }

@@ -9,13 +9,19 @@
 
 ```bash
 uv sync                                   # зависимости (Python 3.12, uv)
-cp .env.example .env                      # впиши DATABASE_URL и ключи (без права вывода!)
+cp .env.example .env                      # работает как есть; ключи вписываются потом
 docker compose -f deploy/docker-compose.yml up -d   # Postgres + worker/bot/web
 uv run alembic upgrade head               # схема базы (в compose это делает сервис migrate)
 uv run python -m lab venues               # какие площадки подключены
 uv run python -m lab strategy add --file examples/strategy.yaml
 uv run python -m lab strategy list
+uv run python -m lab measure run <strategy_id>      # замерить стратегию сейчас
 ```
+
+`cp .env.example .env` даёт рабочую конфигурацию без единой правки: `DATABASE_URL` уже
+указывает на локальный Postgres, ключей нет — все площадки идут «только данные», Telegram
+отключён, веб поднимается с разовым паролем (он печатается при старте). Хвостовые
+комментарии (` # ...`) в значения не попадают.
 
 `DATABASE_URL` берётся из окружения, иначе из `.env` — одинаково для CLI, сервисов и Alembic;
 не задан нигде — ошибка с подсказкой, молчаливого localhost нет.
@@ -38,7 +44,9 @@ uv run python -m lab strategy list
 | Тесты | `uv run pytest -q` (один файл: `uv run pytest -q tests/<путь>`) |
 | Линт | `uv run ruff check .` |
 | Миграции | `uv run alembic upgrade head` |
-| CLI | `uv run python -m lab <команда>` — `venues`, `strategy add/list/retire`, `candidate add`, `service worker|bot|web` |
+| CLI | `uv run python -m lab <команда>` — `venues`, `strategy add/list/retire`, `candidate add`, `measure run/show`, `service worker|bot|web` |
+| Замер руками | `uv run python -m lab measure run <strategy_id> [--mode backtest\|paper\|forward] [--days N] [--root data]` |
+| Что уже замерено | `uv run python -m lab measure show <strategy_id> [--limit N]` |
 | Запуск | `docker compose -f deploy/docker-compose.yml up -d` |
 
 Тесты базы ходят в Postgres по `TEST_DATABASE_URL`
@@ -52,7 +60,7 @@ uv run python -m lab strategy list
 | `config/limits.yaml` | раскладка капитала 40/25/20/10/5 и лимиты веток (В9а) |
 | `config/threshold.yaml` | порог прохождения ступени (В12) |
 | `config/schedule.yaml` | расписание планировщика (Europe/Samara) |
-| `.env.example` | все имена секретов с комментариями; значений в репозитории нет |
+| `.env.example` | все имена секретов с комментариями; секретов в репозитории нет, копируется без правок |
 | `examples/strategy.yaml` | пример манифеста стратегии |
 | `src/lab/contracts/` | протоколы `Feed`, `Executor`, `Strategy`, `NftMarket` и типы (`OrderIntent`, `Signal`, `Costs`, `Health`, `KeyRights`, `StrategyManifest`) |
 | `src/lab/core/registry.py` | реестр стратегий и очередь кандидатов |

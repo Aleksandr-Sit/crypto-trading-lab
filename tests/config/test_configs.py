@@ -125,3 +125,76 @@ def test_database_url_is_read_from_dotenv_like_migrations(tmp_path: Path):
     # ни там, ни там — понятная ошибка, а не молчаливый localhost
     with pytest.raises(DatabaseUrlMissing, match="DATABASE_URL"):
         database_url(dotenv=tmp_path / "absent.env", environ={})
+
+
+def test_dotenv_strips_trailing_comment_like_env_example(tmp_path: Path):
+    """`cp .env.example .env` без правок: хвостовой комментарий не попадает в значение."""
+    from lab.config import load_dotenv
+
+    example = Path(__file__).resolve().parents[2] / ".env.example"
+    dotenv = tmp_path / ".env"
+    dotenv.write_text(example.read_text(encoding="utf-8"), encoding="utf-8")
+    values = load_dotenv(dotenv)
+    assert "#" not in values["POSTGRES_PASSWORD"]
+    assert values["POSTGRES_PASSWORD"] == ""
+    assert values["TELEGRAM_BOT_TOKEN"] == ""
+    assert " " not in values["DATABASE_URL"]
+    assert values["DATABASE_URL"].startswith("postgresql+psycopg://")
+
+
+def test_dotenv_comment_rules(tmp_path: Path):
+    from lab.config import load_dotenv
+
+    dotenv = tmp_path / ".env"
+    dotenv.write_text(
+        "\n".join(
+            [
+                "FOO=bar # комментарий",
+                "EMPTY=            # только комментарий",
+                'QUOTED="bar # не комментарий"  # а это комментарий',
+                "HASHY=pa#ss",  # решётка без пробела перед ней — часть значения
+                "PLAIN=bar",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    values = load_dotenv(dotenv)
+    assert values["FOO"] == "bar"
+    assert values["EMPTY"] == ""
+    assert values["QUOTED"] == "bar # не комментарий"
+    assert values["HASHY"] == "pa#ss"
+    assert values["PLAIN"] == "bar"
+
+
+def test_alembic_url_prefers_the_config_it_was_given(tmp_path: Path):
+    """Программный вызов (тесты, скрипты) выбирает базу сам — `DATABASE_URL` её не подменяет.
+
+    Иначе `pytest` с непустым `DATABASE_URL` в `.env` накатывает миграции на боевую базу.
+    """
+    from lab.db.engine import alembic_url
+
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("DATABASE_URL=postgresql+psycopg://real/lab\n", encoding="utf-8")
+    forced = "postgresql+psycopg://cfg/lab_test"
+
+    assert (
+        alembic_url(
+            config_url="postgresql+psycopg://ini/lab",
+            attributes={"sqlalchemy.url": forced},
+            environ={"DATABASE_URL": "postgresql+psycopg://real/lab"},
+            dotenv=dotenv,
+        )
+        == forced
+    )
+    # обычный `alembic upgrade head`: базу выбирают окружение и .env, потом alembic.ini
+    assert (
+        alembic_url(config_url="postgresql+psycopg://ini/lab", attributes={}, dotenv=dotenv)
+        == "postgresql+psycopg://real/lab"
+    )
+    assert (
+        alembic_url(
+            config_url="postgresql+psycopg://ini/lab", attributes={}, dotenv=tmp_path / "absent"
+        )
+        == "postgresql+psycopg://ini/lab"
+    )

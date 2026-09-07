@@ -30,6 +30,8 @@ def alembic_config(url: str) -> Config:
     cfg = Config(str(ROOT / "alembic.ini"))
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
     cfg.set_main_option("sqlalchemy.url", url)
+    # Сильнее, чем DATABASE_URL из .env: тесты не должны накатывать миграции на боевую базу.
+    cfg.attributes["sqlalchemy.url"] = url
     return cfg
 
 

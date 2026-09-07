@@ -13,20 +13,23 @@
 
 ```bash
 git clone <репозиторий> crypto-trading-lab && cd crypto-trading-lab
-cp .env.example .env && nano .env      # заполнить секреты
+cp .env.example .env                   # копия работает как есть
+nano .env                              # вписать секреты: без них система идёт в режиме замера
 ```
 
 ## 2. `.env`
 
 Имена — строго из `.env.example`; в коде и логах ключей нет, система показывает только
-«заполнено / пусто» (`uv run python -m lab venues`). Обязательный минимум:
+«заполнено / пусто» (`uv run python -m lab venues`). Файл копируется без правок: хвостовые
+комментарии (` # ...`) в значения не попадают, пустой ключ = «только данные», пустой
+`TELEGRAM_BOT_TOKEN` = карточки отключены (сервисы при этом поднимаются). Обязательный минимум:
 
 | Переменная | Зачем |
 |---|---|
 | `POSTGRES_PASSWORD` | пароль пользователя `lab` в контейнере базы |
-| `DATABASE_URL` | можно не задавать — compose соберёт `postgresql+psycopg://lab:…@db:5432/lab` |
+| `DATABASE_URL` | в compose не используется (compose подставляет `…@db:5432/lab` сам); значение из `.env.example` — для запуска CLI и alembic с хоста |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_ID` | бот и единственный админ, от кого принимаются команды |
-| `WEB_USER`, `WEB_PASSWORD` | HTTP Basic веб-экрана; без них `web` не стартует |
+| `WEB_USER`, `WEB_PASSWORD` | HTTP Basic веб-экрана; не заданы — пароль генерируется при каждом старте и печатается в лог |
 | `WEB_BIND` | адрес:порт веба, по умолчанию `127.0.0.1:8080` |
 | `BACKUP_DIR` | каталог копий внутри контейнера (том `lab_backups`, по умолчанию `/app/backups`) |
 | `BUDGET_MONTH_USD` | лимит на платные источники, по умолчанию 50 |
@@ -110,7 +113,8 @@ docker compose -f deploy/docker-compose.yml kill -s HUP worker
 
 | Симптом | Что смотреть |
 |---|---|
-| `web` не стартует | не заданы `WEB_USER`/`WEB_PASSWORD` |
+| в веб не пускает пароль | не заданы `WEB_USER`/`WEB_PASSWORD` — разовый пароль печатается при старте (`docker compose ... logs web`) |
+| нет задания `remeasure` в списке worker | старый образ: `docker compose ... up -d --build` |
 | `bot` пишет «TELEGRAM_… не заданы» | пустые `TELEGRAM_BOT_TOKEN`/`TELEGRAM_ADMIN_ID` |
 | площадка `гео-блок` в `ops status` | биржа закрыта для IP сервера — ветка живёт в режиме замера |
 | `migrate` упал | `docker compose ... run --rm migrate uv run alembic upgrade head` и смотреть вывод |

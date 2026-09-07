@@ -92,6 +92,23 @@ class Strategy(BaseModel):
         )
 
 
+# Ветка кандидата неизвестна — мерить его дороже всего, что мы умеем оценить.
+UNKNOWN_MEASURE_COST = 9
+
+
+def measure_cost_of(payload: Mapping[str, Any] | None) -> int:
+    """Цена замера кандидата по его ветке (`core.measure.measure_plan`) — ключ сортировки В6."""
+    from lab.core.measure import measure_plan
+
+    branch = str((payload or {}).get("branch") or "").strip()
+    if not branch:
+        return UNKNOWN_MEASURE_COST
+    try:
+        return measure_plan(Branch(branch)).measure_cost
+    except (ValueError, KeyError):
+        return UNKNOWN_MEASURE_COST
+
+
 class Candidate(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -102,6 +119,7 @@ class Candidate(BaseModel):
     discovered_at: datetime
     decided_at: datetime | None
     error: str | None = None
+    measure_cost: int = UNKNOWN_MEASURE_COST
 
     @classmethod
     def from_row(cls, row: CandidateRow) -> Candidate:
@@ -113,6 +131,7 @@ class Candidate(BaseModel):
             discovered_at=row.discovered_at,
             decided_at=row.decided_at,
             error=row.error,
+            measure_cost=measure_cost_of(row.payload),
         )
 
 
@@ -257,10 +276,12 @@ class Registry:
         return Candidate.from_row(row)
 
     def candidates(self, decision: CandidateDecision | str | None = None) -> list[Candidate]:
+        """Очередь кандидатов — по цене замера (В6): дешёвый бэктест раньше форвард-ветки."""
         stmt = select(CandidateRow).order_by(CandidateRow.discovered_at, CandidateRow.id)
         if decision is not None:
             stmt = stmt.where(CandidateRow.decision == CandidateDecision(decision).value)
-        return [Candidate.from_row(r) for r in self._s.scalars(stmt).all()]
+        rows = [Candidate.from_row(r) for r in self._s.scalars(stmt).all()]
+        return sorted(rows, key=lambda c: (c.measure_cost, c.discovered_at, c.id))
 
     def _save_draft(self, spec: Mapping[str, Any], fields: dict[str, str]) -> int:
         ref = _guess_ref(spec)

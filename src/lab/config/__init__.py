@@ -4,8 +4,10 @@ from pathlib import Path
 
 from lab.config.env import (
     DATA_ENV,
+    SERVICE_ENV,
     VENUE_ENV,
     VenueStatus,
+    apply_dotenv,
     data_keys_report,
     environment,
     format_venues_table,
@@ -40,6 +42,7 @@ def load_schedule(path: Path | None = None) -> ScheduleConfig:
 __all__ = [
     "CONFIG_DIR",
     "DATA_ENV",
+    "SERVICE_ENV",
     "VENUE_ENV",
     "BranchGroupLimits",
     "BranchStop",
@@ -49,6 +52,7 @@ __all__ = [
     "ScheduleConfig",
     "ThresholdConfig",
     "VenueStatus",
+    "apply_dotenv",
     "data_keys_report",
     "environment",
     "format_venues_table",

@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 import secrets
 from collections.abc import Awaitable, Callable, Coroutine, Iterator, Mapping
@@ -46,7 +47,7 @@ HELP = (
     "/report — утренний отчёт сейчас"
 )
 
-DecisionHook = Callable[[str, str], Awaitable[None] | None]
+DecisionHook = Callable[[str, str], Awaitable[str | None] | str | None]
 ConfirmHook = Callable[[str], Awaitable[None] | None]
 
 
@@ -76,9 +77,11 @@ class _PendingAction:
     args: dict[str, Any] = field(default_factory=dict)
 
 
-async def _maybe_await(value: Awaitable[None] | None) -> None:
-    if value is not None:
-        await value
+async def _maybe_await(value: Any) -> Any:
+    """Хук может быть синхронным или корутиной; возврат отдаём вызывающему как есть."""
+    if inspect.isawaitable(value):
+        return await value
+    return value
 
 
 def _utcnow() -> datetime:
@@ -422,8 +425,9 @@ class TraderBot:
         hook = self._hooks[kind]
         label = {"cand": "кандидат", "rebal": "перелив", "allow": "allowlist"}[kind]
         if hook is not None:
-            await _maybe_await(hook(ref_id, decision))
-            suffix = f"Решение записано: {decision}"
+            # Хук возвращает готовую строку для карточки (что решено и чем кончился замер).
+            told = await _maybe_await(hook(ref_id, decision))
+            suffix = str(told) if told else f"Решение записано: {decision}"
         else:
             suffix = f"Решение принято ({decision}), обработчик пока не подключён — н/д"
         with self._session() as s:

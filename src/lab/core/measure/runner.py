@@ -216,6 +216,21 @@ def _persist(session: Session, m: Measurement) -> Measurement:
     return m.model_copy(update={"id": row.id, "created_at": row.created_at})
 
 
+def history(
+    session: Session,
+    strategy_id: str,
+    *,
+    mode: MeasureMode | str | None = None,
+    limit: int = 5,
+) -> list[Measurement]:
+    """Сохранённые снимки стратегии, свежие первыми (`lab measure show`, веб-карточка)."""
+    stmt = select(MeasurementRow).where(MeasurementRow.strategy_id == strategy_id)
+    if mode is not None:
+        stmt = stmt.where(MeasurementRow.mode == MeasureMode(mode).value)
+    stmt = stmt.order_by(MeasurementRow.created_at.desc(), MeasurementRow.id.desc()).limit(limit)
+    return [_row_to_measurement(row, cached=True) for row in session.scalars(stmt)]
+
+
 def run(
     strategy_id: str,
     mode: MeasureMode | str,

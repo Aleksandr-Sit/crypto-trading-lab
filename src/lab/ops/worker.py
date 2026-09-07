@@ -5,6 +5,7 @@
 - `ops.feeds_registry.FeedsRegistry` — квоты и здоровье источников (и он же кормит веб и бота);
 - `ops.portfolio.LivePortfolio` — цифры для `core.risk.RiskEngine`;
 - `ops.stop_watch.StopWatch` — `risk.check` + перевод стратегии в `degraded` при пробое стопа;
+- `ops.measure.make_measure` — замер: `remeasure` (вс 22:00) и кнопка «В замер» в боте;
 - `ops.jobs.jobs(...)` и `lab.discovery` — еженедельные задания;
 - `ops.jobs.reconcile`, `ops.backup`, `ops.watchdog`, `ops.funding` — суточная эксплуатация;
 - `bot.TraderBot.on_confirm` — подтверждение сигнала оператором превращается в ордер.
@@ -32,6 +33,7 @@ from lab.ops.backup import backup_job
 from lab.ops.feeds_registry import FeedsRegistry
 from lab.ops.funding import funding_job
 from lab.ops.jobs.reconcile import reconcile_job
+from lab.ops.measure import make_measure
 from lab.ops.portfolio import LivePortfolio
 from lab.ops.reload import ConfigReloader
 from lab.ops.scheduler import Job, Scheduler, default_scheduler
@@ -56,11 +58,13 @@ class Worker:
         scheduler: Scheduler | None = None,
         executors: Mapping[str, Any] | None = None,
         clock: Callable[[], datetime] | None = None,
+        store: Any = None,
     ) -> None:
         self.scope = session_scope
         self.env = dict(env or {})
         self.bot = bot
         self.clock = clock or (lambda: datetime.now(UTC))
+        self.measure = make_measure(session_scope, store=store)
         self.scheduler = scheduler or default_scheduler()
         self.feeds = FeedsRegistry(session_factory=session_scope)
         self.executors = dict(executors or live_executors(quota=self.feeds))
@@ -226,6 +230,7 @@ class Worker:
             discovery_jobs(
                 self.scope,
                 bot=self.bot,
+                measure=self.measure,
                 ladder_factory=self.ladder,
                 risk=self.risk,
                 reminder=reminder,

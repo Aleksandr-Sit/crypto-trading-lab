@@ -49,6 +49,20 @@ class DecisionResult:
     mode: MeasureMode | None = None
     reason: str = ""
     measured: bool = False
+    measurement: Any = None
+
+    def text(self) -> str:
+        """Строка для карточки бота: что решено и чем кончился замер."""
+        if self.decision is CandidateDecision.REJECTED:
+            return f"Отклонён: {self.reason}" if self.reason else "Отклонён"
+        if self.decision is CandidateDecision.PENDING:
+            return "Отложен — вернётся в очередь"
+        head = f"В замер: {self.strategy_id or self.reason}"
+        if self.mode is not None:
+            head += f" · {self.mode}"
+        if not self.measured:
+            return f"{head} — замер не запускался ({self.reason})" if self.reason else head
+        return f"{head} — {_measure_text(self.measurement)}"
 
 
 def decide(
@@ -113,10 +127,10 @@ def decide(
 
     if ladder is not None:
         ladder.start(strategy_id)
-    measured = False
+    measured, measurement = False, None
     if measure is not None:
         window = (at - timedelta(days=cfg.remeasure.window_days), at)
-        measure(strategy_id=strategy_id, mode=mode.value, window=window)
+        measurement = measure(strategy_id=strategy_id, mode=mode.value, window=window)
         measured = True
     return DecisionResult(
         row.id,
@@ -125,7 +139,24 @@ def decide(
         mode=mode,
         reason=plan.reason,
         measured=measured,
+        measurement=measurement,
     )
+
+
+def _measure_text(measurement: Any) -> str:
+    """Итог замера коротко: статус, порог, причина неполноты."""
+    if measurement is None:
+        return "замер запущен"
+    status = getattr(measurement, "status", None)
+    if status is None:
+        return str(measurement)
+    if status != "ok":
+        return f"замер неполный: {getattr(measurement, 'reason', '') or 'нет данных'}"
+    threshold = getattr(measurement, "threshold", None)
+    if threshold is None:
+        return "замер выполнен"
+    failed = ", ".join(threshold.failed_names()) or "—"
+    return f"замер выполнен, порог: {threshold.status} (не прошло: {failed})"
 
 
 def manifest_for(
@@ -168,10 +199,13 @@ def candidate_hook(
     measure: Callable[..., Any] | None = None,
     ladder_factory: Callable[[Any], Any] | None = None,
     config: DiscoveryConfig | None = None,
-) -> Callable[[str, str], None]:
-    """Обработчик кнопок карточки для `bot.TraderBot(on_candidate=...)` (подключает T14)."""
+) -> Callable[[str, str], str]:
+    """Обработчик кнопок карточки для `bot.TraderBot(on_candidate=...)`.
 
-    def hook(ref_id: str, decision: str) -> None:
+    Возврат — строка для карточки: что решено и чем кончился замер. Без `measure=`
+    кнопка «В замер» только заводит стратегию, и это видно в тексте."""
+
+    def hook(ref_id: str, decision: str) -> str:
         with session_factory() as session:
             ladder = ladder_factory(session) if ladder_factory else None
             result = decide(
@@ -185,6 +219,7 @@ def candidate_hook(
             log.info(
                 "Кандидат #%s: %s (%s)", result.candidate_id, result.decision, result.reason
             )
+            return result.text()
 
     return hook
 

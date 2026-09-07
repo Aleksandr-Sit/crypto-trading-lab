@@ -1,6 +1,5 @@
 """Alembic env: URL из DATABASE_URL (.env или окружение), метаданные — lab.db.models."""
 
-import os
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -11,9 +10,9 @@ from sqlalchemy import engine_from_config, pool
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from lab.config.env import load_dotenv  # noqa: E402
 from lab.db import models  # noqa: E402,F401 — регистрирует таблицы в metadata
 from lab.db.base import Base  # noqa: E402
+from lab.db.engine import alembic_url  # noqa: E402
 
 config = context.config
 if config.config_file_name is not None:
@@ -23,8 +22,11 @@ target_metadata = Base.metadata
 
 
 def _url() -> str:
-    env_url = os.environ.get("DATABASE_URL") or load_dotenv(ROOT / ".env").get("DATABASE_URL")
-    return env_url or config.get_main_option("sqlalchemy.url")
+    return alembic_url(
+        config_url=config.get_main_option("sqlalchemy.url"),
+        attributes=config.attributes,
+        dotenv=ROOT / ".env",
+    )
 
 
 def run_migrations_offline() -> None:

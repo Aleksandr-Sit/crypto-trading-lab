@@ -33,6 +33,8 @@
 | Развернуть на VPS | `docker compose -f deploy/docker-compose.yml up -d --build` |
 | Обновить | `git pull && docker compose -f deploy/docker-compose.yml up -d --build` (миграции автоматом) |
 | Логи сервиса | `docker compose -f deploy/docker-compose.yml logs -f worker` (или `bot`, `web`) |
+| Замер стратегии руками | `uv run python -m lab measure run <strategy_id> [--mode M] [--days N]` |
+| Что уже замерено | `uv run python -m lab measure show <strategy_id>` |
 | Доступность площадок | `uv run python -m lab ops status` |
 | Источники: квоты, здоровье, бюджет | `uv run python -m lab ops feeds` |
 | Резервная копия сейчас | `uv run python -m lab ops backup [--dest DIR] [--keep-days N]` |

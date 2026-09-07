@@ -260,3 +260,29 @@ async def test_expiry_after_restart_edits_card_from_outbox(
     msg_id, edited = tg.edited[-1]
     assert msg_id == 1001 and edited.buttons == [] and "просрочен" in edited.text.lower()
     assert "BTC-USDT" in edited.text  # исходный текст карточки сохранён
+
+
+async def test_candidate_card_shows_what_the_hook_returned(session, tg, halt, clock) -> None:
+    """«В замер» возвращает итог замера — он и попадает в карточку, а не «решение записано»."""
+    from lab.bot import TraderBot
+    from lab.core.ladder import Ladder
+    from tests.core.test_ladder import FakeThreshold
+
+    verdict = "В замер: cex-spot-x · backtest — замер выполнен, порог: passed"
+    bot = TraderBot(
+        session_factory=lambda: session,
+        admin_id=ADMIN,
+        transport=tg,
+        clock=clock,
+        ladder_factory=lambda s: Ladder(s, threshold=FakeThreshold(), halt=halt),
+        on_candidate=lambda ref_id, decision: verdict,
+        close_sessions=False,
+    )
+    await bot.send_card(
+        "candidate", {"candidate_id": "7", "kind": "wallet", "ref": "0xabc", "summary": "тест"}
+    )
+
+    reply = await bot.handle_callback(ADMIN, "cand:7:accept")
+
+    assert verdict in (reply.text or "")
+    assert verdict in tg.edited[-1][1].text

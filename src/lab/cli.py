@@ -5,10 +5,17 @@ lab strategy add --file examples/strategy.yaml
 lab strategy list [--branch B] [--status S]
 lab strategy retire <id> --reason "..."
 lab candidate add <kind> <ref>
+lab measure run <id> [--mode M] [--days N] [--root DIR]   — замерить стратегию сейчас
+lab measure show <id> [--limit N]       — что уже замерено и с каким порогом
 lab service <worker|bot|web>            — worker: планировщик; bot: Trader (тикет 05); web: таск 06
+
+`.env` выкладывается в окружение до разбора команды (`apply_dotenv`): иначе `lab venues`
+(читает `.env`) и проверки доступа исполнителей (читают `os.environ`) расходятся в оценке
+одних и тех же ключей.
 """
 
 import argparse
+import secrets
 import sys
 import time
 from pathlib import Path
@@ -16,7 +23,7 @@ from pathlib import Path
 import yaml
 
 from lab import __version__
-from lab.config import environment, format_venues_table, venues_report
+from lab.config import apply_dotenv, environment, format_venues_table, venues_report
 from lab.core.registry import (
     DuplicateStrategy,
     IncompleteManifest,
@@ -24,6 +31,7 @@ from lab.core.registry import (
     StrategyNotFound,
 )
 from lab.db import make_engine, make_session_factory, session_scope
+from lab.ops.measure import make_measure
 
 EMPTY_HINT = "Реестр пуст: добавь кандидата (lab strategy add --file ...) или запусти поиск."
 HEARTBEAT_DIR = Path("/tmp/lab")
@@ -91,6 +99,65 @@ def cmd_candidate_add(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_measure_run(args: argparse.Namespace) -> int:
+    """Замер руками (R12): та же обёртка, что у `remeasure` и кнопки «В замер» в боте."""
+    from datetime import UTC, datetime, timedelta
+
+    from lab.core.registry import StrategyNotFound
+    from lab.ops.measure import MeasureUnavailable, make_measure
+
+    to = datetime.now(UTC)
+    window = (to - timedelta(days=args.days), to)
+    measure = make_measure(_scope(), root=args.root)
+    try:
+        m = measure(strategy_id=args.strategy_id, mode=args.mode, window=window)
+    except (StrategyNotFound, MeasureUnavailable) as err:
+        print(f"Замер не выполнен: {err}", file=sys.stderr)
+        return 2
+    print(format_measurement(m, window=window))
+    return 0
+
+
+def cmd_measure_show(args: argparse.Namespace) -> int:
+    """Последние снимки стратегии — что именно замерено и когда."""
+    from lab.core.measure import history
+
+    with _scope()() as session:
+        rows = history(session, args.strategy_id, limit=args.limit)
+        if not rows:
+            print(
+                f"{args.strategy_id}: ещё не мерил — запусти "
+                f"`lab measure run {args.strategy_id}`"
+            )
+            return 0
+        for m in rows:
+            print(format_measurement(m))
+    return 0
+
+
+def format_measurement(m, *, window=None) -> str:
+    """Одна строка «что замерено» + порог; incomplete печатает причину, а не пустоту."""
+    at = f"{m.created_at:%d.%m %H:%M}" if m.created_at else "—"
+    win = window or (m.window_from, m.window_to)
+    head = (
+        f"{m.strategy_id} · {m.mode} · {win[0]:%d.%m.%Y}–{win[1]:%d.%m.%Y}"
+        f" · {m.status} · {at}"
+    )
+    if m.status != "ok" or m.metrics is None:
+        return f"{head}\n  причина: {m.reason or 'нет данных'}"
+    lines = [head]
+    mt = m.metrics
+    for name in ("n_trades", "net_pnl_pct", "max_dd_pct", "sharpe", "win_rate", "vs_btc"):
+        value = getattr(mt, name, None)
+        if value is not None:
+            lines.append(f"  {name}: {value}")
+    if m.threshold is not None:
+        failed = ", ".join(m.threshold.failed_names()) or "—"
+        lines.append(f"  порог: {m.threshold.status} (не прошло: {failed})")
+    lines.append(f"  снимок: данные {m.data_hash[:12]} · код {m.code_version[:12]}")
+    return "\n".join(lines)
+
+
 def cmd_service(args: argparse.Namespace) -> int:
     from lab.db.engine import DatabaseUrlMissing
 
@@ -150,14 +217,21 @@ def cmd_service_web(args: argparse.Namespace) -> int:
 
     beat, tick = _heartbeat("web")
     tick()
-    auth = credentials_from_env(None)
+    env = environment()  # `.env` поверх окружения — как обещает README
+    auth, generated = credentials_from_env(env), False
     if auth is None:
-        print("WEB_USER и WEB_PASSWORD не заданы в .env — веб не поднимаю", file=sys.stderr)
-        return 2
-    host, port = bind_address(None)
+        # `cp .env.example .env` без правок не должен упираться в отказ: логин остаётся
+        # обязательным (§15), но пароль на этот запуск генерируем и показываем оператору.
+        auth, generated = ((env.get("WEB_USER") or "lab").strip(), secrets.token_urlsafe(12)), True
+    host, port = bind_address(env)
     scope = _scope()
     app = create_app(scope, feeds=_feeds_registry(scope), auth=auth)
     print(f"Веб-экран: http://{host}:{port}/ (пользователь {auth[0]}); heartbeat → {beat}")
+    if generated:
+        print(
+            f"WEB_USER/WEB_PASSWORD не заданы в .env — разовый пароль на этот запуск: {auth[1]}."
+            " Впиши свои в .env, чтобы он не менялся при перезапуске."
+        )
     if args.once:
         return 0
     _db_beat(scope, "web")
@@ -187,14 +261,23 @@ def _trader_bot(env: dict[str, str]):
     from lab.bot.telegram import TelegramTransport, make_aiogram_bot
     from lab.core.ladder import Ladder, default_threshold_fn
     from lab.core.risk import DbHaltSwitch
+    from lab.discovery import candidate_hook
+    from lab.ops.jobs import rebalance_hook
 
-    token, admin = env.get("TELEGRAM_BOT_TOKEN"), env.get("TELEGRAM_ADMIN_ID")
-    if not token or not admin:
+    token = (env.get("TELEGRAM_BOT_TOKEN") or "").strip()
+    admin = (env.get("TELEGRAM_ADMIN_ID") or "").strip()
+    if not token or not admin.isdigit():
         return None, None, "TELEGRAM_BOT_TOKEN/TELEGRAM_ADMIN_ID не заданы в .env"
-    aio = make_aiogram_bot(token)
+    try:
+        aio = make_aiogram_bot(token)
+    except Exception as err:  # noqa: BLE001 — мусор в токене не должен ронять worker
+        return None, None, f"TELEGRAM_BOT_TOKEN не принят: {err}"
     factory = _session_factory()
     scope = lambda: session_scope(factory)  # noqa: E731
     feeds = _feeds_registry(scope)
+    ladder_factory = lambda s: Ladder(  # noqa: E731
+        s, threshold=default_threshold_fn(), halt=DbHaltSwitch(s)
+    )
     worker = None
     try:
         from lab.ops.worker import Worker
@@ -202,13 +285,17 @@ def _trader_bot(env: dict[str, str]):
         worker = Worker(scope, env=env)
     except Exception as err:  # noqa: BLE001 — без исполнения бот всё равно нужен
         print(f"Исполнение сигналов недоступно: {err}", file=sys.stderr)
+    # Кнопка «В замер» обязана мерить: без `measure=` кандидат заводится, но замера нет (R12).
+    measure = worker.measure if worker is not None else make_measure(scope)
     bot = TraderBot(
         session_factory=factory,
         admin_id=int(admin),
         transport=TelegramTransport(aio),
-        ladder_factory=lambda s: Ladder(s, threshold=default_threshold_fn(), halt=DbHaltSwitch(s)),
+        ladder_factory=ladder_factory,
         feeds_status=feeds,
         on_confirm=(worker.place_signal if worker is not None else None),
+        on_candidate=candidate_hook(scope, measure=measure, ladder_factory=ladder_factory),
+        on_rebalance=rebalance_hook(scope),
     )
     if worker is not None:
         worker.bot = bot
@@ -398,6 +485,21 @@ def build_parser() -> argparse.ArgumentParser:
     bf.add_argument("--root", default="data", help="корень Parquet-хранилища")
     bf.set_defaults(func=cmd_data_backfill)
 
+    ms = sub.add_parser("measure", help="замер стратегии: запустить руками и посмотреть")
+    msub = ms.add_subparsers(dest="action", required=True)
+    mrun = msub.add_parser("run", help="замерить стратегию сейчас")
+    mrun.add_argument("strategy_id")
+    mrun.add_argument(
+        "--mode", default="backtest", choices=["backtest", "paper", "forward", "micro"]
+    )
+    mrun.add_argument("--days", type=int, default=365, help="длина окна замера в сутках")
+    mrun.add_argument("--root", default=None, help="корень хранилища свечей (по умолчанию data)")
+    mrun.set_defaults(func=cmd_measure_run)
+    mshow = msub.add_parser("show", help="последние снимки замеров стратегии")
+    mshow.add_argument("strategy_id")
+    mshow.add_argument("--limit", type=int, default=5)
+    mshow.set_defaults(func=cmd_measure_show)
+
     ops = sub.add_parser("ops", help="эксплуатация: бэкап, перезагрузка конфигов, источники")
     ops.add_argument(
         "action", choices=["backup", "reload", "feeds", "status"], help="что сделать"
@@ -415,6 +517,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # `.env` в окружение до всего остального: иначе `lab venues` (читает .env) и проверки
+    # доступа исполнителей (читают os.environ) расходятся в оценке одних и тех же ключей.
+    apply_dotenv()
     args = build_parser().parse_args(argv)
     return args.func(args)
 
