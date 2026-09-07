@@ -1,0 +1,139 @@
+# NFT-ветка (Истории 72–81). Параметры меняются здесь, не в коде.
+version: 1
+
+# Площадки. Blur — только чтение on-chain (История 81, G03): исполнителя у него нет.
+markets:
+  magiceden:
+    feed_id: magiceden
+    chain: solana
+    quota_limit: 120          # 2 QPS / 120 QPM без ключа
+    quota_period: minute
+    weight: 1
+    key_env: MAGICEDEN_API_KEY
+  opensea:
+    feed_id: opensea
+    chain: ethereum
+    quota_limit: 600          # free-ключ: 600 req/ч, живёт 7 дней
+    quota_period: hour
+    weight: 1
+    key_env: OPENSEA_API_KEY
+    key_ttl_days: 7           # ключ обновляется автоматически до истечения
+  zora:
+    feed_id: zora
+    chain: base
+    quota_limit: 600
+    quota_period: hour
+    weight: 1
+  alchemy_nft:
+    feed_id: alchemy_nft
+    chain: ethereum
+    quota_limit: 300
+    quota_period: minute
+    weight: 1
+    key_env: ALCHEMY_API_KEY
+  tensor:
+    feed_id: tensor
+    chain: solana
+    quota_limit: 60
+    quota_period: minute
+    weight: 1
+    key_env: TENSOR_API_KEY
+    enabled: false            # ключ только по заявке — включается при получении
+  blur:
+    feed_id: blur
+    chain: ethereum
+    quota_limit: 300
+    quota_period: minute
+    weight: 1
+    read_only: true           # публичного API нет, данные через Alchemy on-chain
+
+# Индекс внимания (История 74a). ВЕСА — ГИПОТЕЗА: они сами предмет замера,
+# а не установленная истина. Меняются здесь и версионируются вместе с замером.
+attention:
+  hypothesis: true
+  weights:
+    mentions_growth: 0.35     # скорость роста упоминаний в каналах/X
+    allowlist_demand: 0.25    # спрос на allowlist-места к их числу
+    launchpad_fill: 0.20      # заполненность слота launchpad
+    creator_score: 0.20       # рейтинг создателя
+  mentions_window_h: 24
+  min_score_to_watch: 0.35    # ниже — минт в ленту не поднимаем
+
+# Рейтинг создателей (История 73).
+creator:
+  windows_days: [1, 7, 30]
+  success_floor_ratio: 1.0    # флор ≥ цены минта — коллекция считается успешной
+  success_window_days: 7      # на каком окне считаем успех
+  min_collections: 1
+  half_life_days: 180         # старые коллекции весят меньше
+
+# Лестница продаж (История 78, G06): часть продаём на целях, часть держим.
+ladder:
+  targets:
+    - {gain_pct: 50, sell_pct: 50}
+    - {gain_pct: 150, sell_pct: 25}
+  hold_pct: 25                # остаток на удержание, не продаётся по лестнице
+  stop_loss_pct: 40
+
+# Неликвид (История 80): нет покупателей — флаг с возрастом и правилом снижения.
+illiquid:
+  age_days: 14                # позиция старше — кандидат в неликвид
+  no_sales_days: 7            # и по коллекции столько дней нет продаж
+  markdown_pct: 10            # шаг снижения цены листинга
+  markdown_every_days: 3
+  min_price_ratio: 0.5        # ниже половины входа не опускаемся
+
+# Ранняя вторичка (Истории 75, 75a).
+secondary:
+  window_min: 15              # «первые минуты» листинга
+  max_floor_premium_pct: 5    # покупаем не выше флора + премия
+  min_volume_usd: 5000
+  min_sales_per_min: 2        # скорость продаж
+  min_attention: 0.4
+  decision_budget_ms: 2000    # потолок decision_latency_ms (История 75a)
+
+# Минт как гипотеза (Истории 76, 77, G09/G09.1). Ничего не отвергается заранее —
+# каждый вариант меряется отдельной строкой замера.
+mint:
+  qty: 1
+  max_price_usd: 200
+  max_attempts: 3
+  variants:
+    - slug: priority-fee
+      note: высокая приоритетная fee, один кошелёк
+      priority_fee_usd: 0.50
+      wallets: 1
+      send_offset_s: 0
+    - slug: multi-wallet
+      note: несколько кошельков параллельно, обычная fee
+      priority_fee_usd: 0.10
+      wallets: 3
+      send_offset_s: 0
+    - slug: early-send
+      note: отправка чуть раньше открытия, обычная fee
+      priority_fee_usd: 0.10
+      wallets: 1
+      send_offset_s: -2
+    - slug: allowlist
+      note: минт по полученному allowlist-месту в момент открытия
+      priority_fee_usd: 0.10
+      wallets: 1
+      send_offset_s: 0
+      allowlist_only: true
+
+# Издержки NFT-сделки по компонентам (История 79, R18.1).
+costs:
+  royalty_pct: 5.0            # роялти создателю по умолчанию
+  marketplace_fee_pct: 2.0    # комиссия площадки
+  gas_usd: 3.0                # оценка газа, если фактического нет
+  per_market:
+    magiceden: {marketplace_fee_pct: 2.0, gas_usd: 0.02}
+    opensea: {marketplace_fee_pct: 2.5, gas_usd: 4.0}
+    zora: {marketplace_fee_pct: 1.5, gas_usd: 0.5}
+    tensor: {marketplace_fee_pct: 1.4, gas_usd: 0.02}
+    blur: {marketplace_fee_pct: 0.5, gas_usd: 4.0}
+
+# Календари минтов (История 74). Публичных API нет — парсинг.
+calendars:
+  - {id: nftcalendar, url: "https://nftcalendar.io/", enabled: true}
+  - {id: magiceden_launchpad, url: "https://api-mainnet.magiceden.dev/v2/launchpad/collections", enabled: true}
