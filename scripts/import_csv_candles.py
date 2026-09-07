@@ -19,6 +19,7 @@ import argparse
 import csv
 import os
 import sys
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -32,8 +33,19 @@ from lab.data.store import SCHEMA, CandleStore  # noqa: E402
 COLUMNS = ("ts", "open", "high", "low", "close", "volume")
 
 
-def read_csv(path: Path) -> pa.Table:
-    """CSV → таблица под схему хранилища. Деньги — Decimal, время — UTC."""
+def _table(ts: list[datetime], cols: dict[str, list[Decimal]]) -> pa.Table:
+    arrays = [pa.array(ts, type=SCHEMA.field("ts").type)]
+    arrays += [pa.array(cols[name], type=SCHEMA.field(name).type) for name in COLUMNS[1:]]
+    return pa.Table.from_arrays(arrays, schema=SCHEMA)
+
+
+def read_csv(path: Path, chunk_rows: int) -> Iterator[pa.Table]:
+    """CSV → таблицы под схему хранилища, кусками. Деньги — Decimal, время — UTC.
+
+    Кусками, а не целиком: минутный файл — больше миллиона строк, а Decimal на строку
+    занимает под сотню байт. На сервере с соседними проектами разовое чтение целиком
+    съедает память у них, а не только у нас.
+    """
     ts: list[datetime] = []
     cols: dict[str, list[Decimal]] = {c: [] for c in COLUMNS[1:]}
     with path.open(newline="", encoding="utf-8") as fh:
@@ -51,9 +63,12 @@ def read_csv(path: Path) -> pa.Table:
             ts.append(datetime.fromtimestamp(seconds, tz=UTC))
             for name in COLUMNS[1:]:
                 cols[name].append(Decimal(row[name]))
-    arrays = [pa.array(ts, type=SCHEMA.field("ts").type)]
-    arrays += [pa.array(cols[name], type=SCHEMA.field(name).type) for name in COLUMNS[1:]]
-    return pa.Table.from_arrays(arrays, schema=SCHEMA)
+            if len(ts) >= chunk_rows:
+                yield _table(ts, cols)
+                ts = []
+                cols = {c: [] for c in COLUMNS[1:]}
+    if ts:
+        yield _table(ts, cols)
 
 
 def main() -> int:
@@ -63,24 +78,36 @@ def main() -> int:
     ap.add_argument("--instrument", required=True, help="инструмент, например BTC/USDT:USDT")
     ap.add_argument("--tf", required=True, help="таймфрейм, например 1h")
     ap.add_argument("--root", default=os.environ.get("LAB_DATA_ROOT", "data"))
+    ap.add_argument(
+        "--chunk-rows",
+        type=int,
+        default=200_000,
+        help="сколько строк держать в памяти за раз (по умолчанию 200000)",
+    )
     args = ap.parse_args()
 
     if not args.csv.exists():
         raise SystemExit(f"нет файла {args.csv}")
 
-    table = read_csv(args.csv)
-    if table.num_rows == 0:
+    store = CandleStore(args.root)
+    rows = written = partitions = 0
+    first: datetime | None = None
+    last: datetime | None = None
+    for table in read_csv(args.csv, args.chunk_rows):
+        result = store.write(args.venue, args.instrument, args.tf, table)
+        rows += table.num_rows
+        written += result.rows_written
+        partitions += len(result.partitions)
+        if first is None:
+            first = table.column("ts")[0].as_py()
+        last = table.column("ts")[-1].as_py()
+    if rows == 0 or first is None or last is None:
         print(f"{args.csv.name}: пусто, нечего писать")
         return 0
-
-    store = CandleStore(args.root)
-    result = store.write(args.venue, args.instrument, args.tf, table)
-    first = table.column("ts")[0].as_py()
-    last = table.column("ts")[-1].as_py()
     print(
-        f"{args.csv.name}: {table.num_rows} строк "
-        f"({first:%Y-%m-%d} → {last:%Y-%m-%d}), записано новых {result.rows_written}, "
-        f"партиций тронуто {len(result.partitions)}"
+        f"{args.csv.name}: {rows} строк "
+        f"({first:%Y-%m-%d} → {last:%Y-%m-%d}), записано новых {written}, "
+        f"партиций тронуто {partitions}"
     )
     print(f"  в хранилище теперь: {store.count(args.venue, args.instrument, args.tf)} свечей")
     return 0
