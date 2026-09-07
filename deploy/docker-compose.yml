@@ -84,6 +84,13 @@ services:
   web:
     <<: *lab-service
     command: ["uv", "run", "python", "-m", "lab", "service", "web"]
+    environment:
+      # Повторяет анкер: свой environment у сервиса заменяет environment анкера целиком.
+      DATABASE_URL: postgresql+psycopg://lab:${POSTGRES_PASSWORD:-lab}@db:5432/lab
+      # WEB_BIND в .env — адрес НА ХОСТЕ (строка ports ниже). Внутри контейнера приложение
+      # обязано слушать все интерфейсы и всегда порт 8080: на loopback контейнера
+      # docker-proxy достучаться не может, и опубликованный порт молча отвечает отказом.
+      WEB_BIND: 0.0.0.0:8080
     ports:
       - "${WEB_BIND:-127.0.0.1:8080}:8080"
     depends_on:
