@@ -17,6 +17,11 @@ COPY migrations ./migrations
 COPY alembic.ini ./
 COPY config ./config
 COPY examples ./examples
+# docs — не только документация: карточки стратегий из docs/research/strategies читает
+# lab.strategies.presets.cards на ИМПОРТЕ реестра (CARDS_DIR). Без них любая команда,
+# собирающая стратегии (measure, worker, discovery), падает в контейнере с
+# FileNotFoundError, хотя тесты из репозитория проходят. 280 КБ, кладём целиком.
+COPY docs ./docs
 RUN uv sync --frozen --no-dev
 
 RUN mkdir -p /tmp/lab /app/data /app/backups
