@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-06T10:43:38+04:00",
+  "updatedAt": "2026-09-06T21:15:15+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -50,13 +50,13 @@ window.STATE =
       "id": "build",
       "status": "active",
       "startedAt": "2026-09-05T22:32:43+04:00",
-      "note": "3 из 14 тасков готовы · пауза по просьбе пользователя"
+      "note": "5 из 14 готовы · 04 в ремонте, 05/06 на ревью, 07 в полёте"
     },
     {
       "id": "review",
       "status": "active",
       "startedAt": "2026-09-05T22:45:47+04:00",
-      "note": "проверено 3 из 14; таск 13 ждёт ревью"
+      "note": "проверено 5 из 14"
     },
     {
       "id": "final",
@@ -65,8 +65,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 45,
-    "done": 18,
-    "inTicket": 26,
+    "done": 22,
+    "inTicket": 22,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 1,
@@ -166,15 +166,18 @@ window.STATE =
       ],
       "status": "done",
       "retries": 0,
-      "repairs": 0,
+      "repairs": 1,
       "handoffs": 0,
       "startedAt": "2026-09-05T22:56:01+04:00",
-      "finishedAt": "2026-09-06T10:43:38+04:00",
+      "finishedAt": "2026-09-06T20:52:33+04:00",
       "tests": {
-        "passed": 103,
+        "passed": 108,
         "failed": 0
       },
-      "commit": "50d7ea6"
+      "commit": "098c4ae",
+      "repairFindings": [
+        "reduce_only блокировался стопами/degraded — позицию нельзя закрыть (G04, История 10)"
+      ]
     },
     {
       "id": "13",
@@ -195,11 +198,13 @@ window.STATE =
         "candidates/",
         "config/authors.yaml"
       ],
-      "status": "review",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-05T22:56:01+04:00"
+      "startedAt": "2026-09-05T22:56:01+04:00",
+      "commit": "a11cfa5",
+      "finishedAt": "2026-09-06T20:52:33+04:00"
     },
     {
       "id": "04",
@@ -222,10 +227,14 @@ window.STATE =
         "src/lab/executors/cex/",
         "src/lab/data/backfill_cex.py"
       ],
-      "status": "pending",
-      "retries": 0,
-      "repairs": 0,
-      "handoffs": 0
+      "status": "repair",
+      "retries": 1,
+      "repairs": 1,
+      "handoffs": 0,
+      "startedAt": "2026-09-06T20:52:33+04:00",
+      "repairFindings": [
+        "paper/live смешаны в positions/balance; при NetworkError отдаётся бумажный баланс; подмена транспорта по PYTEST_CURRENT_TEST"
+      ]
     },
     {
       "id": "05",
@@ -247,10 +256,11 @@ window.STATE =
         "src/lab/ops/scheduler.py",
         "src/lab/ops/outbox.py"
       ],
-      "status": "pending",
-      "retries": 0,
+      "status": "review",
+      "retries": 1,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-06T20:52:33+04:00"
     },
     {
       "id": "06",
@@ -270,10 +280,11 @@ window.STATE =
       "zone": [
         "src/lab/web/"
       ],
-      "status": "pending",
-      "retries": 0,
+      "status": "review",
+      "retries": 1,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-06T20:52:33+04:00"
     },
     {
       "id": "07",
@@ -298,10 +309,11 @@ window.STATE =
         "src/lab/feeds/stocks/",
         "src/lab/feeds/social/"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-06T21:15:15+04:00"
     },
     {
       "id": "08",
@@ -516,7 +528,23 @@ window.STATE =
     "T03 machine.py:139-147 — evaluate вызывает start(); провал на нижней ступени не пишет переход; demote с backtest молча None",
     "T03 engine.py:243 — available_usd от базы, лимиты от current_usd",
     "T02 runner.py code_version() = unknown в образе без .git; record_fill не проверяет decided_at < ts; тест воспроизводимости сравнивает с кэшем; extra_metrics с опечаткой молча отбрасывается; threshold() читает yaml на каждый вызов; journal reconcile checked считает общие дважды; signal_id = inputs_hash в симуляторе; FIFO-матчер продублирован в journal и simulator",
-    "T02 R10: measure_cost/can_backtest не прикреплены к кандидату — очередь (T12) вызывает measure_plan на лету"
+    "T02 R10: measure_cost/can_backtest не прикреплены к кандидату — очередь (T12) вызывает measure_plan на лету",
+    "T13 copy-okx-lead-filtered.md:35, cex-perp-funding-arb-spot-hedge.md:30 — константы в прозе не в params",
+    "T13 source_ref карточек Coinmetrika указывает в .autopilot/user-inputs — не попадает в образ",
+    "T13 HL-лидеры и смарт-мани кошельки не собраны — долг discovery (T12)",
+    "T03 engine.py:116 текст причины для retired «закрытие позиций запрещено» и на открывающий ордер",
+    "T04 executor.py:98-108,261-289 — _walk_book и неттинг позиций продублированы (core.costs, FakeExecutor, FakeTransport)",
+    "T04 executor.py:306 — _find_on_venue перед каждым live-ордером; InvalidOrder duplicate не обрабатывается",
+    "T04 transport.py:29 — max_leverage=50 по умолчанию, когда площадка не сообщила лимит",
+    "T04 пустые подклассы BybitExecutor и т.п. с декоративным venue",
+    "T04 fills()/positions() с побочными эффектами",
+    "T04 backfill: символ без данных → «готово, 0 свечей» с кодом 0",
+    "T04 live-пути протестированы только на bybit",
+    "T04 transport.py:33 — rate_limit_note без источника",
+    "T04 нет funding_history в фиде/бэкфилле — бэктест перпов с фандингом не из чего (долг T14)",
+    "T04 paper-филл не сохраняет ref_price для Journal",
+    "T04 стартовый баннер venues_report без rights — withdraw-ключ узнаётся только при первом live place (долг T14)",
+    "T04 hyperliquid-python-sdk не взят — лидерборд HL остаётся T12"
   ],
   "reviewers": {
     "manifestSpec": "afea90f146a601738",

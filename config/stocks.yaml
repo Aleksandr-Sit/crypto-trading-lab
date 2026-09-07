@@ -1,0 +1,6 @@
+# Акции для сигналов (G01.2): провайдер свечей — `STOCK_DATA_PROVIDER` (yfinance без ключа |
+# alphavantage + ALPHAVANTAGE_API_KEY). Исполнения нет — ступень `signal` навсегда, вручную через RH.
+version: 1
+timeframe: 1d
+venue: stocks              # venue в CandleStore: data/candles/venue=stocks/instrument=<TICKER>/tf=1d
+tickers: [AAPL, MSFT, NVDA, TSLA, SPY]   # дополнит пользователь

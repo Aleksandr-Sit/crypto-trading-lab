@@ -279,6 +279,13 @@ class OutboxRow(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[Ts] = mapped_column(default=utcnow)
     delivered_at: Mapped[TsOpt]
+    # миграция 0004 (тикет 05): повтор с задержкой и ссылка на отправленное сообщение
+    kind: Mapped[str] = mapped_column(String(32), default="alert")
+    ref: Mapped[str | None] = mapped_column(String(128))
+    next_attempt_at: Mapped[TsOpt]
+    last_error: Mapped[str | None] = mapped_column(Text)
+    message_id: Mapped[int | None] = mapped_column(Integer)
+    dead: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class ConfigChangeRow(Base):

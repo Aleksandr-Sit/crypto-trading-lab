@@ -20,3 +20,13 @@ jobs:
   backup:
     cron: "0 3 * * *"
     description: Резервная копия базы в BACKUP_DIR
+  # тикет 05 — служебные задания бота (минутный тик)
+  outbox_flush:
+    cron: "* * * * *"
+    description: Повтор недоставленных сообщений Telegram (outbox)
+  expire_signals:
+    cron: "* * * * *"
+    description: Протухание сигналов без ответа (ttl_s) и правка карточек
+  stop_watch:
+    cron: "* * * * *"
+    description: Пробой стопа стратегии → degraded (Deny(strategy_stop_*) → ladder.breach)

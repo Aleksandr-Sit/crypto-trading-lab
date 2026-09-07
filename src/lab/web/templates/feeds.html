@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Источники{% endblock %}
+{% block content %}
+<h1>Источники данных</h1>
+{% if not connected %}
+<section class="notice">
+  <b>Источник ещё не подключён.</b> Экран читает <code>ops.feeds_registry.status()</code> и
+  <code>budget()</code>; реестр источников поднимает worker (таск 14). Ниже — пустые значения,
+  не реальные квоты.
+</section>
+{% endif %}
+<section class="card">
+  <h2>Бюджет платных источников</h2>
+  <p>
+    Потрачено за месяц: <b>{{ budget.spent_usd|fmt("money") }} USD</b> из {{ budget.month_limit_usd|fmt("money") }} USD ·
+    прогноз на конец месяца: <b class="{% if budget.warning %}warn{% endif %}">{{ budget.forecast_usd|fmt("money") }} USD</b>
+    {% if budget.warning %}<span class="warn">— близко к лимиту, отключи или замени дорогой источник</span>{% endif %}
+  </p>
+</section>
+<section class="card">
+  <h2>Квоты и здоровье</h2>
+  {% if feeds %}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Источник</th><th>Тип</th><th>Здоровье</th><th class="num">Квота</th><th>Исчерпание</th><th class="num">Цена/мес, USD</th></tr></thead>
+    <tbody>
+    {% for f in feeds %}
+      <tr>
+        <td>{{ f.name }} <span class="muted">{{ f.id }}</span></td>
+        <td>{{ f.kind }}</td>
+        <td><span class="health {{ f.health }}">{% if f.health == "ok" %}ок{% elif f.health == "degraded" %}деградация{% else %}недоступен{% endif %}</span>{% if f.health_detail %} <span class="muted">{{ f.health_detail }}</span>{% endif %}</td>
+        <td class="num">{% if f.quota_limit %}{{ f.quota_used }} / {{ f.quota_limit }} {% if f.quota_period %}за {{ f.quota_period }}{% endif %} ({{ f.quota_pct }} %){% else %}без лимита{% endif %}</td>
+        <td>{% if f.exhausted_at %}<span class="warn">{{ f.exhausted_at|samara(False) }}</span>{% else %}не грозит{% endif %}</td>
+        <td class="num">{{ f.cost_month|fmt("money") }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">Источники ещё не зарегистрированы. Они появятся, как только worker поднимет реестр фидов; ключи — в <code>.env</code> по именам из <code>.env.example</code>.</p>
+  {% endif %}
+</section>
+{% endblock %}

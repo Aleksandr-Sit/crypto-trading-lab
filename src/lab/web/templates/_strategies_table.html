@@ -1,0 +1,38 @@
+{% macro th(key, title) -%}
+{% set next = "desc" if (f.sort == key and f.dir == "asc") else "asc" %}
+<th class="{% if key in ('id','branch','rung','status') %}{% else %}num{% endif %}{% if f.sort == key %} sorted{% endif %}">
+  <a hx-get="/strategies?branch={{ f.branch }}&rung={{ f.rung }}&status={{ f.status }}&sort={{ key }}&dir={{ next }}"
+     hx-target="#strategies-table" hx-push-url="true"
+     href="/strategies?branch={{ f.branch }}&rung={{ f.rung }}&status={{ f.status }}&sort={{ key }}&dir={{ next }}">{{ title }}{% if f.sort == key %} {{ "▲" if f.dir == "asc" else "▼" }}{% endif %}</a>
+</th>
+{%- endmacro %}
+{% if lines %}
+<div class="scroll">
+<table class="strategies">
+  <thead>
+    <tr>
+      {{ th("id", "Стратегия") }}
+      {{ th("branch", "Ветка") }}
+      {{ th("rung", "Ступень") }}
+      {{ th("status", "Статус") }}
+      {% for key, title, _ in metric_columns %}{{ th(key, title) }}{% endfor %}
+      <th>Замер</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for ln in lines %}
+    <tr>
+      <td><a href="/strategies/{{ ln.strategy.id }}">{{ ln.strategy.id }}</a></td>
+      <td>{{ ln.strategy.branch.value|label("branch") }}</td>
+      <td>{{ ln.strategy.rung.value|label("rung") }}</td>
+      <td><span class="status {{ ln.strategy.status.value }}">{{ ln.strategy.status.value|label("status") }}</span></td>
+      {% for key, _, _ in metric_columns %}<td class="num">{{ ln.cells[key] }}</td>{% endfor %}
+      <td>{% if ln.sample %}<span class="warn">{{ ln.sample }}</span>{% else %}{{ ln.measured_at }}{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="empty-inline">По этим фильтрам стратегий нет. <a href="/strategies">Сбросить фильтры</a></p>
+{% endif %}

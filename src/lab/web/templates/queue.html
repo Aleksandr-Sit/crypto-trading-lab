@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Очередь кандидатов{% endblock %}
+{% block content %}
+<h1>Очередь кандидатов</h1>
+<form class="filters" method="get" action="/queue">
+  <label>Решение
+    <select name="decision" onchange="this.form.submit()">
+      <option value="" {% if decision == "" %}selected{% endif %}>все</option>
+      {% for d in decisions %}<option value="{{ d }}" {% if decision == d %}selected{% endif %}>{{ {"pending":"ждёт","draft":"черновик","accepted":"принят","rejected":"отклонён"}[d] }}</option>{% endfor %}
+    </select>
+  </label>
+  <noscript><button type="submit">Применить</button></noscript>
+</form>
+{% if items %}
+<table>
+  <thead><tr><th>#</th><th>Вид</th><th>Ссылка</th><th>Найден</th><th>Решение</th><th>Ошибка</th></tr></thead>
+  <tbody>
+  {% for c in items %}
+    <tr><td>{{ c.id }}</td><td>{{ c.kind }}</td><td>{{ c.ref }}</td><td>{{ c.discovered_at|samara }}</td><td>{{ c.decision.value }}{% if c.decided_at %} ({{ c.decided_at|samara(False) }}){% endif %}</td><td>{{ c.error or "" }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted">Принять в замер или отклонить — кнопками в карточке бота Trader.</p>
+{% else %}
+<section class="empty">
+  <h2>{% if total == 0 %}Очередь пуста{% else %}Кандидатов с таким решением нет{% endif %}</h2>
+  <p>{% if total == 0 %}Кандидатов ещё не находили. Добавь вручную или запусти поиск.{% else %}Всего кандидатов: {{ total }}. <a href="/queue?decision=">Показать все</a>{% endif %}</p>
+  <div class="actions">
+    <code class="cmd">uv run python -m lab candidate add &lt;вид&gt; &lt;ссылка&gt;</code>
+    <a class="btn" href="/strategies">К стратегиям</a>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{% block title %}Лаборатория{% endblock %} — crypto-trading-lab</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">crypto-trading-lab</a>
+  <nav>
+    <a href="/" {% if page == "index" %}class="active"{% endif %}>Сводка</a>
+    <a href="/strategies" {% if page == "strategies" %}class="active"{% endif %}>Стратегии</a>
+    <a href="/feeds" {% if page == "feeds" %}class="active"{% endif %}>Источники</a>
+    <a href="/queue" {% if page == "queue" %}class="active"{% endif %}>Очередь</a>
+    <a href="/graveyard" {% if page == "graveyard" %}class="active"{% endif %}>Кладбище</a>
+  </nav>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer class="foot">Время — Европа/Самара. Деньги — USD после издержек.</footer>
+</body>
+</html>

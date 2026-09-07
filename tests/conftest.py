@@ -16,6 +16,9 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 ROOT = Path(__file__).resolve().parents[1]
+# Исполнители CEX (таск 04): в тестах — фейковый транспорт ccxt; живые API — за LAB_LIVE_TESTS=1.
+if os.environ.get("LAB_LIVE_TESTS") != "1":
+    os.environ.setdefault("LAB_CEX_TRANSPORT", "fake")
 DEFAULT_TEST_URL = "postgresql+psycopg://lab:lab@localhost:5432/lab_test"
 
 

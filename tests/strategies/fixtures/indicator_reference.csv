@@ -1,0 +1,27 @@
+# Эталон для теста v1 индикаторов (G08). Формат: одна строка = одна проверка.
+# author     — pifagor | coinmetrika
+# indicator  — имя индикатора (см. `by_name` в pifagor.py / coinmetrika.py)
+# date       — дата (YYYY-MM-DD, UTC) закрытия свечи, к которой относится проверка
+# signal     — ожидаемый сигнал на эту дату: buy | sell | dot_green | dot_red (пусто — проверять значение)
+# tolerance_days — допуск по датам для signal (по умолчанию 31 = ±1 месяц)
+# column     — колонка индикатора, чьё значение проверяем (пусто — только signal)
+# expected   — эталонное значение на дату (из Data Window TradingView); пусто — только signal
+# abs_tol    — допуск по значению (по умолчанию 1)
+# data_file  — файл дневных свечей в этом каталоге: колонки ts,open,high,low,close,volume;
+#              для BTC нужен ряд с 2012 (Bitstamp BTC/USD, не Binance) — btcusd_1d.csv
+# Строки ниже — даты сигналов со скриншотов пользователя (docs/research/indicators/coinmetrika.md).
+# Тест пропускается, пока нет data_file; чтобы включить — положите btcusd_1d.csv рядом.
+author,indicator,date,signal,tolerance_days,column,expected,abs_tol,data_file
+coinmetrika,monthly-trend-flip,2015-06-01,buy,31,,,,btcusd_1d.csv
+coinmetrika,monthly-trend-flip,2019-04-01,buy,31,,,,btcusd_1d.csv
+coinmetrika,monthly-trend-flip,2023-01-01,buy,31,,,,btcusd_1d.csv
+coinmetrika,monthly-trend-flip,2026-08-01,buy,31,,,,btcusd_1d.csv
+coinmetrika,mtf-oversold,2015-07-01,dot_green,45,,,,btcusd_1d.csv
+coinmetrika,mtf-oversold,2019-02-01,dot_green,45,,,,btcusd_1d.csv
+coinmetrika,mtf-oversold,2022-12-01,dot_green,45,,,,btcusd_1d.csv
+coinmetrika,mtf-oversold,2023-07-01,dot_green,45,,,,btcusd_1d.csv
+coinmetrika,mtf-oversold,2026-07-01,dot_green,45,,,,btcusd_1d.csv
+coinmetrika,mtf-oversold,2017-12-01,dot_red,45,,,,btcusd_1d.csv
+coinmetrika,mtf-oversold,2021-04-01,dot_red,45,,,,btcusd_1d.csv
+pifagor,mfi,,,,mfi,,1,btcusd_1d.csv
+pifagor,forever-sma,,,,sma,,1,btcusd_1d.csv

@@ -1,0 +1,24 @@
+{% if lines %}
+<table>
+  <thead><tr><th>Стратегия</th><th>Ветка</th><th>Статус</th><th>Причина</th><th>Добавлена</th></tr></thead>
+  <tbody>
+  {% for ln in lines %}
+    <tr>
+      <td><a href="/strategies/{{ ln.strategy.id }}">{{ ln.strategy.id }}</a></td>
+      <td>{{ ln.strategy.branch.value|label("branch") }}</td>
+      <td><span class="status {{ ln.strategy.status.value }}">{{ ln.strategy.status.value|label("status") }}</span></td>
+      <td>{{ ln.reason }}</td>
+      <td>{{ ln.when }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% elif reason %}
+<p class="empty-inline">По причине «{{ reason }}» ничего нет. <a href="/graveyard">Показать всё кладбище</a></p>
+{% else %}
+<section class="empty">
+  <h2>Кладбище пусто</h2>
+  <p>Ни одна стратегия ещё не провалила порог и не была снята. Это нормально для новой лаборатории.</p>
+  <div class="actions"><a class="btn" href="/strategies">К стратегиям</a></div>
+</section>
+{% endif %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Сводка{% endblock %}
+{% block content %}
+<h1>Сводка</h1>
+{% if s.registry_empty %}
+  {% include "_empty_registry.html" %}
+{% endif %}
+
+<section class="grid">
+<article class="card">
+  <h2>Капитал по веткам</h2>
+  {% if s.allocations %}
+  <table>
+    <thead><tr><th>Ветка</th><th class="num">Доля</th><th class="num">База, USD</th><th class="num">Сейчас, USD</th><th>Свежесть</th></tr></thead>
+    <tbody>
+    {% for a in s.allocations %}
+      <tr>
+        <td>{{ a.branch|label("branch") }}</td>
+        <td class="num">{{ a.share|fmt("ratio") }}</td>
+        <td class="num">{{ a.base_amount|fmt("money") }}</td>
+        <td class="num">{{ a.current_amount|fmt("money") }}</td>
+        <td>{% if a.stale %}<span class="warn">устарело</span>{% else %}{{ a.updated_at|samara }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Раскладка капитала ещё не рассчитана — появится после первого прогона риск-ядра (<code>config/limits.yaml</code>).</p>
+  {% endif %}
+</article>
+
+<article class="card">
+  <h2>За неделю</h2>
+  <p><span class="ok">Прошли: {{ s.passed_week|length }}</span> · <span class="bad">Упали: {{ s.failed_week|length }}</span> · переходов по лестнице: {{ s.transitions_week|length }}</p>
+  {% if s.passed_week or s.failed_week %}
+  <ul class="plain">
+    {% for st in s.passed_week %}<li><a href="/strategies/{{ st.id }}">{{ st.id }}</a> — <span class="ok">прошла</span>, ступень {{ st.rung.value|label("rung") }}</li>{% endfor %}
+    {% for st in s.failed_week %}<li><a href="/strategies/{{ st.id }}">{{ st.id }}</a> — <span class="bad">не прошла</span></li>{% endfor %}
+  </ul>
+  {% elif not s.registry_empty %}
+  <p class="muted">За последние 7 дней ни одна стратегия не меняла статус. Замеры идут по расписанию (<code>config/schedule.yaml</code>).</p>
+  {% endif %}
+</article>
+
+<article class="card">
+  <h2>Ожидают решения ({{ s.decisions_count }})</h2>
+  {% if s.decisions_count == 0 %}
+    <p class="muted">Решений не требуется. Новые кандидаты появятся в <a href="/queue">очереди</a>.</p>
+  {% else %}
+  <ul class="plain">
+    {% if s.pending_candidates %}<li><a href="/queue">Кандидатов в очереди: {{ s.pending_candidates|length }}</a> — принять в замер или отклонить (в боте Trader)</li>{% endif %}
+    {% for st in s.awaiting_operator %}<li><a href="/strategies/{{ st.id }}">{{ st.id }}</a> — прошла порог на ступени «полуавто», перевод в «авто» только оператором: <code>/promote {{ st.id }}</code></li>{% endfor %}
+    {% for st in s.degraded %}<li><a href="/strategies/{{ st.id }}">{{ st.id }}</a> — <span class="warn">деградация</span>: пробит стоп, ордера сняты; решить — вернуть или снять</li>{% endfor %}
+  </ul>
+  {% endif %}
+</article>
+</section>
+{% endblock %}

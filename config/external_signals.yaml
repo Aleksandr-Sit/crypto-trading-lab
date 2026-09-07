@@ -1,0 +1,41 @@
+# Адаптер внешних проектов `external-signal` (R01.3): сигналы crypto-trader и solana-smart-money
+# заводятся как стратегии-источники `<ветка>-ext-<name>`. Три транспорта: webhook | file | telegram.
+# Формат сообщения (json-v1) один для всех транспортов — пример в `example`; Telegram-пост
+# разбирается парсером `lab.feeds.social.parser` (тикер, направление, вход, цели, стоп).
+# «[ПУТЬ — впиши]» / «[ССЫЛКА — впиши]» — заполняет пользователь; до этого источник неактивен.
+version: 1
+format: json-v1
+example:
+  instrument: "BTC/USDT"          # символ ccxt (спот BTC/USDT, перп BTC/USDT:USDT) или mint/адрес для meme
+  side: "buy"                     # buy | sell
+  size: "0.01"                    # количество базового актива (строка — Decimal)
+  price: "61200"                  # опорная цена, опционально
+  ts: "2026-09-01T12:00:00+00:00" # момент решения источника (decided_at) — обязателен
+  ttl_s: 900                      # срок годности сигнала
+  source_id: "ct-000123"          # id сигнала в источнике — защита от дублей
+  meta: {reason: "example"}       # произвольное
+webhook:
+  path: /hooks/external-signal/<name>   # маршрут в web (таск 06/14); тело — JSON как example
+  signature_header: X-Signature         # hex HMAC-SHA256(secret, body); secret — из secret_env
+sources:
+  - name: crypto-trader
+    transport: webhook
+    branch: cex-spot
+    venue: bybit
+    secret_env: EXTERNAL_WEBHOOK_SECRET
+    repo: "[ПУТЬ — впиши]"          # локальный путь/URL старого проекта crypto-trader
+  - name: crypto-trader-file
+    transport: file
+    branch: cex-spot
+    venue: bybit
+    path: "[ПУТЬ — впиши]"          # JSON Lines: одна строка — одно сообщение json-v1
+  - name: solana-smart-money
+    transport: file
+    branch: meme
+    venue: jupiter
+    path: "[ПУТЬ — впиши]"
+  - name: solana-smart-money-tg
+    transport: telegram
+    branch: meme
+    venue: jupiter
+    channel: "[ССЫЛКА — впиши]"     # t.me/<канал>, читается Telethon (lab.feeds.social.telegram)

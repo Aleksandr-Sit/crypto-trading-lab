@@ -5,7 +5,7 @@ lab strategy add --file examples/strategy.yaml
 lab strategy list [--branch B] [--status S]
 lab strategy retire <id> --reason "..."
 lab candidate add <kind> <ref>
-lab service <worker|bot|web>            — пустой сервис: баннер + heartbeat (тикет 01)
+lab service <worker|bot|web>            — worker: планировщик; bot: Trader (тикет 05); web: таск 06
 """
 
 import argparse
@@ -93,17 +93,125 @@ def cmd_candidate_add(args: argparse.Namespace) -> int:
 
 def cmd_service(args: argparse.Namespace) -> int:
     print_startup_banner(args.name)
+    if args.name == "web":  # таск 06: uvicorn на WEB_BIND, остальное — в lab.web
+        from lab.web import serve
+
+        return serve(_session_factory, once=args.once)
+    if args.name == "bot":  # таск 05
+        return cmd_service_bot(args)
+    return cmd_service_worker(args)  # таск 05: планировщик
+
+
+def _heartbeat(name: str):
     HEARTBEAT_DIR.mkdir(parents=True, exist_ok=True)
-    beat = HEARTBEAT_DIR / f"{args.name}.heartbeat"
-    print(f"Сервис {args.name}: логика появится в следующих тикетах; heartbeat → {beat}")
+    beat = HEARTBEAT_DIR / f"{name}.heartbeat"
+
+    def tick() -> None:
+        beat.write_text(str(int(time.time())), encoding="utf-8")
+
+    return beat, tick
+
+
+def _trader_bot(env: dict[str, str]):
+    """Тикет 05: TraderBot на aiogram-транспорте; None (с причиной), если нет токена/админа."""
+    from lab.bot import TraderBot
+    from lab.bot.telegram import TelegramTransport, make_aiogram_bot
+    from lab.core.ladder import Ladder, default_threshold_fn
+    from lab.core.risk import DbHaltSwitch
+
+    token, admin = env.get("TELEGRAM_BOT_TOKEN"), env.get("TELEGRAM_ADMIN_ID")
+    if not token or not admin:
+        return None, None, "TELEGRAM_BOT_TOKEN/TELEGRAM_ADMIN_ID не заданы в .env"
+    aio = make_aiogram_bot(token)
+    factory = _session_factory()
+    bot = TraderBot(
+        session_factory=factory,
+        admin_id=int(admin),
+        transport=TelegramTransport(aio),
+        ladder_factory=lambda s: Ladder(s, threshold=default_threshold_fn(), halt=DbHaltSwitch(s)),
+    )
+    return bot, aio, None
+
+
+def cmd_service_bot(args: argparse.Namespace) -> int:
+    """Бот Trader: long polling + утренний отчёт/протухание/outbox по schedule.yaml."""
+    import asyncio
+
+    from lab.bot.telegram import run_bot
+    from lab.ops.scheduler import default_scheduler
+
+    beat, tick = _heartbeat("bot")
+    bot, aio, why = _trader_bot(environment())
+    tick()
+    if bot is None:
+        print(f"Сервис bot: {why}; heartbeat → {beat}")
+        return 0 if args.once else 1
+    if args.once:
+        print(f"Сервис bot готов: админ {bot.admin_id}; heartbeat → {beat}")
+        return 0
+    asyncio.run(run_bot(bot, aio, scheduler=default_scheduler(), heartbeat=tick))
+    return 0
+
+
+def cmd_service_worker(args: argparse.Namespace) -> int:
+    """Worker: APScheduler с расписанием из schedule.yaml. Задания ядра (фиды, замеры,
+    сверка, бэкап) регистрируют свои тикеты через `ops.scheduler.register(job)`;
+    здесь — только запуск планировщика и heartbeat."""
+    from lab.ops.scheduler import default_scheduler
+
+    beat, tick = _heartbeat("worker")
+    sched = default_scheduler()
+    tick()
+    print(
+        f"Сервис worker: планировщик {sched.tz.key}, заданий: {len(sched.jobs())}; "
+        f"heartbeat → {beat}"
+    )
+    if args.once:
+        return 0
+    sched.start()
     try:
         while True:
-            beat.write_text(str(int(time.time())), encoding="utf-8")
-            if args.once:
-                return 0
+            tick()
             time.sleep(10)
     except KeyboardInterrupt:
         return 0
+    finally:
+        sched.shutdown()
+
+
+def cmd_data_backfill(args: argparse.Namespace) -> int:
+    """Таск 04: свечи CEX за N дней в Parquet с прогрессом; прерывание — повтор продолжит."""
+    from lab.data import CandleStore
+    from lab.data.backfill_cex import backfill_venue
+
+    symbols = [s.strip() for chunk in args.symbols for s in chunk.split(",") if s.strip()]
+    last: dict[str, int] = {}
+
+    def progress(instrument: str, done: int, total: int) -> None:
+        pct = 100 * done // total if total else 100
+        if last.get(instrument) != pct:
+            last[instrument] = pct
+            label = f"{args.venue} {instrument} {args.tf}"
+            print(f"{label}: {done}/{total} свечей ({pct}%)", flush=True)
+
+    results = backfill_venue(
+        CandleStore(args.root), args.venue, symbols, args.tf, args.days, progress=progress
+    )
+    failed = 0
+    for r in results:
+        if r.error:
+            failed += 1
+            print(
+                f"{r.venue} {r.instrument} {r.tf}: прерван на {r.resume_from:%Y-%m-%d %H:%M}"
+                f" — {r.error}; записано {r.rows_written}."
+                " Повторите команду — продолжится с этой точки."
+            )
+        elif r.result and r.result.skipped:
+            print(f"{r.venue} {r.instrument} {r.tf}: уже загружено, пропуск")
+        elif r.result:
+            n = r.result.rows_written
+            print(f"{r.venue} {r.instrument} {r.tf}: готово, записано {n} свечей")
+    return 1 if failed else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -137,6 +245,19 @@ def build_parser() -> argparse.ArgumentParser:
     cadd.add_argument("kind")
     cadd.add_argument("ref")
     cadd.set_defaults(func=cmd_candidate_add)
+
+    data = sub.add_parser("data", help="данные: бэкфилл свечей").add_subparsers(
+        dest="action", required=True
+    )
+    bf = data.add_parser("backfill", help="свечи CEX за N дней в Parquet (таск 04)")
+    bf.add_argument("--venue", required=True, choices=["bybit", "okx", "binance", "hyperliquid"])
+    bf.add_argument(
+        "--symbols", required=True, action="append", help="через запятую или повтором флага"
+    )
+    bf.add_argument("--tf", default="1h")
+    bf.add_argument("--days", type=int, default=365)
+    bf.add_argument("--root", default="data", help="корень Parquet-хранилища")
+    bf.set_defaults(func=cmd_data_backfill)
 
     svc = sub.add_parser("service", help="запуск сервиса worker|bot|web")
     svc.add_argument("name", choices=["worker", "bot", "web"])

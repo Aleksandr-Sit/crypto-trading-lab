@@ -1,0 +1,61 @@
+/* Светлая/тёмная тема по prefers-color-scheme; без сборки. */
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7f5; --panel: #ffffff; --ink: #1c1c1a; --muted: #6b6b66; --line: #dedcd6;
+  --accent: #2456c4; --ok: #1d7a3b; --bad: #b3261e; --warn: #9a6200; --curve: #2456c4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15161a; --panel: #1e2026; --ink: #e8e6e0; --muted: #9a9a94; --line: #34363d;
+    --accent: #7ea2ff; --ok: #5ccf7f; --bad: #ff7b72; --warn: #e5b452; --curve: #7ea2ff;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+header.top { display: flex; gap: 24px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header .brand { font-weight: 700; color: var(--ink); text-decoration: none; }
+header nav a { margin-right: 14px; text-decoration: none; padding: 4px 0; }
+header nav a.active { border-bottom: 2px solid var(--accent); font-weight: 600; }
+main { max-width: 1400px; margin: 0 auto; padding: 16px 20px 40px; }
+footer.foot { color: var(--muted); text-align: center; padding: 12px; font-size: 12px; }
+h1 { font-size: 22px; margin: 8px 0 12px; }
+h2 { font-size: 15px; margin: 0 0 10px; }
+.meta, .muted { color: var(--muted); }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 14px; }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: 12px; }
+th a { text-decoration: none; color: inherit; }
+th.sorted a { color: var(--accent); }
+td.num, th.num { text-align: right; }
+table.kv th { width: 60%; text-align: left; color: var(--ink); font-weight: 400; }
+.scroll { overflow-x: auto; }
+.ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+.status { padding: 1px 7px; border-radius: 10px; font-size: 12px; border: 1px solid var(--line); }
+.status.passed { color: var(--ok); border-color: var(--ok); }
+.status.failed, .status.retired { color: var(--bad); border-color: var(--bad); }
+.status.degraded, .status.insufficient { color: var(--warn); border-color: var(--warn); }
+.health.ok { color: var(--ok); } .health.degraded { color: var(--warn); } .health.down { color: var(--bad); }
+.criteria tr.pass .mark { color: var(--ok); } .criteria tr.fail .mark { color: var(--bad); } .criteria tr.unknown .mark { color: var(--warn); }
+.mark { font-size: 16px; text-align: center; }
+.ci { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.notice { border-left: 4px solid var(--warn); background: var(--panel); padding: 10px 14px; margin-bottom: 14px; border-radius: 0 8px 8px 0; }
+.filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-bottom: 12px; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+select, input[type=search] { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font: inherit; }
+.btn { display: inline-block; background: var(--accent); color: #fff; padding: 7px 12px; border-radius: 6px; text-decoration: none; }
+.btn.small { font-size: 12px; padding: 3px 8px; margin-left: 8px; }
+.empty { border: 1px dashed var(--line); border-radius: 8px; padding: 24px; text-align: center; background: var(--panel); margin-bottom: 14px; }
+.empty .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+.empty-inline { padding: 14px; color: var(--muted); }
+code.cmd { background: var(--bg); border: 1px solid var(--line); padding: 6px 10px; border-radius: 6px; }
+ul.plain { padding-left: 18px; margin: 6px 0; }
+svg.equity { width: 100%; height: auto; display: block; }
+svg.equity .curve { stroke: var(--curve); stroke-width: 1.8; }
+svg.equity.down .curve { stroke: var(--bad); }
+svg.equity .zero { stroke: var(--line); stroke-dasharray: 3 3; }
+svg.equity .tick, svg.equity .last { fill: var(--muted); font-size: 11px; }
+svg.equity .last { fill: var(--ink); font-weight: 600; }

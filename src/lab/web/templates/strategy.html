@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}{{ c.strategy.id }}{% endblock %}
+{% block content %}
+{% set st = c.strategy %}
+<h1>{{ st.id }} <span class="status {{ st.status.value }}">{{ st.status.value|label("status") }}</span></h1>
+<p class="meta">
+  {{ st.branch.value|label("branch") }} · {{ st.venue }} · {{ st.instruments|join(", ") }}{% if st.timeframe %} · {{ st.timeframe }}{% endif %}
+  · ступень <b>{{ st.rung.value|label("rung") }}</b> · источник {{ st.source_kind }}{% if st.source_ref %} ({{ st.source_ref }}){% endif %}
+  · добавлена {{ st.created_at|samara(False) }}
+</p>
+{% if st.description %}<p>{{ st.description }}</p>{% endif %}
+{% if st.retired_reason %}<p class="bad">Снята: {{ st.retired_reason }}</p>{% endif %}
+
+{% if c.forward_only %}
+<section class="notice">
+  <b>Бэктест: н/д — нет честной истории.</b> Ветка измеряется только форвардом.
+  Накоплено: <b>{{ c.forward_counter }}</b>.
+</section>
+{% endif %}
+
+<section class="grid two">
+<article class="card">
+  <h2>Кривая капитала</h2>
+  {% if curve_svg %}
+    {{ curve_svg|safe }}
+    <p class="muted">Накопленный P&amp;L после издержек по закрытым сделкам, USD.</p>
+  {% else %}
+    <p class="muted">Закрытых сделок пока нет — кривой не из чего построить.
+    {% if c.forward_only %}Стратегия накапливает форвард.{% else %}Запусти замер: <code>core.measure.run("{{ st.id }}", "backtest", ...)</code>.{% endif %}</p>
+  {% endif %}
+</article>
+
+<article class="card">
+  <h2>Порог по критериям</h2>
+  {% if c.sample %}<p class="warn"><b>{{ c.sample }}</b></p>{% endif %}
+  {% if c.criteria %}
+  <p>Итог: <span class="status {{ c.threshold_status }}">
+    {% if c.threshold_status == "passed" %}пройден{% elif c.threshold_status == "failed" %}не пройден{% else %}недостаточно данных{% endif %}
+  </span></p>
+  <table class="criteria">
+    <thead><tr><th>Критерий</th><th class="num">Значение</th><th class="num">Порог</th><th></th></tr></thead>
+    <tbody>
+    {% for cr in c.criteria %}
+      <tr class="{% if cr.passed %}pass{% elif cr.passed is sameas false %}fail{% else %}unknown{% endif %}">
+        <td>{{ cr.name }}{% if cr.detail %} <span class="muted">— {{ cr.detail }}</span>{% endif %}</td>
+        <td class="num">{{ cr.value }}</td>
+        <td class="num">{{ cr.op }} {{ cr.limit }}</td>
+        <td class="mark">{{ cr.mark }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% elif c.latest and c.latest.status == "incomplete" %}
+    <p class="warn">Замер не завершён: {{ c.latest.reason or "причина не записана" }}</p>
+  {% else %}
+    <p class="muted">Замеров ещё не было — порог не из чего считать.</p>
+  {% endif %}
+</article>
+</section>
+
+<section class="grid two">
+<article class="card">
+  <h2>Метрики{% if c.latest %} <span class="muted">({{ c.latest.mode.value }}, {{ c.latest.created_at|samara }})</span>{% endif %}</h2>
+  {% if c.metrics %}
+  <table class="kv">
+    {% for name, value in c.common_rows %}
+      <tr><th>{{ name }}</th><td class="num">{{ value }}{% if name == "EV/сделку, USD" %} <span class="ci">CI95 {{ c.ev_ci95 }}</span>{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p class="muted">Метрик нет: {% if c.latest %}замер не завершён — {{ c.latest.reason or "причина не записана" }}{% else %}замеров ещё не было{% endif %}.</p>
+  {% endif %}
+</article>
+
+<article class="card">
+  <h2>Метрики ветки</h2>
+  {% if c.metrics %}
+  <table class="kv">
+    {% for name, value in c.branch_rows %}<tr><th>{{ name }}</th><td class="num">{{ value }}</td></tr>{% endfor %}
+  </table>
+  <p class="muted">«н/д» — метрика не относится к этой ветке.</p>
+  {% else %}<p class="muted">Появятся вместе с первым замером.</p>{% endif %}
+</article>
+</section>
+
+<section class="card">
+  <h2>Журнал сделок <a class="btn small" href="/strategies/{{ st.id }}/trades.csv">Экспорт CSV</a></h2>
+  {% if c.trades or c.open_trades %}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Открыта</th><th>Закрыта</th><th>Инструмент</th><th>Сторона</th><th class="num">Объём</th><th class="num">Вход</th><th class="num">Выход</th><th class="num">P&amp;L брутто</th><th class="num">Издержки</th><th class="num">P&amp;L нетто</th><th>Режим</th></tr></thead>
+    <tbody>
+    {% for t in c.open_trades + c.trades %}
+      <tr>
+        <td>{{ t.opened_at|samara }}</td>
+        <td>{{ t.closed_at|samara if t.closed_at else "открыта" }}</td>
+        <td>{{ t.instrument }}</td><td>{{ t.side }}</td>
+        <td class="num">{{ t.qty }}</td>
+        <td class="num">{{ t.entry_price|fmt("money") }}</td>
+        <td class="num">{{ t.exit_price|fmt("money") }}</td>
+        <td class="num">{{ t.pnl_gross|fmt("money") }}</td>
+        <td class="num">{{ t.costs.total|fmt("money") }}</td>
+        <td class="num {% if t.pnl_net >= 0 %}ok{% else %}bad{% endif %}">{{ t.pnl_net|fmt("money") }}</td>
+        <td>{{ t.mode }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">Сделок пока нет. {% if st.rung.value == "backtest" %}Сделки бэктеста живут в замере, журнал заполняется с ступени «бумага».{% else %}Сигналы и исполнение появятся здесь, как только стратегия сработает.{% endif %}</p>
+  {% endif %}
+</section>
+
+<section class="grid two">
+<article class="card">
+  <h2>История замеров</h2>
+  {% if c.measurements %}
+  <table>
+    <thead><tr><th>Когда</th><th>Режим</th><th>Окно</th><th>Статус</th><th class="num">Сделок</th><th class="num">Итог, %</th><th>Порог</th></tr></thead>
+    <tbody>
+    {% for m in c.measurements %}
+      <tr>
+        <td>{{ m.created_at|samara }}</td>
+        <td>{{ m.mode.value }}</td>
+        <td>{{ m.window_from|samara(False) }} — {{ m.window_to|samara(False) }}</td>
+        <td>{% if m.status == "ok" %}ок{% else %}<span class="warn">не завершён</span>{% if m.reason %} — {{ m.reason }}{% endif %}{% endif %}</td>
+        <td class="num">{{ m.metrics.n_trades if m.metrics else "—" }}</td>
+        <td class="num">{{ m.metrics.net_pnl_pct|fmt("pct") if m.metrics else "—" }}</td>
+        <td>{% if m.threshold %}<span class="status {{ m.threshold.status }}">{{ m.threshold.status }}</span>{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">Замеров ещё не было.</p>{% endif %}
+</article>
+
+<article class="card">
+  <h2>Переходы по лестнице</h2>
+  {% if c.transitions %}
+  <table>
+    <thead><tr><th>Когда</th><th>Откуда</th><th>Куда</th><th>Кто</th><th>Причина</th></tr></thead>
+    <tbody>
+    {% for tr in c.transitions %}
+      <tr><td>{{ tr.ts|samara }}</td><td>{{ tr.from_rung.value|label("rung") }}</td><td>{{ tr.to_rung.value|label("rung") }}</td><td>{{ tr.by }}</td><td>{{ tr.reason }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">Переходов ещё не было: стратегия на начальной ступени.</p>{% endif %}
+</article>
+</section>
+{% endblock %}

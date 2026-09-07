@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Стратегии{% endblock %}
+{% block content %}
+<h1>Стратегии</h1>
+{% if registry_empty %}
+  {% include "_empty_registry.html" %}
+{% else %}
+<form class="filters" hx-get="/strategies" hx-target="#strategies-table" hx-trigger="change" hx-push-url="true" method="get" action="/strategies">
+  <label>Ветка
+    <select name="branch">
+      <option value="">все</option>
+      {% for b in branches %}<option value="{{ b }}" {% if f.branch == b %}selected{% endif %}>{{ b|label("branch") }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Ступень
+    <select name="rung">
+      <option value="">все</option>
+      {% for r in rungs %}<option value="{{ r }}" {% if f.rung == r %}selected{% endif %}>{{ r|label("rung") }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Статус
+    <select name="status">
+      <option value="">все</option>
+      {% for st in statuses %}<option value="{{ st }}" {% if f.status == st %}selected{% endif %}>{{ st|label("status") }}</option>{% endfor %}
+    </select>
+  </label>
+  <input type="hidden" name="sort" value="{{ f.sort }}">
+  <input type="hidden" name="dir" value="{{ f.dir }}">
+  <noscript><button type="submit">Применить</button></noscript>
+  <a class="btn small" href="/trades.csv">Экспорт всех сделок (CSV)</a>
+</form>
+<div id="strategies-table">
+  {% include "_strategies_table.html" %}
+</div>
+{% endif %}
+{% endblock %}
