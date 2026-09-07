@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-07T10:31:33+04:00",
+  "updatedAt": "2026-09-07T11:28:56+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -50,13 +50,13 @@ window.STATE =
       "id": "build",
       "status": "active",
       "startedAt": "2026-09-05T22:32:43+04:00",
-      "note": "9 из 14 готовы · волна 5: 09, 10, 11"
+      "note": "12 из 14 готовы · волна 6: 12, затем 14"
     },
     {
       "id": "review",
       "status": "active",
       "startedAt": "2026-09-05T22:45:47+04:00",
-      "note": "проверено 9 из 14"
+      "note": "проверено 12 из 14"
     },
     {
       "id": "final",
@@ -65,8 +65,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 45,
-    "done": 32,
-    "inTicket": 12,
+    "done": 40,
+    "inTicket": 4,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 1,
@@ -388,11 +388,17 @@ window.STATE =
         "src/lab/feeds/robinhood/",
         "src/lab/executors/robinhood/"
       ],
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-07T10:31:33+04:00"
+      "startedAt": "2026-09-07T10:31:33+04:00",
+      "commit": "96dd79a",
+      "finishedAt": "2026-09-07T11:28:56+04:00",
+      "tests": {
+        "passed": 308,
+        "failed": 0
+      }
     },
     {
       "id": "09",
@@ -412,11 +418,17 @@ window.STATE =
         "src/lab/executors/dex/",
         "src/lab/strategies/meme/"
       ],
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-07T10:31:33+04:00"
+      "startedAt": "2026-09-07T10:31:33+04:00",
+      "commit": "1ecdcd4",
+      "finishedAt": "2026-09-07T11:28:56+04:00",
+      "tests": {
+        "passed": 366,
+        "failed": 0
+      }
     },
     {
       "id": "10",
@@ -439,11 +451,17 @@ window.STATE =
         "src/lab/executors/nft/",
         "src/lab/strategies/nft/"
       ],
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-07T10:31:33+04:00"
+      "startedAt": "2026-09-07T10:31:33+04:00",
+      "commit": "1a30d8a",
+      "finishedAt": "2026-09-07T11:28:56+04:00",
+      "tests": {
+        "passed": 446,
+        "failed": 0
+      }
     },
     {
       "id": "12",
@@ -465,10 +483,11 @@ window.STATE =
         "src/lab/discovery/",
         "src/lab/ops/jobs/"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-07T11:28:56+04:00"
     },
     {
       "id": "14",
@@ -505,7 +524,7 @@ window.STATE =
   ],
   "singlePass": null,
   "tests": {
-    "passed": 266,
+    "passed": 446,
     "failed": 0
   },
   "debt": {
@@ -580,7 +599,12 @@ window.STATE =
     "T04 hyperliquid-python-sdk не взят — лидерборд HL остаётся T12",
     "T08 миграция 0006 стоит на 0004 — если T11 положит 0005, перевесить",
     "T08 R22 placeholder — сбор кандидатов-кошельков за discovery (T12)",
-    "T08 разборщики Solana/EVM/TON собраны по докам, не на живых ответах"
+    "T08 разборщики Solana/EVM/TON собраны по докам, не на живых ответах",
+    "T09/T10/T11 live-подпись транзакций не реализована — solders/web3/TON-SDK не втянуты; live честно бросает TradingUnavailable (долг перед первой реальной сделкой)",
+    "T10 R24.2 confirm_latency_ms только на минте — у сделки придёт из живого клиента",
+    "T10 индекс внимания: mentions_growth требует адаптера к feeds/social",
+    "T11 py-clob-client не добавлен (25 пакетов + python-dotenv) — чтение и бумага на httpx",
+    "T11 правил 3 строки в src/lab/bot/core.py (зона T05) ради /status"
   ],
   "reviewers": {
     "manifestSpec": "afea90f146a601738",

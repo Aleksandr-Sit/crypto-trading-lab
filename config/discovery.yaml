@@ -1,0 +1,69 @@
+# Поиск кандидатов, переизмерение, срок годности и перелив (R15, R14, G05).
+# Читают: lab.discovery (источники) и lab.ops.jobs (задания). Расписание — schedule.yaml.
+
+sources:
+  okx_lead:
+    enabled: true
+    limit: 20
+    inst_type: SWAP
+    min_days: 30
+    min_win_rate_pct: 50
+  hyperliquid:
+    enabled: true
+    limit: 20
+    # Community-эндпоинт лидерборда неофициальный: когда он молчит, берём ручной список.
+    manual:
+      - "0x0000000000000000000000000000000000000000"
+  polymarket:
+    enabled: true
+    limit: 20
+    window: all
+    order_by: pnl
+  smart_money:
+    enabled: true
+    # Ключей нет — источник честно уходит в degraded и не роняет прогон.
+    providers:
+      - id: cielo
+        url: https://feed-api.cielo.finance/api/v1/feed
+        key_env: CIELO_API_KEY
+        weight: 1
+        wallet_field: wallet
+        chain: solana
+      - id: dune
+        url: https://api.dune.com/api/v1/query/3237025/results
+        key_env: DUNE_API_KEY
+        weight: 10
+        wallet_field: address
+        chain: ethereum
+  github:
+    enabled: true
+    limit: 10
+    min_stars: 50
+    branch: cex-spot
+    queries:
+      - "crypto trading strategy backtest"
+      - "hyperliquid trading bot"
+  nft_launchpad:
+    enabled: true
+    limit: 20
+    markets:
+      - magiceden
+    calendars:
+      - nftcalendar
+  seed:
+    enabled: true
+    path: candidates/seed.md
+
+# Сколько карточек за один прогон уходит в телегу (остальное ждёт в очереди).
+max_cards_per_scan: 10
+
+remeasure:
+  window_days: 90
+  # Без успешного переизмерения столько недель — degraded (R14.1).
+  valid_weeks: 4
+  mode: backtest
+
+rebalance:
+  risky_branches: [meme, nft, prediction, copy]
+  to_branch: cex-spot
+  min_amount_usd: 50
