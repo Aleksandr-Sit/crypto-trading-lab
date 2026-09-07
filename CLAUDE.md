@@ -180,6 +180,11 @@
   Отказ тихий — `up` проходит, просто не тот порт. Ссылку делает `deploy/setup.sh`; проверка —
   `docker compose -f deploy/docker-compose.yml config | grep published`. На env_file внутри
   сервисов это не влияет: в контейнеры `../.env` попадает и без ссылки.
+- **`DATABASE_URL` в `.env` — адрес для запуска с ХОСТА (`localhost:5432`), в compose он не
+  подставляется.** В `docker-compose.yml` хост базы зашит как `db`. Пока `.env` был не виден
+  compose, это держалось само собой; со ссылкой (грабля выше) значение из файла едва не уехало
+  в контейнеры — `migrate` падал на `connection to 127.0.0.1:5432 refused`. Не «упрощать»
+  обратно в `${DATABASE_URL:-…}`.
 - **Два «registry» и два «ladder».** `strategies.registry` ≠ `core.registry`;
   `core.ladder` (ступени) ≠ `strategies.meme.ladder` (лесенка продаж). Смотри импорт.
 

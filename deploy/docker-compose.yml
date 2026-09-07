@@ -15,7 +15,10 @@ x-lab-service: &lab-service
     - path: ../.env
       required: false
   environment:
-    DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://lab:${POSTGRES_PASSWORD:-lab}@db:5432/lab}
+    # Хост базы задан жёстко: внутри compose она всегда "db". Значение DATABASE_URL из .env
+    # сюда подставлять нельзя — там адрес для запуска CLI и alembic С ХОСТА (localhost:5432),
+    # и контейнер с ним стучится сам в себя: "connection to 127.0.0.1:5432 refused".
+    DATABASE_URL: postgresql+psycopg://lab:${POSTGRES_PASSWORD:-lab}@db:5432/lab
   volumes:
     - ../config:/app/config:ro
     - lab_data:/app/data
