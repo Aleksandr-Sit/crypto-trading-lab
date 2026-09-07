@@ -11,8 +11,8 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-07T12:40:22+04:00",
-  "finishedAt": null,
+  "updatedAt": "2026-09-07T12:55:09+04:00",
+  "finishedAt": "2026-09-07T12:55:09+04:00",
   "stages": [
     {
       "id": "preflight",
@@ -48,19 +48,24 @@ window.STATE =
     },
     {
       "id": "build",
-      "status": "active",
+      "status": "done",
       "startedAt": "2026-09-05T22:32:43+04:00",
-      "note": "15 из 15 готовы"
+      "note": "15 из 15 готовы",
+      "finishedAt": "2026-09-07T12:55:09+04:00"
     },
     {
       "id": "review",
-      "status": "active",
+      "status": "done",
       "startedAt": "2026-09-05T22:45:47+04:00",
-      "note": "проверено 15 из 15"
+      "note": "проверено 15 из 15",
+      "finishedAt": "2026-09-07T12:55:09+04:00"
     },
     {
       "id": "final",
-      "status": "pending"
+      "status": "done",
+      "startedAt": "2026-09-07T12:55:09+04:00",
+      "finishedAt": "2026-09-07T12:55:09+04:00",
+      "note": "слепая приёмка: 2 расхождения, оба закрыты таском 15"
     }
   ],
   "requirements": {
@@ -591,7 +596,13 @@ window.STATE =
       "WEB_PASSWORD"
     ]
   },
-  "additions": [],
+  "additions": [
+    "Бюджетомер платных сервисов с предупреждением при 80% и 100% — ради R25",
+    "«Кладбище» стратегий с причиной — отрицательный результат сохраняется, ради R11",
+    "Экспорт журнала сделок в CSV — ради R31i",
+    "Доверительный интервал EV (бутстрап CI95) рядом с точечной оценкой — ради R12",
+    "Лестница частичных продаж для мемов по аналогии с NFT — ради R17"
+  ],
   "coverage": {
     "findings": 7,
     "missing": 2,
