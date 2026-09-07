@@ -1,7 +1,12 @@
 # Один образ для worker / bot / web / migrate; команда задаётся в docker-compose.yml.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 TZ=UTC
+# UV_NO_SYNC=1 — на старте контейнера `uv run` не должен лезть в сеть. Без него он
+# досинхронизирует окружение с dev-группой (тянет ruff и pytest, ~10 МБ), хотя образ собран
+# с --no-dev: старт растягивается на десятки секунд, а при обрыве сети сервис не поднимется.
+# На сборку не влияет: `uv sync` ниже вызывается явно. Все рантайм-зависимости — основные,
+# dev-группа (pytest, ruff) в контейнере не нужна.
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy PYTHONUNBUFFERED=1 TZ=UTC UV_NO_SYNC=1
 WORKDIR /app
 
 COPY pyproject.toml uv.lock README.md ./
