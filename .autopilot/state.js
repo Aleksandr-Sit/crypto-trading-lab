@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-06T21:15:15+04:00",
+  "updatedAt": "2026-09-07T10:31:33+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -50,13 +50,13 @@ window.STATE =
       "id": "build",
       "status": "active",
       "startedAt": "2026-09-05T22:32:43+04:00",
-      "note": "5 из 14 готовы · 04 в ремонте, 05/06 на ревью, 07 в полёте"
+      "note": "9 из 14 готовы · волна 5: 09, 10, 11"
     },
     {
       "id": "review",
       "status": "active",
       "startedAt": "2026-09-05T22:45:47+04:00",
-      "note": "проверено 5 из 14"
+      "note": "проверено 9 из 14"
     },
     {
       "id": "final",
@@ -65,8 +65,8 @@ window.STATE =
   ],
   "requirements": {
     "total": 45,
-    "done": 22,
-    "inTicket": 22,
+    "done": 32,
+    "inTicket": 12,
     "inSpec": 0,
     "placeholder": 0,
     "deferred": 1,
@@ -227,14 +227,20 @@ window.STATE =
         "src/lab/executors/cex/",
         "src/lab/data/backfill_cex.py"
       ],
-      "status": "repair",
+      "status": "done",
       "retries": 1,
       "repairs": 1,
       "handoffs": 0,
       "startedAt": "2026-09-06T20:52:33+04:00",
       "repairFindings": [
         "paper/live смешаны в positions/balance; при NetworkError отдаётся бумажный баланс; подмена транспорта по PYTEST_CURRENT_TEST"
-      ]
+      ],
+      "commit": "af532f2",
+      "finishedAt": "2026-09-07T10:31:33+04:00",
+      "tests": {
+        "passed": 233,
+        "failed": 0
+      }
     },
     {
       "id": "05",
@@ -256,11 +262,17 @@ window.STATE =
         "src/lab/ops/scheduler.py",
         "src/lab/ops/outbox.py"
       ],
-      "status": "review",
+      "status": "done",
       "retries": 1,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-06T20:52:33+04:00"
+      "startedAt": "2026-09-06T20:52:33+04:00",
+      "commit": "af532f2",
+      "finishedAt": "2026-09-07T10:31:33+04:00",
+      "tests": {
+        "passed": 233,
+        "failed": 0
+      }
     },
     {
       "id": "06",
@@ -280,11 +292,17 @@ window.STATE =
       "zone": [
         "src/lab/web/"
       ],
-      "status": "review",
+      "status": "done",
       "retries": 1,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-06T20:52:33+04:00"
+      "startedAt": "2026-09-06T20:52:33+04:00",
+      "commit": "af532f2",
+      "finishedAt": "2026-09-07T10:31:33+04:00",
+      "tests": {
+        "passed": 233,
+        "failed": 0
+      }
     },
     {
       "id": "07",
@@ -309,11 +327,17 @@ window.STATE =
         "src/lab/feeds/stocks/",
         "src/lab/feeds/social/"
       ],
-      "status": "in-progress",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
       "handoffs": 0,
-      "startedAt": "2026-09-06T21:15:15+04:00"
+      "startedAt": "2026-09-06T21:15:15+04:00",
+      "commit": "af532f2",
+      "finishedAt": "2026-09-07T10:31:33+04:00",
+      "tests": {
+        "passed": 233,
+        "failed": 0
+      }
     },
     {
       "id": "08",
@@ -334,10 +358,16 @@ window.STATE =
         "src/lab/strategies/copy/",
         "src/lab/executors/cex/copy_exchange.py"
       ],
-      "status": "pending",
+      "status": "done",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "commit": "36318ee",
+      "finishedAt": "2026-09-07T10:31:33+04:00",
+      "tests": {
+        "passed": 266,
+        "failed": 0
+      }
     },
     {
       "id": "11",
@@ -358,10 +388,11 @@ window.STATE =
         "src/lab/feeds/robinhood/",
         "src/lab/executors/robinhood/"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-07T10:31:33+04:00"
     },
     {
       "id": "09",
@@ -381,10 +412,11 @@ window.STATE =
         "src/lab/executors/dex/",
         "src/lab/strategies/meme/"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-07T10:31:33+04:00"
     },
     {
       "id": "10",
@@ -407,10 +439,11 @@ window.STATE =
         "src/lab/executors/nft/",
         "src/lab/strategies/nft/"
       ],
-      "status": "pending",
+      "status": "in-progress",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "startedAt": "2026-09-07T10:31:33+04:00"
     },
     {
       "id": "12",
@@ -472,7 +505,7 @@ window.STATE =
   ],
   "singlePass": null,
   "tests": {
-    "passed": 103,
+    "passed": 266,
     "failed": 0
   },
   "debt": {
@@ -544,7 +577,10 @@ window.STATE =
     "T04 нет funding_history в фиде/бэкфилле — бэктест перпов с фандингом не из чего (долг T14)",
     "T04 paper-филл не сохраняет ref_price для Journal",
     "T04 стартовый баннер venues_report без rights — withdraw-ключ узнаётся только при первом live place (долг T14)",
-    "T04 hyperliquid-python-sdk не взят — лидерборд HL остаётся T12"
+    "T04 hyperliquid-python-sdk не взят — лидерборд HL остаётся T12",
+    "T08 миграция 0006 стоит на 0004 — если T11 положит 0005, перевесить",
+    "T08 R22 placeholder — сбор кандидатов-кошельков за discovery (T12)",
+    "T08 разборщики Solana/EVM/TON собраны по докам, не на живых ответах"
   ],
   "reviewers": {
     "manifestSpec": "afea90f146a601738",

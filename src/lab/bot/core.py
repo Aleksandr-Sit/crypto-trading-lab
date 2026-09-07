@@ -28,6 +28,7 @@ from lab.contracts import Rung, SignalOutcome
 from lab.core.journal import Journal
 from lab.core.ladder import Ladder, LadderError, Transition
 from lab.core.registry import Registry, StrategyNotFound
+from lab.executors.access import status_lines as branch_status_lines
 from lab.ops.outbox import Button, Outbox, OutboxMessage, Transport
 from lab.ops.scheduler import Job, Scheduler
 
@@ -249,6 +250,8 @@ class TraderBot:
             rows = Registry(s).list()
             pending = pending_signal_cards(s)
             queued = len(self._outbox(s).pending(now=self.now()))
+            # ветки, где торговля закрыта для нашего IP/аккаунта (таск 11: Polymarket, Robinhood)
+            closed_branches = branch_status_lines(s)
         halted = "ДА" if ladder.halted else "нет"
         by_rung: dict[str, list[str]] = {}
         for r in rows:
@@ -258,6 +261,7 @@ class TraderBot:
             ids = by_rung.get(rung.value)
             if ids:
                 lines.append(f"• {rung.value}: " + ", ".join(f"<code>{i}</code>" for i in ids))
+        lines.extend(closed_branches)
         lines.append(f"ждут решения: {len(pending)} · в очереди на отправку: {queued}")
         return Reply(text="\n".join(lines))
 
