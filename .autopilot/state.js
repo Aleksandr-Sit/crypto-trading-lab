@@ -1,7 +1,7 @@
 window.STATE =
 {
   "slug": "crypto-trading-lab",
-  "dir": "2026-09-05-crypto-trading-lab--wip",
+  "dir": "2026-09-05-crypto-trading-lab",
   "title": "Лаборатория торговых стратегий: крипта, мемы, NFT",
   "mode": "interview",
   "depth": "deep",
@@ -11,7 +11,7 @@ window.STATE =
   "memoryFile": "CLAUDE.md",
   "skillDir": "/root/.claude/skills/autopilot",
   "startedAt": "2026-09-05T15:32:35+04:00",
-  "updatedAt": "2026-09-07T12:17:00+04:00",
+  "updatedAt": "2026-09-07T12:40:22+04:00",
   "finishedAt": null,
   "stages": [
     {
@@ -50,13 +50,13 @@ window.STATE =
       "id": "build",
       "status": "active",
       "startedAt": "2026-09-05T22:32:43+04:00",
-      "note": "14 из 15 · таск 15 (связка) в полёте"
+      "note": "15 из 15 готовы"
     },
     {
       "id": "review",
       "status": "active",
       "startedAt": "2026-09-05T22:45:47+04:00",
-      "note": "проверено 14 из 14"
+      "note": "проверено 15 из 15"
     },
     {
       "id": "final",
@@ -554,16 +554,22 @@ window.STATE =
         "src/lab/config/env.py",
         ".env.example"
       ],
-      "status": "in-progress",
+      "status": "done",
       "startedAt": "2026-09-07T12:17:00+04:00",
       "retries": 0,
       "repairs": 0,
-      "handoffs": 0
+      "handoffs": 0,
+      "commit": "de95932",
+      "finishedAt": "2026-09-07T12:40:22+04:00",
+      "tests": {
+        "passed": 524,
+        "failed": 0
+      }
     }
   ],
   "singlePass": null,
   "tests": {
-    "passed": 505,
+    "passed": 524,
     "failed": 0
   },
   "debt": {
@@ -649,7 +655,10 @@ window.STATE =
     "T14 связка worker/cli покрыта только смоуком --once, юнит-тестов нет",
     "T14 задание remeasure не регистрируется — нужен measure= в worker",
     "T14 фандинг пишется прямо в trades.funding, не через Journal.record_fill",
-    "T14 lab.web.serve не принимает feeds= — service web собирает приложение сам"
+    "T14 lab.web.serve не принимает feeds= — service web собирает приложение сам",
+    "T15 DATABASE_URL в .env.example на localhost (compose подставляет свой через environment:)",
+    "T15 lab service web при пустых WEB_USER/PASSWORD генерирует разовый пароль вместо отказа",
+    "T15 найден и починен дефект вне зоны: migrations/env.py брал DATABASE_URL из .env поверх программного конфига — pytest мог накатывать миграции на боевую базу"
   ],
   "reviewers": {
     "manifestSpec": "afea90f146a601738",
@@ -658,9 +667,9 @@ window.STATE =
   "blind": {
     "checked": "2026-09-07T12:17:00+04:00",
     "drift": [
-      "R12/R11: манифест — done, слепая приёмка — частично: движок замера рабочий, но система его не вызывает (remeasure не регистрируется, бот не меряет, CLI-команды нет) → таск 15",
-      "R32i: сценарий из README (cp .env.example .env) ломает систему — хвостовые комментарии попадают в значения; lab service web не читает .env → таск 15",
-      "R10: measure_cost считается, но очередь сортируется по id → таск 15"
+      "R12/R11: манифест — done, слепая приёмка — частично: движок замера рабочий, но система его не вызывает (remeasure не регистрируется, бот не меряет, CLI-команды нет) → таск 15 — ЗАКРЫТО таском 15 de95932",
+      "R32i: сценарий из README (cp .env.example .env) ломает систему — хвостовые комментарии попадают в значения; lab service web не читает .env → таск 15 — ЗАКРЫТО таском 15 de95932",
+      "R10: measure_cost считается, но очередь сортируется по id → таск 15 — ЗАКРЫТО таском 15 de95932"
     ],
     "confirmed": "плечо, спот, лимиты веток, стоп стратегии, бюджет $50, потолок капитала $1000, сети, NFT-ветка, минт-варианты, Polymarket/RH, только свои боты, вне рамок — подтверждены",
     "not_run": "живой сбор с бирж и Telegram не проверены — сеть песочницы закрыта, токена бота нет"
