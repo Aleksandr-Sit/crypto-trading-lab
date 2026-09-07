@@ -14,7 +14,7 @@ import hashlib
 import json
 import os
 import subprocess
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 
 from lab.config import ThresholdConfig
 from lab.contracts import Branch, Candle, MeasureMode, Rung, StrategyManifest
+from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.metrics import metrics as compute_metrics
 from lab.core.measure.metrics import threshold as compute_threshold
@@ -117,16 +118,49 @@ def code_version() -> str:
     return "unknown"
 
 
+def _hash_row(h: Any, c: Candle) -> None:
+    h.update(
+        f"{c.instrument}|{c.tf}|{c.ts.isoformat()}|{c.open}|{c.high}|{c.low}|{c.close}|"
+        f"{c.volume}\n".encode()
+    )
+
+
+class DataHasher:
+    """Отпечаток данных замера, считаемый ПО ХОДУ чтения.
+
+    Порядок байтов тот же, что в `data_hash`: тег `data`, все свечи, тег `bench`, бенчмарк, —
+    поэтому поток и готовый список дают одинаковый отпечаток. Нужен потому, что ряд больше
+    в память не помещается: хешировать его можно только по мере поступления.
+    """
+
+    def __init__(self) -> None:
+        self._h = hashlib.sha256()
+        self._h.update(b"data")
+        self._closed = False
+
+    def add(self, candle: Candle) -> None:
+        _hash_row(self._h, candle)
+
+    def wrap(self, candles: Iterable[Candle]) -> Iterator[Candle]:
+        """Пропускает поток через себя, попутно хешируя каждую свечу."""
+        for c in candles:
+            self.add(c)
+            yield c
+
+    def digest(self, benchmark: Sequence[Candle] | None = None) -> str:
+        if not self._closed:
+            self._h.update(b"bench")
+            for c in benchmark or ():
+                _hash_row(self._h, c)
+            self._closed = True
+        return self._h.hexdigest()
+
+
 def data_hash(candles: Sequence[Candle], benchmark: Sequence[Candle] | None = None) -> str:
-    h = hashlib.sha256()
-    for tag, rows in (("data", candles), ("bench", benchmark or ())):
-        h.update(tag.encode())
-        for c in rows:
-            h.update(
-                f"{c.instrument}|{c.tf}|{c.ts.isoformat()}|{c.open}|{c.high}|{c.low}|{c.close}|"
-                f"{c.volume}\n".encode()
-            )
-    return h.hexdigest()
+    hasher = DataHasher()
+    for c in candles:
+        hasher.add(c)
+    return hasher.digest(benchmark)
 
 
 def _params_hash(params: dict[str, Any]) -> str:
@@ -156,6 +190,43 @@ def walk_forward_windows(
 
 def _slice(candles: Sequence[Candle], a: datetime, b: datetime) -> list[Candle]:
     return [c for c in candles if a <= c.ts < b]
+
+
+CHUNK_BARS = 20_000
+"""Сколько свечей держать в памяти за раз при чтении из источника.
+
+20 000 минутных баров — это две недели ряда и десятки мегабайт; окно целиком (год минуток —
+полмиллиона объектов Candle) занимает больше гигабайта и на сервере ловит OOM-killer.
+"""
+
+
+def _stream(
+    candles: Sequence[Candle] | None,
+    source: Source | None,
+    instrument: str,
+    tf: str,
+    a: datetime,
+    b: datetime,
+) -> Iterator[Candle]:
+    """Свечи окна [a, b) потоком: из готового списка либо из источника кусками.
+
+    Источник спрашивается по отрезкам, а не на всё окно сразу; каждый ответ отфильтрован
+    по своему отрезку, поэтому свеча на стыке не задваивается, даже если источник считает
+    правую границу включительно.
+    """
+    if candles is not None:
+        yield from (c for c in candles if a <= c.ts < b)
+        return
+    if source is None:
+        raise IncompleteData("нет данных: не переданы ни candles, ни source")
+    span = parse_tf(tf) * CHUNK_BARS
+    cursor = a
+    while cursor < b:
+        upto = min(cursor + span, b)
+        for c in source(instrument, tf, cursor, upto):
+            if cursor <= c.ts < upto:
+                yield c
+        cursor = upto
 
 
 def _resolve(strategy):
@@ -306,19 +377,11 @@ def run(
     instrument = manifest.instruments[0]
 
     # -- данные: готовые свечи или источник; сбой → incomplete -----------------------
+    bench_rows = benchmark if isinstance(benchmark, Sequence) else None
+    hasher = DataHasher()
     try:
-        if candles is None:
-            if source is None:
-                raise IncompleteData("нет данных: не переданы ни candles, ни source")
-            candles = list(source(instrument, tf, window_from, window_to))
-        candles = _slice(candles, window_from, window_to)
-        if not candles:
-            raise IncompleteData("нет свечей в окне")
-        bench_rows = benchmark if isinstance(benchmark, Sequence) else None
-        dh = data_hash(candles, bench_rows)
-        cached = _lookup(session, base, dh)
-        if cached is not None:
-            return cached
+        if candles is None and source is None:
+            raise IncompleteData("нет данных: не переданы ни candles, ни source")
 
         def engine() -> PaperEngine:
             return PaperEngine(
@@ -340,8 +403,16 @@ def run(
             for f in walk_forward_windows(
                 window_from, window_to, in_sample=walk_forward[0], out_of_sample=walk_forward[1]
             ):
-                is_r = simulate(factory(), _slice(candles, f.is_from, f.is_to), engine=engine())
-                oos_r = simulate(factory(), _slice(candles, f.oos_from, f.oos_to), engine=engine())
+                is_r = simulate(
+                    factory(),
+                    _stream(candles, source, instrument, tf, f.is_from, f.is_to),
+                    engine=engine(),
+                )
+                oos_r = simulate(
+                    factory(),
+                    _stream(candles, source, instrument, tf, f.oos_from, f.oos_to),
+                    engine=engine(),
+                )
                 folds.append(
                     f.model_copy(
                         update={
@@ -364,11 +435,22 @@ def run(
                         }
                     )
                 )
-        result = simulate(inst, candles, engine=engine())
+        # Отпечаток данных считается по ходу единственного прохода: второй раз ряд не читаем,
+        # иначе живой источник опрашивался бы дважды. Поэтому и сохранённый снимок ищется
+        # ПОСЛЕ прогона — раньше отпечатка просто нет.
+        result = simulate(
+            inst,
+            hasher.wrap(_stream(candles, source, instrument, tf, window_from, window_to)),
+            engine=engine(),
+        )
+        dh = hasher.digest(bench_rows)
+        cached = _lookup(session, base, dh)
+        if cached is not None:
+            return cached
     except IncompleteData as err:
-        return _incomplete(base, session, str(err), candles)
+        return _incomplete(base, session, str(err), hasher.digest(bench_rows))
     except (OSError, ConnectionError, TimeoutError) as err:
-        return _incomplete(base, session, f"источник данных упал: {err}", candles)
+        return _incomplete(base, session, f"источник данных упал: {err}", hasher.digest(bench_rows))
 
     return _finish(
         base,
@@ -429,10 +511,10 @@ def _lookup(session: Session | None, base: dict[str, Any], dh: str) -> Measureme
     return None
 
 
-def _incomplete(base, session, reason: str, candles) -> Measurement:
-    m = Measurement(
-        id=None, data_hash=data_hash(candles or []), status="incomplete", reason=reason, **base
-    )
+def _incomplete(base, session, reason: str, digest: str) -> Measurement:
+    """Незавершённый замер: цифр нет, но отпечаток прочитанных данных сохраняем —
+    по нему видно, на чём именно оборвалось."""
+    m = Measurement(id=None, data_hash=digest, status="incomplete", reason=reason, **base)
     return _persist(session, m) if session is not None else m
 
 

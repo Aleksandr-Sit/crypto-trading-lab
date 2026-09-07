@@ -14,7 +14,7 @@ P&L сделки считается по референсным ценам (ми
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -272,17 +272,32 @@ class SimResult:
 
 def simulate(
     strategy,
-    candles: Sequence[Candle],
+    candles: Iterable[Candle],
     *,
     engine: PaperEngine,
 ) -> SimResult:
     """Прогон стратегии по свечам: сначала исполняются ожидающие сигналы по бару,
-    потом стратегия видит бар и решает — её сигналы исполнятся не раньше следующего бара."""
-    check_continuity(candles, engine.step)
+    потом стратегия видит бар и решает — её сигналы исполнятся не раньше следующего бара.
+
+    Принимает поток, а не список: год минутных свечей — полмиллиона объектов и больше
+    гигабайта памяти, а нужен всегда только текущий бар. Непрерывность проверяется по ходу
+    (то же правило, что в `check_continuity`), поэтому держать ряд целиком незачем.
+    """
+    prev: Candle | None = None
+    seen = 0
     for bar in candles:
+        if prev is not None and bar.ts - prev.ts != engine.step:
+            raise IncompleteData(
+                f"разрыв данных между {prev.ts.isoformat()} и {bar.ts.isoformat()} "
+                f"(ожидался шаг {engine.step})"
+            )
+        prev = bar
+        seen += 1
         engine.on_bar(bar)
         for signal in strategy.on_bar(bar):
             engine.submit(signal)
+    if seen == 0:
+        raise IncompleteData("нет свечей в окне")
     return SimResult(
         trades=list(engine.closed),
         fills=list(engine.fills),

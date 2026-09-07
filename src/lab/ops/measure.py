@@ -26,6 +26,7 @@ from datetime import datetime
 from typing import Any
 
 from lab.contracts import Candle, MeasureMode
+from lab.contracts.timeframes import parse_tf
 
 log = logging.getLogger(__name__)
 
@@ -33,6 +34,10 @@ DATA_ROOT_ENV = "LAB_DATA_ROOT"
 DEFAULT_DATA_ROOT = "data"
 # Имена BTC на разных площадках — берём первое, по которому в хранилище есть ряд.
 BENCHMARK_INSTRUMENTS: tuple[str, ...] = ("BTC/USDT", "BTC/USD", "BTCUSDT", "BTC/USDC", "BTC")
+
+# Сколько баров пробовать с каждого края окна, чтобы найти первую и последнюю свечу
+# бенчмарка: ряд может начинаться позже левой границы или обрываться раньше правой.
+EDGE_BARS = 500
 FROM_JOURNAL = (MeasureMode.MICRO, MeasureMode.FORWARD)
 
 
@@ -103,9 +108,8 @@ def run_measure(
         if mode in FROM_JOURNAL:
             kwargs["trades"] = _journal_trades(session, strategy_id, window)
         else:
-            candles = _from_store(store, record.venue, instrument, tf, window)
-            if candles:
-                kwargs["candles"] = candles
+            if _has_candles(store, record.venue, instrument, tf):
+                kwargs["source"] = _store_source(store, record.venue)
             else:
                 kwargs["source"] = _feed_source(record.venue, feed_factory)
         kwargs.update(extra)
@@ -162,15 +166,61 @@ def _from_store(
         return []
 
 
+def _store_source(store: Any, venue: str) -> Any:
+    """Источник свечей из хранилища с сигнатурой `Feed.candles`.
+
+    Отдаём именно источник, а не готовый список: `core.measure.run` спрашивает окно
+    кусками и держит в памяти только текущий кусок. Год минутного ряда списком —
+    это больше гигабайта и OOM, а по кускам — десятки мегабайт.
+    """
+
+    def source(instrument: str, tf: str, from_ts: datetime, to_ts: datetime) -> list[Candle]:
+        return _from_store(store, venue, instrument, tf, (from_ts, to_ts))
+
+    return source
+
+
+def _has_candles(store: Any, venue: str, instrument: str, tf: str) -> bool:
+    """Есть ли ряд в хранилище вообще — без чтения самого ряда."""
+    if store is None or instrument == "*":
+        return False
+    try:
+        return bool(store.count(venue, instrument, tf))
+    except Exception as err:  # noqa: BLE001 — пустое/битое хранилище не роняет замер
+        log.info("Хранилище свечей %s %s %s: %s", venue, instrument, tf, err)
+        return False
+
+
 def _benchmark(
     store: Any, venue: str, tf: str, window: tuple[datetime, datetime]
 ) -> list[Candle] | None:
-    """BTC той же площадки и таймфрейма — база сравнения «лучше ли, чем просто держать BTC»."""
+    """BTC той же площадки и таймфрейма — база сравнения «лучше ли, чем просто держать BTC».
+
+    Берём ТОЛЬКО края окна: `btc_buy_and_hold_pct` считает `последний close / первый open`,
+    остальной ряд не используется никем — а на минутках это второй такой же гигабайт памяти,
+    как у самой стратегии. В отпечаток данных попадают те же две свечи: они и определяют
+    вклад бенчмарка в результат.
+    """
     for instrument in BENCHMARK_INSTRUMENTS:
-        rows = _from_store(store, venue, instrument, tf, window)
-        if rows:
-            return rows
+        if not _has_candles(store, venue, instrument, tf):
+            continue
+        edges = _edge_candles(store, venue, instrument, tf, window)
+        if edges:
+            return edges
     return None
+
+
+def _edge_candles(
+    store: Any, venue: str, instrument: str, tf: str, window: tuple[datetime, datetime]
+) -> list[Candle]:
+    """Первая и последняя свеча окна, без чтения середины."""
+    step = parse_tf(tf)
+    first = _from_store(store, venue, instrument, tf, (window[0], window[0] + step * EDGE_BARS))
+    last_from = max(window[0], window[1] - step * EDGE_BARS)
+    last = _from_store(store, venue, instrument, tf, (last_from, window[1]))
+    if not first or not last:
+        return []
+    return [first[0], last[-1]]
 
 
 def _feed_source(venue: str, feed_factory: Callable[[str], Any] | None):
