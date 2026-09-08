@@ -8,6 +8,7 @@ from decimal import Decimal
 
 import ccxt
 
+from lab.contracts import Candle
 from lab.data import CandleStore
 from lab.data.backfill_cex import BinanceArchive, backfill_venue
 from lab.feeds import MemoryFeedsRegistry
@@ -142,3 +143,71 @@ def test_binance_backfill_uses_archives_and_rest_for_current_month(tmp_path):
         in urls
     )
     assert "fetch_ohlcv" in t.calls, "хвост текущего месяца добирается по REST"
+
+
+def test_truncated_archive_month_is_refetched_from_rest():
+    """Обрезанный месячный архив не должен молча оставлять дырку в хранилище.
+
+    Так и было: у SOL и XRP архивы Binance не содержали последних дней февраля и марта 2022,
+    код брал их как есть, и пропуск всплыл только через полгода — портфельный замер встал
+    на «разрыв данных SOL/USDT:USDT между 25.02 и 01.03».
+    """
+    month = datetime(2022, 2, 1, tzinfo=UTC)
+    full = [
+        Candle(
+            instrument="SOL/USDT:USDT",
+            tf="1d",
+            ts=month + timedelta(days=i),
+            open=Decimal(100),
+            high=Decimal(100),
+            low=Decimal(100),
+            close=Decimal(100),
+            volume=Decimal(1),
+        )
+        for i in range(28)
+    ]
+    truncated = full[:25]  # архив без 26–28 февраля
+
+    class _Archive(BinanceArchive):
+        def month(self, instrument, tf, month_start):  # noqa: ARG002
+            return truncated
+
+    rest_calls: list[tuple[datetime, datetime]] = []
+
+    def rest(instrument, tf, from_ts, to_ts):  # noqa: ARG001
+        rest_calls.append((from_ts, to_ts))
+        return [c for c in full if from_ts <= c.ts < to_ts]
+
+    source = _Archive(fetch=lambda url: None).source(rest, now=datetime(2022, 6, 1, tzinfo=UTC))
+    rows = source("SOL/USDT:USDT", "1d", month, month + timedelta(days=28))
+
+    assert len(rows) == 28, "месяц должен быть добран из REST целиком"
+    assert rest_calls, "к REST обязаны обратиться, а не поверить обрезанному архиву"
+
+
+def test_complete_archive_month_is_not_refetched():
+    """Целый месяц из архива берём как есть — лишние запросы к бирже не нужны."""
+    month = datetime(2022, 4, 1, tzinfo=UTC)
+    rows_in = [
+        Candle(
+            instrument="SOL/USDT:USDT",
+            tf="1d",
+            ts=month + timedelta(days=i),
+            open=Decimal(100),
+            high=Decimal(100),
+            low=Decimal(100),
+            close=Decimal(100),
+            volume=Decimal(1),
+        )
+        for i in range(30)
+    ]
+
+    class _Archive(BinanceArchive):
+        def month(self, instrument, tf, month_start):  # noqa: ARG002
+            return rows_in
+
+    def rest(instrument, tf, from_ts, to_ts):  # noqa: ARG001
+        raise AssertionError("к REST обращаться не должны")
+
+    source = _Archive(fetch=lambda url: None).source(rest, now=datetime(2022, 6, 1, tzinfo=UTC))
+    assert len(source("SOL/USDT:USDT", "1d", month, month + timedelta(days=30))) == 30

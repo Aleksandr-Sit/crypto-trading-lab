@@ -133,6 +133,11 @@ class BinanceArchive:
                 month_end = _next_month(month)
                 upto = min(month_end, to_ts)
                 rows = self.month(instrument, tf, month) if month_end <= now else None
+                if rows is not None and not _month_complete(rows, tf, month_end):
+                    # Архив бывает обрезан: у SOL и XRP не хватало последних дней февраля
+                    # и марта 2022, и дырка молча уезжала в хранилище — портфельный замер
+                    # потом вставал на «разрыв данных». Неполный месяц берём из REST целиком.
+                    rows = None
                 if rows is None:
                     out.extend(rest(instrument, tf, cursor, upto))
                 else:
@@ -141,6 +146,20 @@ class BinanceArchive:
             return out
 
         return fetch
+
+
+def _month_complete(rows: Sequence[Candle], tf: str, month_end: datetime) -> bool:
+    """Доходит ли месяц архива до своего конца и идёт ли подряд.
+
+    Начало проверять нельзя: инструмент мог быть заведён в середине месяца, и короткий
+    первый месяц — это норма. А вот обрыв в середине или отсутствие хвоста — потеря данных.
+    """
+    if not rows:
+        return False
+    step = parse_tf(tf)
+    if rows[-1].ts + step != month_end:
+        return False
+    return all(b.ts - a.ts == step for a, b in zip(rows, rows[1:], strict=False))
 
 
 def _utcnow() -> datetime:
