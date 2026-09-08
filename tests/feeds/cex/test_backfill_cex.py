@@ -2,6 +2,7 @@
 Binance — из архивов data.binance.vision с добором хвоста по REST. Сети нет."""
 
 import io
+import json
 import zipfile
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -211,3 +212,60 @@ def test_complete_archive_month_is_not_refetched():
 
     source = _Archive(fetch=lambda url: None).source(rest, now=datetime(2022, 6, 1, tzinfo=UTC))
     assert len(source("SOL/USDT:USDT", "1d", month, month + timedelta(days=30))) == 30
+
+
+def test_backfill_refills_a_series_with_holes_despite_done_state(tmp_path):
+    """Запись «диапазон загружен» не должна перекрывать дырявый ряд.
+
+    Именно это и произошло: состояние говорило «готово», а в SOL и XRP не хватало
+    по три дня — повторный бэкфилл их не восстанавливал, потому что честно пропускал
+    уже «загруженное» окно.
+    """
+    from lab.data.backfill import backfill
+
+    store = CandleStore(tmp_path / "data")
+    start = datetime(2022, 2, 1, tzinfo=UTC)
+    days = 28
+    full = [
+        Candle(
+            instrument="SOL/USDT:USDT",
+            tf="1d",
+            ts=start + timedelta(days=i),
+            open=Decimal(100),
+            high=Decimal(100),
+            low=Decimal(100),
+            close=Decimal(100),
+            volume=Decimal(1),
+        )
+        for i in range(days)
+    ]
+    # В хранилище ряд с дыркой, а состояние — «всё загружено».
+    store.write("binance", "SOL/USDT:USDT", "1d", full[:20] + full[23:])
+    state = store.path("binance", "SOL/USDT:USDT", "1d") / ".backfill.json"
+    state.write_text(
+        json.dumps(
+            {
+                "from": start.isoformat(),
+                "to": (start + timedelta(days=days)).isoformat(),
+                "done_until": (start + timedelta(days=days)).isoformat(),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def source(instrument, tf, from_ts, to_ts):  # noqa: ARG001
+        return [c for c in full if from_ts <= c.ts < to_ts]
+
+    result = backfill(
+        store,
+        source,
+        "binance",
+        "SOL/USDT:USDT",
+        "1d",
+        start,
+        start + timedelta(days=days),
+        chunk=timedelta(days=31),
+    )
+
+    assert not result.skipped, "дырявый ряд нельзя пропускать по записи о выполнении"
+    assert store.count("binance", "SOL/USDT:USDT", "1d") == days

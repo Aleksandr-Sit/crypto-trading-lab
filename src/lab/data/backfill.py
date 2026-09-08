@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -16,6 +17,8 @@ from pathlib import Path
 from lab.contracts import Candle
 from lab.contracts.timeframes import parse_tf
 from lab.data.store import CandleStore
+
+log = logging.getLogger(__name__)
 
 Source = Callable[[str, str, datetime, datetime], Sequence[Candle]]
 Progress = Callable[[int, int], None]
@@ -62,6 +65,42 @@ def _save_state(path: Path, done_until: datetime, from_ts: datetime, to_ts: date
     )
 
 
+def _has_holes(
+    store: CandleStore,
+    venue: str,
+    instrument: str,
+    tf: str,
+    from_ts: datetime,
+    to_ts: datetime,
+) -> bool:
+    """Есть ли пропуски внутри уже записанного ряда.
+
+    Запись «диапазон загружен» сама по себе ничего не гарантирует: источник мог отдать
+    неполный кусок, и тогда состояние говорит «готово», а в ряду дырка (так и случилось
+    с архивами Binance по SOL и XRP за февраль–март 2022). Считаем в хранилище: сколько
+    свечей лежит между первой и последней против того, сколько их должно быть при шаге tf.
+    Границы ряда не проверяем — инструмент мог появиться позже начала окна.
+    """
+    try:
+        rows = store.query(
+            "select count(*) as n, min(ts) as first_ts, max(ts) as last_ts from {candles} "
+            "where ts >= ? and ts < ?",
+            venue,
+            instrument,
+            tf,
+            params=[from_ts, to_ts],
+        )
+    except Exception as err:  # noqa: BLE001 — недоступное хранилище не повод молча пропускать
+        log.info("Проверка непрерывности %s %s %s: %s", venue, instrument, tf, err)
+        return False
+    if not rows or not rows[0].get("n"):
+        return False
+    row = rows[0]
+    step = parse_tf(tf)
+    expected = int((row["last_ts"] - row["first_ts"]) / step) + 1
+    return int(row["n"]) < expected
+
+
 def backfill(
     store: CandleStore,
     source: Source,
@@ -81,11 +120,17 @@ def backfill(
     resumed: datetime | None = None
     if state.get("from") == from_ts.isoformat() and state.get("to") == to_ts.isoformat():
         done = datetime.fromisoformat(state["done_until"])
-        if done >= to_ts:
+        holes = _has_holes(store, venue, instrument, tf, from_ts, to_ts)
+        if done >= to_ts and not holes:
             if progress:
                 progress(_units(from_ts, to_ts, tf), _units(from_ts, to_ts, tf))
             return BackfillResult(0, 0, None, skipped=True)
-        cursor = resumed = done
+        if holes:
+            # Где именно пропуск, состояние не знает — проходим окно заново. Повторная
+            # запись безопасна: store.write сливает партицию и отбрасывает дубли.
+            log.info("Ряд %s %s %s дырявый, перезагружаю окно целиком", venue, instrument, tf)
+        else:
+            cursor = resumed = done
     total = _units(from_ts, to_ts, tf)
     written = chunks = 0
     while cursor < to_ts:
