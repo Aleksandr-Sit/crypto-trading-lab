@@ -17,13 +17,35 @@ from __future__ import annotations
 
 import argparse
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+from lab.contracts import StopSpec  # noqa: E402
 from lab.core.registry import DuplicateStrategy, Registry  # noqa: E402
 from lab.db import make_engine, make_session_factory, session_scope  # noqa: E402
 from lab.strategies import registry as code_registry  # noqa: E402
+
+
+def _params(pairs: list[str]) -> dict[str, object]:
+    """`имя=значение` → словарь параметров; числа приводятся к числам.
+
+    Строковый «0.25» вместо числа тихо ломает арифметику правил, поэтому разбор здесь,
+    а не в стратегии: она вправе рассчитывать на нормальные типы.
+    """
+    out: dict[str, object] = {}
+    for pair in pairs:
+        name, sep, raw = pair.partition("=")
+        if not sep or not name.strip():
+            raise SystemExit(f"параметр должен быть вида имя=значение, получено {pair!r}")
+        value: object = raw
+        try:
+            value = int(raw) if raw.strip().lstrip("-").isdigit() else float(raw)
+        except ValueError:
+            value = raw
+        out[name.strip()] = value
+    return out
 
 
 def main() -> int:
@@ -43,10 +65,18 @@ def main() -> int:
         help="хвост к слагу: id собирается как <ветка>-<источник>-<слаг>, "
         "без своего слага запись просто столкнётся с исходной",
     )
+    ap.add_argument(
+        "--param",
+        action="append",
+        default=[],
+        metavar="ИМЯ=ЗНАЧЕНИЕ",
+        help="параметр правил поверх карточки, например risk_unit_pct=0.25 "
+        "(так проверяют размер позиции, не трогая исходную запись)",
+    )
     args = ap.parse_args()
-    if (args.venue or args.instrument) and not args.slug_suffix:
+    if (args.venue or args.instrument or args.param) and not args.slug_suffix:
         print(
-            "с --venue/--instrument нужен --slug-suffix: иначе id совпадёт с исходной "
+            "с --venue/--instrument/--param нужен --slug-suffix: иначе id совпадёт с исходной "
             "стратегией и запись будет отклонена как дубль",
             file=sys.stderr,
         )
@@ -78,20 +108,24 @@ def main() -> int:
         for sid in wanted:
             manifest = code_registry.manifest(sid)
             if args.slug_suffix:
-                # Тот же код правил, но другая площадка и другой ряд: манифест копируется
-                # с новым слагом, иначе id совпадёт с исходной записью. Параметры правил
-                # не трогаем — сравнивать имеет смысл только одинаковые правила.
+                # Те же правила, но другая площадка, другой ряд или другие параметры: манифест
+                # копируется с новым слагом, иначе id совпадёт с исходной записью.
                 update: dict[str, object] = {
                     "slug": f"{manifest.slug}-{args.slug_suffix}",
                     # id копии реестру кода неизвестен, поэтому в параметрах остаётся ссылка
                     # на исходные правила: по ней `ops.measure` соберёт стратегию (иначе замер
                     # ответит «нет кода правил» — ровно как на шаблон из examples/).
-                    "params": {**manifest.params, "code_id": sid},
+                    "params": {**manifest.params, **_params(args.param), "code_id": sid},
                 }
                 if args.venue:
                     update["venue"] = args.venue
                 if args.instrument:
                     update["instruments"] = list(args.instrument)
+                stop_pct = _params(args.param).get("stop_loss_pct")
+                if stop_pct:
+                    # Стоп живёт не в params, а отдельным полем манифеста: без этой строки
+                    # параметр записался бы, а стратегия осталась со старым стопом.
+                    update["stop"] = StopSpec(max_dd_pct=Decimal(str(stop_pct)))
                 manifest = manifest.model_copy(update=update)
             try:
                 row = registry.add(manifest)
