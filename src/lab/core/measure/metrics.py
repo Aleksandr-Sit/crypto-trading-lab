@@ -77,7 +77,25 @@ def annualized_pct(total_pct: Decimal | None, window: tuple[datetime, datetime])
     growth = 1 + float(total_pct) / 100
     if growth <= 0:
         return None
-    return _d((growth ** (365.25 / days) - 1) * 100)
+    # Считаем через логарифм и отсекаем бессмыслицу: растянуть двухдневные +60% на год —
+    # это 10^39 процентов. Такое число не только не читается, оно и в Decimal не влезает
+    # (InvalidOperation). Нет годовых — значит сравнение остаётся на процентах за окно.
+    rate = math.log(growth) * 365.25 / days
+    if abs(rate) > 20:  # e^20 ≈ 4.9e8 % годовых — окно слишком коротко для такой оценки
+        return None
+    return _d((math.exp(rate) - 1) * 100)
+
+
+def _vs_btc_value(m: Metrics) -> Decimal | None:
+    """Насколько стратегия лучше бенчмарка.
+
+    В годовых, если их можно посчитать, иначе — в процентах за окно (короткое окно,
+    капитал в нуле). Знак от единицы не зависит: годовые — монотонное преобразование
+    доходности за то же окно, поэтому ВЕРДИКТ порога не меняется, меняется читаемость.
+    Именно поэтому смена единицы — не решение проблемы «бенчмарк с 2011 недостижим»;
+    решает её сравнение по скользящим окнам (`lab measure rolling`).
+    """
+    return m.vs_btc_cagr if m.vs_btc_cagr is not None else m.vs_btc
 
 
 def _vs_btc_detail(m: Metrics) -> str:
@@ -85,7 +103,7 @@ def _vs_btc_detail(m: Metrics) -> str:
     if m.btc_bh_pct is None:
         return "нет бенчмарка за окно"
     if m.vs_btc_cagr is None:
-        return "капитал ушёл в ноль — годовых не существует"
+        return "процентов за окно (годовые тут не считаются)"
     return "годовых против BTC B&H"
 
 
@@ -303,7 +321,7 @@ def threshold(
     criteria.append(
         _crit(
             "vs_btc",
-            m.vs_btc_cagr,
+            _vs_btc_value(m),
             Decimal(0),
             ">",
             _vs_btc_detail(m),
