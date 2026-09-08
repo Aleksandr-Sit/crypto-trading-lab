@@ -17,6 +17,9 @@ params:
   rebalance_days: 7
   min_daily_volume_usd: 20000000
   btc_filter_sma_days: 100       # покупать только если BTC > SMA(100)
+  # стоп на ОДНУ сделку; имя не stop_loss_pct — под тем именем заводится стоп всей стратегии
+  trade_stop_pct: 15
+  btc_instrument: BTC/USDT
 ---
 
 # Кросс-секционный моментум альтов (топ-N за 3 недели)

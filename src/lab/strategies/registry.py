@@ -123,6 +123,13 @@ def manifest_from_card(
     """Манифест из карточки. `source_kind` карточек (`bot_preset`, `author_indicator`) не проходит
     паттерн манифеста — заменяется на `preset`/`indicator`; slug — хвост id карточки после ветки."""
     card = read_card(path)
+    # Вселенная в карточке может быть описана ПРОЗОЙ («топ-50 USDT-пар по обороту»), когда
+    # состав пересчитывается на каждом ребалансе. `list()` от строки дал бы список отдельных
+    # БУКВ, и стратегия поехала бы торговать инструментом «т». Такие вселенные задаются
+    # списком при регистрации (`scripts/register_coded_strategy.py --instrument`).
+    raw_instruments = card.get("instruments") or []
+    if not isinstance(raw_instruments, list):
+        raw_instruments = []
     branch = Branch(card["branch"])
     card_id = str(card["id"])
     kind = source_kind or _SOURCE_KINDS.get(str(card.get("source_kind", "")), "preset")
@@ -138,7 +145,7 @@ def manifest_from_card(
             venue=str(card.get("venue", "")),
             source_kind=kind,
             source_ref=str(card.get("source_ref")) if card.get("source_ref") else None,
-            instruments=list(card.get("instruments") or []),
+            instruments=raw_instruments,
             timeframe=_TF.get(str(card.get("timeframe")), str(card.get("timeframe"))),
             params=params,
             can_backtest=bool(card.get("can_backtest", True)),
@@ -166,6 +173,7 @@ def _load_builtin() -> None:
     import lab.strategies.indicators.strategies  # noqa: F401
     import lab.strategies.neutral  # noqa: F401
     import lab.strategies.presets  # noqa: F401
+    import lab.strategies.xsmom  # noqa: F401
 
 
 __all__ = [
