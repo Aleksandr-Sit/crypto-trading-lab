@@ -120,11 +120,18 @@ def run_measure(
 
 
 def _build_strategy(record: Any):
-    """Код правил по id реестра; параметры записи накладываются поверх манифеста кода."""
+    """Код правил по id реестра; параметры записи накладываются поверх манифеста кода.
+
+    `params["code_id"]` — те же правила под другой записью: так заводится копия стратегии
+    на другой площадке или другой истории (`scripts/register_coded_strategy.py --slug-suffix`).
+    Без этой ссылки реестр кода не знает id копии и замер отвечает «нет кода правил».
+    """
     from lab.strategies import registry as code_registry
 
+    params = dict(record.params or {})
+    code_id = str(params.get("code_id") or record.id)
     try:
-        return code_registry.build(record.id, params=dict(record.params or {}))
+        return code_registry.build(code_id, params=params)
     except code_registry.UnknownStrategy:
         return None
 

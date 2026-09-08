@@ -215,11 +215,16 @@ class HyperliquidFeed(CexFeed):
     pass
 
 
+class BitstampFeed(CexFeed):
+    """Только чтение истории: ряд BTC/USD с 2011 года, торговых ключей у площадки нет."""
+
+
 FEEDS: dict[str, type[CexFeed]] = {
     "bybit": BybitFeed,
     "okx": OkxFeed,
     "binance": BinanceFeed,
     "hyperliquid": HyperliquidFeed,
+    "bitstamp": BitstampFeed,
 }
 
 
@@ -236,6 +241,7 @@ def make_feed(
 __all__ = [
     "FEEDS",
     "BinanceFeed",
+    "BitstampFeed",
     "BybitFeed",
     "CexFeed",
     "FundingRate",

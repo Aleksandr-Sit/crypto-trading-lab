@@ -494,7 +494,9 @@ def build_parser() -> argparse.ArgumentParser:
         dest="action", required=True
     )
     bf = data.add_parser("backfill", help="свечи CEX за N дней в Parquet (таск 04)")
-    bf.add_argument("--venue", required=True, choices=["bybit", "okx", "binance", "hyperliquid"])
+    bf.add_argument(
+        "--venue", required=True, choices=["bybit", "okx", "binance", "hyperliquid", "bitstamp"]
+    )
     bf.add_argument(
         "--symbols", required=True, action="append", help="через запятую или повтором флага"
     )

@@ -9,6 +9,10 @@ cex:
   okx:         {taker_bps: 10,  maker_bps: 8,  funding_interval_h: 8}
   binance:     {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8}
   hyperliquid: {taker_bps: 4.5, maker_bps: 1.5, funding_interval_h: 1}
+  # Только история (ряд BTC/USD с 2011): тариф базового уровня Bitstamp, ощутимо дороже
+  # бирж, где мы бы торговали. Это НАМЕРЕННО консервативно: прошла порог на таких
+  # издержках — на Binance или Bybit пройдёт тем более.
+  bitstamp:    {taker_bps: 40,  maker_bps: 25, funding_interval_h: 8}
   fake:        {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8}
 
 # DEX-свопы: fee пула + приоритетная fee + газ (USD, оценка).
