@@ -104,6 +104,14 @@ class Strategy:
         base_inputs = {"ts": bar.ts, "instrument": bar.instrument, "side": side}
         if inputs:
             base_inputs.update(inputs)
+        # `inputs` уходит В ХЕШ, а хеш обратно не прочитаешь: почему стратегия закрылась —
+        # по стопу, по каналу или по базису — после этого узнать негде. Поэтому «что это
+        # было» и «почему» дублируются в meta, откуда их видит замер и журнал.
+        meta_out = dict(meta or {})
+        for key in ("kind", "reason"):
+            value = (inputs or {}).get(key)
+            if value is not None and key not in meta_out:
+                meta_out[key] = value
         return Signal(
             strategy_id=self.strategy_id,
             decided_at=decided_at or self.decided_at(bar),
@@ -113,7 +121,7 @@ class Strategy:
             price_ref=bar.close if price_ref is None else price_ref,
             inputs_hash=inputs_hash(base_inputs, self.manifest.params),
             ttl_s=self.ttl_s(),
-            meta=dict(meta or {}),
+            meta=meta_out,
         )
 
     def event_signal(

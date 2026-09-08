@@ -160,6 +160,10 @@ class Metrics(_Model):
     stopped_at: datetime | None = None
     stop_rule: str = ""
     blocked_signals: int = 0
+    # Сколько сделок пришлось на каждую причину: «стоп», «выход по каналу», «базис».
+    # Без этого поведение стратегии объяснить нечем — только гадать по итоговым цифрам,
+    # а именно на этом дважды и застряли: со стопом черепах и с выходами фандинг-арбитража.
+    reasons: dict[str, int] = Field(default_factory=dict)
 
 
 class Criterion(_Model):

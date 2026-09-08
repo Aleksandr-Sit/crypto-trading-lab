@@ -330,6 +330,9 @@ class SimResult:
     # Позиции по инструментам: у портфельной стратегии «одна открытая позиция» не значит
     # ничего — важно, что осталось на каждой ноге.
     positions: dict[str, Decimal] = field(default_factory=dict)
+    # Сколько исполненных сигналов пришлось на каждую причину: «стоп», «выход по каналу»,
+    # «базис». Без этого поведение стратегии объяснить нечем — только гадать по цифрам.
+    reasons: dict[str, int] = field(default_factory=dict)
 
 
 class _StopTracker:
@@ -429,6 +432,18 @@ def simulate(
     tracker = _StopTracker(stop, capital)
     consumed = dict.fromkeys(book, 0)
 
+    # Причины считаем по ИСПОЛНЕННЫМ сигналам: намерение и сделка — разные вещи, лимитка
+    # могла не сработать, а сигнал протухнуть по ttl.
+    reasons: dict[str, int] = {}
+
+    def _count(_fill: Fill, signal: Signal, _costs: Costs, _ref: Decimal) -> None:
+        label = str(signal.meta.get("reason") or signal.meta.get("kind") or "без причины")
+        reasons[label] = reasons.get(label, 0) + 1
+
+    for engine_ in book.values():
+        if engine_.on_fill is None:
+            engine_.on_fill = _count
+
     single = next(iter(book.values())) if len(book) == 1 else None
     for bar in candles:  # noqa: PLR1702
         # С одним движком имя в баре не проверяем: поток и есть его инструмент, а звать его
@@ -507,4 +522,5 @@ def simulate(
         stop_rule=stop_rule,
         blocked_signals=blocked,
         positions={name: e.position for name, e in book.items()},
+        reasons=reasons,
     )

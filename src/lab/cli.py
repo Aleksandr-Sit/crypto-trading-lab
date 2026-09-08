@@ -265,6 +265,11 @@ def format_measurement(m, *, window=None) -> str:
             f"  СТОП стратегии сработал ({rule}) {stopped_at:%d.%m.%Y}: дальше открытия "
             f"запрещены, пропущено сигналов {getattr(mt, 'blocked_signals', 0)}"
         )
+    reasons = getattr(mt, "reasons", None)
+    if reasons:
+        # Почему стратегия торговала: без этого объяснить её поведение нечем.
+        top = sorted(reasons.items(), key=lambda item: -item[1])
+        lines.append("  причины сделок: " + ", ".join(f"{name} {n}" for name, n in top))
     if m.threshold is not None:
         failed = ", ".join(m.threshold.failed_names()) or "—"
         lines.append(f"  порог: {m.threshold.status} (не прошло: {failed})")

@@ -519,6 +519,8 @@ def run(
         cached = _lookup(session, base, dh)
         if cached is not None:
             return cached
+        if result.reasons:
+            extra_metrics = {**(extra_metrics or {}), "reasons": dict(result.reasons)}
         if result.stopped_at is not None:
             # Без этой пометки снимок читается неверно: цифры обрываются на пробое стопа,
             # а по метрикам это выглядит как «стратегия просто перестала торговать».

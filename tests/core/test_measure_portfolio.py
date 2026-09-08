@@ -143,3 +143,38 @@ def test_gap_is_checked_per_instrument():
 
     with pytest.raises(IncompleteData, match="разрыв данных"):
         simulate(TwoLegs(), bars, engines=_engines())
+
+
+def test_reasons_are_counted_by_executed_signals():
+    """Почему стратегия торговала — должно доезжать до результата, а не теряться в хеше.
+
+    `inputs` уходит в `inputs_hash`, а хеш обратно не прочитаешь: именно поэтому нельзя было
+    объяснить ни ранний стоп черепах, ни частые выходы фандинг-арбитража. Причина считается
+    по ИСПОЛНЕННЫМ сигналам: намерение и сделка — разные вещи.
+    """
+    from lab.strategies.base import Strategy
+
+    class Tagged(Strategy):
+        def reset(self) -> None:
+            self.sent = False
+
+        def on_bar(self, bar: Candle) -> list[Signal]:
+            if self.sent or bar.instrument != A:
+                return []
+            self.sent = True
+            return [self.signal(bar, "buy", Decimal(1), inputs={"kind": "breakout"})]
+
+    manifest = StrategyManifest(
+        slug="tagged",
+        branch=Branch.CEX_PERP,
+        venue="binance",
+        source_kind="test",
+        instruments=[A],
+        timeframe="1h",
+        stop=StopSpec(max_dd_pct=Decimal(50)),
+    )
+    engine = PaperEngine(venue="binance", instrument=A, tf="1h", branch=Branch.CEX_PERP)
+
+    result = simulate(Tagged(manifest), [_bar(A, i, Decimal(100)) for i in range(4)], engine=engine)
+
+    assert result.reasons == {"breakout": 1}

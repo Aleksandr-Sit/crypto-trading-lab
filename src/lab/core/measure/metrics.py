@@ -40,7 +40,14 @@ _NA = {
 }
 
 # Факты о ходе прогона: не метрики ветки, но часть снимка — иначе их некуда положить.
-_OUTCOME_KEYS = ("stopped_at", "stop_rule", "blocked_signals", "benchmark_kind", "stability")
+_OUTCOME_KEYS = (
+    "stopped_at",
+    "stop_rule",
+    "blocked_signals",
+    "benchmark_kind",
+    "stability",
+    "reasons",
+)
 
 
 def _d(value: float | int | Decimal) -> Decimal:
