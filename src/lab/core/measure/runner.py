@@ -148,11 +148,25 @@ class DataHasher:
             self.add(c)
             yield c
 
-    def digest(self, benchmark: Sequence[Candle] | None = None) -> str:
+    def digest(
+        self,
+        benchmark: Sequence[Candle] | None = None,
+        funding: dict[str, dict[datetime, Decimal]] | None = None,
+    ) -> str:
+        """Отпечаток всех данных замера: свечи, бенчмарк и ставки фандинга.
+
+        Фандинг обязан входить: без него замер на реальных ставках и замер на константе
+        дают ОДИН отпечаток, и сохранённый снимок вернулся бы вместо нового — с чужими
+        цифрами. Для спота словарь пуст, и отпечаток не меняется.
+        """
         if not self._closed:
             self._h.update(b"bench")
             for c in benchmark or ():
                 _hash_row(self._h, c)
+            self._h.update(b"funding")
+            for instrument in sorted(funding or {}):
+                for ts in sorted(funding[instrument]):
+                    self._h.update(f"{instrument}|{ts.isoformat()}|{funding[instrument][ts]}\n".encode())
             self._closed = True
         return self._h.hexdigest()
 
@@ -498,7 +512,7 @@ def run(
             stop=manifest.stop,
             capital=capital,
         )
-        dh = hasher.digest(bench_rows)
+        dh = hasher.digest(bench_rows, funding_history)
         cached = _lookup(session, base, dh)
         if cached is not None:
             return cached
@@ -510,9 +524,10 @@ def run(
             extra_metrics["stop_rule"] = result.stop_rule
             extra_metrics["blocked_signals"] = result.blocked_signals
     except IncompleteData as err:
-        return _incomplete(base, session, str(err), hasher.digest(bench_rows))
+        return _incomplete(base, session, str(err), hasher.digest(bench_rows, funding_history))
     except (OSError, ConnectionError, TimeoutError) as err:
-        return _incomplete(base, session, f"источник данных упал: {err}", hasher.digest(bench_rows))
+        digest = hasher.digest(bench_rows, funding_history)
+        return _incomplete(base, session, f"источник данных упал: {err}", digest)
 
     return _finish(
         base,
