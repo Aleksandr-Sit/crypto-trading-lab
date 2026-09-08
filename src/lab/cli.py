@@ -118,6 +118,90 @@ def cmd_measure_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_measure_rolling(args: argparse.Namespace) -> int:
+    """Устойчивость стратегии по скользящим окнам (R11.5): не «сколько заработала», а
+    «в какой доле периодов обходила бенчмарк».
+
+    Один прогон на одном окне — плохая опора: вердикт меняется от сдвига границы, а на
+    длинной истории бенчмарк вообще недостижим — рост биткоина с 2011 года был режимом
+    ранней капитализации и в нынешнем триллионном активе не повторится. Скользящие окна
+    судят стратегию в каждом периоде отдельно, поэтому эпоха, которой больше не будет,
+    остаётся одним окном из многих, а не приговором всему замеру.
+
+    Снимки НЕ сохраняются: это отчёт оператору, а не решение ступени (её принимает
+    `remeasure` по одиночному замеру).
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from lab.core.registry import StrategyNotFound
+    from lab.ops.measure import MeasureUnavailable, make_measure
+
+    if args.window < 1 or args.step < 1 or args.days < args.window:
+        print(
+            "нужно --days >= --window, а --window и --step больше нуля",
+            file=sys.stderr,
+        )
+        return 2
+
+    now = datetime.now(UTC)
+    start = now - timedelta(days=args.days)
+    measure = make_measure(_scope(), root=args.root)
+    rows: list[tuple[datetime, datetime, object]] = []
+    cursor = start
+    while cursor + timedelta(days=args.window) <= now:
+        upto = cursor + timedelta(days=args.window)
+        try:
+            m = measure(
+                strategy_id=args.strategy_id, mode="backtest", window=(cursor, upto), session=None
+            )
+        except (StrategyNotFound, MeasureUnavailable) as err:
+            print(f"Замер не выполнен: {err}", file=sys.stderr)
+            return 2
+        rows.append((cursor, upto, m))
+        cursor += timedelta(days=args.step)
+
+    if not rows:
+        print("окон не получилось: проверь --days, --window и --step", file=sys.stderr)
+        return 2
+
+    print(
+        f"{args.strategy_id}: окно {args.window} сут, шаг {args.step} сут, всего окон {len(rows)}"
+    )
+    print(f"{'период':25} {'сделок':>7} {'годовых':>10} {'BTC годовых':>12} {'разница':>10}")
+    ahead = counted = 0
+    for a, b, m in rows:
+        period = f"{a:%m.%Y}–{b:%m.%Y}"
+        mt = getattr(m, "metrics", None)
+        if getattr(m, "status", "") != "ok" or mt is None:
+            print(f"{period:25} {'—':>7} {'нет данных':>10}")
+            continue
+        diff = mt.vs_btc_cagr
+        if diff is not None:
+            counted += 1
+            ahead += 1 if diff > 0 else 0
+        print(
+            f"{period:25} {mt.n_trades:>7} {_pct(mt.cagr_pct):>10} "
+            f"{_pct(mt.btc_cagr_pct):>12} {_pct(diff):>10}"
+        )
+    if counted:
+        share = ahead * 100 // counted
+        print(f"\nВпереди BTC в {ahead} окнах из {counted} ({share}%).")
+        print(
+            "  Читать так: одно-два окна из двадцати — случайность; устойчивое "
+            "преимущество видно, когда стратегия впереди в большинстве периодов."
+        )
+    else:
+        print("\nСравнить не с чем: бенчмарка за эти окна в хранилище нет.")
+    return 0
+
+
+def _pct(value) -> str:
+    """Проценты для таблицы: два знака, прочерк вместо пустоты."""
+    if value is None:
+        return "—"
+    return f"{float(value):+.2f}%"
+
+
 def cmd_measure_show(args: argparse.Namespace) -> int:
     """Последние снимки стратегии — что именно замерено и когда."""
     from lab.core.measure import history
@@ -151,6 +235,13 @@ def format_measurement(m, *, window=None) -> str:
         value = getattr(mt, name, None)
         if value is not None:
             lines.append(f"  {name}: {value}")
+    # Годовые печатаются рядом: именно по ним судит порог, а `vs_btc` за окно оставлен
+    # справкой — на длинной истории он превращается в нечитаемое число.
+    if getattr(mt, "cagr_pct", None) is not None:
+        lines.append(
+            f"  годовых: {_pct(mt.cagr_pct)} · BTC: {_pct(mt.btc_cagr_pct)} · "
+            f"разница: {_pct(mt.vs_btc_cagr)}"
+        )
     stopped_at = getattr(mt, "stopped_at", None)
     if stopped_at is not None:
         rule = {
@@ -519,6 +610,15 @@ def build_parser() -> argparse.ArgumentParser:
     mshow.add_argument("strategy_id")
     mshow.add_argument("--limit", type=int, default=5)
     mshow.set_defaults(func=cmd_measure_show)
+    mroll = msub.add_parser(
+        "rolling", help="устойчивость: замер по скользящим окнам, в скольких стратегия впереди"
+    )
+    mroll.add_argument("strategy_id")
+    mroll.add_argument("--window", type=int, default=365, help="длина одного окна, суток")
+    mroll.add_argument("--step", type=int, default=90, help="шаг между окнами, суток")
+    mroll.add_argument("--days", type=int, default=1825, help="сколько истории брать, суток")
+    mroll.add_argument("--root", default=None, help="корень хранилища свечей")
+    mroll.set_defaults(func=cmd_measure_rolling)
 
     ops = sub.add_parser("ops", help="эксплуатация: бэкап, перезагрузка конфигов, источники")
     ops.add_argument(

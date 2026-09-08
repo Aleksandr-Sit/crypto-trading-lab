@@ -94,6 +94,12 @@ class Metrics(_Model):
     costs: CostsBreakdown
     btc_bh_pct: Decimal | None
     vs_btc: Decimal | None
+    # Годовые: разница процентов за окно несопоставима между окнами разной длины и
+    # ломается на длинной истории (BTC с 2011 дал +2 855 000%, и вычитание съедает всё).
+    # Сравнение ведётся по этим полям; `vs_btc` остаётся как справка «сколько за окно».
+    cagr_pct: Decimal | None = None
+    btc_cagr_pct: Decimal | None = None
+    vs_btc_cagr: Decimal | None = None
     paper_vs_live_gap: Decimal | NotApplicable
     copy_lag_cost: dict[str, Decimal] | NotApplicable
     brier: Decimal | NotApplicable

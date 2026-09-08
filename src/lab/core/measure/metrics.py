@@ -58,6 +58,28 @@ def btc_buy_and_hold_pct(candles: Sequence[Candle]) -> Decimal:
     return (candles[-1].close / candles[0].open - 1) * 100
 
 
+def annualized_pct(total_pct: Decimal | None, window: tuple[datetime, datetime]) -> Decimal | None:
+    """Доходность за окно → среднегодовая, в %.
+
+    Зачем: проценты за окно между окнами разной длины несравнимы, а на длинной истории
+    вычитание процентов теряет смысл вовсе — BTC с 2011 года дал +2 855 000%, и любая
+    разница превращается в астрономическое число. Годовые читаются и сопоставляются:
+    «+24% в год против +100% в год», а не «−2 852 951».
+
+    None — когда считать нечего: окно короче суток или капитал ушёл в ноль и ниже
+    (тогда «среднегодовой» доходности не существует, и выдумывать её нельзя).
+    """
+    if total_pct is None:
+        return None
+    days = (window[1] - window[0]).total_seconds() / 86400
+    if days < 1:
+        return None
+    growth = 1 + float(total_pct) / 100
+    if growth <= 0:
+        return None
+    return _d((growth ** (365.25 / days) - 1) * 100)
+
+
 def sample_status(n: int, required: int) -> SampleStatus:
     if n >= required:
         return SampleStatus(status="ok", n=n, required=required, detail=f"{n} из {required}")
@@ -181,6 +203,9 @@ def metrics(
     else:
         bh = None
 
+    cagr = annualized_pct(net_pct, window)
+    btc_cagr = annualized_pct(bh, window)
+
     values: dict[str, object] = dict(_NA)
     outcome: dict[str, object] = {}
     for key, val in (extra or {}).items():
@@ -212,6 +237,9 @@ def metrics(
         costs=breakdown,
         btc_bh_pct=bh,
         vs_btc=(net_pct - bh) if bh is not None else None,
+        cagr_pct=cagr,
+        btc_cagr_pct=btc_cagr,
+        vs_btc_cagr=(cagr - btc_cagr) if (cagr is not None and btc_cagr is not None) else None,
         capital=capital,
         window_from=window[0],
         window_to=window[1],
@@ -260,13 +288,18 @@ def threshold(
         lo = m.ev_ci95[0] if m.ev_ci95 else None
         criteria.append(_crit("ev_ci95_low", lo, cfg.min_ev_after_costs, ">", "бутстрап CI95"))
     criteria.append(_crit("max_dd_pct", m.max_dd_pct, dd_limit, "<=", f"лимит группы {group}"))
+    # Сравнение с бенчмарком — в ГОДОВЫХ. Разница процентов за окно зависит от длины окна
+    # и на длинной истории бессмысленна: BTC с 2011 года дал +2 855 000%, и её не перебьёт
+    # ничто. Годовые сопоставимы между окнами: «+24% в год против +100% в год».
     criteria.append(
         _crit(
-            "vs_btc",
-            m.vs_btc,
+            "vs_btc_cagr",
+            m.vs_btc_cagr,
             Decimal(0),
             ">",
-            "бенчмарк BTC B&H" if m.vs_btc is not None else "нет бенчмарка за окно",
+            "годовых против BTC B&H"
+            if m.vs_btc_cagr is not None
+            else "нет бенчмарка за окно или капитал ушёл в ноль",
         )
     )
     status: Literal["passed", "failed", "insufficient"]
