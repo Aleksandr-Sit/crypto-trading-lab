@@ -146,7 +146,7 @@ def test_binance_backfill_uses_archives_and_rest_for_current_month(tmp_path):
     assert "fetch_ohlcv" in t.calls, "хвост текущего месяца добирается по REST"
 
 
-def test_truncated_archive_month_is_refetched_from_rest():
+def test_truncated_archive_month_is_refetched_from_rest():  # хвост обрезан
     """Обрезанный месячный архив не должен молча оставлять дырку в хранилище.
 
     Так и было: у SOL и XRP архивы Binance не содержали последних дней февраля и марта 2022,
@@ -269,3 +269,42 @@ def test_backfill_refills_a_series_with_holes_despite_done_state(tmp_path):
 
     assert not result.skipped, "дырявый ряд нельзя пропускать по записи о выполнении"
     assert store.count("binance", "SOL/USDT:USDT", "1d") == days
+
+
+def test_archive_month_missing_first_days_is_refetched_too():
+    """Архив бывает обрезан и с начала: у SOL и XRP апрель 2022 начинался с третьего числа.
+
+    Проверка одного хвоста закрыла февральскую дырку и оставила апрельскую — поэтому
+    покрытие проверяется с обоих концов.
+    """
+    month = datetime(2022, 4, 1, tzinfo=UTC)
+    full = [
+        Candle(
+            instrument="SOL/USDT:USDT",
+            tf="1d",
+            ts=month + timedelta(days=i),
+            open=Decimal(100),
+            high=Decimal(100),
+            low=Decimal(100),
+            close=Decimal(100),
+            volume=Decimal(1),
+        )
+        for i in range(30)
+    ]
+
+    class _Archive(BinanceArchive):
+        def month(self, instrument, tf, month_start):  # noqa: ARG002
+            return full[2:]  # архив без 1 и 2 апреля
+
+    used_rest = False
+
+    def rest(instrument, tf, from_ts, to_ts):  # noqa: ARG001
+        nonlocal used_rest
+        used_rest = True
+        return [c for c in full if from_ts <= c.ts < to_ts]
+
+    source = _Archive(fetch=lambda url: None).source(rest, now=datetime(2022, 6, 1, tzinfo=UTC))
+    rows = source("SOL/USDT:USDT", "1d", month, month + timedelta(days=30))
+
+    assert used_rest, "недостающее начало месяца обязано добираться из REST"
+    assert len(rows) == 30

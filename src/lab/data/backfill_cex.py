@@ -133,10 +133,11 @@ class BinanceArchive:
                 month_end = _next_month(month)
                 upto = min(month_end, to_ts)
                 rows = self.month(instrument, tf, month) if month_end <= now else None
-                if rows is not None and not _month_complete(rows, tf, month_end):
-                    # Архив бывает обрезан: у SOL и XRP не хватало последних дней февраля
-                    # и марта 2022, и дырка молча уезжала в хранилище — портфельный замер
-                    # потом вставал на «разрыв данных». Неполный месяц берём из REST целиком.
+                if rows is not None and not _covers(rows, tf, cursor, upto):
+                    # Архив бывает обрезан с любого конца: у SOL и XRP февраль 2022
+                    # заканчивался 25-м, а апрель начинался с 3-го. Дырка молча уезжала
+                    # в хранилище, и портфельный замер потом вставал на «разрыв данных».
+                    # Не покрывает запрошенный отрезок — берём его из REST.
                     rows = None
                 if rows is None:
                     out.extend(rest(instrument, tf, cursor, upto))
@@ -148,16 +149,20 @@ class BinanceArchive:
         return fetch
 
 
-def _month_complete(rows: Sequence[Candle], tf: str, month_end: datetime) -> bool:
-    """Доходит ли месяц архива до своего конца и идёт ли подряд.
+def _covers(rows: Sequence[Candle], tf: str, cursor: datetime, upto: datetime) -> bool:
+    """Покрывает ли месяц архива запрошенный отрезок целиком и без пропусков.
 
-    Начало проверять нельзя: инструмент мог быть заведён в середине месяца, и короткий
-    первый месяц — это норма. А вот обрыв в середине или отсутствие хвоста — потеря данных.
+    Проверять надо оба конца, а не только хвост: у SOL и XRP архив за февраль 2022 обрывался
+    на 25-м, а за апрель — начинался с 3-го. Проверка одного хвоста закрыла первую дырку
+    и оставила вторую.
+
+    Ложное срабатывание на первом месяце листинга (инструмента ещё не было) не страшно:
+    REST вернёт ровно то же самое, цена ошибки — один лишний запрос.
     """
     if not rows:
         return False
     step = parse_tf(tf)
-    if rows[-1].ts + step != month_end:
+    if rows[0].ts > cursor or rows[-1].ts + step < upto:
         return False
     return all(b.ts - a.ts == step for a, b in zip(rows, rows[1:], strict=False))
 
