@@ -22,11 +22,12 @@ from __future__ import annotations
 import logging
 import os
 from collections.abc import Callable, Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from lab.contracts import Candle, MeasureMode
 from lab.contracts.timeframes import parse_tf
+from lab.core.measure.types import Stability
 
 log = logging.getLogger(__name__)
 
@@ -343,6 +344,67 @@ def _journal_trades(session: Any, strategy_id: str, window: tuple[datetime, date
     return out
 
 
+def run_stability(
+    strategy_id: str,
+    *,
+    session_scope: Callable[[], Any],
+    now: datetime,
+    window_days: int,
+    step_days: int,
+    store: Any = None,
+    feed_factory: Callable[[str], Any] | None = None,
+    root: str | None = None,
+    history_days: int | None = None,
+) -> tuple[Stability, list[tuple[datetime, datetime, Any]]]:
+    """Прогон по скользящим окнам: в скольких стратегия в плюсе и в скольких обошла бенчмарк.
+
+    Зачем: одиночное окно даёт вердикт, который меняется от сдвига границы, — у
+    `pifagor-forever-sma` он гулял от «преимущество» до «разгрома». Каждое окно судится
+    в своём режиме рынка, поэтому неповторимая эпоха роста остаётся одним окном из многих.
+
+    Снимки НЕ сохраняются (`session=None`): это оценка, а не решение ступени; писать
+    в историю два десятка замеров на каждую проверку — мусор.
+    """
+    span = history_days or (window_days * 4)
+    start = now - timedelta(days=span)
+    windows: list[tuple[datetime, datetime, Any]] = []
+    profitable = ahead = compared = 0
+    cursor = start
+    while cursor + timedelta(days=window_days) <= now:
+        upto = cursor + timedelta(days=window_days)
+        m = run_measure(
+            strategy_id,
+            MeasureMode.BACKTEST,
+            (cursor, upto),
+            session_scope=session_scope,
+            store=store,
+            feed_factory=feed_factory,
+            root=root,
+            session=None,
+        )
+        windows.append((cursor, upto, m))
+        mt = getattr(m, "metrics", None)
+        if getattr(m, "status", "") == "ok" and mt is not None:
+            if mt.net_pnl_pct > 0:
+                profitable += 1
+            edge = mt.vs_btc_cagr if mt.vs_btc_cagr is not None else mt.vs_btc
+            if edge is not None:
+                compared += 1
+                if edge > 0:
+                    ahead += 1
+        cursor += timedelta(days=step_days)
+
+    stability = Stability(
+        windows=len(windows),
+        profitable=profitable,
+        ahead=ahead,
+        compared=compared,
+        window_days=window_days,
+        step_days=step_days,
+    )
+    return stability, windows
+
+
 __all__ = [
     "BENCHMARK_INSTRUMENTS",
     "DATA_ROOT_ENV",
@@ -350,4 +412,5 @@ __all__ = [
     "data_root",
     "make_measure",
     "run_measure",
+    "run_stability",
 ]

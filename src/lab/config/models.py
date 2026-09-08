@@ -64,6 +64,20 @@ class LimitsConfig(_Cfg):
         return self.groups[self.group_of(branch)]
 
 
+class StabilityConfig(_Cfg):
+    """Оценка по многим окнам (В12, замечание 08.09.2026).
+
+    Одиночное окно — плохая опора: вердикт получается свойством нарезки. Считается только
+    для стратегий, прошедших остальные критерии: прогон по окнам дорогой.
+    """
+
+    window_days: int = Field(ge=30, default=730)
+    step_days: int = Field(ge=7, default=180)
+    min_windows: int = Field(ge=2, default=6)
+    min_profitable_pct: Decimal = Decimal(60)
+    min_ahead_pct: Decimal = Decimal(50)
+
+
 class ThresholdConfig(_Cfg):
     """Правило В12: ≥30 сделок, EV>0 после издержек, MaxDD в лимите, лучше BTC B&H."""
 
@@ -73,6 +87,7 @@ class ThresholdConfig(_Cfg):
     max_dd_pct: dict[str, Decimal]
     bootstrap_samples: int = Field(ge=100, default=1000)
     confidence: Decimal = Field(gt=0, lt=1, default=Decimal("0.95"))
+    stability: StabilityConfig = Field(default_factory=StabilityConfig)
 
 
 class JobSpec(_Cfg):

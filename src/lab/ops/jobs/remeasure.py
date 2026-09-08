@@ -65,14 +65,17 @@ def weekly_remeasure(
         rows = list(session.scalars(select(StrategyRow).where(StrategyRow.status.in_(LIVE))))
         for row in rows:
             try:
-                measure(strategy_id=row.id, mode=cfg.remeasure.mode, window=window)
+                measured = measure(strategy_id=row.id, mode=cfg.remeasure.mode, window=window)
             except Exception as err:  # noqa: BLE001 — одна стратегия не роняет прогон
                 report.failed[row.id] = f"{type(err).__name__}: {err}"
                 log.warning("Переизмерение %s не удалось: %s", row.id, err)
                 continue
             report.measured.append(row.id)
             row.valid_until = at + timedelta(weeks=cfg.remeasure.valid_weeks)
-            transition = ladder.evaluate(row.id)
+            metrics = _with_stability(
+                session_scope, row, measured, at, session=session, measure=measure
+            )
+            transition = ladder.evaluate(row.id, metrics=metrics)
             if transition is not None:
                 report.transitions.append(transition)
         session.flush()
@@ -111,6 +114,56 @@ def expiry(
     if expired:
         _notify(bot, "Срок годности", "Просрочены и переведены в degraded:\n" + "\n".join(expired))
     return expired
+
+
+def _with_stability(
+    session_scope: Callable[[], Any],
+    row: StrategyRow,
+    measured: Any,
+    at: datetime,
+    *,
+    session: Any,
+    measure: Callable[..., Any],
+) -> Any:
+    """Метрики свежего замера плюс оценка устойчивости — если её вообще есть смысл считать.
+
+    Прогон по скользящим окнам стоит десятков замеров, поэтому он делается ТОЛЬКО для
+    стратегий, прошедших остальные критерии: провалившей EV или просадку устойчивость
+    ничего не изменит. Сорвался прогон — двигаемся по одиночному замеру, как раньше,
+    а не роняем всё переизмерение.
+    """
+    from lab.config import load_threshold
+    from lab.core.measure import threshold as measure_threshold
+    from lab.ops.measure import run_stability
+
+    metrics = getattr(measured, "metrics", None)
+    if metrics is None or getattr(measured, "status", "") != "ok":
+        return None
+    base = measure_threshold(metrics, row.branch, rung=row.rung)
+    if base.status != "passed":
+        return metrics
+
+    cfg = load_threshold().stability
+    try:
+        stability, _ = run_stability(
+            row.id,
+            session_scope=session_scope,
+            now=at,
+            window_days=cfg.window_days,
+            step_days=cfg.step_days,
+        )
+    except Exception as err:  # noqa: BLE001 — оценка не обязана быть, решение всё равно нужно
+        log.warning("Устойчивость %s не посчиталась: %s", row.id, err)
+        return metrics
+    log.info(
+        "Устойчивость %s: в плюс %s из %s окон, впереди бенчмарка %s из %s",
+        row.id,
+        stability.profitable,
+        stability.windows,
+        stability.ahead,
+        stability.compared,
+    )
+    return metrics.model_copy(update={"stability": stability})
 
 
 def _notify(bot: Any, title: str, detail: str) -> None:

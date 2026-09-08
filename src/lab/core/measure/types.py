@@ -73,6 +73,34 @@ class CostsBreakdown(_Model):
     turnover: Decimal = Decimal(0)
 
 
+class Stability(_Model):
+    """Как стратегия ведёт себя на МНОГИХ окнах, а не на одном (В12, замечание 08.09.2026).
+
+    Одиночное окно — плохая опора: у `pifagor-forever-sma` вердикт менялся с «преимущество»
+    на «разгром» от сдвига границы. Здесь считается, в скольких окнах стратегия зарабатывала
+    после издержек и в скольких обходила бенчмарк своей ветки.
+
+    `compared` может быть меньше `windows`: в части окон бенчмарка в хранилище нет,
+    и сравнивать не с чем — такие окна в долю «впереди» не входят, а не считаются провалом.
+    """
+
+    windows: int = 0
+    profitable: int = 0
+    ahead: int = 0
+    compared: int = 0
+    window_days: int = 0
+    step_days: int = 0
+
+    @property
+    def profitable_pct(self) -> Decimal:
+        return Decimal(self.profitable) * 100 / self.windows if self.windows else Decimal(0)
+
+    @property
+    def ahead_pct(self) -> Decimal | None:
+        """None — сравнивать было не с чем ни в одном окне."""
+        return Decimal(self.ahead) * 100 / self.compared if self.compared else None
+
+
 class Metrics(_Model):
     """Единый словарь метрик (R34i). Ветко-специфичные — значение или NotApplicable."""
 
@@ -109,6 +137,10 @@ class Metrics(_Model):
     capital: Decimal
     window_from: datetime
     window_to: datetime
+    # Оценка по многим окнам, если её считали: одиночное окно — плохая опора, вердикт
+    # получается свойством нарезки. Считается только когда остальные критерии пройдены,
+    # поэтому у большинства снимков здесь пусто.
+    stability: Stability | None = None
     # Стоп стратегии в симуляции (G04): без этих полей обрыв цифр на пробое читался бы
     # как «стратегия сама перестала торговать», а не «её остановили по правилу».
     stopped_at: datetime | None = None

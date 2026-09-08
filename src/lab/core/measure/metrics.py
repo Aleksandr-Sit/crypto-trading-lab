@@ -327,6 +327,32 @@ def threshold(
             _vs_btc_detail(m),
         )
     )
+    # Устойчивость: считается не всегда (дорого), поэтому критерии добавляются только когда
+    # оценка есть и окон набралось достаточно. Нет оценки — порог работает как раньше,
+    # по одному окну; это видно по отсутствию критериев в списке, а не по молчаливому «ок».
+    st = m.stability
+    if st is not None and st.windows >= cfg.stability.min_windows:
+        criteria.append(
+            _crit(
+                "stability_profitable",
+                st.profitable_pct,
+                cfg.stability.min_profitable_pct,
+                ">=",
+                f"зарабатывает в {st.profitable} окнах из {st.windows}",
+            )
+        )
+        criteria.append(
+            _crit(
+                "stability_vs_benchmark",
+                st.ahead_pct,
+                cfg.stability.min_ahead_pct,
+                ">=",
+                f"впереди бенчмарка в {st.ahead} окнах из {st.compared}"
+                if st.compared
+                else "бенчмарка не было ни в одном окне",
+            )
+        )
+
     status: Literal["passed", "failed", "insufficient"]
     if sample.status == "insufficient":
         status = "insufficient"

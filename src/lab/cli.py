@@ -131,10 +131,10 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
     Снимки НЕ сохраняются: это отчёт оператору, а не решение ступени (её принимает
     `remeasure` по одиночному замеру).
     """
-    from datetime import UTC, datetime, timedelta
+    from datetime import UTC, datetime
 
     from lab.core.registry import StrategyNotFound
-    from lab.ops.measure import MeasureUnavailable, make_measure
+    from lab.ops.measure import MeasureUnavailable, run_stability
 
     if args.window < 1 or args.step < 1 or args.days < args.window:
         print(
@@ -144,21 +144,19 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
         return 2
 
     now = datetime.now(UTC)
-    start = now - timedelta(days=args.days)
-    measure = make_measure(_scope(), root=args.root)
-    rows: list[tuple[datetime, datetime, object]] = []
-    cursor = start
-    while cursor + timedelta(days=args.window) <= now:
-        upto = cursor + timedelta(days=args.window)
-        try:
-            m = measure(
-                strategy_id=args.strategy_id, mode="backtest", window=(cursor, upto), session=None
-            )
-        except (StrategyNotFound, MeasureUnavailable) as err:
-            print(f"Замер не выполнен: {err}", file=sys.stderr)
-            return 2
-        rows.append((cursor, upto, m))
-        cursor += timedelta(days=args.step)
+    try:
+        stability, rows = run_stability(
+            args.strategy_id,
+            session_scope=_scope(),
+            now=now,
+            window_days=args.window,
+            step_days=args.step,
+            root=args.root,
+            history_days=args.days,
+        )
+    except (StrategyNotFound, MeasureUnavailable) as err:
+        print(f"Замер не выполнен: {err}", file=sys.stderr)
+        return 2
 
     if not rows:
         print("окон не получилось: проверь --days, --window и --step", file=sys.stderr)
@@ -168,30 +166,33 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
         f"{args.strategy_id}: окно {args.window} сут, шаг {args.step} сут, всего окон {len(rows)}"
     )
     print(f"{'период':25} {'сделок':>7} {'годовых':>10} {'BTC годовых':>12} {'разница':>10}")
-    ahead = counted = 0
     for a, b, m in rows:
         period = f"{a:%m.%Y}–{b:%m.%Y}"
         mt = getattr(m, "metrics", None)
         if getattr(m, "status", "") != "ok" or mt is None:
             print(f"{period:25} {'—':>7} {'нет данных':>10}")
             continue
-        diff = mt.vs_btc_cagr
-        if diff is not None:
-            counted += 1
-            ahead += 1 if diff > 0 else 0
+        diff = mt.vs_btc_cagr if mt.vs_btc_cagr is not None else mt.vs_btc
         print(
             f"{period:25} {mt.n_trades:>7} {_pct(mt.cagr_pct):>10} "
             f"{_pct(mt.btc_cagr_pct):>12} {_pct(diff):>10}"
         )
-    if counted:
-        share = ahead * 100 // counted
-        print(f"\nВпереди BTC в {ahead} окнах из {counted} ({share}%).")
+    print(
+        f"\nЗарабатывает в {stability.profitable} окнах из {stability.windows} "
+        f"({float(stability.profitable_pct):.0f}%)."
+    )
+    if stability.compared:
+        share = stability.ahead_pct
         print(
-            "  Читать так: одно-два окна из двадцати — случайность; устойчивое "
-            "преимущество видно, когда стратегия впереди в большинстве периодов."
+            f"Впереди бенчмарка в {stability.ahead} окнах из {stability.compared} "
+            f"({float(share):.0f}%)." if share is not None else ""
         )
     else:
-        print("\nСравнить не с чем: бенчмарка за эти окна в хранилище нет.")
+        print("Сравнить не с чем: бенчмарка за эти окна в хранилище нет.")
+    print(
+        "  Читать так: одно-два окна из двадцати — случайность; устойчивое преимущество "
+        "видно, когда стратегия впереди в большинстве периодов."
+    )
     return 0
 
 
