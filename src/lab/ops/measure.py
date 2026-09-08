@@ -468,6 +468,16 @@ def run_stability(
     Снимки НЕ сохраняются (`session=None`): это оценка, а не решение ступени; писать
     в историю два десятка замеров на каждую проверку — мусор.
     """
+    from lab.core.registry import Registry
+    from lab.data import CandleStore
+
+    # Хранилище и запись читаются ОДИН раз на весь прогон: окон бывают десятки, и создавать
+    # store с нуля на каждое — лишняя работа на ровном месте.
+    store = store if store is not None else CandleStore(root or data_root())
+    with session_scope() as session:
+        record = Registry(session).get(strategy_id)
+        venue, tf = record.venue, record.timeframe or "1h"
+
     span = history_days or (window_days * 4)
     start = now - timedelta(days=span)
     windows: list[tuple[datetime, datetime, Any]] = []
@@ -495,7 +505,7 @@ def run_stability(
             profitable += 1 if is_profit else 0
             compared += 1 if edge is not None else 0
             ahead += 1 if is_ahead else 0
-            phase = market_phase(_btc_cagr(m, mt))
+            phase = market_phase(_btc_cagr(store, venue, tf, (cursor, upto), mt))
             stat = phases.get(phase, PhaseStat())
             phases[phase] = PhaseStat(
                 windows=stat.windows + 1,
@@ -516,16 +526,26 @@ def run_stability(
     return stability, windows
 
 
-def _btc_cagr(measurement: Any, mt: Any) -> Decimal | None:
+def _btc_cagr(
+    store: Any, venue: str, tf: str, window: tuple[datetime, datetime], mt: Any
+) -> Decimal | None:
     """Годовой рост биткоина в окне — для разметки фазы рынка.
 
-    Если ветка и так сравнивается с биткоином, значение уже посчитано; для веток с
-    бенчмарком «кэш» его нет, и фаза остаётся неизвестной. Отдельно ходить за рядом BTC
-    здесь не станем: это ещё один проход по хранилищу на каждое окно.
+    Считается ВСЕГДА по биткоину, даже когда ветка сравнивается с кэшем: фаза — свойство
+    рынка, а не выбранной альтернативы. Брать её из бенчмарка было ошибкой: у перпов
+    бенчмарк «кэш», и все окна помечались «неизвестно» — ровно там, где разбивка по фазам
+    нужнее всего, у стратегий, не зависящих от направления.
+
+    Стоит это двух свечей: у краёв окна, тем же путём, что и обычный бенчмарк.
     """
-    if str(getattr(mt, "benchmark_kind", "")).startswith("btc"):
+    from lab.core.measure.metrics import annualized_pct, btc_buy_and_hold_pct
+
+    if str(getattr(mt, "benchmark_kind", "")) == "btc_bh" and mt.benchmark_cagr_pct is not None:
         return mt.benchmark_cagr_pct
-    return None
+    edges = _benchmark(store, venue, tf, window, "btc_bh")
+    if not isinstance(edges, list) or not edges:
+        return None
+    return annualized_pct(btc_buy_and_hold_pct(edges), window)
 
 
 __all__ = [
