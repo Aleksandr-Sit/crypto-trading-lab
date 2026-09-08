@@ -150,6 +150,38 @@ class CexFeed:
             mark_price=_dec(mark) if mark is not None else None,
         )
 
+    def funding_history(
+        self, instrument: str, from_ts: datetime, to_ts: datetime
+    ) -> list[tuple[datetime, Decimal]]:
+        """История выплат фандинга в окне [from_ts, to_ts) — страницами, как свечи.
+
+        Нужна замеру нейтральных стратегий: у фандинг-арбитража и базиса весь доход именно
+        в этой ставке, и подставлять вместо неё константу — значит мерить выдуманное число.
+        """
+        out: list[tuple[datetime, Decimal]] = []
+        cursor = int(from_ts.astimezone(UTC).timestamp() * 1000)
+        end = int(to_ts.astimezone(UTC).timestamp() * 1000)
+        seen: set[int] = set()
+        while cursor < end:
+            rows = self._call("fetch_funding_rate_history", instrument, cursor, self.page_limit)
+            fresh = [r for r in rows if cursor <= int(r["timestamp"]) < end]
+            if not fresh:
+                break
+            for row in fresh:
+                ms = int(row["timestamp"])
+                if ms in seen:
+                    continue
+                seen.add(ms)
+                out.append((_ts(ms), _dec(row.get("fundingRate"))))
+            last = max(int(r["timestamp"]) for r in fresh)
+            if last < cursor:  # площадка отдала прошлое — иначе цикл не кончится
+                break
+            cursor = last + 1
+            if len(rows) < self.page_limit:
+                break
+        out.sort(key=lambda item: item[0])
+        return out
+
     async def events(
         self, kind: str, *, instruments: Sequence[str] = (), poll_s: float = 60.0
     ) -> AsyncIterator[Event]:

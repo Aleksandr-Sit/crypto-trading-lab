@@ -359,6 +359,7 @@ def run(
     rung: Rung | str | None = None,
     depth: Depth | None = None,
     funding_rate: Decimal = Decimal("0.0001"),
+    funding_history: dict[str, dict[datetime, Decimal]] | None = None,
     seed: int = 0,
     extra_metrics: dict[str, object] | None = None,
 ) -> Measurement:
@@ -432,6 +433,9 @@ def run(
                     costs=model,
                     depth=depth,
                     funding_rate=funding_rate,
+                    # Реальные ставки, если их собрали: у нейтральных стратегий весь доход
+                    # именно в фандинге, и константа вместо истории мерила бы выдуманное.
+                    funding_rates=(funding_history or {}).get(name),
                 )
                 for name in instruments
             }

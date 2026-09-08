@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections import deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from itertools import count
 
@@ -72,6 +72,9 @@ class PaperEngine:
     depth: Depth | None = None
     quote_asset: str = "USD"
     on_fill: Callable[[Fill, Signal, Costs, Decimal], None] | None = None
+    # История ставок «время расчёта → ставка». Нет — начисляем по константе funding_rate,
+    # и это честно видно в счётчиках ниже.
+    funding_rates: Mapping[datetime, Decimal] | None = None
 
     def __post_init__(self) -> None:
         self.step = parse_tf(self.tf)
@@ -83,6 +86,8 @@ class PaperEngine:
         self.expired: list[Signal] = []
         self._ids = count(1)
         self._funding_h = self.costs.funding_interval_h(self.venue) or 8
+        self.funding_from_history = 0  # сколько выплат взято из истории
+        self.funding_missed = 0  # сколько посчитано по константе, потому что истории нет
         self._is_perp = Branch(self.branch) in PERP_BRANCHES
 
     # -- вход --------------------------------------------------------------------
@@ -237,22 +242,47 @@ class PaperEngine:
             )
 
     def _accrue_funding(self, bar: Candle) -> None:
-        """Начисление за все границы фандинга внутри бара [ts, ts+step): на дневных барах
-        при интервале 8 ч их три, на часовых — ноль или одна."""
-        periods = _funding_periods(bar.ts, bar.ts + self.step, self._funding_h)
-        if not periods or not self.lots:
+        """Начисление за каждую границу фандинга внутри бара [ts, ts+step).
+
+        На дневных барах при интервале 8 ч границ три, на часовых — ноль или одна. Ставка
+        берётся из истории (`funding_rates`), если она есть: у нейтральных стратегий весь
+        доход именно в ней, и подставлять константу значит мерить выдуманное число. Нет
+        истории на этот момент — остаётся `funding_rate` из параметров, и это видно
+        по `funding_from_history`.
+        """
+        if not self.lots:
             return
-        for lot in self.lots:
-            sign = 1 if lot.side == "long" else -1
-            pay = self.funding_rate * lot.qty * bar.open * sign * periods
-            lot.costs = lot.costs.model_copy(update={"funding": lot.costs.funding + pay})
+        for moment in _funding_moments(bar.ts, bar.ts + self.step, self._funding_h):
+            rate = self._rate_at(moment)
+            if not rate:
+                continue
+            for lot in self.lots:
+                sign = 1 if lot.side == "long" else -1
+                pay = rate * lot.qty * bar.open * sign
+                lot.costs = lot.costs.model_copy(update={"funding": lot.costs.funding + pay})
+
+    def _rate_at(self, moment: datetime) -> Decimal:
+        """Ставка на момент расчёта: из истории, иначе — константа из параметров."""
+        if self.funding_rates is None:
+            return self.funding_rate
+        rate = self.funding_rates.get(moment)
+        if rate is None:
+            self.funding_missed += 1
+            return self.funding_rate
+        self.funding_from_history += 1
+        return rate
 
 
-def _funding_periods(start: datetime, end: datetime, interval_h: int) -> int:
-    """Сколько границ фандинга (часы, кратные интервалу от полуночи UTC) попало в [start, end)."""
+def _funding_moments(start: datetime, end: datetime, interval_h: int) -> list[datetime]:
+    """Границы фандинга (часы, кратные интервалу от полуночи UTC) внутри [start, end).
+
+    Раньше считалось только их КОЛИЧЕСТВО — при константной ставке этого хватало. С историей
+    нужны сами моменты: ставка у каждой выплаты своя, и в этом весь смысл нейтральных стратегий.
+    """
     step = interval_h * 3600
     a, b = int(start.timestamp()), int(end.timestamp())
-    return max(0, (b - 1) // step - (a - 1) // step)
+    first = ((a - 1) // step + 1) * step
+    return [datetime.fromtimestamp(t, tz=UTC) for t in range(first, b, step) if t >= a]
 
 
 def _scale(c: Costs, k: Decimal) -> Costs:

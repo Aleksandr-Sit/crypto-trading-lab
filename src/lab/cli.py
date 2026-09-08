@@ -527,6 +527,25 @@ def cmd_ops(args: argparse.Namespace) -> int:
     return 2
 
 
+def cmd_data_funding(args: argparse.Namespace) -> int:
+    """Сбор истории ставок фандинга (R05): у нейтральных стратегий в ней весь доход."""
+    from lab.data.backfill_cex import backfill_funding
+    from lab.data.funding import FundingStore
+
+    symbols = [s.strip() for raw in args.symbols for s in raw.split(",") if s.strip()]
+    store = FundingStore(args.root)
+    rows = backfill_funding(store, args.venue, symbols, args.days)
+    failed = 0
+    for symbol, written, error in rows:
+        if error:
+            failed += 1
+            print(f"{args.venue} {symbol}: не собрано — {error}", file=sys.stderr)
+            continue
+        total = store.count(args.venue, symbol)
+        print(f"{args.venue} {symbol}: записано {written}, всего в хранилище {total}")
+    return 1 if failed else 0
+
+
 def cmd_data_backfill(args: argparse.Namespace) -> int:
     """Таск 04: свечи CEX за N дней в Parquet с прогрессом; прерывание — повтор продолжит."""
     from lab.data import CandleStore
@@ -608,6 +627,14 @@ def build_parser() -> argparse.ArgumentParser:
     bf.add_argument("--days", type=int, default=365)
     bf.add_argument("--root", default="data", help="корень Parquet-хранилища")
     bf.set_defaults(func=cmd_data_backfill)
+    fund = data.add_parser("funding", help="история ставок фандинга (нужна нейтральным стратегиям)")
+    fund.add_argument("--venue", required=True, choices=["bybit", "okx", "binance", "hyperliquid"])
+    fund.add_argument(
+        "--symbols", required=True, action="append", help="через запятую или повтором флага"
+    )
+    fund.add_argument("--days", type=int, default=365)
+    fund.add_argument("--root", default="data", help="корень хранилища")
+    fund.set_defaults(func=cmd_data_funding)
 
     ms = sub.add_parser("measure", help="замер стратегии: запустить руками и посмотреть")
     msub = ms.add_subparsers(dest="action", required=True)

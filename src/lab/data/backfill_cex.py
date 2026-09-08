@@ -18,10 +18,12 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 from lab.contracts import Candle
 from lab.contracts.timeframes import parse_tf
 from lab.data.backfill import BackfillInterrupted, BackfillResult, Source, backfill
+from lab.data.funding import FundingRate
 from lab.data.store import CandleStore
 from lab.feeds.cex.feed import CexFeed, make_feed
 from lab.feeds.cex.transport import Transport
@@ -229,3 +231,38 @@ def backfill_venue(
 
 
 __all__ = ["ARCHIVE_FEED_ID", "BinanceArchive", "SymbolResult", "backfill_venue"]
+
+
+def backfill_funding(
+    store: Any,
+    venue: str,
+    symbols: Sequence[str],
+    days: int,
+    *,
+    feed: CexFeed | None = None,
+    transport: Transport | None = None,
+    quota: FeedsRegistry | None = None,
+    now: datetime | None = None,
+    progress: Callable[[str, int], None] | None = None,
+) -> list[tuple[str, int, str | None]]:
+    """История ставок фандинга по инструментам за последние `days` дней.
+
+    Отдельно от свечей: у фандинга своя сетка (раз в 8 часов) и одно число вместо OHLCV.
+    Обрыв на одном символе не роняет остальные — результат несёт причину, как у свечей.
+    """
+    feed = feed or make_feed(venue, transport, quota=quota)
+    now = (now or _utcnow()).astimezone(UTC)
+    from_ts = now - timedelta(days=days)
+    out: list[tuple[str, int, str | None]] = []
+    for symbol in symbols:
+        try:
+            rows = feed.funding_history(symbol, from_ts, now)
+        except Exception as err:  # noqa: BLE001 — один символ не роняет прогон
+            log.warning("Фандинг %s %s: %s", venue, symbol, err)
+            out.append((symbol, 0, f"{type(err).__name__}: {err}"))
+            continue
+        written = store.write(venue, symbol, [FundingRate(ts=ts, rate=rate) for ts, rate in rows])
+        out.append((symbol, written, None))
+        if progress:
+            progress(symbol, written)
+    return out

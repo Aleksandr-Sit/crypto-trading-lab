@@ -111,6 +111,7 @@ def run_measure(
             session=session,
             benchmark=_benchmark(store, record.venue, tf, window, kind),
             extra_metrics={"benchmark_kind": kind},
+            funding_history=_funding_history(record, window, root),
         )
         if mode in FROM_JOURNAL:
             kwargs["trades"] = _journal_trades(session, strategy_id, window)
@@ -124,6 +125,33 @@ def run_measure(
 
 
 # -- стратегия ---------------------------------------------------------------------------
+
+
+def _funding_history(
+    record: Any, window: tuple[datetime, datetime], root: str | None
+) -> dict[str, dict[datetime, Decimal]] | None:
+    """Реальные ставки фандинга по инструментам записи — только для перп-веток.
+
+    У спота фандинга нет вовсе, поэтому и читать нечего. Истории нет в хранилище — вернём
+    None, и движок начислит по константе из параметров: это видно в счётчиках движка,
+    а не выдаётся за настоящие данные.
+    """
+    from lab.contracts import Branch
+    from lab.data.funding import FundingStore, rates_lookup
+
+    if Branch(record.branch) not in (Branch.CEX_PERP, Branch.DEX_PERP):
+        return None
+    store = FundingStore(root or data_root())
+    out: dict[str, dict[datetime, Decimal]] = {}
+    for instrument in record.instruments or []:
+        try:
+            rows = store.read(record.venue, instrument, window[0], window[1])
+        except Exception as err:  # noqa: BLE001 — битое хранилище не роняет замер
+            log.info("История фандинга %s %s: %s", record.venue, instrument, err)
+            continue
+        if rows:
+            out[instrument] = rates_lookup(rows)
+    return out or None
 
 
 def _build_strategy(record: Any):
