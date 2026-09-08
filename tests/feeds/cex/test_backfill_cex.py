@@ -96,6 +96,40 @@ def _zip_csv(rows: list[list], header: bool) -> bytes:
     return out.getvalue()
 
 
+def test_daily_backfill_pulls_by_pages_not_by_months(tmp_path):
+    """Шаг качания — в СВЕЧАХ, а не в сутках, иначе дневные ряды качаются по 31 строке.
+
+    Помесячные архивы Binance удачны для 1h (файл ≈ 744 свечи) и разорительны для 1d:
+    те же 80 файлов дают 80 свечей, минуту на пару и полсуток на вселенную из 735 пар.
+    На таймфреймах от суток архив не трогается вовсе — REST отдаёт страницу целиком.
+    """
+    archive_urls: list[str] = []
+
+    def fetch(url: str) -> bytes | None:
+        archive_urls.append(url)
+        return None
+
+    t = FakeTransport("binance")
+    t.seed_ohlcv("BTC/USDT", "1d", T0, 400, start_price=Decimal("50000"))
+    store = CandleStore(tmp_path)
+
+    results = backfill_venue(
+        store,
+        "binance",
+        ["BTC/USDT"],
+        "1d",
+        days=400,
+        transport=t,
+        now=T0 + timedelta(days=400),
+        archive=BinanceArchive(fetch=fetch),
+    )
+
+    assert [r.error for r in results] == [None]
+    assert store.count("binance", "BTC/USDT", "1d") == 400
+    assert archive_urls == [], "на дневных архив не нужен"
+    assert t.calls.count("fetch_ohlcv") <= 3, "400 дней — это одна страница, а не 13 месяцев"
+
+
 def test_binance_backfill_uses_archives_and_rest_for_current_month(tmp_path):
     urls: list[str] = []
     start = datetime(2025, 12, 1, tzinfo=UTC)

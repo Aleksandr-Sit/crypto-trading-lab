@@ -198,13 +198,19 @@ def backfill_venue(
         (now.timestamp() // step.total_seconds()) * step.total_seconds(), tz=UTC
     )
     from_ts = to_ts - timedelta(days=days)
-    if venue == "binance":
+    # Шаг качания считается В СВЕЧАХ, а не в сутках. Архив Binance лежит помесячными
+    # файлами, и для 1h это удачно — один файл ≈ 744 свечи. Для 1d тот же файл даёт 31
+    # строку за HTTP-запрос: 80 запросов на пару, минута на символ, полсуток на вселенную
+    # из 735 пар. Поэтому на таймфреймах от суток архив не используется вовсе — обычный
+    # REST отдаёт `page_limit` свечей за раз (у Binance 1000), то есть три запроса на пару.
+    page = int(getattr(feed, "page_limit", 0) or 1000)
+    if venue == "binance" and step < timedelta(days=1):
         archive = archive or BinanceArchive(quota=quota)
         source = archive.source(feed.source(), now=now)
         chunk = chunk or timedelta(days=31)
     else:
         source = feed.source()
-        chunk = chunk or timedelta(days=7)
+        chunk = chunk or step * page
     results: list[SymbolResult] = []
     for instrument in symbols:
         cb = (lambda done, total, _i=instrument: progress(_i, done, total)) if progress else None
