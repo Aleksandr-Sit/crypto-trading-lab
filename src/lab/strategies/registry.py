@@ -66,14 +66,28 @@ def klass(strategy_id: str) -> type[Strategy]:
         raise UnknownStrategy(strategy_id) from err
 
 
-def build(strategy_id: str, *, params: dict[str, Any] | None = None) -> Strategy:
-    """Экземпляр стратегии; `params` накладываются поверх параметров манифеста."""
+def build(
+    strategy_id: str,
+    *,
+    params: dict[str, Any] | None = None,
+    overrides: dict[str, Any] | None = None,
+) -> Strategy:
+    """Экземпляр стратегии; `params` накладываются поверх параметров манифеста.
+
+    `overrides` — поля манифеста из записи реестра (площадка, инструменты, таймфрейм, стоп).
+    Правила берутся из кода, а ГДЕ и НА ЧЁМ они работают — из записи: иначе копия стратегии
+    на другом ряду (`--slug-suffix`) молча читала бы инструмент исходной площадки и получала
+    «нет свечей в окне».
+    """
     _load_builtin()
     try:
         cls, base = _REGISTRY[strategy_id]
     except KeyError as err:
         raise UnknownStrategy(strategy_id) from err
-    m = base if not params else base.model_copy(update={"params": {**base.params, **params}})
+    update: dict[str, Any] = dict(overrides or {})
+    if params:
+        update["params"] = {**base.params, **params}
+    m = base if not update else base.model_copy(update=update)
     return cls(m)
 
 

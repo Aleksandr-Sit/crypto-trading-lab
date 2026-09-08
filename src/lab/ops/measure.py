@@ -130,8 +130,19 @@ def _build_strategy(record: Any):
 
     params = dict(record.params or {})
     code_id = str(params.get("code_id") or record.id)
+    # Что именно торгуем — из записи реестра, а не из карточки: `core.measure.run` берёт
+    # инструмент и таймфрейм из манифеста стратегии, и без этого копия на другом ряду
+    # искала бы инструмент исходной площадки.
+    overrides = {
+        "slug": record.slug,
+        "venue": record.venue,
+        "instruments": list(record.instruments),
+        "stop": record.stop,
+    }
+    if record.timeframe:
+        overrides["timeframe"] = record.timeframe
     try:
-        return code_registry.build(code_id, params=params)
+        return code_registry.build(code_id, params=params, overrides=overrides)
     except code_registry.UnknownStrategy:
         return None
 
