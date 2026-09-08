@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import Decimal
 
 from lab.contracts import Candle, Event, Signal
@@ -44,6 +45,9 @@ class _Pair:
     perp: str = ""
     spot_price: Decimal = ZERO
     perp_price: Decimal = ZERO
+    # Время бара КАЖДОЙ ноги: базис имеет смысл только между ценами одного момента.
+    spot_ts: datetime | None = None
+    perp_ts: datetime | None = None
     qty: Decimal = ZERO
     payouts: int = 0  # сколько выплат прошло с открытия — раньше времени не выходим
     last_bar: Candle | None = None
@@ -95,10 +99,16 @@ class FundingArbSpotHedgeStrategy(Strategy):
         pair = self._pair(bar.instrument)
         pair.last_bar = bar
         if is_perp(bar.instrument):
-            pair.perp_price = bar.close
+            pair.perp_price, pair.perp_ts = bar.close, bar.ts
         else:
-            pair.spot_price = bar.close
+            pair.spot_price, pair.spot_ts = bar.close, bar.ts
         if not pair.opened or pair.spot_price <= 0:
+            return []
+        # Ноги приходят РАЗНЫМИ барами: на баре спота цена перпа ещё с прошлого часа.
+        # Их разность — не базис, а движение рынка за час, и на волатильном часе она
+        # спокойно уходит за −1%. Так замер получил 156 «выходов по базису» из 156 сделок,
+        # хотя настоящий базис BTC не отходил дальше −0.04%. Считаем по одному моменту.
+        if pair.spot_ts != pair.perp_ts:
             return []
         # Базис ушёл в минус — перп дешевле спота, фандинг вот-вот развернётся против нас.
         limit = D(str(self.param("basis_exit_pct", -1))) / 100
