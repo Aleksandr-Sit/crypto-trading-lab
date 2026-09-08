@@ -190,14 +190,21 @@ def test_alembic_url_prefers_the_config_it_was_given(tmp_path: Path):
         )
         == forced
     )
-    # обычный `alembic upgrade head`: базу выбирают окружение и .env, потом alembic.ini
+    # обычный `alembic upgrade head`: базу выбирают окружение и .env, потом alembic.ini.
+    # `environ` задаётся ЯВНО, иначе берётся окружение процесса: в контейнере `DATABASE_URL`
+    # проставлен compose'ом, и тест падал на нём, хотя правило отрабатывало верно.
     assert (
-        alembic_url(config_url="postgresql+psycopg://ini/lab", attributes={}, dotenv=dotenv)
+        alembic_url(
+            config_url="postgresql+psycopg://ini/lab", attributes={}, environ={}, dotenv=dotenv
+        )
         == "postgresql+psycopg://real/lab"
     )
     assert (
         alembic_url(
-            config_url="postgresql+psycopg://ini/lab", attributes={}, dotenv=tmp_path / "absent"
+            config_url="postgresql+psycopg://ini/lab",
+            attributes={},
+            environ={},
+            dotenv=tmp_path / "absent",
         )
         == "postgresql+psycopg://ini/lab"
     )
