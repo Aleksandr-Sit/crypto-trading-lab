@@ -21,7 +21,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from itertools import count
 
-from lab.contracts import Branch, Candle, Costs, Fill, OrderIntent, Signal, StopSpec
+from lab.contracts import Branch, Candle, Costs, Event, Fill, OrderIntent, Signal, StopSpec
 from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.types import ClosedTrade, IncompleteData, LookaheadError
@@ -75,6 +75,10 @@ class PaperEngine:
     # История ставок «время расчёта → ставка». Нет — начисляем по константе funding_rate,
     # и это честно видно в счётчиках ниже.
     funding_rates: Mapping[datetime, Decimal] | None = None
+    # Платит ли этот инструмент фандинг. None — решает ветка (так и было раньше).
+    # Явное значение нужно связкам «спот + перп»: обе ноги в перп-ветке, но платит одна,
+    # и угадывать это по имени движок не должен — пусть говорит тот, кто его создаёт.
+    is_perp: bool | None = None
 
     def __post_init__(self) -> None:
         self.step = parse_tf(self.tf)
@@ -88,7 +92,9 @@ class PaperEngine:
         self._funding_h = self.costs.funding_interval_h(self.venue) or 8
         self.funding_from_history = 0  # сколько выплат взято из истории
         self.funding_missed = 0  # сколько посчитано по константе, потому что истории нет
-        self._is_perp = Branch(self.branch) in PERP_BRANCHES
+        self._is_perp = (
+            Branch(self.branch) in PERP_BRANCHES if self.is_perp is None else self.is_perp
+        )
 
     # -- вход --------------------------------------------------------------------
 
@@ -240,6 +246,25 @@ class PaperEngine:
                     costs=_scale(costs, remaining / total_qty),
                 )
             )
+
+    def funding_events(self, bar: Candle) -> list[tuple[datetime, Decimal]]:
+        """Выплаты фандинга внутри бара: момент и ставка. Для спота — пусто.
+
+        Отдаётся симулятору, чтобы он передал их стратегии: фандинг-арбитраж принимает
+        решение именно по ставке, а из свечей её не видно.
+        """
+        if not self._is_perp:
+            return []
+        return [(moment, self._peek_rate(moment)) for moment in _funding_moments(
+            bar.ts, bar.ts + self.step, self._funding_h
+        )]
+
+    def _peek_rate(self, moment: datetime) -> Decimal:
+        """Ставка на момент без учёта в счётчиках: счётчики про НАЧИСЛЕНИЕ, а не про показ."""
+        if self.funding_rates is None:
+            return self.funding_rate
+        rate = self.funding_rates.get(moment)
+        return self.funding_rate if rate is None else rate
 
     def _accrue_funding(self, bar: Candle) -> None:
         """Начисление за каждую границу фандинга внутри бара [ts, ts+step).
@@ -434,7 +459,23 @@ def simulate(
             if stop_rule:
                 stopped_at = bar.ts
 
-        for signal in strategy.on_bar(bar):
+        # Ставку фандинга из свечей не видно, а фандинг-арбитраж решает именно по ней.
+        # Отдаём её СОБЫТИЕМ — тем же контрактом, которым стратегия слушает живые фиды.
+        decisions = list(strategy.on_bar(bar))
+        on_event = getattr(strategy, "on_event", None)
+        if on_event is not None:
+            for moment, rate in eng.funding_events(bar):
+                decisions.extend(
+                    on_event(
+                        Event(
+                            kind="funding",
+                            ts=moment,
+                            payload={"instrument": bar.instrument, "rate": rate},
+                        )
+                    )
+                )
+
+        for signal in decisions:
             # Сигнал уходит движку СВОЕГО инструмента; при одном движке — ему же.
             target = single or book.get(signal.instrument, eng)
             # После пробоя стратегия ведёт себя как `degraded` у живого риск-ядра:

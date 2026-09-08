@@ -5,7 +5,9 @@ source_kind: api_docs
 source_ref: https://www.binance.com/en/support/faq/introduction-to-binance-futures-funding-rates-360033525031
 can_backtest: true
 timeframe: 1h
-instruments: [BTC, ETH, SOL]
+# Обе ноги связки перечислены явно: спот и перп одного актива нужны замеру ОДНОВРЕМЕННО,
+# а голый тикер «BTC» движку ничего не говорит. Связываются по базовому активу.
+instruments: [BTC/USDT, BTC/USDT:USDT, ETH/USDT, ETH/USDT:USDT, SOL/USDT, SOL/USDT:USDT]
 venue: binance
 regime: any
 status: hypothesis
@@ -16,6 +18,7 @@ params:
   leverage: 1
   max_notional_pct_of_branch: 50
   rebalance_threshold_pct: 2           # выравнивать хедж, если дельта > 2 %
+  basis_exit_pct: -1                   # выход при базисе (perp − spot)/spot ниже этого
 ---
 
 # Фандинг-арбитраж: спот-лонг + перп-шорт

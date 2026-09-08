@@ -164,6 +164,7 @@ def _load_builtin() -> None:
     _loaded = True
     import lab.strategies.classics  # noqa: F401
     import lab.strategies.indicators.strategies  # noqa: F401
+    import lab.strategies.neutral  # noqa: F401
     import lab.strategies.presets  # noqa: F401
 
 

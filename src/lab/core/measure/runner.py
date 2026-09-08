@@ -31,7 +31,7 @@ from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.metrics import metrics as compute_metrics
 from lab.core.measure.metrics import threshold as compute_threshold
-from lab.core.measure.simulator import PaperEngine, simulate
+from lab.core.measure.simulator import PERP_BRANCHES, PaperEngine, simulate
 from lab.core.measure.types import (
     ClosedTrade,
     FoldResult,
@@ -450,6 +450,9 @@ def run(
                     # Реальные ставки, если их собрали: у нейтральных стратегий весь доход
                     # именно в фандинге, и константа вместо истории мерила бы выдуманное.
                     funding_rates=(funding_history or {}).get(name),
+                    # Двоеточие в имени ccxt — признак перпа: у связки «спот + перп» обе
+                    # ноги в перп-ветке, но фандинг платит только перповая.
+                    is_perp=":" in name if manifest.branch in PERP_BRANCHES else None,
                 )
                 for name in instruments
             }
