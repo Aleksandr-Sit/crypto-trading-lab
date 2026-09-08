@@ -101,7 +101,8 @@ def test_btc_filter_keeps_everything_in_cash():
 
 
 def test_volume_floor_excludes_thin_pairs():
-    s = _strategy(min_daily_volume_usd=1_000_000_000, rebalance_days=7)
+    # порог заведомо выше оборота пары (цена 100 × объём 10 млн = 1 млрд)
+    s = _strategy(min_daily_volume_usd=1_000_000_000_000, rebalance_days=7)
     for i in range(40):
         _feed_day(s, i, {BTC: Decimal(50_000), **{a: Decimal(100 + i) for a in ALTS}})
 
@@ -126,7 +127,9 @@ def test_delisted_pair_leaves_the_universe():
 
 def test_stop_closes_a_losing_position_before_the_rebalance():
     s = _strategy(rebalance_days=7, lookback_days=5, top_n=1, trade_stop_pct=15)
-    for i in range(15):
+    # 36 дней: раньше 30-го пара не входит во вселенную — не набралась история оборота.
+    # День 36 выбран не случайно: он НЕ кратен неделе, поэтому в сигналах будет только стоп.
+    for i in range(36):
         prices = {BTC: Decimal(50_000), "AAA/USDT": Decimal(100), "CCC/USDT": Decimal(100)}
         prices["BBB/USDT"] = Decimal(100) + Decimal(i) * 5
         _feed_day(s, i, prices)
@@ -136,7 +139,7 @@ def test_stop_closes_a_losing_position_before_the_rebalance():
     # обвал на следующий день: −20% от входа
     signals = _feed_day(
         s,
-        15,
+        36,
         {
             BTC: Decimal(50_000),
             "AAA/USDT": Decimal(100),
