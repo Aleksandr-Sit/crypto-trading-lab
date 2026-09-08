@@ -73,6 +73,14 @@ class CostsBreakdown(_Model):
     turnover: Decimal = Decimal(0)
 
 
+class PhaseStat(_Model):
+    """Как стратегия отработала в одной фазе рынка: рост, падение или боковик."""
+
+    windows: int = 0
+    profitable: int = 0
+    ahead: int = 0
+
+
 class Stability(_Model):
     """Как стратегия ведёт себя на МНОГИХ окнах, а не на одном (В12, замечание 08.09.2026).
 
@@ -90,6 +98,9 @@ class Stability(_Model):
     compared: int = 0
     window_days: int = 0
     step_days: int = 0
+    # Разбивка по фазам рынка: система строится ради работы на РАЗНЫХ фазах, и вопрос
+    # «работает ли она в своей фазе» важнее, чем «обогнала ли биткоин вообще».
+    phases: dict[str, PhaseStat] = Field(default_factory=dict)
 
     @property
     def profitable_pct(self) -> Decimal:
@@ -120,14 +131,17 @@ class Metrics(_Model):
     exposure_pct: Decimal
     costs_pct: Decimal | None
     costs: CostsBreakdown
-    btc_bh_pct: Decimal | None
-    vs_btc: Decimal | None
+    benchmark_pct: Decimal | None
+    vs_benchmark: Decimal | None
     # Годовые: разница процентов за окно несопоставима между окнами разной длины и
     # ломается на длинной истории (BTC с 2011 дал +2 855 000%, и вычитание съедает всё).
-    # Сравнение ведётся по этим полям; `vs_btc` остаётся как справка «сколько за окно».
+    # Сравнение ведётся по этим полям; `vs_benchmark` остаётся как справка «сколько за окно».
     cagr_pct: Decimal | None = None
-    btc_cagr_pct: Decimal | None = None
-    vs_btc_cagr: Decimal | None = None
+    benchmark_cagr_pct: Decimal | None = None
+    vs_benchmark_cagr: Decimal | None = None
+    # С чем сравнивали: btc_bh | btc_dca | cash | none. Без этого поля «обошла бенчмарк»
+    # нечитаемо — у разных веток бенчмарк разный.
+    benchmark_kind: str = ""
     paper_vs_live_gap: Decimal | NotApplicable
     copy_lag_cost: dict[str, Decimal] | NotApplicable
     brier: Decimal | NotApplicable

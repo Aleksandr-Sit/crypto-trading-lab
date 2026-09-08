@@ -40,7 +40,7 @@ _NA = {
 }
 
 # Факты о ходе прогона: не метрики ветки, но часть снимка — иначе их некуда положить.
-_OUTCOME_KEYS = ("stopped_at", "stop_rule", "blocked_signals")
+_OUTCOME_KEYS = ("stopped_at", "stop_rule", "blocked_signals", "benchmark_kind", "stability")
 
 
 def _d(value: float | int | Decimal) -> Decimal:
@@ -86,7 +86,7 @@ def annualized_pct(total_pct: Decimal | None, window: tuple[datetime, datetime])
     return _d((math.exp(rate) - 1) * 100)
 
 
-def _vs_btc_value(m: Metrics) -> Decimal | None:
+def _vs_benchmark_value(m: Metrics) -> Decimal | None:
     """Насколько стратегия лучше бенчмарка.
 
     В годовых, если их можно посчитать, иначе — в процентах за окно (короткое окно,
@@ -95,16 +95,22 @@ def _vs_btc_value(m: Metrics) -> Decimal | None:
     Именно поэтому смена единицы — не решение проблемы «бенчмарк с 2011 недостижим»;
     решает её сравнение по скользящим окнам (`lab measure rolling`).
     """
-    return m.vs_btc_cagr if m.vs_btc_cagr is not None else m.vs_btc
+    return m.vs_benchmark_cagr if m.vs_benchmark_cagr is not None else m.vs_benchmark
 
 
-def _vs_btc_detail(m: Metrics) -> str:
+def _vs_benchmark_detail(m: Metrics) -> str:
     """Почему сравнения нет — разные причины, и их нельзя смешивать в одну строку."""
-    if m.btc_bh_pct is None:
-        return "нет бенчмарка за окно"
-    if m.vs_btc_cagr is None:
-        return "процентов за окно (годовые тут не считаются)"
-    return "годовых против BTC B&H"
+    kind = {
+        "btc_bh": "BTC купить и держать",
+        "btc_dca": "BTC равными докупками",
+        "cash": "не делать ничего",
+        "none": "без бенчмарка",
+    }.get(m.benchmark_kind, m.benchmark_kind or "бенчмарк")
+    if m.benchmark_pct is None:
+        return f"нет данных бенчмарка за окно ({kind})"
+    if m.vs_benchmark_cagr is None:
+        return f"процентов за окно против «{kind}» (годовые тут не считаются)"
+    return f"годовых против «{kind}»"
 
 
 def sample_status(n: int, required: int) -> SampleStatus:
@@ -231,7 +237,7 @@ def metrics(
         bh = None
 
     cagr = annualized_pct(net_pct, window)
-    btc_cagr = annualized_pct(bh, window)
+    bench_cagr = annualized_pct(bh, window)
 
     values: dict[str, object] = dict(_NA)
     outcome: dict[str, object] = {}
@@ -262,11 +268,13 @@ def metrics(
         exposure_pct=_exposure_pct(trades, window),
         costs_pct=(breakdown.total / breakdown.turnover * 100) if breakdown.turnover else None,
         costs=breakdown,
-        btc_bh_pct=bh,
-        vs_btc=(net_pct - bh) if bh is not None else None,
+        benchmark_pct=bh,
+        vs_benchmark=(net_pct - bh) if bh is not None else None,
         cagr_pct=cagr,
-        btc_cagr_pct=btc_cagr,
-        vs_btc_cagr=(cagr - btc_cagr) if (cagr is not None and btc_cagr is not None) else None,
+        benchmark_cagr_pct=bench_cagr,
+        vs_benchmark_cagr=(
+            (cagr - bench_cagr) if (cagr is not None and bench_cagr is not None) else None
+        ),
         capital=capital,
         window_from=window[0],
         window_to=window[1],
@@ -301,7 +309,7 @@ def threshold(
     limits_max_dd: dict[str, Decimal] | None = None,
 ) -> ThresholdResult:
     """Правило В12: n_trades ≥ 30, EV > 0 (для auto — и нижняя граница CI95 > 0),
-    max_dd ≤ лимит группы ветки, vs_btc > 0. При недостатке сделок — `insufficient`."""
+    max_dd ≤ лимит группы ветки, vs_benchmark > 0. При недостатке сделок — `insufficient`."""
     cfg = config or load_threshold()
     group = load_limits().group_of(branch)
     dd_table = limits_max_dd or cfg.max_dd_pct
@@ -320,11 +328,11 @@ def threshold(
     # ничто. Годовые сопоставимы между окнами: «+24% в год против +100% в год».
     criteria.append(
         _crit(
-            "vs_btc",
-            _vs_btc_value(m),
+            "vs_benchmark",
+            _vs_benchmark_value(m),
             Decimal(0),
             ">",
-            _vs_btc_detail(m),
+            _vs_benchmark_detail(m),
         )
     )
     # Устойчивость: считается не всегда (дорого), поэтому критерии добавляются только когда

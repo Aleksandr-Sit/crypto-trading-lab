@@ -49,7 +49,10 @@ def test_threshold_matches_rule_v12():
     th = load_config(CONFIG_DIR / "threshold.yaml", ThresholdConfig)
     assert th.min_trades == 30
     assert th.min_ev_after_costs == Decimal(0)
-    assert th.benchmark == "BTC-buy-and-hold"
+    # Бенчмарк теперь по веткам: споту альтернатива биткоин, нейтральным стратегиям кэш.
+    assert th.benchmark.default == "btc_bh"
+    assert th.benchmark.by_branch["cex-spot"] == "btc_dca"
+    assert th.benchmark.by_branch["cex-perp"] == "cash"
     assert th.max_dd_pct["meme"] == Decimal(20)
 
 

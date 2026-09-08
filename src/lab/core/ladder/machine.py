@@ -44,7 +44,7 @@ _SNAPSHOT_FIELDS = (
     "ev_ci95",
     "net_pnl_pct",
     "max_dd_pct",
-    "vs_btc",
+    "vs_benchmark",
     "win_rate",
     "costs_pct",
     "window_from",

@@ -172,10 +172,10 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
         if getattr(m, "status", "") != "ok" or mt is None:
             print(f"{period:25} {'—':>7} {'нет данных':>10}")
             continue
-        diff = mt.vs_btc_cagr if mt.vs_btc_cagr is not None else mt.vs_btc
+        diff = mt.vs_benchmark_cagr if mt.vs_benchmark_cagr is not None else mt.vs_benchmark
         print(
             f"{period:25} {mt.n_trades:>7} {_pct(mt.cagr_pct):>10} "
-            f"{_pct(mt.btc_cagr_pct):>12} {_pct(diff):>10}"
+            f"{_pct(mt.benchmark_cagr_pct):>12} {_pct(diff):>10}"
         )
     print(
         f"\nЗарабатывает в {stability.profitable} окнах из {stability.windows} "
@@ -193,6 +193,18 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
         "  Читать так: одно-два окна из двадцати — случайность; устойчивое преимущество "
         "видно, когда стратегия впереди в большинстве периодов."
     )
+    if stability.phases:
+        print("\nПо фазам рынка (фаза — по росту биткоина в окне):")
+        print(f"{'фаза':12} {'окон':>6} {'в плюс':>8} {'впереди':>9}")
+        for phase in ("рост", "боковик", "падение", "неизвестно"):
+            stat = stability.phases.get(phase)
+            if stat is None:
+                continue
+            print(f"{phase:12} {stat.windows:>6} {stat.profitable:>8} {stat.ahead:>9}")
+        print(
+            "  Здесь и виден смысл: стратегия для боковика не обязана обгонять рынок "
+            "на росте — важно, работает ли она в своей фазе."
+        )
     return 0
 
 
@@ -232,16 +244,16 @@ def format_measurement(m, *, window=None) -> str:
         return f"{head}\n  причина: {m.reason or 'нет данных'}"
     lines = [head]
     mt = m.metrics
-    for name in ("n_trades", "net_pnl_pct", "max_dd_pct", "sharpe", "win_rate", "vs_btc"):
+    for name in ("n_trades", "net_pnl_pct", "max_dd_pct", "sharpe", "win_rate", "vs_benchmark"):
         value = getattr(mt, name, None)
         if value is not None:
             lines.append(f"  {name}: {value}")
-    # Годовые печатаются рядом: именно по ним судит порог, а `vs_btc` за окно оставлен
+    # Годовые печатаются рядом: именно по ним судит порог, а `vs_benchmark` за окно оставлен
     # справкой — на длинной истории он превращается в нечитаемое число.
     if getattr(mt, "cagr_pct", None) is not None:
         lines.append(
-            f"  годовых: {_pct(mt.cagr_pct)} · BTC: {_pct(mt.btc_cagr_pct)} · "
-            f"разница: {_pct(mt.vs_btc_cagr)}"
+            f"  годовых: {_pct(mt.cagr_pct)} · BTC: {_pct(mt.benchmark_cagr_pct)} · "
+            f"разница: {_pct(mt.vs_benchmark_cagr)}"
         )
     stopped_at = getattr(mt, "stopped_at", None)
     if stopped_at is not None:

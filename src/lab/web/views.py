@@ -43,7 +43,7 @@ METRIC_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("sortino", "Sortino", "num"),
     ("exposure_pct", "В рынке, %", "pct"),
     ("costs_pct", "Издержки, %", "pct"),
-    ("vs_btc", "vs BTC, п.п.", "pct"),
+    ("vs_benchmark", "vs BTC, п.п.", "pct"),
 )
 BRANCH_METRICS: tuple[tuple[str, str, str], ...] = (
     ("paper_vs_live_gap", "Разрыв бумага/реальность, %", "pct"),
@@ -87,7 +87,7 @@ CRITERION_LABELS = {
     "ev_ci95": "нижняя граница CI95 EV",
     "ev_ci95_low": "нижняя граница CI95 EV",
     "max_dd_pct": "макс. просадка, %",
-    "vs_btc": "vs BTC, п.п.",
+    "vs_benchmark": "vs BTC, п.п.",
 }
 OPS = {">=": "≥", "<=": "≤", ">": ">", "<": "<", "==": "="}
 # Префиксы причин переходов, которые пишет core.ladder.evaluate
@@ -259,7 +259,7 @@ def criteria_lines(t: ThresholdResult | None) -> list[CriterionLine]:
     for c in t.criteria:
         if c.name == "n_trades":
             kind = "int"
-        elif "pct" in c.name or c.name == "vs_btc":
+        elif "pct" in c.name or c.name == "vs_benchmark":
             kind = "pct"
         else:
             kind = "money"

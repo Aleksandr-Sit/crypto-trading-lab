@@ -176,15 +176,15 @@ def test_source_failure_marks_incomplete(candles):
     assert "feed down" in m.reason
 
 
-def test_vs_btc_uses_benchmark_window(candles):
+def test_vs_benchmark_uses_benchmark_window(candles):
     btc = synthetic_candles(
         48, "trend", drift_pct=Decimal("1"), noise_pct=0, seed=2, instrument="BTC/USD"
     )
     m = _run(candles, FirstLast(len(candles), _manifest()), benchmark=btc)
     # BTC B&H за окно = close[-1]/open[0] - 1 = 1.01^47 - 1 ≈ 59.6%
     bh = (btc[-1].close / btc[0].open - 1) * 100
-    assert m.metrics.btc_bh_pct.quantize(Decimal("0.0001")) == bh.quantize(Decimal("0.0001"))
-    assert m.metrics.vs_btc == m.metrics.net_pnl_pct - m.metrics.btc_bh_pct
+    assert m.metrics.benchmark_pct.quantize(Decimal("0.0001")) == bh.quantize(Decimal("0.0001"))
+    assert m.metrics.vs_benchmark == m.metrics.net_pnl_pct - m.metrics.benchmark_pct
 
 
 def test_walk_forward_windows_split_in_and_out_of_sample():

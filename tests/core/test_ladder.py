@@ -30,7 +30,7 @@ T0 = datetime(2026, 9, 1, tzinfo=UTC)
 
 
 def make_metrics(
-    n_trades: int = 40, ev: str = "1.5", max_dd: str = "3", vs_btc: str = "2"
+    n_trades: int = 40, ev: str = "1.5", max_dd: str = "3", vs_benchmark: str = "2"
 ) -> Metrics:
     na = NotApplicable(reason="н/д")
     return Metrics(
@@ -50,12 +50,12 @@ def make_metrics(
         exposure_pct=D(50),
         costs_pct=D("0.1"),
         costs=CostsBreakdown(),
-        btc_bh_pct=D(4),
-        vs_btc=D(vs_btc),
+        benchmark_pct=D(4),
+        vs_benchmark=D(vs_benchmark),
         # Порог сравнивает в ГОДОВЫХ: разница процентов за окно зависит от его длины.
         cagr_pct=D(6),
-        btc_cagr_pct=D(4),
-        vs_btc_cagr=D(vs_btc),
+        benchmark_cagr_pct=D(4),
+        vs_benchmark_cagr=D(vs_benchmark),
         paper_vs_live_gap=na,
         copy_lag_cost=na,
         brier=na,
@@ -249,11 +249,11 @@ def test_default_threshold_adapter_uses_real_measure_threshold(session, registry
 
     ladder = Ladder(session, threshold=default_threshold_fn(), halt=MemoryHaltSwitch())
     s = registry.add(manifest())
-    # 40 сделок, EV 1.5 > 0, MaxDD 3 % ≤ 5 % (cex), vs_btc +2 % → порог В12 пройден
+    # 40 сделок, EV 1.5 > 0, MaxDD 3 % ≤ 5 % (cex), vs_benchmark +2 % → порог В12 пройден
     t = ladder.evaluate(s.id, make_metrics())
     assert t is not None and t.to_rung == Rung.PAPER
     names = {c["name"] for c in t.metrics_snapshot["threshold"]["criteria"]}
-    assert {"n_trades", "ev_per_trade", "max_dd_pct", "vs_btc"} <= names
+    assert {"n_trades", "ev_per_trade", "max_dd_pct", "vs_benchmark"} <= names
     # MaxDD 8 % > лимита 5 % группы cex → провал → назад на backtest
     t = ladder.evaluate(s.id, make_metrics(max_dd="8"))
     assert t is not None and t.to_rung == Rung.BACKTEST and "max_dd_pct" in t.reason

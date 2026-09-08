@@ -64,6 +64,22 @@ class LimitsConfig(_Cfg):
         return self.groups[self.group_of(branch)]
 
 
+class BenchmarkConfig(_Cfg):
+    """С чем сравнивать стратегию — по веткам (замечание владельца 08.09.2026).
+
+    Единый бенчмарк «BTC купил и держи» систематически отбраковывает стратегии, ценные
+    в боковике и падении: на бычьем окне они проиграют биткоину и вылетят. Но система
+    строится ради всех фаз рынка, поэтому альтернатива у каждой ветки своя.
+
+    Виды: btc_bh — купить BTC в начале окна и держать; btc_dca — равные докупки раз в месяц
+    (ближе к тому, как деньги приходят на самом деле); cash — ничего не делать; none —
+    не сравнивать.
+    """
+
+    default: str = "btc_bh"
+    by_branch: dict[str, str] = Field(default_factory=dict)
+
+
 class StabilityConfig(_Cfg):
     """Оценка по многим окнам (В12, замечание 08.09.2026).
 
@@ -83,11 +99,11 @@ class ThresholdConfig(_Cfg):
 
     min_trades: int = Field(ge=1)
     min_ev_after_costs: Decimal
-    benchmark: str
     max_dd_pct: dict[str, Decimal]
     bootstrap_samples: int = Field(ge=100, default=1000)
     confidence: Decimal = Field(gt=0, lt=1, default=Decimal("0.95"))
     stability: StabilityConfig = Field(default_factory=StabilityConfig)
+    benchmark: BenchmarkConfig = Field(default_factory=BenchmarkConfig)
 
 
 class JobSpec(_Cfg):

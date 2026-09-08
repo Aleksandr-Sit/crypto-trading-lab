@@ -23,11 +23,12 @@ import logging
 import os
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Any
 
 from lab.contracts import Candle, MeasureMode
 from lab.contracts.timeframes import parse_tf
-from lab.core.measure.types import Stability
+from lab.core.measure.types import PhaseStat, Stability
 
 log = logging.getLogger(__name__)
 
@@ -86,6 +87,7 @@ def run_measure(
     **extra: Any,
 ):
     """Один замер стратегии из реестра. Возврат — `core.measure.Measurement`."""
+    from lab.config import load_threshold
     from lab.core.measure import run as core_run
     from lab.core.registry import Registry
     from lab.data import CandleStore
@@ -97,6 +99,9 @@ def run_measure(
         tf = record.timeframe or "1h"
         strategy = _build_strategy(record)
         mode = _mode_for(MeasureMode(mode), strategy, record)
+        # С чем сравнивать — зависит от ветки: споту альтернатива биткоин, нейтральным
+        # стратегиям — кэш. Единый бенчмарк отбраковывал бы всё, что не растёт вместе с рынком.
+        kind = _benchmark_kind(record.branch, load_threshold().benchmark)
 
         kwargs: dict[str, Any] = dict(
             strategy=strategy,
@@ -104,7 +109,8 @@ def run_measure(
             rung=record.rung,
             params=dict(record.params or {}),
             session=session,
-            benchmark=_benchmark(store, record.venue, tf, window),
+            benchmark=_benchmark(store, record.venue, tf, window, kind),
+            extra_metrics={"benchmark_kind": kind},
         )
         if mode in FROM_JOURNAL:
             kwargs["trades"] = _journal_trades(session, strategy_id, window)
@@ -210,16 +216,94 @@ def _has_candles(store: Any, venue: str, instrument: str, tf: str) -> bool:
         return False
 
 
-def _benchmark(
-    store: Any, venue: str, tf: str, window: tuple[datetime, datetime]
-) -> list[Candle] | None:
-    """BTC той же площадки и таймфрейма — база сравнения «лучше ли, чем просто держать BTC».
+BENCHMARK_KINDS = ("btc_bh", "btc_dca", "cash", "none")
 
-    Берём ТОЛЬКО края окна: `btc_buy_and_hold_pct` считает `последний close / первый open`,
-    остальной ряд не используется никем — а на минутках это второй такой же гигабайт памяти,
-    как у самой стратегии. В отпечаток данных попадают те же две свечи: они и определяют
-    вклад бенчмарка в результат.
+
+def _benchmark_kind(branch: str, cfg: Any) -> str:
+    """С чем сравнивать ветку — из `config/threshold.yaml`.
+
+    Единый бенчмарк «BTC купил и держи» — неверный судья для системы, которая должна
+    работать на всех фазах рынка: стратегия, не зависящая от направления, на бычьем окне
+    проиграет биткоину и будет отброшена, хотя именно она нужна в боковике и падении.
+    Поэтому у каждой ветки своя альтернатива: спот сравнивается с биткоином (он и правда
+    альтернатива), нейтральные ветки — с кэшем («не делать ничего»).
     """
+    by_branch = getattr(cfg, "by_branch", {}) or {}
+    return str(by_branch.get(str(branch), getattr(cfg, "default", "btc_bh")))
+
+
+def _dca_pct(store: Any, venue: str, tf: str, window: tuple[datetime, datetime]) -> Decimal | None:
+    """Доходность равномерных докупок (DCA) за окно, %.
+
+    Зачем отдельно от B&H: «купил и держи» подразумевает вход одной суммой в конкретный
+    день, и её результат сильно зависит от того, куда попал этот день. Владелец пополняет
+    счёт по частям, поэтому честная альтернатива его деньгам — равные покупки раз в месяц.
+
+    Считается по первой цене каждого месяца: на каждую покупку тратится одна и та же сумма,
+    итог — стоимость накопленного количества по последней цене окна.
+    """
+    for instrument in BENCHMARK_INSTRUMENTS:
+        rows = _monthly_opens(store, venue, instrument, tf, window)
+        if len(rows) < 2:
+            continue
+        qty = Decimal(0)
+        spent = Decimal(0)
+        for price in rows[:-1]:  # последняя точка — цена оценки, не покупка
+            if price <= 0:
+                continue
+            qty += Decimal(1) / price
+            spent += Decimal(1)
+        if spent <= 0:
+            continue
+        return (qty * rows[-1] / spent - 1) * 100
+    return None
+
+
+def _monthly_opens(
+    store: Any, venue: str, instrument: str, tf: str, window: tuple[datetime, datetime]
+) -> list[Decimal]:
+    """Первая цена каждого месяца окна — агрегацией в хранилище, а не чтением всего ряда."""
+    if store is None or not hasattr(store, "query"):
+        return []
+    try:
+        rows = store.query(
+            "select date_trunc('month', ts) as m, arg_min(open, ts) as price "
+            "from {candles} where ts >= ? and ts < ? group by 1 order by 1",
+            venue,
+            instrument,
+            tf,
+            params=[window[0], window[1]],
+        )
+    except Exception as err:  # noqa: BLE001 — битое хранилище не роняет замер
+        log.info("Помесячные цены %s %s %s: %s", venue, instrument, tf, err)
+        return []
+    return [Decimal(str(r["price"])) for r in rows if r.get("price") is not None]
+def _benchmark(
+    store: Any,
+    venue: str,
+    tf: str,
+    window: tuple[datetime, datetime],
+    kind: str = "btc_bh",
+) -> list[Candle] | Decimal | None:
+    """Альтернатива, с которой сравнивают стратегию. Что именно — зависит от ветки.
+
+    `btc_bh` — купить биткоин в начале окна и держать (свечи краёв окна);
+    `btc_dca` — равные докупки раз в месяц: ближе к тому, как деньги приходят на самом деле,
+      и не зависит от удачности одной даты входа;
+    `cash` — ничего не делать (0%): честная альтернатива для стратегий, не зависящих от
+      направления рынка, — их незачем мерить биткоином;
+    `none` — сравнения нет, критерий не считается.
+
+    Для `btc_bh` берём ТОЛЬКО края окна: `btc_buy_and_hold_pct` считает
+    `последний close / первый open`, остальной ряд не нужен никому — а на минутках это
+    второй такой же гигабайт памяти, как у самой стратегии.
+    """
+    if kind == "none":
+        return None
+    if kind == "cash":
+        return Decimal(0)
+    if kind == "btc_dca":
+        return _dca_pct(store, venue, tf, window)
     for instrument in BENCHMARK_INSTRUMENTS:
         if not _has_candles(store, venue, instrument, tf):
             continue
@@ -344,6 +428,25 @@ def _journal_trades(session: Any, strategy_id: str, window: tuple[datetime, date
     return out
 
 
+# Фаза рынка по среднегодовому росту биткоина в окне. Границы — не истина, а рабочая
+# разметка: между «рос» и «падал» есть широкая полоса, где стратегии живут иначе.
+PHASE_UP_PCT = Decimal(15)
+PHASE_DOWN_PCT = Decimal(-15)
+
+
+def market_phase(btc_cagr: Decimal | None) -> str:
+    """рост | падение | боковик | неизвестно — по поведению биткоина, а не бенчмарка ветки.
+
+    Считается всегда по BTC, даже когда ветка сравнивается с кэшем: фаза — свойство рынка,
+    а не выбранной альтернативы.
+    """
+    if btc_cagr is None:
+        return "неизвестно"
+    if btc_cagr >= PHASE_UP_PCT:
+        return "рост"
+    if btc_cagr <= PHASE_DOWN_PCT:
+        return "падение"
+    return "боковик"
 def run_stability(
     strategy_id: str,
     *,
@@ -368,6 +471,7 @@ def run_stability(
     span = history_days or (window_days * 4)
     start = now - timedelta(days=span)
     windows: list[tuple[datetime, datetime, Any]] = []
+    phases: dict[str, PhaseStat] = {}
     profitable = ahead = compared = 0
     cursor = start
     while cursor + timedelta(days=window_days) <= now:
@@ -385,13 +489,19 @@ def run_stability(
         windows.append((cursor, upto, m))
         mt = getattr(m, "metrics", None)
         if getattr(m, "status", "") == "ok" and mt is not None:
-            if mt.net_pnl_pct > 0:
-                profitable += 1
-            edge = mt.vs_btc_cagr if mt.vs_btc_cagr is not None else mt.vs_btc
-            if edge is not None:
-                compared += 1
-                if edge > 0:
-                    ahead += 1
+            is_profit = mt.net_pnl_pct > 0
+            edge = mt.vs_benchmark_cagr if mt.vs_benchmark_cagr is not None else mt.vs_benchmark
+            is_ahead = edge is not None and edge > 0
+            profitable += 1 if is_profit else 0
+            compared += 1 if edge is not None else 0
+            ahead += 1 if is_ahead else 0
+            phase = market_phase(_btc_cagr(m, mt))
+            stat = phases.get(phase, PhaseStat())
+            phases[phase] = PhaseStat(
+                windows=stat.windows + 1,
+                profitable=stat.profitable + (1 if is_profit else 0),
+                ahead=stat.ahead + (1 if is_ahead else 0),
+            )
         cursor += timedelta(days=step_days)
 
     stability = Stability(
@@ -401,8 +511,21 @@ def run_stability(
         compared=compared,
         window_days=window_days,
         step_days=step_days,
+        phases=phases,
     )
     return stability, windows
+
+
+def _btc_cagr(measurement: Any, mt: Any) -> Decimal | None:
+    """Годовой рост биткоина в окне — для разметки фазы рынка.
+
+    Если ветка и так сравнивается с биткоином, значение уже посчитано; для веток с
+    бенчмарком «кэш» его нет, и фаза остаётся неизвестной. Отдельно ходить за рядом BTC
+    здесь не станем: это ещё один проход по хранилищу на каждое окно.
+    """
+    if str(getattr(mt, "benchmark_kind", "")).startswith("btc"):
+        return mt.benchmark_cagr_pct
+    return None
 
 
 __all__ = [
