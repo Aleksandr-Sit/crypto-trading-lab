@@ -1,0 +1,145 @@
+"""Замер стратегии на НЕСКОЛЬКИХ инструментах сразу (08.09.2026).
+
+До этого движок вёл один инструмент, и три стратегии каталога были неизмеримы в принципе:
+фандинг-арбитраж и базис держат две ноги одновременно (перп и спот), кроссмоментум —
+корзину. Здесь проверяется, что ряды сливаются по времени, сигнал уходит движку своего
+инструмента, а капитал и стоп остаются общими на всю стратегию.
+"""
+
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+
+import pytest
+
+from lab.contracts import Branch, Candle, Signal, StopSpec, StrategyManifest
+from lab.core.measure import PaperEngine
+from lab.core.measure.simulator import simulate
+from lab.core.measure.types import IncompleteData
+
+HOUR = timedelta(hours=1)
+T0 = datetime(2026, 1, 1, tzinfo=UTC)
+A, B = "BTC/USDT:USDT", "ETH/USDT:USDT"
+
+
+def _bar(instrument: str, i: int, price: Decimal) -> Candle:
+    return Candle(
+        instrument=instrument,
+        tf="1h",
+        ts=T0 + HOUR * i,
+        open=price,
+        high=price,
+        low=price,
+        close=price,
+        volume=Decimal(1000),
+    )
+
+
+def _merged(n: int, price_a=Decimal(100), price_b=Decimal(50)) -> list[Candle]:
+    """Два ряда, слитые по времени — так их отдаёт `_merged` в runner."""
+    out: list[Candle] = []
+    for i in range(n):
+        out.append(_bar(A, i, price_a))
+        out.append(_bar(B, i, price_b))
+    return out
+
+
+def _engines() -> dict[str, PaperEngine]:
+    return {
+        name: PaperEngine(venue="binance", instrument=name, tf="1h", branch=Branch.CEX_PERP)
+        for name in (A, B)
+    }
+
+
+class TwoLegs:
+    """Открывает лонг по первой ноге и шорт по второй — как связка спот+перп."""
+
+    def __init__(self) -> None:
+        self.manifest = StrategyManifest(
+            slug="two-legs",
+            branch=Branch.CEX_PERP,
+            venue="binance",
+            source_kind="test",
+            instruments=[A, B],
+            timeframe="1h",
+            stop=StopSpec(max_dd_pct=Decimal(50)),
+        )
+        self.opened = False
+
+    def on_bar(self, bar: Candle) -> list[Signal]:
+        if self.opened or bar.instrument != B:
+            return []
+        self.opened = True
+        # Обе ноги решаются на одном баре: это и есть смысл связки.
+        return [
+            Signal(
+                strategy_id="x",
+                decided_at=bar.ts + HOUR,
+                instrument=instrument,
+                side=side,
+                size=Decimal(1),
+                price_ref=bar.close,
+                inputs_hash=f"h-{instrument}",
+                ttl_s=7200,
+            )
+            for instrument, side in ((A, "buy"), (B, "sell"))
+        ]
+
+
+def test_signals_go_to_the_engine_of_their_instrument():
+    strategy = TwoLegs()
+    engines = _engines()
+
+    result = simulate(strategy, _merged(5), engines=engines, capital=Decimal(10_000))
+
+    assert engines[A].position > 0, "первая нога должна быть в лонге"
+    assert engines[B].position < 0, "вторая — в шорте"
+    assert result.positions[A] > 0 and result.positions[B] < 0
+
+
+def test_single_instrument_call_still_works():
+    """Старый вызов с одним движком — прежнее поведение, ничего не сломано."""
+    engine = PaperEngine(venue="binance", instrument=A, tf="1h", branch=Branch.CEX_PERP)
+
+    class Idle:
+        manifest = None
+
+        def on_bar(self, bar: Candle) -> list[Signal]:
+            return []
+
+    result = simulate(Idle(), [_bar(A, i, Decimal(100)) for i in range(3)], engine=engine)
+    assert result.trades == []
+
+
+def test_unknown_instrument_in_a_portfolio_is_an_error_not_silence():
+    """У портфеля имя решает, кому уйдёт сделка: чужой ряд — дефект данных, а не мелочь."""
+    engines = _engines()
+    stray = [_bar("SOL/USDT:USDT", 0, Decimal(10))]
+
+    with pytest.raises(IncompleteData, match="нет в манифесте"):
+        simulate(TwoLegs(), stray, engines=engines)
+
+
+def test_single_engine_does_not_check_the_name():
+    """С одним движком поток и ЕСТЬ его инструмент, как бы ряд ни назывался.
+
+    Так приходят синтетические ряды в тестах и переименованные пары; проверять там имя
+    значило бы ломать замер на ровном месте — распределять сделки всё равно некуда.
+    """
+    engine = PaperEngine(venue="binance", instrument=A, tf="1h", branch=Branch.CEX_PERP)
+
+    class Idle:
+        manifest = None
+
+        def on_bar(self, bar: Candle) -> list[Signal]:
+            return []
+
+    result = simulate(Idle(), [_bar("SYN/USD", i, Decimal(100)) for i in range(3)], engine=engine)
+    assert result.trades == []
+
+
+def test_gap_is_checked_per_instrument():
+    """Разрыв в одном ряду не должен маскироваться чередованием инструментов."""
+    bars = [_bar(A, 0, Decimal(100)), _bar(B, 0, Decimal(50)), _bar(A, 5, Decimal(100))]
+
+    with pytest.raises(IncompleteData, match="разрыв данных"):
+        simulate(TwoLegs(), bars, engines=_engines())

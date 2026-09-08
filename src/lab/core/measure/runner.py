@@ -11,6 +11,7 @@ run(strategy_id, mode, window, *, strategy, candles | source, benchmark, session
 from __future__ import annotations
 
 import hashlib
+import heapq
 import json
 import os
 import subprocess
@@ -200,6 +201,33 @@ CHUNK_BARS = 20_000
 """
 
 
+def _merged(
+    candles: Sequence[Candle] | None,
+    source: Source | None,
+    instruments: Sequence[str],
+    tf: str,
+    a: datetime,
+    b: datetime,
+) -> Iterator[Candle]:
+    """Свечи нескольких инструментов, слитые по времени.
+
+    Портфельным стратегиям (кроссмоментум, базис, фандинг-арбитраж) нужны несколько рядов
+    ОДНОВРЕМЕННО, иначе их нечем мерить. Ряды читаются кусками параллельно и сливаются
+    по времени: в памяти лежит по куску на инструмент, а не всё окно.
+    """
+    if len(instruments) == 1:
+        yield from _stream(candles, source, instruments[0], tf, a, b)
+        return
+    # Кусок делится между рядами: пятьдесят инструментов по 20 тысяч баров — это снова
+    # миллион свечей в памяти, ради чего всё и переписывалось на потоки.
+    per_instrument = max(2_000, CHUNK_BARS // max(1, len(instruments)))
+    streams = [
+        _stream(candles, source, name, tf, a, b, chunk_bars=per_instrument, match=True)
+        for name in instruments
+    ]
+    yield from heapq.merge(*streams, key=lambda c: c.ts)
+
+
 def _stream(
     candles: Sequence[Candle] | None,
     source: Source | None,
@@ -207,6 +235,8 @@ def _stream(
     tf: str,
     a: datetime,
     b: datetime,
+    chunk_bars: int | None = None,
+    match: bool = False,
 ) -> Iterator[Candle]:
     """Свечи окна [a, b) потоком: из готового списка либо из источника кусками.
 
@@ -215,11 +245,18 @@ def _stream(
     правую границу включительно.
     """
     if candles is not None:
-        yield from (c for c in candles if a <= c.ts < b)
+        # `match` — когда инструментов несколько: готовый список общий на всех, и без
+        # отбора по имени один и тот же ряд ушёл бы каждому движку. С одним инструментом
+        # не фильтруем: поток и есть он, как бы ряд ни назывался (синтетика в тестах).
+        yield from (
+            c
+            for c in candles
+            if a <= c.ts < b and (not match or c.instrument == instrument)
+        )
         return
     if source is None:
         raise IncompleteData("нет данных: не переданы ни candles, ни source")
-    span = parse_tf(tf) * CHUNK_BARS
+    span = parse_tf(tf) * (chunk_bars or CHUNK_BARS)
     cursor = a
     while cursor < b:
         upto = min(cursor + span, b)
@@ -374,7 +411,7 @@ def run(
     inst, factory = _resolve(strategy)
     manifest: StrategyManifest = inst.manifest
     tf = manifest.timeframe or "1h"
-    instrument = manifest.instruments[0]
+    instruments = list(manifest.instruments)
 
     # -- данные: готовые свечи или источник; сбой → incomplete -----------------------
     bench_rows = benchmark if isinstance(benchmark, Sequence) else None
@@ -383,16 +420,21 @@ def run(
         if candles is None and source is None:
             raise IncompleteData("нет данных: не переданы ни candles, ни source")
 
-        def engine() -> PaperEngine:
-            return PaperEngine(
-                venue=manifest.venue,
-                instrument=instrument,
-                tf=tf,
-                branch=manifest.branch,
-                costs=model,
-                depth=depth,
-                funding_rate=funding_rate,
-            )
+        def engines() -> dict[str, PaperEngine]:
+            """Свой движок на каждый инструмент: позиции, филлы и фандинг у них разные,
+            а капитал и стоп — общие (их считает симулятор по всем сделкам вместе)."""
+            return {
+                name: PaperEngine(
+                    venue=manifest.venue,
+                    instrument=name,
+                    tf=tf,
+                    branch=manifest.branch,
+                    costs=model,
+                    depth=depth,
+                    funding_rate=funding_rate,
+                )
+                for name in instruments
+            }
 
         folds: list[FoldResult] = []
         if walk_forward:
@@ -405,15 +447,15 @@ def run(
             ):
                 is_r = simulate(
                     factory(),
-                    _stream(candles, source, instrument, tf, f.is_from, f.is_to),
-                    engine=engine(),
+                    _merged(candles, source, instruments, tf, f.is_from, f.is_to),
+                    engines=engines(),
                     stop=manifest.stop,
                     capital=capital,
                 )
                 oos_r = simulate(
                     factory(),
-                    _stream(candles, source, instrument, tf, f.oos_from, f.oos_to),
-                    engine=engine(),
+                    _merged(candles, source, instruments, tf, f.oos_from, f.oos_to),
+                    engines=engines(),
                     stop=manifest.stop,
                     capital=capital,
                 )
@@ -447,8 +489,8 @@ def run(
         # (`RiskEngine` → `strategy_stop_dd|daily`, `StopWatch` → degraded).
         result = simulate(
             inst,
-            hasher.wrap(_stream(candles, source, instrument, tf, window_from, window_to)),
-            engine=engine(),
+            hasher.wrap(_merged(candles, source, instruments, tf, window_from, window_to)),
+            engines=engines(),
             stop=manifest.stop,
             capital=capital,
         )

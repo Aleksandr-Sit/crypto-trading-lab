@@ -15,7 +15,7 @@ P&L сделки считается по референсным ценам (ми
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -272,6 +272,9 @@ class SimResult:
     stopped_at: datetime | None = None
     stop_rule: str = ""
     blocked_signals: int = 0
+    # Позиции по инструментам: у портфельной стратегии «одна открытая позиция» не значит
+    # ничего — важно, что осталось на каждой ноге.
+    positions: dict[str, Decimal] = field(default_factory=dict)
 
 
 class _StopTracker:
@@ -291,7 +294,6 @@ class _StopTracker:
         self.stop = stop
         self.capital = capital
         self.active = stop is not None and capital > 0
-        self._seen = 0
         self._equity = Decimal(0)
         self._peak = Decimal(0)
         self._worst = Decimal(0)
@@ -299,16 +301,21 @@ class _StopTracker:
         self._day_sum = Decimal(0)
 
     def breach(self, closed: Sequence[ClosedTrade], now: datetime) -> str:
+        """`closed` — только НОВЫЕ сделки с прошлого бара.
+
+        Раньше сюда приходил весь список, и счётчик сам отслеживал позицию в нём. С портфелем
+        списков несколько (по движку на инструмент), общего порядка у них нет — поэтому кто
+        именно новый, знает вызывающий, а счётчик просто складывает.
+        """
         if not self.active:
             return ""
-        for trade in closed[self._seen :]:
+        for trade in closed:
             self._equity += trade.pnl_net
             self._peak = max(self._peak, self._equity)
             self._worst = min(self._worst, self._equity - self._peak)
             if trade.closed_at is not None:
                 self._day.append((trade.closed_at, trade.pnl_net))
                 self._day_sum += trade.pnl_net
-        self._seen = len(closed)
 
         stop = self.stop
         assert stop is not None  # active == stop is not None
@@ -335,52 +342,98 @@ def simulate(
     strategy,
     candles: Iterable[Candle],
     *,
-    engine: PaperEngine,
+    engine: PaperEngine | None = None,
+    engines: Mapping[str, PaperEngine] | None = None,
     stop: StopSpec | None = None,
     capital: Decimal = Decimal(10_000),
 ) -> SimResult:
     """Прогон стратегии по свечам: сначала исполняются ожидающие сигналы по бару,
     потом стратегия видит бар и решает — её сигналы исполнятся не раньше следующего бара.
 
+    Инструментов может быть несколько (`engines` — движок на инструмент): кроссмоментум,
+    базис и фандинг-арбитраж иначе не измерить, им нужны несколько рядов ОДНОВРЕМЕННО.
+    Поток свечей приходит слитым по времени, сигнал уходит движку своего инструмента.
+    Капитал общий: стоп стратегии считается по всем закрытым сделкам вместе, а не по каждой
+    ноге отдельно — иначе связка «лонг спот + шорт перп» выглядела бы как две стратегии.
+
     Принимает поток, а не список: год минутных свечей — полмиллиона объектов и больше
     гигабайта памяти, а нужен всегда только текущий бар. Непрерывность проверяется по ходу
-    (то же правило, что в `check_continuity`), поэтому держать ряд целиком незачем.
+    и ОТДЕЛЬНО по каждому инструменту (то же правило, что в `check_continuity`).
     """
-    prev: Candle | None = None
+    book = dict(engines) if engines is not None else {}
+    if engine is not None:
+        book.setdefault(engine.instrument, engine)
+    if not book:
+        raise ValueError("нужен engine или engines")
+
+    prev: dict[str, Candle] = {}
     seen = 0
     stopped_at: datetime | None = None
     stop_rule = ""
     blocked = 0
     tracker = _StopTracker(stop, capital)
-    for bar in candles:
-        if prev is not None and bar.ts - prev.ts != engine.step:
+    consumed = dict.fromkeys(book, 0)
+
+    single = next(iter(book.values())) if len(book) == 1 else None
+    for bar in candles:  # noqa: PLR1702
+        # С одним движком имя в баре не проверяем: поток и есть его инструмент, а звать его
+        # ряд может иначе (синтетика в тестах, переименованная пара). С несколькими движками
+        # так нельзя — там имя решает, кому уйдёт сделка, и расхождение с манифестом это
+        # дефект данных, а не мелочь.
+        eng = single if single is not None else book.get(bar.instrument)
+        if eng is None:
             raise IncompleteData(
-                f"разрыв данных между {prev.ts.isoformat()} и {bar.ts.isoformat()} "
-                f"(ожидался шаг {engine.step})"
+                f"свеча инструмента {bar.instrument}, которого нет в манифесте стратегии"
             )
-        prev = bar
+        before = prev.get(bar.instrument)
+        if before is not None and bar.ts - before.ts != eng.step:
+            raise IncompleteData(
+                f"разрыв данных {bar.instrument} между {before.ts.isoformat()} и "
+                f"{bar.ts.isoformat()} (ожидался шаг {eng.step})"
+            )
+        prev[bar.instrument] = bar
         seen += 1
-        engine.on_bar(bar)
+        eng.on_bar(bar)
+
         if stopped_at is None:
-            stop_rule = tracker.breach(engine.closed, bar.ts)
+            fresh: list[ClosedTrade] = []
+            for name, e in book.items():
+                fresh.extend(e.closed[consumed[name] :])
+                consumed[name] = len(e.closed)
+            stop_rule = tracker.breach(fresh, bar.ts)
             if stop_rule:
                 stopped_at = bar.ts
+
         for signal in strategy.on_bar(bar):
+            # Сигнал уходит движку СВОЕГО инструмента; при одном движке — ему же.
+            target = single or book.get(signal.instrument, eng)
             # После пробоя стратегия ведёт себя как `degraded` у живого риск-ядра:
             # закрывающие сигналы проходят, открывающие — нет. Сама стратегия об этом
             # не знает и продолжает считать: так же, как в бою.
-            if stopped_at is not None and _opens_exposure(engine.position, signal):
+            if stopped_at is not None and _opens_exposure(target.position, signal):
                 blocked += 1
                 continue
-            engine.submit(signal)
+            target.submit(signal)
+
     if seen == 0:
         raise IncompleteData("нет свечей в окне")
+    trades: list[ClosedTrade] = []
+    fills: list[Fill] = []
+    expired = 0
+    position = Decimal(0)
+    for e in book.values():
+        trades.extend(e.closed)
+        fills.extend(e.fills)
+        expired += len(e.expired)
+        position += e.position
+    trades.sort(key=lambda t: t.closed_at)
     return SimResult(
-        trades=list(engine.closed),
-        fills=list(engine.fills),
-        open_position=engine.position,
-        expired_signals=len(engine.expired),
+        trades=trades,
+        fills=fills,
+        open_position=position,
+        expired_signals=expired,
         stopped_at=stopped_at,
         stop_rule=stop_rule,
         blocked_signals=blocked,
+        positions={name: e.position for name, e in book.items()},
     )
