@@ -5,7 +5,10 @@ source_kind: paper
 source_ref: https://doi.org/10.1111/jofi.13119
 can_backtest: true
 timeframe: 1d
-instruments: "топ-50 USDT-пар Binance по обороту за 30 дней, исключая стейблы и leveraged-токены"
+# Здесь только якорь: BTC нужен стратегии всегда — по нему считается фильтр режима.
+# Торгуемая вселенная динамическая, её состав приезжает из записи реестра (см. «Вселенная»).
+instruments: [BTC/USDT]
+universe: "топ-50 USDT-пар Binance по обороту за 30 дней, исключая стейблы и leveraged-токены"
 venue: binance
 regime: trend
 status: hypothesis

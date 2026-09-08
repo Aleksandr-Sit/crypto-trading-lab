@@ -168,12 +168,16 @@ def _load_builtin() -> None:
     global _loaded
     if _loaded:
         return
-    _loaded = True
     import lab.strategies.classics  # noqa: F401
     import lab.strategies.indicators.strategies  # noqa: F401
     import lab.strategies.neutral  # noqa: F401
     import lab.strategies.presets  # noqa: F401
     import lab.strategies.xsmom  # noqa: F401
+
+    # Флаг ставится ПОСЛЕ импортов, а не до. Иначе сломанный модуль виден только один раз:
+    # первый вызов падает с настоящей ошибкой, а все следующие считают загрузку сделанной
+    # и врут «стратегия неизвестна» — на реестре без половины стратегий.
+    _loaded = True
 
 
 __all__ = [
