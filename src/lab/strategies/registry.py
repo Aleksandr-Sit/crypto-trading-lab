@@ -157,11 +157,12 @@ _loaded = False
 
 
 def _load_builtin() -> None:
-    """Пресеты и индикаторные стратегии регистрируются при импорте своих модулей."""
+    """Пресеты, индикаторные и книжные стратегии регистрируются при импорте своих модулей."""
     global _loaded
     if _loaded:
         return
     _loaded = True
+    import lab.strategies.classics  # noqa: F401
     import lab.strategies.indicators.strategies  # noqa: F401
     import lab.strategies.presets  # noqa: F401
 
