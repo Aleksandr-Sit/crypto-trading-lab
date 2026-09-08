@@ -52,6 +52,10 @@ def make_metrics(
         costs=CostsBreakdown(),
         btc_bh_pct=D(4),
         vs_btc=D(vs_btc),
+        # Порог сравнивает в ГОДОВЫХ: разница процентов за окно зависит от его длины.
+        cagr_pct=D(6),
+        btc_cagr_pct=D(4),
+        vs_btc_cagr=D(vs_btc),
         paper_vs_live_gap=na,
         copy_lag_cost=na,
         brier=na,

@@ -80,6 +80,15 @@ def annualized_pct(total_pct: Decimal | None, window: tuple[datetime, datetime])
     return _d((growth ** (365.25 / days) - 1) * 100)
 
 
+def _vs_btc_detail(m: Metrics) -> str:
+    """Почему сравнения нет — разные причины, и их нельзя смешивать в одну строку."""
+    if m.btc_bh_pct is None:
+        return "нет бенчмарка за окно"
+    if m.vs_btc_cagr is None:
+        return "капитал ушёл в ноль — годовых не существует"
+    return "годовых против BTC B&H"
+
+
 def sample_status(n: int, required: int) -> SampleStatus:
     if n >= required:
         return SampleStatus(status="ok", n=n, required=required, detail=f"{n} из {required}")
@@ -293,13 +302,11 @@ def threshold(
     # ничто. Годовые сопоставимы между окнами: «+24% в год против +100% в год».
     criteria.append(
         _crit(
-            "vs_btc_cagr",
+            "vs_btc",
             m.vs_btc_cagr,
             Decimal(0),
             ">",
-            "годовых против BTC B&H"
-            if m.vs_btc_cagr is not None
-            else "нет бенчмарка за окно или капитал ушёл в ноль",
+            _vs_btc_detail(m),
         )
     )
     status: Literal["passed", "failed", "insufficient"]
