@@ -90,7 +90,10 @@ def credentials_from_env(venue: str, env: dict[str, str] | None = None) -> dict[
     env = os.environ if env is None else env
     names = VENUE_ENV.get(venue, ())
     values = {name: (env.get(name) or "").strip() for name in names}
-    if not all(values.values()):
+    # `not names` проверяется отдельно и ПЕРВЫМ: у площадки только для данных (bitstamp)
+    # имён ключей нет вовсе, а `all({}.values())` — истина, поэтому пустой набор проходил
+    # проверку «ключи заполнены» и падал ниже на values[names[0]] с IndexError.
+    if not names or not all(values.values()):
         return {}
     if venue == "hyperliquid":
         return {"privateKey": values["HYPERLIQUID_PRIVATE_KEY"]}

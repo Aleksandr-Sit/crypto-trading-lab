@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from lab.feeds import CountingQuota
 from lab.feeds.cex import BybitFeed, FakeTransport
+from lab.feeds.cex.transport import VENUE_SPECS, VENUES, credentials_from_env
 
 T0 = datetime(2026, 1, 1, tzinfo=UTC)
 
@@ -53,3 +54,16 @@ def test_funding_and_book_come_from_venue():
     book = feed.book("BTC/USDT:USDT")
     assert book.bids[0].price < book.asks[0].price
     assert all(isinstance(level.qty, Decimal) for level in book.bids + book.asks)
+
+
+def test_data_only_venue_has_no_credentials_and_does_not_crash():
+    """Площадка только для истории (bitstamp) не имеет имён ключей в `.env`.
+
+    Проверка «все ключи заполнены» на пустом наборе имён истинна (`all({}.values())`),
+    поэтому раньше код шёл дальше и падал на `values[names[0]]` с IndexError — бэкфилл
+    Bitstamp не запускался вовсе.
+    """
+    assert credentials_from_env("bitstamp", {}) == {}
+    assert credentials_from_env("bitstamp", {"BYBIT_API_KEY": "x"}) == {}
+    assert "bitstamp" in VENUE_SPECS
+    assert "bitstamp" not in VENUES, "торговых исполнителей на bitstamp быть не должно"
