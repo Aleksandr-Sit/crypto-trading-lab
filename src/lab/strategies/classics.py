@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from lab.contracts import Candle, Signal
@@ -28,6 +29,26 @@ def true_range(bar: Candle, prev_close: Decimal | None) -> Decimal:
     return max(bar.high - bar.low, abs(bar.high - prev_close), abs(bar.low - prev_close))
 
 
+@dataclass
+class _Market:
+    """Состояние ОДНОГО инструмента: у черепах каждый рынок живёт своей жизнью.
+
+    Общее состояние на портфель было бы ошибкой, и не теоретической: пока история баров
+    была общей, свечи BTC по 60 тысяч и XRP по полдоллара складывались в один ряд, канал
+    Дончиана считался по этой каше и не пробивался никогда — портфельный замер дал ноль
+    сделок там, где на одном инструменте их было 91.
+    """
+
+    history: list[Candle] = field(default_factory=list)
+    prev_close: Decimal | None = None
+    n_value: Decimal | None = None  # «N» — EMA истинного диапазона
+    side: str | None = None
+    qty: Decimal = ZERO
+    units: int = 0
+    last_entry: Decimal = ZERO
+    stop: Decimal = ZERO
+
+
 @preset(
     manifest_from_card(CARDS_DIR / "cex-perp-turtle-donchian.md", source_kind="book"),
 )
@@ -38,139 +59,150 @@ class TurtleDonchianStrategy(Strategy):
     20-дневного в другую сторону, размер позиции — от волатильности (N = EMA истинного
     диапазона). Фильтра «прошлая сделка была прибыльной» здесь нет — это System 1.
 
-    Чего в правилах намеренно нет: лимитов на коррелированные рынки и на общее число units
-    в одну сторону. Они про ПОРТФЕЛЬ из нескольких инструментов, а замер ведёт один
-    инструмент, и вписывать сюда portfolio-правила значило бы измерять несуществующее.
+    Портфельная по замыслу: каждый рынок торгуется независимо, а ограничения общие —
+    потолок units в одну сторону и потолок плеча по всей занятой позиции.
     """
 
     card = "cex-perp-turtle-donchian"
 
     def reset(self) -> None:
-        self.history: list[Candle] = []
-        self.prev_close: Decimal | None = None
-        self.n_value: Decimal | None = None  # «N» — EMA истинного диапазона
-        self.side: str | None = None
-        self.qty = ZERO
-        self.units = 0
-        self.last_entry = ZERO
-        self.stop = ZERO
+        self.markets: dict[str, _Market] = {}
+
+    def _market(self, instrument: str) -> _Market:
+        market = self.markets.get(instrument)
+        if market is None:
+            market = self.markets[instrument] = _Market()
+        return market
 
     # -- волатильность ---------------------------------------------------------------
 
-    def _update_n(self, bar: Candle) -> None:
-        tr = true_range(bar, self.prev_close)
+    def _update_n(self, market: _Market, bar: Candle) -> None:
+        tr = true_range(bar, market.prev_close)
         period = int(self.param("atr_period", 20))
-        if self.n_value is None:
-            self.n_value = tr
-        else:
-            # EMA по Уайлдеру, как в оригинале: N = (19·N_прошлое + TR) / 20.
-            self.n_value = (self.n_value * (period - 1) + tr) / period
-        self.prev_close = bar.close
+        # EMA по Уайлдеру, как в оригинале: N = (19·N_прошлое + TR) / 20.
+        market.n_value = (
+            tr if market.n_value is None else (market.n_value * (period - 1) + tr) / period
+        )
+        market.prev_close = bar.close
 
-    def _unit_qty(self, bar: Candle) -> Decimal:
-        """1 unit = risk_unit_pct капитала на движение в 1N, с потолком по плечу."""
-        if not self.n_value or self.n_value <= 0:
+    def _open_units(self) -> int:
+        return sum(m.units for m in self.markets.values())
+
+    def _exposure(self, price: Decimal, instrument: str) -> Decimal:
+        """Занятый номинал по всем рынкам: свой — по текущей цене, чужие — по цене входа."""
+        total = ZERO
+        for name, market in self.markets.items():
+            if market.qty <= 0:
+                continue
+            total += market.qty * (price if name == instrument else market.last_entry)
+        return total
+
+    def _unit_qty(self, market: _Market, bar: Candle) -> Decimal:
+        """1 unit = risk_unit_pct капитала на движение в 1N, с ОБЩИМ потолком плеча."""
+        if not market.n_value or market.n_value <= 0 or bar.close <= 0:
             return ZERO
         capital = D(str(self.param("capital_usd", 10_000)))
         risk = D(str(self.param("risk_unit_pct", 1.0))) / 100
-        qty = capital * risk / self.n_value
+        qty = capital * risk / market.n_value
         leverage = D(str(self.param("leverage_cap", 2)))
-        max_qty = capital * leverage / bar.close if bar.close > 0 else ZERO
-        room = max_qty - self.qty
-        return max(ZERO, min(qty, room))
+        room_usd = capital * leverage - self._exposure(bar.close, bar.instrument)
+        return max(ZERO, min(qty, room_usd / bar.close))
 
     # -- решение ---------------------------------------------------------------------
 
     def on_bar(self, bar: Candle) -> list[Signal]:
-        out: list[Signal] = []
+        market = self._market(bar.instrument)
         entry_days = int(self.param("entry_days", 55))
         exit_days = int(self.param("exit_days", 20))
-        keep = max(entry_days, exit_days)
-        hist = self.history
+        out: list[Signal] = []
 
-        self._update_n(bar)
-        if self.side is not None:
-            out.extend(self._manage(bar, hist, exit_days))
-        elif len(hist) >= entry_days:
-            out.extend(self._enter(bar, hist, entry_days))
+        self._update_n(market, bar)
+        if market.side is not None:
+            out.extend(self._manage(market, bar, exit_days))
+        elif len(market.history) >= entry_days:
+            out.extend(self._enter(market, bar, entry_days))
 
-        hist.append(bar)
-        del hist[:-keep]
+        market.history.append(bar)
+        del market.history[: -max(entry_days, exit_days)]
         return out
 
-    def _enter(self, bar: Candle, hist: list[Candle], entry_days: int) -> list[Signal]:
-        high = max(b.high for b in hist[-entry_days:])
-        low = min(b.low for b in hist[-entry_days:])
-        qty = self._unit_qty(bar)
-        if qty <= 0 or self.n_value is None:
+    def _enter(self, market: _Market, bar: Candle, entry_days: int) -> list[Signal]:
+        if self._open_units() >= int(self.param("max_units_total", 12)):
+            return []
+        window = market.history[-entry_days:]
+        high = max(b.high for b in window)
+        low = min(b.low for b in window)
+        qty = self._unit_qty(market, bar)
+        if qty <= 0 or market.n_value is None:
             return []
         stop_mult = D(str(self.param("stop_atr_mult", 2.0)))
         if bar.close > high:
-            self.side, self.qty, self.units = "long", qty, 1
-            self.last_entry = bar.close
-            self.stop = bar.close - stop_mult * self.n_value
+            market.side, market.qty, market.units = "long", qty, 1
+            market.last_entry = bar.close
+            market.stop = bar.close - stop_mult * market.n_value
             return [self.signal(bar, "buy", qty, inputs={"kind": "breakout", "level": high})]
         if bar.close < low:
-            self.side, self.qty, self.units = "short", qty, 1
-            self.last_entry = bar.close
-            self.stop = bar.close + stop_mult * self.n_value
+            market.side, market.qty, market.units = "short", qty, 1
+            market.last_entry = bar.close
+            market.stop = bar.close + stop_mult * market.n_value
             return [self.signal(bar, "sell", qty, inputs={"kind": "breakdown", "level": low})]
         return []
 
-    def _manage(self, bar: Candle, hist: list[Candle], exit_days: int) -> list[Signal]:
+    def _manage(self, market: _Market, bar: Candle, exit_days: int) -> list[Signal]:
         """Порядок важен: сначала стоп, потом выход по каналу, и только потом добавление."""
-        long = self.side == "long"
-        stop_hit = bar.low <= self.stop if long else bar.high >= self.stop
-        if stop_hit:
-            return [self._close(bar, "stop")]
-        if len(hist) >= exit_days:
-            channel = (
-                min(b.low for b in hist[-exit_days:])
-                if long
-                else max(b.high for b in hist[-exit_days:])
-            )
+        long = market.side == "long"
+        if (bar.low <= market.stop) if long else (bar.high >= market.stop):
+            return [self._close(market, bar, "stop")]
+        if len(market.history) >= exit_days:
+            window = market.history[-exit_days:]
+            channel = min(b.low for b in window) if long else max(b.high for b in window)
             if (bar.close < channel) if long else (bar.close > channel):
-                return [self._close(bar, "channel_exit", level=channel)]
-        return self._pyramid(bar)
+                return [self._close(market, bar, "channel_exit", level=channel)]
+        return self._pyramid(market, bar)
 
-    def _pyramid(self, bar: Candle) -> list[Signal]:
+    def _pyramid(self, market: _Market, bar: Candle) -> list[Signal]:
         """Добавление по ½N в сторону прибыли; стоп подтягивается к последнему входу."""
-        if self.n_value is None or self.n_value <= 0:
+        if market.n_value is None or market.n_value <= 0:
             return []
-        if self.units >= int(self.param("max_units_per_market", 4)):
+        if market.units >= int(self.param("max_units_per_market", 4)):
             return []
-        step = D(str(self.param("pyramid_step_atr", 0.5))) * self.n_value
-        long = self.side == "long"
-        moved = (bar.close - self.last_entry) if long else (self.last_entry - bar.close)
+        if self._open_units() >= int(self.param("max_units_total", 12)):
+            return []
+        long = market.side == "long"
+        step = D(str(self.param("pyramid_step_atr", 0.5))) * market.n_value
+        moved = (bar.close - market.last_entry) if long else (market.last_entry - bar.close)
         if moved < step:
             return []
-        qty = self._unit_qty(bar)
+        qty = self._unit_qty(market, bar)
         if qty <= 0:
             return []
         stop_mult = D(str(self.param("stop_atr_mult", 2.0)))
-        self.qty += qty
-        self.units += 1
-        self.last_entry = bar.close
-        self.stop = (
-            bar.close - stop_mult * self.n_value if long else bar.close + stop_mult * self.n_value
+        market.qty += qty
+        market.units += 1
+        market.last_entry = bar.close
+        market.stop = (
+            bar.close - stop_mult * market.n_value
+            if long
+            else bar.close + stop_mult * market.n_value
         )
         return [
             self.signal(
                 bar,
                 "buy" if long else "sell",
                 qty,
-                inputs={"kind": "pyramid", "unit": self.units},
+                inputs={"kind": "pyramid", "unit": market.units},
             )
         ]
 
-    def _close(self, bar: Candle, kind: str, level: Decimal | None = None) -> Signal:
-        side = "sell" if self.side == "long" else "buy"
-        qty = self.qty
-        inputs: dict[str, object] = {"kind": kind, "units": self.units}
+    def _close(
+        self, market: _Market, bar: Candle, kind: str, level: Decimal | None = None
+    ) -> Signal:
+        side = "sell" if market.side == "long" else "buy"
+        qty = market.qty
+        inputs: dict[str, object] = {"kind": kind, "units": market.units}
         if level is not None:
             inputs["level"] = level
-        self.side, self.qty, self.units = None, ZERO, 0
-        self.stop = ZERO
+        market.side, market.qty, market.units, market.stop = None, ZERO, 0, ZERO
         return self.signal(bar, side, qty, inputs=inputs)
 
 

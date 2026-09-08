@@ -78,13 +78,13 @@ def test_stop_is_two_n_below_entry_and_closes_position():
     for bar in _flat_then(10):
         s.on_bar(bar)
     s.on_bar(_bar(10, Decimal(120), high=Decimal(120), low=Decimal(99)))
-    entry_stop = s.stop
+    entry_stop = s.markets["BTC/USDT:USDT"].stop
     assert entry_stop < Decimal(120)
 
     out = s.on_bar(_bar(11, entry_stop - 1, high=Decimal(120), low=entry_stop - 1))
     assert len(out) == 1
     assert out[0].side == "sell"
-    assert s.side is None, "после стопа позиции быть не должно"
+    assert s.markets["BTC/USDT:USDT"].side is None, "после стопа позиции быть не должно"
 
 
 def test_pyramid_adds_units_up_to_limit():
@@ -92,11 +92,11 @@ def test_pyramid_adds_units_up_to_limit():
     for bar in _flat_then(10):
         s.on_bar(bar)
     s.on_bar(_bar(10, Decimal(120), high=Decimal(120), low=Decimal(99)))
-    assert s.units == 1
+    assert s.markets["BTC/USDT:USDT"].units == 1
 
     added = s.on_bar(_bar(11, Decimal(140), high=Decimal(140), low=Decimal(119)))
     assert len(added) == 1 and added[0].side == "buy"
-    assert s.units == 2
+    assert s.markets["BTC/USDT:USDT"].units == 2
 
     more = s.on_bar(_bar(12, Decimal(200), high=Decimal(200), low=Decimal(139)))
     assert more == [], "предел units не должен превышаться"
@@ -113,7 +113,7 @@ def test_channel_exit_closes_before_stop_is_hit():
     out = s.on_bar(_bar(16, Decimal(119), high=Decimal(121), low=Decimal(119)))
     assert len(out) == 1 and out[0].side == "sell"
     assert out[0].meta.get("kind") in (None, "channel_exit") or True
-    assert s.side is None
+    assert s.markets["BTC/USDT:USDT"].side is None
 
 
 def test_leverage_cap_limits_position_size():
@@ -123,4 +123,67 @@ def test_leverage_cap_limits_position_size():
         s.on_bar(bar)
     s.on_bar(_bar(10, Decimal(120), high=Decimal(120), low=Decimal(99)))
 
-    assert s.qty * Decimal(120) <= Decimal(10_000) + Decimal(1)
+    assert s.markets["BTC/USDT:USDT"].qty * Decimal(120) <= Decimal(10_000) + Decimal(1)
+
+
+def test_markets_are_independent():
+    """Каждый рынок живёт своей жизнью: канал одного не должен считаться по чужим ценам.
+
+    Пока состояние было общим, свечи BTC по 60 тысяч и XRP по полдоллара складывались
+    в один ряд — канал не пробивался никогда, и портфельный замер дал ноль сделок там,
+    где на одном инструменте их было 91.
+    """
+    s = _strategy()
+    cheap, rich = "XRP/USDT:USDT", "BTC/USDT:USDT"
+
+    def bar(instrument: str, i: int, price: Decimal) -> Candle:
+        return Candle(
+            instrument=instrument,
+            tf="1d",
+            ts=T0 + DAY * i,
+            open=price,
+            high=price + price / 100,
+            low=price - price / 100,
+            close=price,
+            volume=Decimal(100),
+        )
+
+    for i in range(10):  # два ряда разного масштаба, оба в плато
+        s.on_bar(bar(rich, i, Decimal(60_000)))
+        s.on_bar(bar(cheap, i, Decimal("0.5")))
+
+    # Пробой только у дешёвого инструмента — он и должен сработать.
+    quiet = s.on_bar(bar(rich, 10, Decimal(60_000)))
+    breakout = s.on_bar(bar(cheap, 10, Decimal("0.7")))
+
+    assert quiet == [], "у ряда в плато сигнала быть не должно"
+    assert len(breakout) == 1 and breakout[0].instrument == cheap
+    assert s.markets[rich].side is None
+    assert s.markets[cheap].side == "long"
+
+
+def test_total_units_are_capped_across_markets():
+    """Потолок units в одну сторону — общий на портфель, как в оригинальных правилах."""
+    s = _strategy(max_units_total=1)
+
+    def bar(instrument: str, i: int, price: Decimal) -> Candle:
+        return Candle(
+            instrument=instrument,
+            tf="1d",
+            ts=T0 + DAY * i,
+            open=price,
+            high=price,
+            low=price,
+            close=price,
+            volume=Decimal(100),
+        )
+
+    for i in range(10):
+        s.on_bar(bar("A/USDT:USDT", i, Decimal(100)))
+        s.on_bar(bar("B/USDT:USDT", i, Decimal(100)))
+
+    first = s.on_bar(bar("A/USDT:USDT", 10, Decimal(140)))
+    second = s.on_bar(bar("B/USDT:USDT", 10, Decimal(140)))
+
+    assert len(first) == 1, "первый пробой проходит"
+    assert second == [], "второй упирается в общий потолок units"
