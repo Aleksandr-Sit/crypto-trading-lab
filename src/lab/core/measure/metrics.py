@@ -12,6 +12,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
+from itertools import groupby
 from typing import Literal
 
 import numpy as np
@@ -144,24 +145,35 @@ def _bootstrap_ci(
     return _d(lo), _d(hi)
 
 
+def _closed_at(trade: ClosedTrade) -> datetime:
+    return trade.closed_at
+
+
 def _drawdown(trades: Sequence[ClosedTrade], capital: Decimal) -> tuple[Decimal, Decimal]:
-    """Макс. просадка (% от капитала) и её длительность в днях по кривой закрытых сделок."""
+    """Макс. просадка (% от капитала) и её длительность в днях по кривой закрытых сделок.
+
+    Сделки, закрытые ОДНИМ моментом, дают один шаг кривой. Иначе у хеджированной связки
+    убыточная нога успевает создать провал до того, как в кривую попадёт прибыльная:
+    у кэш-энд-керри так набегала «просадка» 20% при итоге связки в пару сотен долларов
+    — и на ней же срабатывал стоп, обрывая замер на середине.
+    """
     equity = capital
     peak = capital
     peak_at: datetime | None = None
     max_dd = Decimal(0)
     max_dur = timedelta(0)
-    for t in sorted(trades, key=lambda x: x.closed_at):
-        equity += t.pnl_net
+    for closed_at, batch in groupby(sorted(trades, key=lambda x: x.closed_at), key=_closed_at):
+        rows = list(batch)
+        equity += sum((t.pnl_net for t in rows), Decimal(0))
         if equity >= peak:
             if peak_at is not None:
-                max_dur = max(max_dur, t.closed_at - peak_at)
-            peak, peak_at = equity, t.closed_at
+                max_dur = max(max_dur, closed_at - peak_at)
+            peak, peak_at = equity, closed_at
         else:
             if peak_at is None:
-                peak_at = t.opened_at
+                peak_at = min(t.opened_at for t in rows)
             max_dd = max(max_dd, (peak - equity) / peak * 100)
-            max_dur = max(max_dur, t.closed_at - peak_at)
+            max_dur = max(max_dur, closed_at - peak_at)
     return max_dd, _d(max_dur.total_seconds() / 86400)
 
 

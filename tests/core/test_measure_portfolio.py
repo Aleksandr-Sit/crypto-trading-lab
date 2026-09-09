@@ -11,10 +11,10 @@ from decimal import Decimal
 
 import pytest
 
-from lab.contracts import Branch, Candle, Signal, StopSpec, StrategyManifest
+from lab.contracts import Branch, Candle, Costs, Signal, StopSpec, StrategyManifest
 from lab.core.measure import PaperEngine
 from lab.core.measure.simulator import simulate
-from lab.core.measure.types import IncompleteData
+from lab.core.measure.types import ClosedTrade, IncompleteData
 
 HOUR = timedelta(hours=1)
 T0 = datetime(2026, 1, 1, tzinfo=UTC)
@@ -143,6 +143,38 @@ def test_gap_is_checked_per_instrument():
 
     with pytest.raises(IncompleteData, match="разрыв данных"):
         simulate(TwoLegs(), bars, engines=_engines())
+
+
+def test_hedged_legs_do_not_create_a_phantom_drawdown():
+    """Ноги, закрытые одним моментом, — один шаг кривой, а не два.
+
+    У хеджа одна нога всегда в минусе, другая в плюсе. Считая их по очереди, кривая
+    проваливается на величину убыточной ноги и тут же восстанавливается — просадки такой
+    не было ни секунды. У кэш-энд-керри так набегало 20% при итоге связки в пару сотен
+    долларов, и на этой выдуманной просадке срабатывал стоп, обрывая замер на середине.
+    """
+    from lab.core.measure.metrics import _drawdown
+
+    opened = T0
+    closed = T0 + HOUR
+    legs = [
+        ClosedTrade(
+            instrument=name,
+            side=side,
+            qty=Decimal(1),
+            entry_price=Decimal(100),
+            exit_price=Decimal(100),
+            opened_at=opened,
+            closed_at=closed,
+            pnl_gross=pnl,
+            costs=Costs(),
+        )
+        for name, side, pnl in ((A, "long", Decimal(-1400)), (B, "short", Decimal(1500)))
+    ]
+
+    max_dd, _ = _drawdown(legs, Decimal(10_000))
+
+    assert max_dd == 0, "связка закрылась в плюс — просадки нет"
 
 
 def test_allowed_gap_is_counted_not_hidden():

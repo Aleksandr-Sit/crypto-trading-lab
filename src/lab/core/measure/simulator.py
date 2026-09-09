@@ -370,10 +370,15 @@ class _StopTracker:
         """
         if not self.active:
             return ""
-        for trade in closed:
-            self._equity += trade.pnl_net
+        if closed:
+            # Пик и дно обновляются ОДИН раз на пачку: все эти сделки закрылись на одном
+            # баре, то есть одновременно. Считая по одной, мы ловили провал между ногами
+            # хеджа — у кэш-энд-керри так набегала «просадка» 20% при итоге связки в пару
+            # сотен долларов, и на ней срабатывал стоп, обрывая замер на середине.
+            self._equity += sum((t.pnl_net for t in closed), Decimal(0))
             self._peak = max(self._peak, self._equity)
             self._worst = min(self._worst, self._equity - self._peak)
+        for trade in closed:
             if trade.closed_at is not None:
                 self._day.append((trade.closed_at, trade.pnl_net))
                 self._day_sum += trade.pnl_net
