@@ -361,3 +361,55 @@ def test_archive_month_missing_first_days_is_refetched_too():
 
     assert used_rest, "недостающее начало месяца обязано добираться из REST"
     assert len(rows) == 30
+
+
+def test_funding_archive_reaches_2020_where_rest_does_not():
+    """У REST конечная глубина ставок — архив её снимает.
+
+    По всем трём перпам `fetch_funding_rate_history` отдавал ровно 3000 ставок, то есть
+    примерно с декабря 2023. Сентябрь 2020 и альтсезон 2021 — ключевые эпизоды для любой
+    гипотезы о фазах рынка — в это окно не попадают вовсе.
+    """
+    from lab.data.backfill_cex import FundingArchive
+
+    seen: list[str] = []
+
+    def fetch(url: str) -> bytes | None:
+        seen.append(url)
+        if "2020-09" not in url:
+            return None  # месяца нет в архиве — это не ошибка
+        rows = [
+            "calc_time,funding_interval_hours,last_funding_rate",
+            "1598918400000,8,0.00010000",
+            "1598947200000,8,0.00022961",
+        ]
+        return _zip_csv_text("BTCUSDT-fundingRate-2020-09.csv", "\n".join(rows))
+
+    archive = FundingArchive(fetch=fetch)
+
+    got = archive.history(
+        PERP, datetime(2020, 9, 1, tzinfo=UTC), datetime(2020, 10, 1, tzinfo=UTC)
+    )
+
+    assert [str(rate) for _, rate in got] == ["0.00010000", "0.00022961"]
+    assert got[0][0] == datetime(2020, 9, 1, tzinfo=UTC)
+    assert seen == [
+        "https://data.binance.vision/data/futures/um/monthly/fundingRate/BTCUSDT/"
+        "BTCUSDT-fundingRate-2020-09.zip"
+    ]
+
+
+def test_funding_archive_skips_months_that_do_not_exist():
+    """Инструмента тогда не было — пустой месяц, а не падение."""
+    from lab.data.backfill_cex import FundingArchive
+
+    archive = FundingArchive(fetch=lambda _url: None)
+
+    assert archive.history(PERP, T0, T0 + timedelta(days=60)) == []
+
+
+def _zip_csv_text(name: str, text: str) -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr(name, text)
+    return buf.getvalue()

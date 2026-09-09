@@ -247,6 +247,60 @@ def backfill_venue(
 __all__ = ["ARCHIVE_FEED_ID", "BinanceArchive", "SymbolResult", "backfill_venue"]
 
 
+class FundingArchive:
+    """Месячные архивы ставок фандинга Binance (`futures/um/monthly/fundingRate`).
+
+    Зачем отдельно от REST: у `fetch_funding_rate_history` конечная глубина — по всем
+    трём инструментам мы получали ровно 3000 ставок, то есть примерно с декабря 2023.
+    Ключевые эпизоды для проверки гипотез о фазах рынка (сентябрь 2020, альтсезон 2021)
+    в это окно не попадают вовсе. В архиве ставки лежат с 2020 года.
+
+    Формат файла (проверен на BTCUSDT-fundingRate-2020-09.csv):
+    заголовок `calc_time,funding_interval_hours,last_funding_rate`, время в миллисекундах.
+    """
+
+    def __init__(self, fetch: Fetch | None = None, *, quota: FeedsRegistry | None = None) -> None:
+        self.fetch = fetch or _http_fetch
+        self.quota = quota
+
+    @staticmethod
+    def url(instrument: str, month: datetime) -> str:
+        base, rest = instrument.split("/")
+        quote = rest.partition(":")[0]
+        symbol = f"{base}{quote}".upper()
+        return (
+            f"{ARCHIVE_BASE}/futures/um/monthly/fundingRate/{symbol}/"
+            f"{symbol}-fundingRate-{month:%Y-%m}.zip"
+        )
+
+    def month(self, instrument: str, month: datetime) -> list[tuple[datetime, Decimal]]:
+        """Ставки одного месяца. Месяца нет в архиве — пусто, это не ошибка."""
+        if self.quota is not None:
+            self.quota.use(ARCHIVE_FEED_ID, 1)
+        data = self.fetch(self.url(instrument, month))
+        if data is None:
+            return []
+        out: list[tuple[datetime, Decimal]] = []
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            name = next(n for n in z.namelist() if n.endswith(".csv"))
+            for line in z.read(name).decode("utf-8").splitlines():
+                parts = line.split(",")
+                if len(parts) < 3 or not parts[0].isdigit():
+                    continue  # заголовок или мусор
+                out.append((_to_dt(parts[0]), Decimal(parts[2])))
+        return out
+
+    def history(
+        self, instrument: str, from_ts: datetime, to_ts: datetime
+    ) -> list[tuple[datetime, Decimal]]:
+        out: list[tuple[datetime, Decimal]] = []
+        cursor = _month_start(from_ts)
+        while cursor < to_ts:
+            out.extend(r for r in self.month(instrument, cursor) if from_ts <= r[0] < to_ts)
+            cursor = _next_month(cursor)
+        return out
+
+
 def backfill_funding(
     store: Any,
     venue: str,
@@ -258,19 +312,32 @@ def backfill_funding(
     quota: FeedsRegistry | None = None,
     now: datetime | None = None,
     progress: Callable[[str, int], None] | None = None,
+    archive: FundingArchive | None = None,
 ) -> list[tuple[str, int, str | None]]:
     """История ставок фандинга по инструментам за последние `days` дней.
 
     Отдельно от свечей: у фандинга своя сетка (раз в 8 часов) и одно число вместо OHLCV.
     Обрыв на одном символе не роняет остальные — результат несёт причину, как у свечей.
+
+    Глубже полугода ставки берутся из АРХИВА: у REST конечная глубина (около 3000 ставок,
+    то есть с конца 2023 года), и на ней не проверить ни одной гипотезы про 2020–2021.
     """
     feed = feed or make_feed(venue, transport, quota=quota)
     now = (now or _utcnow()).astimezone(UTC)
     from_ts = now - timedelta(days=days)
+    use_archive = venue == "binance" and days > 180
+    if use_archive and archive is None:
+        archive = FundingArchive(quota=quota)
     out: list[tuple[str, int, str | None]] = []
     for symbol in symbols:
         try:
-            rows = feed.funding_history(symbol, from_ts, now)
+            if use_archive and archive is not None:
+                rows = archive.history(symbol, from_ts, now)
+                # Хвост текущего месяца в архиве появляется с задержкой — добираем по REST.
+                tail = rows[-1][0] if rows else from_ts
+                rows = rows + [r for r in feed.funding_history(symbol, tail, now) if r[0] > tail]
+            else:
+                rows = feed.funding_history(symbol, from_ts, now)
         except Exception as err:  # noqa: BLE001 — один символ не роняет прогон
             log.warning("Фандинг %s %s: %s", venue, symbol, err)
             out.append((symbol, 0, f"{type(err).__name__}: {err}"))
