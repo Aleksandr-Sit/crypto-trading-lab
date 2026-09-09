@@ -443,6 +443,15 @@ def run(
     manifest: StrategyManifest = inst.manifest
     tf = manifest.timeframe or "1h"
     instruments = list(manifest.instruments)
+    # Плечо ноги с залогом. Нет в параметрах — единица: позиция обеспечена целиком, и это
+    # самое мягкое из честных допущений. Ноль или мусор трактуем так же, а не падаем:
+    # замер не место для валидации карточек.
+    try:
+        leverage = Decimal(str(manifest.params.get("leverage", 1) or 1))
+    except (ArithmeticError, ValueError):
+        leverage = Decimal(1)
+    if leverage <= 0:
+        leverage = Decimal(1)
 
     # -- данные: готовые свечи или источник; сбой → incomplete -----------------------
     bench_rows = benchmark if isinstance(benchmark, Sequence) else None
@@ -469,6 +478,10 @@ def run(
                     # Двоеточие в имени ccxt — признак перпа: у связки «спот + перп» обе
                     # ноги в перп-ветке, но фандинг платит только перповая.
                     is_perp=":" in name if manifest.branch in PERP_BRANCHES else None,
+                    # Плечо — только у ног с залогом (тем же двоеточием отличаются перпы
+                    # и срочные контракты от спота). У спот-ноги залога нет, и ликвидировать
+                    # её нельзя: это ключевая асимметрия хеджа «спот + шорт фьючерса».
+                    leverage=leverage if ":" in name else None,
                 )
                 for name in instruments
             }
@@ -541,6 +554,18 @@ def run(
             return cached
         if result.reasons:
             extra_metrics = {**(extra_metrics or {}), "reasons": dict(result.reasons)}
+        if result.liquidations:
+            # Ликвидация — не «одна из метрик», а ответ на вопрос, дожил ли счёт. Без неё
+            # доход правил читался бы как доход стратегии, хотя биржа закрыла бы ногу.
+            first_at, first_what = result.liquidations[0][1], result.liquidations[0][0]
+            extra_metrics = {
+                **(extra_metrics or {}),
+                "liquidations": {
+                    "count": len(result.liquidations),
+                    "first_at": first_at.isoformat(),
+                    "first_instrument": first_what,
+                },
+            }
         if result.gaps:
             # Сколько баров недосчитались и по скольким рядам: замер прошёл, но данные
             # были дырявые, и снимок обязан это признавать.

@@ -49,6 +49,7 @@ _OUTCOME_KEYS = (
     "stability",
     "reasons",
     "data_gaps",
+    "liquidations",
 )
 
 

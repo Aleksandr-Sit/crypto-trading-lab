@@ -27,6 +27,7 @@ from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.types import ClosedTrade, IncompleteData, LookaheadError
 
 PERP_BRANCHES = {Branch.CEX_PERP, Branch.DEX_PERP}
+ZERO_D = Decimal(0)
 
 
 def check_continuity(candles: Sequence[Candle], tf: timedelta) -> None:
@@ -79,6 +80,12 @@ class PaperEngine:
     # Явное значение нужно связкам «спот + перп»: обе ноги в перп-ветке, но платит одна,
     # и угадывать это по имени движок не должен — пусть говорит тот, кто его создаёт.
     is_perp: bool | None = None
+    # Плечо этой ноги. None — залога нет вовсе (спот), ликвидация невозможна.
+    # Залог считается ПО НОГЕ, а не по стратегии: на бирже спот и фьючерс — разные счета,
+    # и шорт фьючерса ликвидируют, даже когда спот-нога того же хеджа в прибыли.
+    leverage: Decimal | None = None
+    # Поддерживающая маржа, % от номинала (Binance для BTC на малом плече — около 0.4–0.5%).
+    maintenance_margin_pct: Decimal = Decimal("0.5")
 
     def __post_init__(self) -> None:
         self.step = parse_tf(self.tf)
@@ -247,6 +254,56 @@ class PaperEngine:
                 )
             )
 
+    # -- маржа ------------------------------------------------------------------------
+
+    def margin_breach(self, bar: Candle) -> Decimal | None:
+        """Цена, на которой позиция была бы ликвидирована внутри бара, или None.
+
+        Считается по ХУДШЕЙ цене бара, а не по закрытию: биржа смотрит на цену непрерывно,
+        и шорт, переживший час «в среднем», мог не пережить его максимум. Модель простая
+        и намеренно грубая — изолированная маржа по ноге, без учёта страхового фонда,
+        частичных ликвидаций и ступеней плеча: она отвечает на вопрос «дожил ли счёт»,
+        а не «сколько именно списала бы биржа».
+        """
+        if self.leverage is None or self.leverage <= 0 or not self.lots:
+            return None
+        worst = bar.high if self.position < 0 else bar.low
+        margin = ZERO_D
+        unrealized = ZERO_D
+        for lot in self.lots:
+            margin += lot.qty * lot.ref_price / self.leverage
+            direction = 1 if lot.side == "long" else -1
+            unrealized += (worst - lot.ref_price) * lot.qty * direction
+        equity = margin + unrealized
+        keep = abs(self.position) * worst * self.maintenance_margin_pct / 100
+        return worst if equity <= keep else None
+
+    def liquidate(self, price: Decimal, ts: datetime) -> Decimal:
+        """Принудительно закрыть всё по цене ликвидации. Возврат — закрытый объём.
+
+        Издержки считаются как у обычного рыночного закрытия. В реальности ликвидация
+        дороже (штраф биржи и проскальзывание в неликвидный момент), так что оценка
+        оптимистична — но она и нужна для ответа «дожил или нет», а не для копейки.
+        """
+        position = self.position
+        if position == 0:
+            return ZERO_D
+        side = "buy" if position < 0 else "sell"
+        qty = abs(position)
+        intent = OrderIntent(
+            strategy_id="liquidation",
+            venue=self.venue,
+            instrument=self.instrument,
+            side=side,  # type: ignore[arg-type]
+            qty=qty,
+            price=price,
+            order_type="market",
+            mode="paper",
+        )
+        costs = self.costs.estimate(self.venue, intent, depth=self.depth)
+        self._apply(side, qty, price, ts, costs)
+        return qty
+
     def funding_events(self, bar: Candle) -> list[tuple[datetime, Decimal]]:
         """Выплаты фандинга внутри бара: момент и ставка. Для спота — пусто.
 
@@ -336,6 +393,8 @@ class SimResult:
     # Пропущенные бары по инструментам, когда разрывы разрешены (портфель): сколько шагов
     # ряда не хватило. Пусто — данные сплошные.
     gaps: dict[str, int] = field(default_factory=dict)
+    # Ликвидации: инструмент и момент. Пусто — счёт дожил до конца окна.
+    liquidations: list[tuple[str, datetime]] = field(default_factory=list)
 
 
 class _StopTracker:
@@ -440,6 +499,7 @@ def simulate(
     blocked = 0
     tracker = _StopTracker(stop, capital)
     batch: list[ClosedTrade] = []
+    liquidations: list[tuple[str, datetime]] = []
     batch_ts: datetime | None = None
     consumed = dict.fromkeys(book, 0)
 
@@ -484,6 +544,17 @@ def simulate(
         prev[bar.instrument] = bar
         seen += 1
         eng.on_bar(bar)
+
+        # Ликвидация: биржа закрывает ногу раньше, чем стратегия успевает что-то решить.
+        # Считается ДО стопа и до решения стратегии — так это и происходит в бою.
+        hit = eng.margin_breach(bar)
+        if hit is not None:
+            eng.liquidate(hit, bar.ts)
+            liquidations.append((bar.instrument, bar.ts))
+            if stopped_at is None:
+                # Хедж после ликвидации одной ноги сломан, и продолжать по правилам нельзя:
+                # ведём себя как при пробое стопа — закрытия проходят, открытия нет.
+                stopped_at, stop_rule = bar.ts, "ликвидация"
 
         if stopped_at is None:
             # Стоп смотрит на сделки, закрытые ОДНИМ МОМЕНТОМ, а не одним баром: ноги
@@ -557,5 +628,6 @@ def simulate(
         blocked_signals=blocked,
         positions={name: e.position for name, e in book.items()},
         reasons=reasons,
+        liquidations=liquidations,
         gaps=gaps,
     )

@@ -283,6 +283,15 @@ def format_measurement(m, *, window=None) -> str:
         # Почему стратегия торговала: без этого объяснить её поведение нечем.
         top = sorted(reasons.items(), key=lambda item: -item[1])
         lines.append("  причины сделок: " + ", ".join(f"{name} {n}" for name, n in top))
+    liq = getattr(mt, "liquidations", None)
+    if liq:
+        # Самая важная строка снимка, если она есть: биржа закрыла ногу принудительно,
+        # и всё, что после неё, стратегия бы уже не сделала.
+        when = str(liq.get("first_at", ""))[:10]
+        lines.append(
+            f"  ЛИКВИДАЦИЯ: {liq.get('count', 0)} шт, первая {when} "
+            f"({liq.get('first_instrument', '?')})"
+        )
     gaps = getattr(mt, "data_gaps", None)
     if gaps:
         # Замер прошёл на неполных данных — читать его цифры нужно с этой поправкой.
