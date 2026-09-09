@@ -19,14 +19,14 @@ def test_year_of_cash_earns_the_annual_rate():
 
 
 def test_interest_compounds():
-    """Купон реинвестируется: 4% за 5.5 лет — это 24.2%, а не 22.0%.
+    """Купон реинвестируется: 4% за 5.5 лет — это 24.1%, а не 22.0%.
 
     Простой процент занижал бы планку в пользу стратегии — та же ошибка, что и ноль,
     только меньше: у кэш-энд-керри она превращала +0.41 пункта преимущества в +0.73.
     """
     got = risk_free_pct((T0, T0 + timedelta(days=365 * 5.5)), Decimal(4))
 
-    assert 24.1 < float(got) < 24.3
+    assert 24.0 < float(got) < 24.2
 
 
 def test_empty_window_earns_nothing():
