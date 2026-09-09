@@ -85,9 +85,17 @@ class BinanceArchive:
 
     @staticmethod
     def url(instrument: str, tf: str, month: datetime) -> str:
-        base, quote = instrument.split("/")
-        quote = quote.split(":")[0]
+        base, rest = instrument.split("/")
+        quote, _, settle = rest.partition(":")
         symbol = f"{base}{quote}".upper()
+        # У СРОЧНОГО контракта в имени есть дата расчёта: `BTC/USDT:USDT-260925` — это
+        # BTCUSDT_260925, отдельный ряд со своей ценой. Без этой строки хвост после
+        # двоеточия отбрасывался целиком, и вместо квартального фьючерса скачивался
+        # БЕССРОЧНЫЙ — молча и с правдоподобными цифрами, а базис между ними и есть
+        # весь смысл кэш-энд-керри.
+        _, dash, expiry = settle.partition("-")
+        if dash and expiry:
+            symbol = f"{symbol}_{expiry}"
         kind = "futures/um" if ":" in instrument else "spot"
         return f"{ARCHIVE_BASE}/{kind}/monthly/klines/{symbol}/{tf}/{symbol}-{tf}-{month:%Y-%m}.zip"
 

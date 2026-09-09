@@ -96,6 +96,25 @@ def _zip_csv(rows: list[list], header: bool) -> bytes:
     return out.getvalue()
 
 
+def test_archive_url_keeps_the_expiry_of_a_dated_contract():
+    """У квартального контракта своя цена — и свой ряд в архиве.
+
+    `BTC/USDT:USDT-260925` — это BTCUSDT_260925. Пока хвост после двоеточия отбрасывался
+    целиком, вместо квартального фьючерса скачивался БЕССРОЧНЫЙ: цифры правдоподобные,
+    ряд чужой, а базис между этими двумя рядами и есть весь смысл кэш-энд-керри.
+    """
+    month = datetime(2026, 3, 1, tzinfo=UTC)
+
+    quarterly = BinanceArchive.url("BTC/USDT:USDT-260925", "1h", month)
+    perp = BinanceArchive.url(PERP, "1h", month)
+    spot = BinanceArchive.url("BTC/USDT", "1h", month)
+
+    assert quarterly.endswith("futures/um/monthly/klines/BTCUSDT_260925/1h/"
+                              "BTCUSDT_260925-1h-2026-03.zip")
+    assert perp.endswith("futures/um/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-03.zip")
+    assert spot.endswith("spot/monthly/klines/BTCUSDT/1h/BTCUSDT-1h-2026-03.zip")
+
+
 def test_daily_backfill_pulls_by_pages_not_by_months(tmp_path):
     """Шаг качания — в СВЕЧАХ, а не в сутках, иначе дневные ряды качаются по 31 строке.
 
