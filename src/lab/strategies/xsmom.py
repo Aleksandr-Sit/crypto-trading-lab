@@ -88,7 +88,13 @@ class CrossSectionalMomentumStrategy(Strategy):
             # часть пар этого дня ещё не пришла бы, и вселенная получилась бы случайной.
             closed, self.day = self.day, day
             self.since_rebalance += 1
-            if self.since_rebalance >= int(self.param("rebalance_days", 7)):
+            # Ширина проверяется КАЖДЫЙ день, а не раз в неделю: в сентябре 2020 она
+            # рухнула с 80% до 22% за двое суток, и ждать ребаланса значило бы отдать
+            # рынку ещё неделю. Выход из фазы — это стоп режима, а не ротация портфеля.
+            if self.held and not self._breadth_allows(closed):
+                out += self._exit_all(bar, "ширина рынка")
+                self.since_rebalance = 0
+            elif self.since_rebalance >= int(self.param("rebalance_days", 7)):
                 self.since_rebalance = 0
                 out += self._rebalance(bar, closed)
         asset = self._asset(bar.instrument)
@@ -139,6 +145,40 @@ class CrossSectionalMomentumStrategy(Strategy):
             return None
         return recent / older - 1
 
+    def breadth_pct(self, day: date) -> Decimal | None:
+        """Доля пар вселенной выше своей SMA — «ширина рынка», %.
+
+        Зачем отдельно от фильтра по BTC: тот смотрит на ОДИН ряд и опаздывает на месяцы.
+        В сентябре 2020 биткоин был выше своей средней (10736 против 10421), а доля альтов
+        выше своей рухнула с 80% до 22% за два дня — и именно тогда моментум отдал всё,
+        что набрал за лето. Считается по тем же данным, что уже есть у стратегии.
+        """
+        days = int(self.param("breadth_sma_days", 50))
+        alive = fresh = 0
+        for name, asset in self.assets.items():
+            if name == str(self.param("btc_instrument", "BTC/USDT")):
+                continue  # ширину меряем по АЛЬТАМ: биткоин тут не участник, а ориентир
+            if len(asset.closes) < days or not asset.closes:
+                continue
+            last_day, last_close = asset.closes[-1]
+            if (day - last_day) > timedelta(days=3):
+                continue  # пара не торгуется — в знаменателе ей не место
+            window = [c for _, c in list(asset.closes)[-days:]]
+            alive += 1
+            if last_close > sum(window, ZERO) / len(window):
+                fresh += 1
+        if alive < int(self.param("breadth_min_pairs", 20)):
+            return None  # пар слишком мало, доля ничего не значит
+        return Decimal(fresh) * 100 / alive
+
+    def _breadth_allows(self, day: date) -> bool:
+        """Ширина ниже порога — рынок альтов развернулся, моментуму здесь делать нечего."""
+        floor = D(str(self.param("breadth_min_pct", 0)))
+        if floor <= 0:
+            return True  # фильтр выключен — поведение прежнее
+        width = self.breadth_pct(day)
+        return width is None or width >= floor
+
     def _btc_allows(self, day: date) -> bool:
         """Фильтр режима: на медвежьем рынке моментум альтов не работает, сидим в кэше."""
         days = int(self.param("btc_filter_sma_days", 0))
@@ -150,10 +190,19 @@ class CrossSectionalMomentumStrategy(Strategy):
         window = [c for _, c in list(btc.closes)[-days:]]
         return btc.closes[-1][1] > sum(window, ZERO) / len(window)
 
+    def _exit_all(self, bar: Candle, reason: str) -> list[Signal]:
+        """Выйти из всего разом: фаза кончилась, держать нечего."""
+        out: list[Signal] = []
+        for name in sorted(self.held):
+            asset = self.assets[name]
+            if asset.qty > 0:
+                out.append(self._sell(bar, name, asset, reason))
+        return out
+
     def _rebalance(self, bar: Candle, day: date) -> list[Signal]:
         top_n = int(self.param("top_n", 5))
         target: list[str] = []
-        if self._btc_allows(day):
+        if self._btc_allows(day) and self._breadth_allows(day):
             ranked = []
             for _, name in self._eligible(day):
                 mom = self._momentum(self.assets[name], day)

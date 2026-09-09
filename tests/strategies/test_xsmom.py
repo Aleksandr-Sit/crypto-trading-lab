@@ -125,6 +125,55 @@ def test_delisted_pair_leaves_the_universe():
     assert "BBB/USDT" not in s.held
 
 
+def test_breadth_is_measured_on_alts_not_on_btc():
+    """Ширина рынка — про АЛЬТЫ: биткоин здесь ориентир, а не участник вселенной."""
+    s = _strategy(breadth_sma_days=5, breadth_min_pairs=2)
+    last = None
+    for i in range(20):
+        prices = {BTC: Decimal(50_000) + Decimal(i) * 1000}
+        prices.update({a: Decimal(100) - Decimal(i) for a in ALTS})  # альты падают
+        _feed_day(s, i, prices)
+        last = (T0 + DAY * i).date()
+
+    assert s.breadth_pct(last) == 0, "все альты ниже средней; растущий BTC на это не влияет"
+
+
+def test_breadth_collapse_closes_everything_without_waiting_for_rebalance():
+    """Фаза кончилась — выходим сразу, а не через неделю.
+
+    В сентябре 2020 доля альтов выше своей средней упала с 80% до 22% за двое суток,
+    а стоп стратегии сработал только через три недели. Ждать ребаланса означало бы отдать
+    рынку эти три недели — именно в них моментум потерял всё, что набрал за лето.
+    """
+    s = _strategy(
+        rebalance_days=7,
+        lookback_days=5,
+        top_n=1,
+        breadth_min_pct=50,
+        breadth_sma_days=5,
+        breadth_min_pairs=2,
+    )
+    for i in range(40):  # рынок широкий и растущий — позиция открывается
+        _feed_day(s, i, {BTC: Decimal(50_000), **{a: Decimal(100) + Decimal(i) for a in ALTS}})
+    assert s.held, "на растущем рынке позиция должна быть"
+
+    signals = []
+    for i in range(40, 44):  # обвал альтов: ширина проваливается
+        prices = {BTC: Decimal(50_000), **{a: Decimal(140) - Decimal(i - 39) * 20 for a in ALTS}}
+        signals += _feed_day(s, i, prices)
+
+    assert s.held == set(), "при узком рынке позиций быть не должно"
+    assert any(sig.meta.get("reason") == "ширина рынка" for sig in signals)
+
+
+def test_breadth_filter_is_off_by_default():
+    """Выключенный фильтр не меняет поведение — прежние замеры остаются сравнимыми."""
+    s = _strategy()
+
+    assert s.param("breadth_min_pct", 0) == 0
+    assert s._breadth_allows(T0.date()) is True
+
+
 def test_stop_closes_a_losing_position_before_the_rebalance():
     s = _strategy(rebalance_days=7, lookback_days=5, top_n=1, trade_stop_pct=15)
     # 36 дней: раньше 30-го пара не входит во вселенную — не набралась история оборота.
