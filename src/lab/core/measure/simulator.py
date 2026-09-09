@@ -299,6 +299,11 @@ class PaperEngine:
             price=price,
             order_type="market",
             mode="paper",
+            # Ликвидацию инициирует БИРЖА, сигнала стратегии за ней нет — но поля
+            # обязательные, и пустыми их оставлять нельзя: пусть в журнале будет видно,
+            # что это принудительное закрытие, а не решение правил.
+            signal_id="liquidation",
+            client_order_id=f"liq-{next(self._ids)}",
         )
         costs = self.costs.estimate(self.venue, intent, depth=self.depth)
         self._apply(side, qty, price, ts, costs)
