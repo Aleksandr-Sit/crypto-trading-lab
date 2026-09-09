@@ -452,6 +452,10 @@ def run(
         leverage = Decimal(1)
     if leverage <= 0:
         leverage = Decimal(1)
+    # Режим маржи. По умолчанию ИЗОЛИРОВАННАЯ — так на бирже и стоит, пока её не
+    # переключишь, и она строже: спот-нога хеджа не считается обеспечением фьючерсной.
+    # `cross` — общий счёт: прибыль одной ноги держит убыток другой.
+    cross_margin = str(manifest.params.get("margin_mode", "isolated")).lower() == "cross"
 
     # -- данные: готовые свечи или источник; сбой → incomplete -----------------------
     bench_rows = benchmark if isinstance(benchmark, Sequence) else None
@@ -547,6 +551,7 @@ def run(
             # альтом — обычное дело, а вселенная кросс-моментума состоит из сотен пар,
             # и хоть одна дыра там есть всегда. Пропуски считаются и уезжают в снимок.
             allow_gaps=len(instruments) > 1,
+            cross_margin=cross_margin,
         )
         dh = hasher.digest(bench_rows, funding_history)
         cached = _lookup(session, base, dh)

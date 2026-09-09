@@ -256,27 +256,45 @@ class PaperEngine:
 
     # -- маржа ------------------------------------------------------------------------
 
-    def margin_breach(self, bar: Candle) -> Decimal | None:
-        """Цена, на которой позиция была бы ликвидирована внутри бара, или None.
+    def worst_price(self, bar: Candle) -> Decimal:
+        """Цена бара, худшая для текущей позиции: шорту максимум, лонгу минимум.
 
-        Считается по ХУДШЕЙ цене бара, а не по закрытию: биржа смотрит на цену непрерывно,
-        и шорт, переживший час «в среднем», мог не пережить его максимум. Модель простая
-        и намеренно грубая — изолированная маржа по ноге, без учёта страхового фонда,
+        Биржа смотрит на цену непрерывно, и позиция, пережившая час «в среднем», могла
+        не пережить его экстремум.
+        """
+        return bar.high if self.position < 0 else bar.low
+
+    def margin_state(self, price: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+        """Залог, нереализованный итог и требование поддержания при данной цене.
+
+        Разложено на три части, потому что складывать их приходится по-разному: при
+        изолированной марже каждая нога отвечает за себя, при кросс-марже все ноги
+        счёта складываются в одну сумму — и тогда прибыль спота держит убыток фьючерса.
+        """
+        margin = ZERO_D
+        unrealized = ZERO_D
+        for lot in self.lots:
+            direction = 1 if lot.side == "long" else -1
+            unrealized += (price - lot.ref_price) * lot.qty * direction
+            if self.leverage is not None and self.leverage > 0:
+                margin += lot.qty * lot.ref_price / self.leverage
+        keep = ZERO_D
+        if self.leverage is not None and self.leverage > 0:
+            keep = abs(self.position) * price * self.maintenance_margin_pct / 100
+        return margin, unrealized, keep
+
+    def margin_breach(self, bar: Candle) -> Decimal | None:
+        """Цена, на которой ИЗОЛИРОВАННАЯ позиция была бы ликвидирована внутри бара.
+
+        Модель простая и намеренно грубая — маржа по ноге, без страхового фонда,
         частичных ликвидаций и ступеней плеча: она отвечает на вопрос «дожил ли счёт»,
         а не «сколько именно списала бы биржа».
         """
         if self.leverage is None or self.leverage <= 0 or not self.lots:
             return None
-        worst = bar.high if self.position < 0 else bar.low
-        margin = ZERO_D
-        unrealized = ZERO_D
-        for lot in self.lots:
-            margin += lot.qty * lot.ref_price / self.leverage
-            direction = 1 if lot.side == "long" else -1
-            unrealized += (worst - lot.ref_price) * lot.qty * direction
-        equity = margin + unrealized
-        keep = abs(self.position) * worst * self.maintenance_margin_pct / 100
-        return worst if equity <= keep else None
+        worst = self.worst_price(bar)
+        margin, unrealized, keep = self.margin_state(worst)
+        return worst if margin + unrealized <= keep else None
 
     def liquidate(self, price: Decimal, ts: datetime) -> Decimal:
         """Принудительно закрыть всё по цене ликвидации. Возврат — закрытый объём.
@@ -402,6 +420,48 @@ class SimResult:
     liquidations: list[tuple[str, datetime]] = field(default_factory=list)
 
 
+def _isolated_breach(bar: Candle, eng: PaperEngine) -> list[tuple[str, Decimal]]:
+    """Изолированная маржа: нога отвечает за себя, и только за себя."""
+    hit = eng.margin_breach(bar)
+    return [(bar.instrument, hit)] if hit is not None else []
+
+
+def _cross_breach(
+    book: Mapping[str, PaperEngine],
+    bar: Candle,
+    eng: PaperEngine,
+    last_price: Mapping[str, Decimal],
+) -> list[tuple[str, Decimal]]:
+    """Кросс-маржа: залог общий на счёт, и прибыль одной ноги держит убыток другой.
+
+    Для кэш-энд-керри это и есть разница между «стратегия умерла» и «стратегия дожила»:
+    08.05.2021 шорт квартального ETH потерял 103% своего залога, а спот-нога в тот же
+    момент стоила на 114% дороже входа. При изолированной марже биржа не видит спот
+    вовсе — счета разные; при кросс-марже видит, и ликвидации не происходит.
+
+    Цены остальных ног берутся ПОСЛЕДНИЕ известные, а не «этого же часа»: бары приходят
+    по одному, и цены всех инструментов одновременно у нас нет. Для часовых баров
+    расхождение мало, но оно есть, и это допущение, а не точный расчёт.
+    """
+    prices = dict(last_price)
+    prices[bar.instrument] = eng.worst_price(bar)
+    equity = ZERO_D
+    keep = ZERO_D
+    leveraged = False
+    for name, engine in book.items():
+        price = prices.get(name)
+        if price is None or not engine.lots:
+            continue
+        margin, unrealized, need = engine.margin_state(price)
+        equity += margin + unrealized
+        keep += need
+        leveraged = leveraged or need > 0
+    if not leveraged or equity > keep:
+        return []
+    # Счёт кончился: биржа закрывает ВСЁ, что на нём есть, а не одну ногу.
+    return [(name, prices[name]) for name, engine in book.items() if engine.lots and name in prices]
+
+
 class _StopTracker:
     """Следит за стопом стратегии по мере закрытия сделок — теми же формулами, что риск-ядро.
 
@@ -477,6 +537,7 @@ def simulate(
     stop: StopSpec | None = None,
     capital: Decimal = Decimal(10_000),
     allow_gaps: bool = False,
+    cross_margin: bool = False,
 ) -> SimResult:
     """Прогон стратегии по свечам: сначала исполняются ожидающие сигналы по бару,
     потом стратегия видит бар и решает — её сигналы исполнятся не раньше следующего бара.
@@ -505,6 +566,7 @@ def simulate(
     tracker = _StopTracker(stop, capital)
     batch: list[ClosedTrade] = []
     liquidations: list[tuple[str, datetime]] = []
+    last_price: dict[str, Decimal] = {}
     batch_ts: datetime | None = None
     consumed = dict.fromkeys(book, 0)
 
@@ -550,16 +612,21 @@ def simulate(
         seen += 1
         eng.on_bar(bar)
 
-        # Ликвидация: биржа закрывает ногу раньше, чем стратегия успевает что-то решить.
+        # Ликвидация: биржа закрывает позицию раньше, чем стратегия успевает что-то решить.
         # Считается ДО стопа и до решения стратегии — так это и происходит в бою.
-        hit = eng.margin_breach(bar)
-        if hit is not None:
-            eng.liquidate(hit, bar.ts)
-            liquidations.append((bar.instrument, bar.ts))
-            if stopped_at is None:
-                # Хедж после ликвидации одной ноги сломан, и продолжать по правилам нельзя:
-                # ведём себя как при пробое стопа — закрытия проходят, открытия нет.
-                stopped_at, stop_rule = bar.ts, "ликвидация"
+        last_price[bar.instrument] = bar.close
+        killed = (
+            _cross_breach(book, bar, eng, last_price)
+            if cross_margin
+            else _isolated_breach(bar, eng)
+        )
+        for name, price in killed:
+            book[name].liquidate(price, bar.ts)
+            liquidations.append((name, bar.ts))
+        if killed and stopped_at is None:
+            # Хедж после ликвидации сломан, и продолжать по правилам нельзя: ведём себя
+            # как при пробое стопа — закрытия проходят, открытия нет.
+            stopped_at, stop_rule = bar.ts, "ликвидация"
 
         if stopped_at is None:
             # Стоп смотрит на сделки, закрытые ОДНИМ МОМЕНТОМ, а не одним баром: ноги
