@@ -177,6 +177,32 @@ def test_hedged_legs_do_not_create_a_phantom_drawdown():
     assert max_dd == 0, "связка закрылась в плюс — просадки нет"
 
 
+def test_stop_sees_legs_of_one_moment_together():
+    """Стопу ноги связки приходят разными БАРАМИ одного часа — считать их надо вместе.
+
+    Метрика просадки группирует по времени закрытия и провала не видит, а стоп получал
+    сделки по мере обработки баров: сначала убыточную ногу, потом прибыльную. На этом
+    расхождении замер кэш-энд-керри печатал «просадка 0%» и «стоп сработал по просадке»
+    в одном и том же снимке.
+    """
+    strategy = TwoLegs()
+    # Стоп сработал бы на любой ноге по отдельности (порог 1%), но связка в плюсе.
+    strategy.manifest = strategy.manifest.model_copy(
+        update={"stop": StopSpec(max_dd_pct=Decimal(1))}
+    )
+    engines = _engines()
+    bars: list[Candle] = []
+    for i in range(6):
+        bars.append(_bar(A, i, Decimal(100) + Decimal(i) * 10))  # лонг растёт
+        bars.append(_bar(B, i, Decimal(50) + Decimal(i) * 5))  # шорт против нас
+
+    result = simulate(
+        strategy, bars, engines=engines, stop=strategy.manifest.stop, capital=Decimal(10_000)
+    )
+
+    assert result.stopped_at is None, "связка в плюсе — останавливать нечего"
+
+
 def test_allowed_gap_is_counted_not_hidden():
     """На портфеле дыра в одном ряду не роняет замер, но обязана попасть в результат.
 

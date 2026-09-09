@@ -439,6 +439,8 @@ def simulate(
     stop_rule = ""
     blocked = 0
     tracker = _StopTracker(stop, capital)
+    batch: list[ClosedTrade] = []
+    batch_ts: datetime | None = None
     consumed = dict.fromkeys(book, 0)
 
     # Причины считаем по ИСПОЛНЕННЫМ сигналам: намерение и сделка — разные вещи, лимитка
@@ -484,13 +486,21 @@ def simulate(
         eng.on_bar(bar)
 
         if stopped_at is None:
+            # Стоп смотрит на сделки, закрытые ОДНИМ МОМЕНТОМ, а не одним баром: ноги
+            # связки приходят разными барами того же часа, и, отдавая их стопу по одной,
+            # мы показывали ему провал между ногами хеджа. Поэтому пачка копится, пока
+            # время не сдвинулось, и уходит целиком на границе часа (и в конце потока).
             fresh: list[ClosedTrade] = []
             for name, e in book.items():
                 fresh.extend(e.closed[consumed[name] :])
                 consumed[name] = len(e.closed)
-            stop_rule = tracker.breach(fresh, bar.ts)
-            if stop_rule:
-                stopped_at = bar.ts
+            if batch_ts is not None and bar.ts != batch_ts:
+                stop_rule = tracker.breach(batch, batch_ts)
+                batch = []
+                if stop_rule:
+                    stopped_at = batch_ts
+            batch_ts = bar.ts
+            batch.extend(fresh)
 
         # Ставку фандинга из свечей не видно, а фандинг-арбитраж решает именно по ней.
         # Отдаём её СОБЫТИЕМ — тем же контрактом, которым стратегия слушает живые фиды.
@@ -521,6 +531,12 @@ def simulate(
 
     if seen == 0:
         raise IncompleteData("нет свечей в окне")
+    # Последний момент потока: его пачка иначе осталась бы непроверенной, и пробой стопа
+    # на самых последних сделках замер бы не заметил.
+    if stopped_at is None and batch and batch_ts is not None:
+        stop_rule = tracker.breach(batch, batch_ts)
+        if stop_rule:
+            stopped_at = batch_ts
     trades: list[ClosedTrade] = []
     fills: list[Fill] = []
     expired = 0
