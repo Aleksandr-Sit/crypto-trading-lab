@@ -165,7 +165,9 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
     print(
         f"{args.strategy_id}: окно {args.window} сут, шаг {args.step} сут, всего окон {len(rows)}"
     )
-    print(f"{'период':25} {'сделок':>7} {'годовых':>10} {'BTC годовых':>12} {'разница':>10}")
+    kinds = {getattr(getattr(m, "metrics", None), "benchmark_kind", "") for _, _, m in rows}
+    label = _BENCHMARK_LABEL.get(next(iter(kinds)), "бенчмарк") if len(kinds) == 1 else "бенчмарк"
+    print(f"{'период':25} {'сделок':>7} {'годовых':>10} {label:>18} {'разница':>10}")
     for a, b, m in rows:
         period = f"{a:%m.%Y}–{b:%m.%Y}"
         mt = getattr(m, "metrics", None)
@@ -175,7 +177,7 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
         diff = mt.vs_benchmark_cagr if mt.vs_benchmark_cagr is not None else mt.vs_benchmark
         print(
             f"{period:25} {mt.n_trades:>7} {_pct(mt.cagr_pct):>10} "
-            f"{_pct(mt.benchmark_cagr_pct):>12} {_pct(diff):>10}"
+            f"{_pct(mt.benchmark_cagr_pct):>18} {_pct(diff):>10}"
         )
     print(
         f"\nЗарабатывает в {stability.profitable} окнах из {stability.windows} "
@@ -206,6 +208,14 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
             "на росте — важно, работает ли она в своей фазе."
         )
     return 0
+
+
+_BENCHMARK_LABEL = {
+    "btc_bh": "BTC",
+    "btc_dca": "BTC докупками",
+    "cash": "деньги без риска",
+    "none": "бенчмарка нет",
+}
 
 
 def _pct(value) -> str:
@@ -252,8 +262,11 @@ def format_measurement(m, *, window=None) -> str:
     # справкой — на длинной истории он превращается в нечитаемое число.
     if getattr(mt, "cagr_pct", None) is not None:
         lines.append(
-            f"  годовых: {_pct(mt.cagr_pct)} · BTC: {_pct(mt.benchmark_cagr_pct)} · "
-            f"разница: {_pct(mt.vs_benchmark_cagr)}"
+            # Подпись бенчмарка — из снимка: у веток они РАЗНЫЕ, и «BTC» на строке, где
+            # сравнивали с кэшем, читалось как «биткоин не вырос вовсе».
+            f"  годовых: {_pct(mt.cagr_pct)} · "
+            f"{_BENCHMARK_LABEL.get(mt.benchmark_kind, mt.benchmark_kind or 'бенчмарк')}: "
+            f"{_pct(mt.benchmark_cagr_pct)} · разница: {_pct(mt.vs_benchmark_cagr)}"
         )
     stopped_at = getattr(mt, "stopped_at", None)
     if stopped_at is not None:

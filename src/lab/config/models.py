@@ -77,6 +77,9 @@ class BenchmarkConfig(_Cfg):
     """
 
     default: str = "btc_bh"
+    # Ставка «денег без риска» в год, %. Ноль был бы враньём в пользу нейтральных стратегий:
+    # доллар не лежит мёртвым грузом. Одно число, а не ряд — источника ставок в лаборатории нет.
+    risk_free_annual_pct: Decimal = Field(ge=0, default=Decimal("4.0"))
     by_branch: dict[str, str] = Field(default_factory=dict)
 
 

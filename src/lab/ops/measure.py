@@ -101,7 +101,8 @@ def run_measure(
         mode = _mode_for(MeasureMode(mode), strategy, record)
         # С чем сравнивать — зависит от ветки: споту альтернатива биткоин, нейтральным
         # стратегиям — кэш. Единый бенчмарк отбраковывал бы всё, что не растёт вместе с рынком.
-        kind = _benchmark_kind(record.branch, load_threshold().benchmark)
+        bench_cfg = load_threshold().benchmark
+        kind = _benchmark_kind(record.branch, bench_cfg)
 
         kwargs: dict[str, Any] = dict(
             strategy=strategy,
@@ -109,7 +110,14 @@ def run_measure(
             rung=record.rung,
             params=dict(record.params or {}),
             session=session,
-            benchmark=_benchmark(store, record.venue, tf, window, kind),
+            benchmark=_benchmark(
+                store,
+                record.venue,
+                tf,
+                window,
+                kind,
+                risk_free=getattr(bench_cfg, "risk_free_annual_pct", None),
+            ),
             extra_metrics={"benchmark_kind": kind},
             funding_history=_funding_history(record, window, root),
         )
@@ -306,12 +314,40 @@ def _monthly_opens(
         log.info("Помесячные цены %s %s %s: %s", venue, instrument, tf, err)
         return []
     return [Decimal(str(r["price"])) for r in rows if r.get("price") is not None]
+RISK_FREE_ANNUAL_PCT = Decimal("4.0")
+"""Ставка «денег без риска» в год, % — то, с чем на самом деле конкурирует нейтральная
+стратегия.
+
+Ноль был бы враньём в пользу стратегии: доллар не лежит мёртвым грузом, он приносит
+процент в казначейских бумагах или на депозите. С нулевым «кэшем» кэш-энд-керри с +4.40%
+годовых формально «обошёл бенчмарк», хотя на деле лишь сравнялся с банковской ставкой,
+и порог отвечал `passed` там, где честный ответ — «не хуже, чем ничего не делать».
+
+Значение — ДОПУЩЕНИЕ, а не факт: настоящая ставка менялась от 0.05% в 2021 до 5.4% в 2023.
+Переопределяется в `config/threshold.yaml` (`benchmark.risk_free_annual_pct`), и это
+осознанно оставлено одним числом: ряд ставок — отдельный источник данных, которого
+в лаборатории нет.
+"""
+
+
+def risk_free_pct(
+    window: tuple[datetime, datetime], annual_pct: Decimal | None = None
+) -> Decimal:
+    """Сколько дали бы те же деньги без риска за это окно, %."""
+    days = Decimal(str((window[1] - window[0]).total_seconds() / 86400))
+    if days <= 0:
+        return Decimal(0)
+    rate = RISK_FREE_ANNUAL_PCT if annual_pct is None else annual_pct
+    return rate * days / Decimal(365)
+
+
 def _benchmark(
     store: Any,
     venue: str,
     tf: str,
     window: tuple[datetime, datetime],
     kind: str = "btc_bh",
+    risk_free: Decimal | None = None,
 ) -> list[Candle] | Decimal | None:
     """Альтернатива, с которой сравнивают стратегию. Что именно — зависит от ветки.
 
@@ -329,7 +365,7 @@ def _benchmark(
     if kind == "none":
         return None
     if kind == "cash":
-        return Decimal(0)
+        return risk_free_pct(window, risk_free)
     if kind == "btc_dca":
         return _dca_pct(store, venue, tf, window)
     for instrument in BENCHMARK_INSTRUMENTS:
