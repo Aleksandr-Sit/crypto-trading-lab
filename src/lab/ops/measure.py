@@ -333,12 +333,19 @@ RISK_FREE_ANNUAL_PCT = Decimal("4.0")
 def risk_free_pct(
     window: tuple[datetime, datetime], annual_pct: Decimal | None = None
 ) -> Decimal:
-    """Сколько дали бы те же деньги без риска за это окно, %."""
-    days = Decimal(str((window[1] - window[0]).total_seconds() / 86400))
+    """Сколько дали бы те же деньги без риска за это окно, %.
+
+    Процент СЛОЖНЫЙ, а не простой: купон казначейских бумаг реинвестируется, и на длинном
+    окне разница не косметическая — 4% годовых за 5.5 лет дают 24.2%, а не 22.0%. Простой
+    процент занижал бы планку в пользу стратегии, то есть повторял бы ту же ошибку, что
+    и ноль, только меньшего размера.
+    """
+    days = (window[1] - window[0]).total_seconds() / 86400
     if days <= 0:
         return Decimal(0)
     rate = RISK_FREE_ANNUAL_PCT if annual_pct is None else annual_pct
-    return rate * days / Decimal(365)
+    growth = (1 + float(rate) / 100) ** (days / 365)
+    return Decimal(repr((growth - 1) * 100))
 
 
 def _benchmark(

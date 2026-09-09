@@ -15,12 +15,18 @@ T0 = datetime(2021, 1, 1, tzinfo=UTC)
 
 
 def test_year_of_cash_earns_the_annual_rate():
-    assert risk_free_pct((T0, T0 + timedelta(days=365)), Decimal(4)) == Decimal(4)
+    assert round(float(risk_free_pct((T0, T0 + timedelta(days=365)), Decimal(4))), 6) == 4.0
 
 
-def test_half_a_year_earns_half():
-    got = risk_free_pct((T0, T0 + timedelta(days=182, hours=12)), Decimal(4))
-    assert round(float(got), 2) == 2.0
+def test_interest_compounds():
+    """Купон реинвестируется: 4% за 5.5 лет — это 24.2%, а не 22.0%.
+
+    Простой процент занижал бы планку в пользу стратегии — та же ошибка, что и ноль,
+    только меньше: у кэш-энд-керри она превращала +0.41 пункта преимущества в +0.73.
+    """
+    got = risk_free_pct((T0, T0 + timedelta(days=365 * 5.5)), Decimal(4))
+
+    assert 24.1 < float(got) < 24.3
 
 
 def test_empty_window_earns_nothing():
