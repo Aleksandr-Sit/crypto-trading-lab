@@ -1,0 +1,40 @@
+#!/bin/bash
+# Долгая задача на сервере — отвязанно от ssh-сессии.
+#
+# Зачем: ssh рвётся на многоминутных операциях («Read from remote host: Connection reset
+# by peer»), и вместе с ней умирает всё, что запущено в переднем плане. За одну сессию так
+# оборвались пересборка образа и часовой замер. Сервер при этом ни при чём: OOM-убийств
+# нет, контейнеры живы — рвётся именно сессия.
+#
+# Как пользоваться (с рабочей машины):
+#   ssh vps-trader 'bash /opt/crypto-trading-lab/scripts/run-detached.sh замер "<команда>"'
+#   ssh vps-trader 'bash /opt/crypto-trading-lab/scripts/run-detached.sh --wait замер'
+#
+# Лог лежит в /root/<имя>.log, последняя строка — «ГОТОВО код=N».
+# ВАЖНО: в лог попадает вывод команды целиком. Если задача может напечатать секрет
+# (упавший assert с DATABASE_URL, например) — удалить лог после чтения: shred -u.
+
+set -u
+
+NAME="${1:?нужно имя задачи}"
+LOG="/root/${NAME}.log"
+
+if [ "$NAME" = "--wait" ]; then
+    NAME="${2:?нужно имя задачи}"
+    LOG="/root/${NAME}.log"
+    # Ждём завершения короткими проверками, а не одной длинной сессией.
+    until grep -q "ГОТОВО код=" "$LOG" 2>/dev/null; do sleep 15; done
+    cat "$LOG"
+    exit 0
+fi
+
+CMD="${2:?нужна команда}"
+cat > "/root/${NAME}.sh" <<SH
+#!/bin/bash
+cd /opt/crypto-trading-lab
+${CMD}
+echo "ГОТОВО код=\$?"
+SH
+chmod +x "/root/${NAME}.sh"
+nohup "/root/${NAME}.sh" > "$LOG" 2>&1 &
+echo "запущено: ${NAME}, лог ${LOG}"
