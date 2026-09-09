@@ -530,6 +530,10 @@ def run(
             engines=engines(),
             stop=manifest.stop,
             capital=capital,
+            # Дыра в ОДНОМ ряду не отменяет замер портфеля: остановка торгов отдельным
+            # альтом — обычное дело, а вселенная кросс-моментума состоит из сотен пар,
+            # и хоть одна дыра там есть всегда. Пропуски считаются и уезжают в снимок.
+            allow_gaps=len(instruments) > 1,
         )
         dh = hasher.digest(bench_rows, funding_history)
         cached = _lookup(session, base, dh)
@@ -537,6 +541,16 @@ def run(
             return cached
         if result.reasons:
             extra_metrics = {**(extra_metrics or {}), "reasons": dict(result.reasons)}
+        if result.gaps:
+            # Сколько баров недосчитались и по скольким рядам: замер прошёл, но данные
+            # были дырявые, и снимок обязан это признавать.
+            extra_metrics = {
+                **(extra_metrics or {}),
+                "data_gaps": {
+                    "instruments": len(result.gaps),
+                    "bars": sum(result.gaps.values()),
+                },
+            }
         if result.stopped_at is not None:
             # Без этой пометки снимок читается неверно: цифры обрываются на пробое стопа,
             # а по метрикам это выглядит как «стратегия просто перестала торговать».

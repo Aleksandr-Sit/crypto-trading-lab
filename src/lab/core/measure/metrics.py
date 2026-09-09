@@ -47,6 +47,7 @@ _OUTCOME_KEYS = (
     "benchmark_kind",
     "stability",
     "reasons",
+    "data_gaps",
 )
 
 

@@ -333,6 +333,9 @@ class SimResult:
     # Сколько исполненных сигналов пришлось на каждую причину: «стоп», «выход по каналу»,
     # «базис». Без этого поведение стратегии объяснить нечем — только гадать по цифрам.
     reasons: dict[str, int] = field(default_factory=dict)
+    # Пропущенные бары по инструментам, когда разрывы разрешены (портфель): сколько шагов
+    # ряда не хватило. Пусто — данные сплошные.
+    gaps: dict[str, int] = field(default_factory=dict)
 
 
 class _StopTracker:
@@ -404,6 +407,7 @@ def simulate(
     engines: Mapping[str, PaperEngine] | None = None,
     stop: StopSpec | None = None,
     capital: Decimal = Decimal(10_000),
+    allow_gaps: bool = False,
 ) -> SimResult:
     """Прогон стратегии по свечам: сначала исполняются ожидающие сигналы по бару,
     потом стратегия видит бар и решает — её сигналы исполнятся не раньше следующего бара.
@@ -434,6 +438,7 @@ def simulate(
 
     # Причины считаем по ИСПОЛНЕННЫМ сигналам: намерение и сделка — разные вещи, лимитка
     # могла не сработать, а сигнал протухнуть по ttl.
+    gaps: dict[str, int] = {}
     reasons: dict[str, int] = {}
 
     def _count(_fill: Fill, signal: Signal, _costs: Costs, _ref: Decimal) -> None:
@@ -457,10 +462,18 @@ def simulate(
             )
         before = prev.get(bar.instrument)
         if before is not None and bar.ts - before.ts != eng.step:
-            raise IncompleteData(
-                f"разрыв данных {bar.instrument} между {before.ts.isoformat()} и "
-                f"{bar.ts.isoformat()} (ожидался шаг {eng.step})"
-            )
+            if not allow_gaps:
+                raise IncompleteData(
+                    f"разрыв данных {bar.instrument} между {before.ts.isoformat()} и "
+                    f"{bar.ts.isoformat()} (ожидался шаг {eng.step})"
+                )
+            # Портфель из сотен рядов: остановка торгов одним альтом — обычное дело
+            # (COCOS/USDT, январь 2021), и ронять из-за неё замер всего среза неправильно.
+            # Пропуск ЧЕСТЕН для кросс-секционных правил: в эти дни пара действительно не
+            # торговалась, и правило обязано её не выбирать. Но молча это делать нельзя —
+            # пропуски считаются и уезжают в снимок, иначе плохие данные так и не всплывут.
+            missing = int((bar.ts - before.ts) / eng.step) - 1
+            gaps[bar.instrument] = gaps.get(bar.instrument, 0) + max(1, missing)
         prev[bar.instrument] = bar
         seen += 1
         eng.on_bar(bar)
@@ -523,4 +536,5 @@ def simulate(
         blocked_signals=blocked,
         positions={name: e.position for name, e in book.items()},
         reasons=reasons,
+        gaps=gaps,
     )

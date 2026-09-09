@@ -145,6 +145,20 @@ def test_gap_is_checked_per_instrument():
         simulate(TwoLegs(), bars, engines=_engines())
 
 
+def test_allowed_gap_is_counted_not_hidden():
+    """На портфеле дыра в одном ряду не роняет замер, но обязана попасть в результат.
+
+    Вселенная кросс-моментума — сотни пар, и остановка торгов хотя бы одной (COCOS/USDT,
+    январь 2021) есть всегда: падать из-за неё замером всего среза неправильно. Но и
+    молчать нельзя — иначе неполные данные так и не всплывут.
+    """
+    bars = [_bar(A, 0, Decimal(100)), _bar(B, 0, Decimal(50)), _bar(A, 5, Decimal(100))]
+
+    result = simulate(TwoLegs(), bars, engines=_engines(), allow_gaps=True)
+
+    assert result.gaps == {A: 4}, "четыре пропущенных бара между 0 и 5"
+
+
 def test_chunk_shrinks_with_the_number_of_instruments():
     """Бюджет памяти общий на замер, а не на инструмент.
 

@@ -270,6 +270,13 @@ def format_measurement(m, *, window=None) -> str:
         # Почему стратегия торговала: без этого объяснить её поведение нечем.
         top = sorted(reasons.items(), key=lambda item: -item[1])
         lines.append("  причины сделок: " + ", ".join(f"{name} {n}" for name, n in top))
+    gaps = getattr(mt, "data_gaps", None)
+    if gaps:
+        # Замер прошёл на неполных данных — читать его цифры нужно с этой поправкой.
+        lines.append(
+            f"  ДЫРЫ в данных: {gaps.get('instruments', 0)} рядов, "
+            f"пропущено баров {gaps.get('bars', 0)}"
+        )
     if m.threshold is not None:
         failed = ", ".join(m.threshold.failed_names()) or "—"
         lines.append(f"  порог: {m.threshold.status} (не прошло: {failed})")
