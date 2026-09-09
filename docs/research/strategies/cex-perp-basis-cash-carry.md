@@ -5,7 +5,10 @@ source_kind: api_docs
 source_ref: https://www.binance.com/en/support/faq/what-are-binance-delivery-futures-contracts-360033525111
 can_backtest: true
 timeframe: 1h
-instruments: [BTCUSDT-QUARTERLY, ETHUSDT-QUARTERLY]
+# Спотовые ноги — якорь; сами контракты живут по три месяца и меняются, их список
+# приезжает из записи реестра (--instruments-file). Имена строго по-ccxt:
+# BTC/USDT:USDT-260925, а не BTCUSDT-QUARTERLY — иначе фид не поймёт инструмент.
+instruments: [BTC/USDT, ETH/USDT]
 venue: binance
 regime: any
 status: hypothesis
@@ -15,6 +18,13 @@ params:
   hold_to_expiry: true
   leverage: 1
   max_notional_pct_of_branch: 50
+  # Ниже — то, что в тексте карточки было словами, а в правилах должно быть числом
+  min_days_to_expiry: 14
+  # за сколько суток до расчёта закрывать руками: расчёт контракта симулятор не моделирует
+  close_before_expiry_days: 1
+  # сколько часов подряд терпеть отрицательный базис, прежде чем выйти
+  negative_basis_hours: 24
+  capital_usd: 10000
 ---
 
 # Cash-and-carry: спот-лонг + шорт квартального фьючерса

@@ -1,6 +1,8 @@
 """Стратегии, не зависящие от направления рынка.
 
 - `cex-perp-api-docs-funding-arb-spot-hedge` — спот-лонг плюс шорт перпа: доход из фандинга.
+- `cex-perp-api-docs-basis-cash-carry` — спот-лонг плюс шорт КВАРТАЛЬНОГО фьючерса:
+  доход из премии, которая обязана сойтись к нулю на расчёте.
 
 Такие стратегии и нужны в боковике и падении, ради них делались портфельный замер (две ноги
 одновременно) и история ставок фандинга (весь их доход — в ней). Бенчмарк у ветки `cex-perp`
@@ -10,7 +12,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from lab.contracts import Candle, Event, Signal
@@ -183,4 +185,199 @@ class FundingArbSpotHedgeStrategy(Strategy):
         return signal.model_copy(update={"instrument": instrument})
 
 
-__all__ = ["FundingArbSpotHedgeStrategy", "annualized_pct", "base_of", "is_perp"]
+EXPIRY_HOUR = 8  # квартальные контракты Binance рассчитываются в 08:00 UTC
+YEAR_DAYS = D(365)
+
+
+def expiry_of(instrument: str) -> datetime | None:
+    """`BTC/USDT:USDT-260925` → 25.09.2026 08:00 UTC; у бессрочного и спота — None."""
+    _, _, settle = instrument.partition(":")
+    _, dash, tail = settle.partition("-")
+    if not dash or len(tail) != 6 or not tail.isdigit():
+        return None
+    return datetime(
+        2000 + int(tail[:2]), int(tail[2:4]), int(tail[4:]), EXPIRY_HOUR, tzinfo=UTC
+    )
+
+
+def basis_annualized_pct(spot: Decimal, futures: Decimal, days_left: Decimal) -> Decimal | None:
+    """Премия фьючерса к споту, приведённая к году. Меньше суток до расчёта — не считаем.
+
+    Годовые здесь не украшение: премия в 1% за две недели и та же премия за три месяца —
+    совершенно разные сделки, а сравнивать их приходится одним порогом.
+    """
+    if spot <= 0 or days_left < 1:
+        return None
+    return (futures - spot) / spot * (YEAR_DAYS / days_left) * 100
+
+
+@dataclass
+class _Carry:
+    """Связка «спот + один срочный контракт» одного актива."""
+
+    spot: str = ""
+    spot_price: Decimal = ZERO
+    spot_ts: datetime | None = None
+    # Цена и ВРЕМЯ БАРА каждого контракта: базис считается только между ценами одного
+    # момента — на этом уже обожглись в фандинг-арбитраже (см. `_Pair.spot_ts`).
+    futures: dict[str, tuple[Decimal, datetime]] = field(default_factory=dict)
+    contract: str = ""  # какой контракт держим сейчас
+    qty: Decimal = ZERO
+    negative_since: datetime | None = None
+
+
+@preset(manifest_from_card(CARDS_DIR / "cex-perp-basis-cash-carry.md", source_kind="api"))
+class BasisCashCarryStrategy(Strategy):
+    """Спот-лонг плюс шорт квартального фьючерса: премия обязана сойтись к нулю на расчёте.
+
+    Отличие от фандинг-арбитража — в источнике дохода и в его определённости. Там платит
+    фандинг: ставка меняется каждые восемь часов и может развернуться. Здесь доход задан
+    заранее — премия контракта, потому что на расчёте фьючерс сходится к индексу по
+    правилам биржи, а не по настроению рынка. Цена этой определённости — деньги заперты
+    до экспирации.
+
+    Допущение симулятора, которое важно знать: расчёта контракта движок не моделирует, и
+    ряд просто обрывается на дате экспирации. Поэтому «держать до расчёта» реализовано как
+    «закрыть обе ноги на последнем баре перед ним». Расхождение с настоящим расчётом мало
+    (фьючерс к этому моменту уже сошёлся к индексу), но оно не в нашу пользу: закрытие
+    рыночным ордером стоит комиссии, а расчёт на бирже бесплатен.
+
+    Ролла между кварталами нет намеренно: карточка его не описывает, а придумывать
+    правило, которого нет в источнике, — это уже другая стратегия.
+    """
+
+    card = "cex-perp-basis-cash-carry"
+
+    def reset(self) -> None:
+        self.carries: dict[str, _Carry] = {}
+
+    # -- связка ---------------------------------------------------------------------
+
+    def _carry(self, instrument: str) -> _Carry:
+        base = base_of(instrument)
+        carry = self.carries.get(base)
+        if carry is None:
+            carry = self.carries[base] = _Carry()
+        if expiry_of(instrument) is None:
+            carry.spot = instrument
+        return carry
+
+    def _notional(self) -> Decimal:
+        capital = D(str(self.param("capital_usd", 10_000)))
+        share = D(str(self.param("max_notional_pct_of_branch", 50))) / 100
+        bases = {base_of(i) for i in self.manifest.instruments} or {"?"}
+        return capital * share / len(bases)
+
+    @staticmethod
+    def _days_left(instrument: str, now: datetime) -> Decimal | None:
+        expiry = expiry_of(instrument)
+        if expiry is None:
+            return None
+        return D(str((expiry - now).total_seconds() / 86400))
+
+    # -- данные ---------------------------------------------------------------------
+
+    def on_bar(self, bar: Candle) -> list[Signal]:
+        carry = self._carry(bar.instrument)
+        if expiry_of(bar.instrument) is None:
+            carry.spot_price, carry.spot_ts = bar.close, bar.ts
+        else:
+            carry.futures[bar.instrument] = (bar.close, bar.ts)
+        if carry.spot_price <= 0 or carry.spot_ts is None:
+            return []
+        if carry.contract:
+            return self._maybe_close(carry, bar)
+        return self._maybe_open(carry, bar)
+
+    def _quote(self, carry: _Carry, contract: str) -> Decimal | None:
+        """Цена контракта, если она из ТОГО ЖЕ бара, что и цена спота."""
+        row = carry.futures.get(contract)
+        if row is None:
+            return None
+        price, stamp = row
+        return price if stamp == carry.spot_ts and price > 0 else None
+
+    # -- решения --------------------------------------------------------------------
+
+    def _maybe_open(self, carry: _Carry, bar: Candle) -> list[Signal]:
+        entry = D(str(self.param("entry_basis_annualized_pct", 10)))
+        min_days = D(str(self.param("min_days_to_expiry", 14)))
+        best: tuple[Decimal, str, Decimal] | None = None
+        for contract in carry.futures:
+            days = self._days_left(contract, bar.ts)
+            price = self._quote(carry, contract)
+            if days is None or price is None or days < min_days:
+                continue
+            ann = basis_annualized_pct(carry.spot_price, price, days)
+            # Из нескольких живых контрактов берём самый доходный в годовых: держать
+            # капитал в дальнем квартале ради той же премии смысла нет.
+            if ann is not None and ann > entry and (best is None or ann > best[0]):
+                best = (ann, contract, price)
+        if best is None:
+            return []
+        ann, contract, _price = best
+        qty = self._notional() / carry.spot_price
+        if qty <= 0:
+            return []
+        carry.contract, carry.qty, carry.negative_since = contract, qty, None
+        inputs = {"kind": "carry_open", "annualized_pct": str(ann)}
+        return [
+            self._leg(bar, carry.spot, "buy", qty, inputs),
+            self._leg(bar, contract, "sell", qty, inputs),
+        ]
+
+    def _maybe_close(self, carry: _Carry, bar: Candle) -> list[Signal]:
+        contract = carry.contract
+        days = self._days_left(contract, bar.ts)
+        if days is None:
+            return []
+        # Расчёт контракта движок не моделирует — закрываем сами на последнем баре.
+        if days <= D(str(self.param("close_before_expiry_days", 1))):
+            return self._close(carry, bar, "экспирация")
+        price = self._quote(carry, contract)
+        if price is None:
+            return []
+        ann = basis_annualized_pct(carry.spot_price, price, days)
+        if ann is None:
+            return []
+        if ann < 0:
+            # Бэквордация: премии больше нет, а с ней и смысла держать капитал запертым.
+            # Ждём подтверждения сутками, чтобы не выходить на одной случайной свече.
+            if carry.negative_since is None:
+                carry.negative_since = bar.ts
+            hours = D(str(self.param("negative_basis_hours", 24)))
+            if (bar.ts - carry.negative_since) >= timedelta(hours=float(hours)):
+                return self._close(carry, bar, "бэквордация")
+            return []
+        carry.negative_since = None
+        if ann < D(str(self.param("exit_basis_annualized_pct", 2))):
+            return self._close(carry, bar, "премия выбрана")
+        return []
+
+    def _close(self, carry: _Carry, bar: Candle, reason: str) -> list[Signal]:
+        qty, contract = carry.qty, carry.contract
+        if qty <= 0 or not contract:
+            return []
+        carry.contract, carry.qty, carry.negative_since = "", ZERO, None
+        inputs = {"kind": "carry_close", "reason": reason}
+        return [
+            self._leg(bar, carry.spot, "sell", qty, inputs),
+            self._leg(bar, contract, "buy", qty, inputs),
+        ]
+
+    def _leg(
+        self, bar: Candle, instrument: str, side: str, qty: Decimal, inputs: dict[str, object]
+    ) -> Signal:
+        signal = self.signal(bar, side, qty, inputs={**inputs, "leg": instrument})
+        return signal.model_copy(update={"instrument": instrument})
+
+
+__all__ = [
+    "BasisCashCarryStrategy",
+    "FundingArbSpotHedgeStrategy",
+    "annualized_pct",
+    "base_of",
+    "basis_annualized_pct",
+    "expiry_of",
+    "is_perp",
+]
