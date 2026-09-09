@@ -145,6 +145,21 @@ def test_gap_is_checked_per_instrument():
         simulate(TwoLegs(), bars, engines=_engines())
 
 
+def test_chunk_shrinks_with_the_number_of_instruments():
+    """Бюджет памяти общий на замер, а не на инструмент.
+
+    `heapq.merge` заводит все потоки сразу, и каждый тянет первый кусок: 647 рядов
+    вселенной кросс-моментума по 2 000 баров — это 1.3 млн свечей и SIGKILL по `mem_limit`
+    (код 137, вывода нет вовсе). Проверяется именно суммарный размер, а не формула.
+    """
+    from lab.core.measure.runner import CHUNK_BARS, chunk_for
+
+    assert chunk_for(1) == CHUNK_BARS
+    assert chunk_for(50) * 50 <= CHUNK_BARS, "полсотни рядов должны укладываться в бюджет"
+    assert chunk_for(647) * 647 <= 200_000, "вселенная альтов не должна съедать гигабайт"
+    assert chunk_for(10_000) >= 100, "но и по одной свече за запрос ходить незачем"
+
+
 def test_reasons_are_counted_by_executed_signals():
     """Почему стратегия торговала — должно доезжать до результата, а не теряться в хеше.
 

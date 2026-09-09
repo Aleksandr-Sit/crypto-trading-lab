@@ -215,6 +215,22 @@ CHUNK_BARS = 20_000
 """
 
 
+MIN_CHUNK_BARS = 250
+"""Нижний предел куска на инструмент.
+
+`heapq.merge` заводит ВСЕ потоки сразу, и каждый тут же тянет свой первый кусок: общая
+память — это предел, умноженный на число рядов. Прежние 2 000 хороши для полусотни
+инструментов и смертельны для вселенной кросс-моментума: 647 × 2 000 — это 1.3 млн свечей,
+и замер получил SIGKILL по `mem_limit` контейнера (код 137, вывода нет). 250 даёт около
+160 тысяч свечей в пике ценой более частых запросов к хранилищу.
+"""
+
+
+def chunk_for(instruments: int) -> int:
+    """Сколько баров тянуть за раз на ОДИН ряд, чтобы в сумме не выйти за бюджет."""
+    return max(MIN_CHUNK_BARS, CHUNK_BARS // max(1, instruments))
+
+
 def _merged(
     candles: Sequence[Candle] | None,
     source: Source | None,
@@ -234,7 +250,7 @@ def _merged(
         return
     # Кусок делится между рядами: пятьдесят инструментов по 20 тысяч баров — это снова
     # миллион свечей в памяти, ради чего всё и переписывалось на потоки.
-    per_instrument = max(2_000, CHUNK_BARS // max(1, len(instruments)))
+    per_instrument = chunk_for(len(instruments))
     streams = [
         _stream(candles, source, name, tf, a, b, chunk_bars=per_instrument, match=True)
         for name in instruments
