@@ -61,6 +61,12 @@ def main() -> int:
         help="другой инструмент под эту площадку (можно повторить)",
     )
     ap.add_argument(
+        "--instruments-file",
+        help="файл со списком пар (по одной в строке) — ДИНАМИЧЕСКАЯ вселенная. "
+        "Кросс-секционные правила выбирают состав сами на каждом ребалансе, в карточке "
+        "стоит только якорь; список живёт в записи реестра, поэтому суффикс здесь не нужен",
+    )
+    ap.add_argument(
         "--slug-suffix",
         help="хвост к слагу: id собирается как <ветка>-<источник>-<слаг>, "
         "без своего слага запись просто столкнётся с исходной",
@@ -84,6 +90,19 @@ def main() -> int:
     if args.slug_suffix and (args.all or len(args.id) != 1):
         print("--slug-suffix применим ровно к одной стратегии (--id)", file=sys.stderr)
         return 2
+    universe: list[str] = []
+    if args.instruments_file:
+        if args.all or len(args.id) != 1:
+            print("--instruments-file применим ровно к одной стратегии (--id)", file=sys.stderr)
+            return 2
+        universe = [
+            line.strip()
+            for line in Path(args.instruments_file).read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.startswith("#")
+        ]
+        if not universe:
+            print(f"{args.instruments_file}: ни одной пары", file=sys.stderr)
+            return 2
 
     known = sorted(code_registry.ids())
     if args.list or (not args.id and not args.all):
@@ -119,14 +138,20 @@ def main() -> int:
                 }
                 if args.venue:
                     update["venue"] = args.venue
-                if args.instrument:
-                    update["instruments"] = list(args.instrument)
+                if args.instrument or universe:
+                    update["instruments"] = list(args.instrument) or universe
                 stop_pct = _params(args.param).get("stop_loss_pct")
                 if stop_pct:
                     # Стоп живёт не в params, а отдельным полем манифеста: без этой строки
                     # параметр записался бы, а стратегия осталась со старым стопом.
                     update["stop"] = StopSpec(max_dd_pct=Decimal(str(stop_pct)))
                 manifest = manifest.model_copy(update=update)
+            elif universe:
+                # Вселенная без суффикса: id остаётся исходным, потому что это НЕ вариант
+                # правил, а их рабочий состав. В карточке лежит только якорь (BTC для
+                # фильтра режима), торговать по нему одному стратегия не собиралась.
+                manifest = manifest.model_copy(update={"instruments": universe})
+                print(f"  вселенная: {len(universe)} пар")
             try:
                 row = registry.add(manifest)
             except DuplicateStrategy:
