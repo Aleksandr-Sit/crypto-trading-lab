@@ -48,12 +48,48 @@ def _params(pairs: list[str]) -> dict[str, object]:
     return out
 
 
+def manifest_id(manifest) -> str:
+    return f"{manifest.branch}-{manifest.source_kind}-{manifest.slug}"
+
+
+def _sync(registry, session, manifest) -> list[str]:
+    """Подтянуть в существующую запись то, что изменилось в карточке. Возврат — что поменяли.
+
+    Зачем: карточку правят, а запись в базе остаётся прежней. Так два перп-пресета почти
+    год ходили с инструментами `BTCUSDT-PERP` — имя, которого фид не понимает («bybit does
+    not have market symbol»), — хотя в карточках давно стоят ccxt-имена `BTC/USDT:USDT`.
+    Замер при этом не падает, а честно отвечает `incomplete`, и расхождение легко не заметить.
+
+    Параметры и ступень НЕ трогаем: ступень — это история стратегии, а параметры могли быть
+    заданы вариантом (`--slug-suffix`) осознанно.
+    """
+    row = registry.get(manifest_id(manifest))
+    changed: list[str] = []
+    if list(row.instruments or []) != list(manifest.instruments):
+        row.instruments = list(manifest.instruments)
+        changed.append("инструменты")
+    if row.venue != manifest.venue:
+        row.venue = manifest.venue
+        changed.append("площадка")
+    if manifest.timeframe and row.timeframe != manifest.timeframe:
+        row.timeframe = manifest.timeframe
+        changed.append("таймфрейм")
+    if changed:
+        session.flush()
+    return changed
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Регистрация стратегии с кодом в реестре базы")
     ap.add_argument("--id", action="append", default=[], help="id стратегии (можно повторить)")
     ap.add_argument("--all", action="store_true", help="все стратегии из реестра кода")
     ap.add_argument("--list", action="store_true", help="показать, что умеет код, и выйти")
     ap.add_argument("--venue", help="другая площадка (например bitstamp — ряд с 2011 года)")
+    ap.add_argument(
+        "--update",
+        action="store_true",
+        help="подтянуть в существующую запись инструменты, площадку и таймфрейм из карточки",
+    )
     ap.add_argument(
         "--instrument",
         action="append",
@@ -121,7 +157,7 @@ def main() -> int:
         return 2
 
     factory = make_session_factory(make_engine())
-    added = skipped = 0
+    added = skipped = updated = 0
     with session_scope(factory) as session:
         registry = Registry(session)
         for sid in wanted:
@@ -155,12 +191,21 @@ def main() -> int:
             try:
                 row = registry.add(manifest)
             except DuplicateStrategy:
+                if args.update:
+                    changed = _sync(registry, session, manifest)
+                    if changed:
+                        updated += 1
+                        print(f"  обновлена: {manifest_id(manifest)} — {', '.join(changed)}")
+                    else:
+                        skipped += 1
+                        print(f"  уже совпадает: {sid}")
+                    continue
                 skipped += 1
                 print(f"  уже в реестре: {sid}")
                 continue
             added += 1
             print(f"  добавлена: {row.id} [{row.status}, ступень {row.rung}]")
-    print(f"добавлено {added}, пропущено {skipped}")
+    print(f"добавлено {added}, обновлено {updated}, пропущено {skipped}")
     return 0
 
 
