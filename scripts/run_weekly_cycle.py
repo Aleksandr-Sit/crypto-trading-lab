@@ -25,7 +25,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from lab.core.ladder import Ladder  # noqa: E402
+from lab.core.ladder import Ladder, default_threshold_fn  # noqa: E402
+from lab.core.risk import DbHaltSwitch  # noqa: E402
 from lab.core.registry import Registry  # noqa: E402
 from lab.db import make_engine, make_session_factory, session_scope  # noqa: E402
 from lab.ops.jobs import weekly_remeasure  # noqa: E402
@@ -51,8 +52,12 @@ def main() -> int:
     if args.dry_run:
         return 0
 
+    def ladder_factory(session):
+        """Та же сборка лестницы, что у worker: порог из конфига и общий рубильник стопа."""
+        return Ladder(session, threshold=default_threshold_fn(), halt=DbHaltSwitch(session))
+
     print("\n--- цикл пошёл ---", flush=True)
-    report = weekly_remeasure(scope, measure=make_measure(scope), ladder_factory=Ladder)
+    report = weekly_remeasure(scope, measure=make_measure(scope), ladder_factory=ladder_factory)
     print(report.text())
     print(
         f"\nизмерено {len(report.measured)}, переходов {len(report.transitions)}, "
