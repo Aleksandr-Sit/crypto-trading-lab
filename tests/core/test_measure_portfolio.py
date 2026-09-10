@@ -296,3 +296,37 @@ def test_expired_signals_are_counted_not_stored():
 
     assert engine.expired == 5
     assert isinstance(engine.expired, int), "список сигналов хранить незачем — нужен счётчик"
+
+
+def test_fills_are_not_stored_when_the_engine_is_told_not_to():
+    """Замер хранит только счётчик исполнений — сами объекты ему не нужны.
+
+    Сеточная стратегия на трёх инструментах и минутных барах исполняется почти непрерывно,
+    лимитки набираются частями: за 400 суток набегает под гигабайт объектов `Fill`,
+    которых потом никто не читает. Замер получал SIGKILL от cgroup молча, без единой
+    строки вывода — снаружи это неотличимо от «замер ничего не сказал».
+    """
+    kept = PaperEngine(venue="binance", instrument=A, tf="1h", branch=Branch.CEX_PERP)
+    lean = PaperEngine(
+        venue="binance", instrument=A, tf="1h", branch=Branch.CEX_PERP, keep_fills=False
+    )
+
+    for engine in (kept, lean):
+        engine.submit(
+            Signal(
+                strategy_id="x",
+                decided_at=T0,
+                instrument=A,
+                side="buy",
+                size=Decimal(1),
+                price_ref=Decimal(100),
+                inputs_hash="h",
+                ttl_s=7200,
+            )
+        )
+        engine.on_bar(_bar(A, 0, Decimal(100)))
+
+    assert kept.fills_count == lean.fills_count == 1, "считаются одинаково"
+    assert len(kept.fills) == 1, "по умолчанию исполнения хранятся — так удобно в бумаге"
+    assert lean.fills == [], "в замере — только счётчик"
+    assert kept.position == lean.position, "на позицию режим не влияет"

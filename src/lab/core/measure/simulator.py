@@ -86,6 +86,12 @@ class PaperEngine:
     leverage: Decimal | None = None
     # Поддерживающая маржа, % от номинала (Binance для BTC на малом плече — около 0.4–0.5%).
     maintenance_margin_pct: Decimal = Decimal("0.5")
+    # Хранить ли КАЖДОЕ исполнение объектом. В бумаге и в тестах это удобно, а в замере
+    # разорительно: сеточная стратегия на трёх инструментах и минутных барах исполняется
+    # почти непрерывно, лимитки набираются частями, и за 400 суток набегает под гигабайт
+    # объектов `Fill`, которых потом никто не читает. Замер получал SIGKILL от cgroup
+    # молча, без единой строки вывода. Счётчик `fills_count` остаётся всегда.
+    keep_fills: bool = True
 
     def __post_init__(self) -> None:
         self.step = parse_tf(self.tf)
@@ -93,6 +99,7 @@ class PaperEngine:
         self.pending: list[_Pending] = []
         self.lots: list[_Lot] = []
         self.fills: list[Fill] = []
+        self.fills_count = 0
         self.closed: list[ClosedTrade] = []
         # СЧЁТЧИК, а не список: у сеточных стратегий на минутках протухает по сигналу
         # почти на каждом баре — 576 тысяч объектов Signal за 400 суток, под гигабайт
@@ -210,7 +217,9 @@ class PaperEngine:
             fee_asset=self.quote_asset,
             ts=bar.ts,
         )
-        self.fills.append(fill)
+        self.fills_count += 1
+        if self.keep_fills:
+            self.fills.append(fill)
         self._apply(side, qty, ref, bar.ts, costs)
         if self.on_fill is not None:
             self.on_fill(fill, p.signal, costs, ref)
