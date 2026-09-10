@@ -81,6 +81,33 @@ def cmd_strategy_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_strategy_start(args: argparse.Namespace) -> int:
+    """Взять стратегию в работу: `candidate` → `measuring`, то есть поставить на лестницу.
+
+    Без этого шага система стратегию НЕ ВИДИТ: воскресное переизмерение берёт только
+    `measuring` и `passed`, а всё, что заведено сценарием, лежит в реестре как `candidate`.
+    Двадцать стратегий так и простояли бы вечно — цикл отработал бы «измерено 0» и не
+    соврал бы ни в одной цифре.
+
+    Решение осознанно оставлено за оператором: `candidate` — это «идея заведена»,
+    `measuring` — «беру в работу и трачу на неё процессор каждую неделю».
+    """
+    from lab.core.ladder import Ladder, default_threshold_fn
+    from lab.core.risk import DbHaltSwitch
+
+    with session_scope(_session_factory()) as session:
+        ladder = Ladder(session, threshold=default_threshold_fn(), halt=DbHaltSwitch(session))
+        for sid in args.id:
+            try:
+                ladder.start(sid)
+            except StrategyNotFound as err:
+                print(f"Отказ: {err}", file=sys.stderr)
+                return 2
+            row = Registry(session).get(sid)
+            print(f"{row.id}: ступень {row.rung}, статус {row.status}")
+    return 0
+
+
 def cmd_strategy_retire(args: argparse.Namespace) -> int:
     with session_scope(_session_factory()) as session:
         try:
@@ -634,6 +661,9 @@ def build_parser() -> argparse.ArgumentParser:
     lst.add_argument("--branch")
     lst.add_argument("--status")
     lst.set_defaults(func=cmd_strategy_list)
+    start = st.add_parser("start", help="взять в работу: candidate → measuring (на лестницу)")
+    start.add_argument("id", nargs="+")
+    start.set_defaults(func=cmd_strategy_start)
     ret = st.add_parser("retire")
     ret.add_argument("id")
     ret.add_argument("--reason", required=True)
