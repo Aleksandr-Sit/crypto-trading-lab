@@ -265,3 +265,34 @@ def test_reasons_are_counted_by_executed_signals():
     result = simulate(Tagged(manifest), [_bar(A, i, Decimal(100)) for i in range(4)], engine=engine)
 
     assert result.reasons == {"breakout": 1}
+
+
+def test_expired_signals_are_counted_not_stored():
+    """Протухшие сигналы считаются, а не копятся объектами.
+
+    У сеточной стратегии на минутках лимитка протухает почти на каждом баре: за 400 суток
+    это 576 тысяч объектов Signal, под гигабайт памяти. Читалась от них только длина,
+    а замер получал SIGKILL от cgroup — молча, без единой строки вывода, что снаружи
+    неотличимо от «замер ничего не сказал».
+    """
+    engine = PaperEngine(venue="binance", instrument=A, tf="1h", branch=Branch.CEX_PERP)
+    for i in range(5):
+        engine.submit(
+            Signal(
+                strategy_id="x",
+                decided_at=T0 + HOUR * i,
+                instrument=A,
+                side="buy",
+                size=Decimal(1),
+                price_ref=Decimal(1),  # лимитка глубоко под рынком — не исполнится
+                inputs_hash=f"h{i}",
+                ttl_s=1,
+                meta={"order_type": "limit", "limit_price": "1"},
+            )
+        )
+
+    for i in range(6):
+        engine.on_bar(_bar(A, i, Decimal(100)))
+
+    assert engine.expired == 5
+    assert isinstance(engine.expired, int), "список сигналов хранить незачем — нужен счётчик"

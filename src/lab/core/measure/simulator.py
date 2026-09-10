@@ -94,7 +94,11 @@ class PaperEngine:
         self.lots: list[_Lot] = []
         self.fills: list[Fill] = []
         self.closed: list[ClosedTrade] = []
-        self.expired: list[Signal] = []
+        # СЧЁТЧИК, а не список: у сеточных стратегий на минутках протухает по сигналу
+        # почти на каждом баре — 576 тысяч объектов Signal за 400 суток, под гигабайт
+        # памяти. Читалась от них всё равно только длина, и замер получал SIGKILL от
+        # cgroup молча, без единой строки вывода.
+        self.expired = 0
         self._ids = count(1)
         self._funding_h = self.costs.funding_interval_h(self.venue) or 8
         self.funding_from_history = 0  # сколько выплат взято из истории
@@ -144,7 +148,7 @@ class PaperEngine:
                 still.append(p)
                 continue
             if bar.ts >= p.expires_at and p.expires_at > p.signal.decided_at:
-                self.expired.append(p.signal)
+                self.expired += 1
                 continue
             fill = self._execute(p, bar)
             if fill is not None:
@@ -687,7 +691,7 @@ def simulate(
     for e in book.values():
         trades.extend(e.closed)
         fills.extend(e.fills)
-        expired += len(e.expired)
+        expired += e.expired
         position += e.position
     trades.sort(key=lambda t: t.closed_at)
     return SimResult(
