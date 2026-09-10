@@ -6,6 +6,8 @@ read — через DuckDB по глобу партиций, деньги воз
 
 from __future__ import annotations
 
+import logging
+import os
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -20,6 +22,8 @@ import pyarrow.parquet as pq
 
 from lab.contracts import Candle
 
+log = logging.getLogger(__name__)
+
 _MONEY = pa.decimal128(30, 12)
 SCHEMA = pa.schema(
     [
@@ -33,9 +37,30 @@ SCHEMA = pa.schema(
 )
 _SAFE = re.compile(r"[^A-Za-z0-9._-]")
 
+# DuckDB по умолчанию берёт 80% ПАМЯТИ КОНТЕЙНЕРА и все ядра. В контейнере с лимитом
+# 1200 МБ это 960 МБ — ровно столько, чтобы не осталось ни рабочему процессу, ни самому
+# Python: три замера минутных стратегий подряд получили SIGKILL от cgroup на 946 МБ,
+# и каждый завершился МОЛЧА, без единой строки вывода. Хранилище читается кусками,
+# и столько памяти движку запроса не нужно; потоки урезаны, потому что ядра на сервере
+# общие с четырьмя соседними проектами.
+DUCKDB_MEMORY = "256MB"
+DUCKDB_THREADS = 2
+DUCKDB_MEMORY_ENV = "LAB_DUCKDB_MEMORY"
+DUCKDB_THREADS_ENV = "LAB_DUCKDB_THREADS"
+
 
 def _safe(part: str) -> str:
     return _SAFE.sub("_", part)
+
+
+def _tame(con: Any) -> None:
+    """Ограничить аппетит DuckDB. Настройки нет в этой сборке — не падать из-за неё."""
+    memory, threads = CandleStore._duckdb_limits()
+    for statement in (f"set memory_limit='{memory}'", f"set threads={threads}"):
+        try:
+            con.execute(statement)
+        except Exception as err:  # noqa: BLE001 — настройка необязательна, запрос важнее
+            log.info("DuckDB: %s не применено (%s)", statement, type(err).__name__)
 
 
 @dataclass(frozen=True)
@@ -130,6 +155,14 @@ class CandleStore:
         rows = self.query("select max(ts) as t from {candles}", venue, instrument, tf)
         return rows[0]["t"] if rows else None
 
+    @staticmethod
+    def _duckdb_limits() -> tuple[str, int]:
+        """Сколько памяти и потоков разрешено DuckDB. Переопределяется окружением."""
+        return (
+            os.environ.get(DUCKDB_MEMORY_ENV, "").strip() or DUCKDB_MEMORY,
+            int(os.environ.get(DUCKDB_THREADS_ENV, "").strip() or DUCKDB_THREADS),
+        )
+
     def query(
         self, sql: str, venue: str, instrument: str, tf: str, *, params: list[Any] | None = None
     ) -> list[dict[str, Any]]:
@@ -140,6 +173,7 @@ class CandleStore:
         glob = str(self.path(venue, instrument, tf) / "*.parquet").replace("'", "''")
         con = duckdb.connect()
         try:
+            _tame(con)
             con.execute("set TimeZone='UTC'")
             # ts отдаём наивным UTC (TIMESTAMPTZ в duckdb требует pytz), tz добавляем сами
             src = (

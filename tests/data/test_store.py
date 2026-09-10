@@ -103,3 +103,41 @@ def test_backfill_resumes_after_interruption(store: CandleStore):
         store, feed2.candles_range, "bybit", "SYN/USD", "1h", START, end, chunk=timedelta(hours=24)
     )
     assert result.rows_written == 0 and result.skipped is True
+
+
+def test_duckdb_appetite_is_capped(tmp_path, monkeypatch):
+    """DuckDB берёт 80% памяти КОНТЕЙНЕРА — и не оставляет её рабочему процессу.
+
+    В контейнере с лимитом 1200 МБ движок запроса ставил себе 960 МБ. Три замера
+    минутных стратегий подряд получили SIGKILL от cgroup ровно на 946 МБ, и каждый
+    завершился МОЛЧА, без единой строки вывода: снаружи это выглядит как «замер ничего
+    не сказал», а не как отказ.
+    """
+    import duckdb
+
+    from lab.data.store import DUCKDB_MEMORY_ENV, DUCKDB_THREADS_ENV, CandleStore, _tame
+
+    store = CandleStore(tmp_path / "parquet")
+    store.write(
+        "bybit", "SYN/USD", "1h", synthetic_candles(3, "noise", seed=1, tf="1h", start=START)
+    )
+    store.query("select count(*) as n from {candles}", "bybit", "SYN/USD", "1h")
+
+    con = duckdb.connect()
+    try:
+        _tame(con)
+        limit = con.execute(
+            "select value from duckdb_settings() where name = 'memory_limit'"
+        ).fetchone()[0]
+        threads = con.execute(
+            "select value from duckdb_settings() where name = 'threads'"
+        ).fetchone()[0]
+    finally:
+        con.close()
+
+    assert "256" in str(limit), f"лимит памяти не применён: {limit}"
+    assert str(threads) == "2"
+
+    monkeypatch.setenv(DUCKDB_MEMORY_ENV, "128MB")
+    monkeypatch.setenv(DUCKDB_THREADS_ENV, "1")
+    assert CandleStore._duckdb_limits() == ("128MB", 1), "окружение должно переопределять"
