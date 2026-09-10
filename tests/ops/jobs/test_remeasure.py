@@ -11,9 +11,12 @@ def test_remeasure_stops_at_the_time_budget():
 
     from lab.ops.jobs.remeasure import RemeasureReport
 
-    report = RemeasureReport(window=(datetime(2026, 1, 1, tzinfo=UTC), datetime(2026, 4, 1, tzinfo=UTC)))
+    window = (datetime(2026, 1, 1, tzinfo=UTC), datetime(2026, 4, 1, tzinfo=UTC))
+    report = RemeasureReport(window=window)
     report.measured.append("cex-perp-api-basis-cash-carry-cross")
-    report.skipped.extend(["cex-spot-paper-xsmom-alts-weekly", "cex-spot-paper-xsmom-alts-weekly-funding"])
+    report.skipped.extend(
+        ["cex-spot-paper-xsmom-alts-weekly", "cex-spot-paper-xsmom-alts-weekly-funding"]
+    )
 
     text = report.text()
 
