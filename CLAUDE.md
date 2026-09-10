@@ -20,7 +20,8 @@
 | Compose | `docker compose -f deploy/docker-compose.yml config` | ок (демон не нужен, его тут и нет) |
 | CLI | `uv run python -m lab --help` | `venues strategy candidate data measure ops service` |
 | Ключи площадок | `lab venues` | таблица «подключена / только данные», `.env` не нужен |
-| Реестр | `lab strategy list` \| `strategy add --file` \| `strategy retire` | **нужен `DATABASE_URL`** |
+| Реестр | `lab strategy list` \| `add --file` \| `start` \| `retire` | **нужен `DATABASE_URL`** |
+| Недельный цикл руками | `python scripts/run_weekly_cycle.py [--dry-run]` | то же, что планировщик в воскресенье |
 | Кандидат | `lab candidate add` | нужен `DATABASE_URL` |
 | Свечи | `lab data backfill --venue bybit --symbols BTC/USDT:USDT --tf 1h --days 365` | нужна сеть к бирже |
 | Замер | `lab measure run <id> [--mode backtest\|paper\|forward\|micro] [--days N]` | нужен `DATABASE_URL` |
@@ -268,6 +269,14 @@ docker compose -f deploy/docker-compose.yml run --rm --no-deps \
   `rm -f /root/<имя>.sh` (без файла новые вызовы падают), потом `pkill -9 -f <имя>` —
   в обратном порядке процессы плодятся быстрее, чем их убиваешь. Дальше поднять соседей:
   `docker start crypto-trader-bot-1 wake-collector beach-volley-coach`.
+- **`candidate` система не видит вовсе.** Воскресное переизмерение берёт только
+  `measuring` и `passed`. Стратегию ставит на лестницу поиск кандидатов, кнопка в боте
+  или `lab strategy start <id>` — заведённая сценарием так и лежит в реестре, пока её
+  не возьмут в работу. Первый честный прогон цикла ответил «измерено 0» и был прав.
+- **Окно переизмерения зависит от таймфрейма** (`remeasure.window_days_by_tf`): порог
+  требует 30 сделок, а дневное правило за квартал их не наберёт физически. Кэш-энд-керри
+  делает 48 сделок за 5.5 лет — на 90 сутках вечный `insufficient`, и медленная стратегия
+  не могла пройти лестницу в принципе.
 - **DuckDB забирает 80% памяти КОНТЕЙНЕРА и убивает замер молча.** При `mem_limit: 1200m`
   движок запроса ставит себе 960 МБ — не оставляя ничего ни рабочему процессу, ни самому
   Python. Три замера минутных стратегий подряд получили SIGKILL от cgroup ровно на 946 МБ,
