@@ -139,3 +139,46 @@ def test_preset_sign_on_synthetic(sid, kind, kwargs, params, sign):
     assert m.status == "ok", m.reason
     assert m.metrics.n_trades > 0
     assert (m.metrics.net_pnl > 0) == (sign > 0), (sid, kind, m.metrics.net_pnl, m.metrics.n_trades)
+
+
+def test_presets_keep_state_per_instrument():
+    """Бот из каталога настраивается на ОДНУ пару — три пары в записи это три бота.
+
+    Пока состояние было общим, портфельный замер получал ерунду и молча: после бара BTC
+    по 60 000 приходил бар ETH по 2467, DCA-бот считал это падением на 96% и докупал
+    «страховочный ордер». За 30 суток — 43 199 покупок при ОДНОЙ закрытой сделке
+    и SIGKILL от cgroup без единой строки вывода.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from lab.contracts import Candle
+    from lab.strategies import registry as reg
+
+    minute = timedelta(minutes=1)
+    t0 = datetime(2026, 1, 1, tzinfo=UTC)
+
+    def bar(instrument: str, i: int, price: str) -> Candle:
+        p = Decimal(price)
+        return Candle(
+            instrument=instrument,
+            tf="1m",
+            ts=t0 + minute * i,
+            open=p,
+            high=p,
+            low=p,
+            close=p,
+            volume=Decimal(1000),
+        )
+
+    s = reg.build("cex-spot-preset-3commas-dca-safety")
+    s.manifest = s.manifest.model_copy(update={"instruments": ["BTC/USDT", "ETH/USDT"]})
+
+    signals = []
+    for i in range(30):  # цены рядов различаются в 25 раз — как BTC и ETH на самом деле
+        signals += s.on_bar(bar("BTC/USDT", i, "60000"))
+        signals += s.on_bar(bar("ETH/USDT", i, "2400"))
+
+    assert set(s.book) == {"BTC/USDT", "ETH/USDT"}, "у каждой пары своя сделка"
+    # По одной базовой покупке на пару; докупок нет — цена не падала ни на одном ряду.
+    assert len(signals) == 2, f"лишние покупки от чужого ряда: {len(signals)}"
+    assert {sig.instrument for sig in signals} == {"BTC/USDT", "ETH/USDT"}
