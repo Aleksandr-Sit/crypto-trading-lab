@@ -91,7 +91,8 @@ def test_extreme_positive_funding_opens_a_short():
     signals = s.on_event(_funding(BTC, 21, "0.005"))
 
     assert len(signals) == 1 and signals[0].side == "sell"
-    assert signals[0].size == Decimal(2500) / Decimal(50_000), "половина капитала на два инструмента"
+    # половина капитала, поделённая между двумя инструментами карточки
+    assert signals[0].size == Decimal(2500) / Decimal(50_000)
     assert s.books[BTC].side == "short"
 
 
