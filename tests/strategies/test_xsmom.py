@@ -200,3 +200,68 @@ def test_stop_closes_a_losing_position_before_the_rebalance():
     assert s.held == set()
     assert [sig.side for sig in signals] == ["sell"]
     assert signals[0].meta.get("reason") == "стоп"
+
+
+def _fund(strategy, rates: list[str], start: int = 0):
+    """Подаёт ставки фандинга событиями — так их отдаёт замер (три выплаты в сутки)."""
+    from lab.contracts import Event
+
+    for i, rate in enumerate(rates):
+        strategy.on_event(
+            Event(
+                kind="funding",
+                ts=T0 + DAY * ((start + i) // 3),
+                payload={"instrument": "BTC/USDT:USDT", "rate": Decimal(rate)},
+            )
+        )
+
+
+def test_funding_regime_needs_a_full_month_before_it_judges():
+    """Мало данных — не запрет, а «не знаю»: молчание не должно останавливать торговлю."""
+    s = _strategy(funding_filter=True, funding_fast_days=7, funding_slow_days=30)
+    _fund(s, ["0.0001"] * 30)
+
+    assert s.funding_regime() is None
+    assert s._funding_allows() is True, "нет оценки — фильтр не мешает"
+
+
+def test_expanding_leverage_demand_allows_trading():
+    """Недельная ставка выше месячной — плечевой спрос расширяется, моментуму это среда."""
+    s = _strategy(funding_filter=True, funding_fast_days=7, funding_slow_days=30)
+    _fund(s, ["0.0001"] * 69 + ["0.0005"] * 21)
+
+    assert s.funding_regime() is True
+
+
+def test_shrinking_leverage_demand_closes_positions():
+    """Ставка сдувается — плечевые деньги уходят из ралли, держать нечего.
+
+    Это ровно то, что было в конце августа 2020: цена ETH шла с 383 до 434, а ставка
+    падала с 19.7% до 11.0% годовых — за неделю до обвала.
+    """
+    s = _strategy(
+        funding_filter=True, funding_fast_days=7, funding_slow_days=30,
+        rebalance_days=7, lookback_days=5, top_n=1,
+    )
+    for i in range(40):
+        _feed_day(s, i, {BTC: Decimal(50_000), **{a: Decimal(100) + Decimal(i) for a in ALTS}})
+    _fund(s, ["0.0005"] * 69 + ["0.00001"] * 21)
+    assert s.held, "позиция должна быть открыта до сжатия ставки"
+
+    signals = _feed_day(s, 40, {BTC: Decimal(50_000), **{a: Decimal(140) for a in ALTS}})
+
+    assert s.funding_regime() is False
+    assert s.held == set()
+    assert any(sig.meta.get("reason") == "плечевой спрос" for sig in signals)
+
+
+def test_perp_is_a_signal_source_not_a_tradable_asset():
+    """Перп в списке нужен ради ставки: покупать его моментум не должен."""
+    s = _strategy(rebalance_days=7, lookback_days=5, top_n=2)
+    s.manifest = s.manifest.model_copy(update={"instruments": [BTC, *ALTS, "BTC/USDT:USDT"]})
+    for i in range(40):
+        prices = {BTC: Decimal(50_000), **{a: Decimal(100) + Decimal(i) for a in ALTS}}
+        prices["BTC/USDT:USDT"] = Decimal(50_000) + Decimal(i) * 5000  # растёт быстрее всех
+        _feed_day(s, i, prices)
+
+    assert "BTC/USDT:USDT" not in s.held

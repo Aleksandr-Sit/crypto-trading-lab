@@ -13,10 +13,10 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from lab.contracts import Candle, Signal
+from lab.contracts import Candle, Event, Signal
 from lab.strategies.base import Strategy
 from lab.strategies.presets.cards import CARDS_DIR
 from lab.strategies.registry import manifest_from_card, preset
@@ -68,6 +68,9 @@ class CrossSectionalMomentumStrategy(Strategy):
         self.day: date | None = None
         self.since_rebalance = 0
         self.held: set[str] = set()
+        # Ставки фандинга по времени — общий ряд на все перпы вселенной: он нужен как
+        # мера рынка целиком, а не отдельного инструмента.
+        self.funding: deque[tuple[datetime, Decimal]] = deque(maxlen=400)
 
     # -- данные ---------------------------------------------------------------------
 
@@ -93,6 +96,9 @@ class CrossSectionalMomentumStrategy(Strategy):
             # рынку ещё неделю. Выход из фазы — это стоп режима, а не ротация портфеля.
             if self.held and not self._breadth_allows(closed):
                 out += self._exit_all(bar, "ширина рынка")
+                self.since_rebalance = 0
+            elif self.held and not self._funding_allows():
+                out += self._exit_all(bar, "плечевой спрос")
                 self.since_rebalance = 0
             elif self.since_rebalance >= int(self.param("rebalance_days", 7)):
                 self.since_rebalance = 0
@@ -122,6 +128,8 @@ class CrossSectionalMomentumStrategy(Strategy):
         floor = D(str(self.param("min_daily_volume_usd", 0)))
         rows: list[tuple[Decimal, str]] = []
         for name, asset in self.assets.items():
+            if ":" in name:
+                continue  # перп в списке — ИСТОЧНИК СИГНАЛА (ставка фандинга), не товар
             if len(asset.turnover) < asset.turnover.maxlen or asset.price <= 0:
                 continue
             mean = sum(asset.turnover, ZERO) / len(asset.turnover)
@@ -156,8 +164,8 @@ class CrossSectionalMomentumStrategy(Strategy):
         days = int(self.param("breadth_sma_days", 50))
         alive = fresh = 0
         for name, asset in self.assets.items():
-            if name == str(self.param("btc_instrument", "BTC/USDT")):
-                continue  # ширину меряем по АЛЬТАМ: биткоин тут не участник, а ориентир
+            if name == str(self.param("btc_instrument", "BTC/USDT")) or ":" in name:
+                continue  # ширину меряем по АЛЬТАМ: биткоин и перпы тут ориентир, не участник
             if len(asset.closes) < days or not asset.closes:
                 continue
             last_day, last_close = asset.closes[-1]
@@ -178,6 +186,50 @@ class CrossSectionalMomentumStrategy(Strategy):
             return True  # фильтр выключен — поведение прежнее
         width = self.breadth_pct(day)
         return width is None or width >= floor
+
+    # -- фандинг как мера плечевого спроса -------------------------------------------
+
+    def on_event(self, event: Event) -> list[Signal]:
+        """Ставки фандинга приходят событием — из них строится оценка фазы рынка.
+
+        Фандинг взят потому, что это данные ДРУГОЙ природы, чем цена. Фильтры по цене
+        (`BTC > SMA`, ширина рынка) провалились одинаково: они разворачиваются вместе
+        с портфелем, а не раньше. Ставка же измеряет позиционирование — сколько платят
+        за право стоять в лонге. В конце августа 2020 цена ETH росла с 383 до 434,
+        а ставка падала с 19.7% до 11.0% годовых: плечевые деньги уходили из ралли
+        за неделю до обвала.
+        """
+        if event.kind != "funding":
+            return []
+        rate = D(str(event.payload.get("rate", 0)))
+        self.funding.append((event.ts, rate))
+        return []
+
+    def funding_regime(self) -> bool | None:
+        """Расширяется ли плечевой спрос: недельное среднее ставки против месячного.
+
+        Порогов нет намеренно. Любое число («держать, пока ставка выше 15% годовых»)
+        пришлось бы подбирать по известному исходу — ровно так была подогнана и провалена
+        гипотеза о ширине рынка. Сравнение ряда с самим собой даёт правило, у которого
+        нечего подкручивать.
+
+        None — данных ещё мало, и тогда фильтр не мешает торговать: отсутствие сигнала
+        не должно превращаться в запрет.
+        """
+        short = int(self.param("funding_fast_days", 7)) * 3  # выплат в сутки — три
+        long = int(self.param("funding_slow_days", 30)) * 3
+        if len(self.funding) < long:
+            return None
+        rates = [rate for _, rate in self.funding]
+        fast = sum(rates[-short:], ZERO) / short
+        slow = sum(rates[-long:], ZERO) / long
+        return fast >= slow
+
+    def _funding_allows(self) -> bool:
+        if not bool(self.param("funding_filter", False)):
+            return True
+        regime = self.funding_regime()
+        return True if regime is None else regime
 
     def _btc_allows(self, day: date) -> bool:
         """Фильтр режима: на медвежьем рынке моментум альтов не работает, сидим в кэше."""
@@ -202,7 +254,7 @@ class CrossSectionalMomentumStrategy(Strategy):
     def _rebalance(self, bar: Candle, day: date) -> list[Signal]:
         top_n = int(self.param("top_n", 5))
         target: list[str] = []
-        if self._btc_allows(day) and self._breadth_allows(day):
+        if self._btc_allows(day) and self._breadth_allows(day) and self._funding_allows():
             ranked = []
             for _, name in self._eligible(day):
                 mom = self._momentum(self.assets[name], day)

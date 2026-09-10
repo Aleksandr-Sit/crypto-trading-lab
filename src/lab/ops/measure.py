@@ -138,20 +138,22 @@ def run_measure(
 def _funding_history(
     record: Any, window: tuple[datetime, datetime], root: str | None
 ) -> dict[str, dict[datetime, Decimal]] | None:
-    """Реальные ставки фандинга по инструментам записи — только для перп-веток.
+    """Реальные ставки фандинга по инструментам записи — по ИМЕНИ инструмента, не по ветке.
 
-    У спота фандинга нет вовсе, поэтому и читать нечего. Истории нет в хранилище — вернём
-    None, и движок начислит по константе из параметров: это видно в счётчиках движка,
-    а не выдаётся за настоящие данные.
+    У спота фандинга нет вовсе, поэтому читаем только для перпов (двоеточие в имени ccxt).
+    Ветка при этом ни при чём: спотовая стратегия может держать перп в списке как ИСТОЧНИК
+    СИГНАЛА, не торгуя его, — так кросс-моментум смотрит на ставку фандинга, чтобы понять
+    фазу рынка. Пока фильтр стоял по ветке, такая стратегия ставок не получала вовсе.
+
+    Истории нет в хранилище — вернём None, и движок начислит по константе из параметров:
+    это видно в счётчиках движка, а не выдаётся за настоящие данные.
     """
-    from lab.contracts import Branch
     from lab.data.funding import FundingStore, rates_lookup
-
-    if Branch(record.branch) not in (Branch.CEX_PERP, Branch.DEX_PERP):
-        return None
     store = FundingStore(root or data_root())
     out: dict[str, dict[datetime, Decimal]] = {}
     for instrument in record.instruments or []:
+        if ":" not in instrument:
+            continue  # спот: фандинга нет, читать нечего
         try:
             rows = store.read(record.venue, instrument, window[0], window[1])
         except Exception as err:  # noqa: BLE001 — битое хранилище не роняет замер
