@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from lab.contracts import StopSpec  # noqa: E402
 from lab.core.registry import DuplicateStrategy, Registry  # noqa: E402
 from lab.db import make_engine, make_session_factory, session_scope  # noqa: E402
+from lab.db.models import StrategyRow  # noqa: E402
 from lab.strategies import registry as code_registry  # noqa: E402
 
 
@@ -52,7 +53,7 @@ def manifest_id(manifest) -> str:
     return f"{manifest.branch}-{manifest.source_kind}-{manifest.slug}"
 
 
-def _sync(registry, session, manifest) -> list[str]:
+def _sync(_registry, session, manifest) -> list[str]:
     """Подтянуть в существующую запись то, что изменилось в карточке. Возврат — что поменяли.
 
     Зачем: карточку правят, а запись в базе остаётся прежней. Так два перп-пресета почти
@@ -63,7 +64,11 @@ def _sync(registry, session, manifest) -> list[str]:
     Параметры и ступень НЕ трогаем: ступень — это история стратегии, а параметры могли быть
     заданы вариантом (`--slug-suffix`) осознанно.
     """
-    row = registry.get(manifest_id(manifest))
+    # Пишем в СТРОКУ базы, а не в модель из `registry.get`: та заморожена (pydantic),
+    # и присваивание ей молча ничего бы не изменило… точнее, не молча — но и не изменило.
+    row = session.get(StrategyRow, manifest_id(manifest))
+    if row is None:
+        return []
     changed: list[str] = []
     if list(row.instruments or []) != list(manifest.instruments):
         row.instruments = list(manifest.instruments)
