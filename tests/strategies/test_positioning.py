@@ -54,12 +54,24 @@ def _warm(s, instrument: str, n: int = 20, rate: str = "0.0001") -> None:
         s.on_event(_funding(instrument, i, rate))
 
 
-def test_percentile_is_the_share_of_history_not_above():
+def test_percentile_is_the_mean_rank_in_its_own_window():
     history = [Decimal(x) for x in ("1", "2", "3", "4")]
-    assert percentile_rank(history, Decimal("4")) == 100
-    assert percentile_rank(history, Decimal("2")) == 50
-    assert percentile_rank(history, Decimal("0")) == 0
+    assert percentile_rank(history, Decimal("5")) == 100, "выше всей истории"
+    assert percentile_rank(history, Decimal("0")) == 0, "ниже всей истории"
+    assert percentile_rank(history, Decimal("2")) == 37.5, "три из восьми полуинтервалов"
     assert percentile_rank([], Decimal("1")) == 50, "пустое окно — середина, а не край"
+
+
+def test_flat_history_gives_the_middle_not_an_extreme():
+    """Ровный ряд — это отсутствие сигнала, а не экстремум на каждой выплате.
+
+    Считая «долю не превышающих», одинаковая история давала бы КАЖДОЙ ставке сотый
+    перцентиль: у спокойных месяцев и стейблкоиновых пар ставка неделями стоит на одном
+    значении, и стратегия открывала бы «экстремум» на самой обычной выплате.
+    """
+    flat = [Decimal("0.0001")] * 30
+
+    assert percentile_rank(flat, Decimal("0.0001")) == 50
 
 
 def test_no_decision_until_history_is_long_enough():
