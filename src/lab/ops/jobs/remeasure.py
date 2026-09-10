@@ -32,6 +32,8 @@ class RemeasureReport:
     measured: list[str] = field(default_factory=list)
     transitions: list[Any] = field(default_factory=list)
     failed: dict[str, str] = field(default_factory=dict)
+    # Кого не успели за отведённое время. Пустой список — успели всех.
+    skipped: list[str] = field(default_factory=list)
 
     def text(self) -> str:
         head = (
@@ -39,6 +41,12 @@ class RemeasureReport:
             f"измерено {len(self.measured)}, переходов {len(self.transitions)}"
         )
         lines = [head]
+        if self.skipped:
+            lines.append(
+                f"⏳ не успели за отведённое время ({len(self.skipped)}): "
+                + ", ".join(self.skipped[:5])
+                + ("…" if len(self.skipped) > 5 else "")
+            )
         for t in self.transitions:
             lines.append(f"• {t.strategy_id}: {t.from_rung} → {t.to_rung} — {t.reason}")
         for sid, err in sorted(self.failed.items()):
@@ -63,7 +71,16 @@ def weekly_remeasure(
     with session_scope() as session:
         ladder = ladder_factory(session)
         rows = list(session.scalars(select(StrategyRow).where(StrategyRow.status.in_(LIVE))))
+        # Бюджет времени на весь прогон. Сервер общий: на тех же ядрах живьём торгует
+        # соседний проект, а замер одной вселенной из 649 инструментов идёт минутами.
+        # Без предела воскресная ночь превращается в многочасовую нагрузку, и виноват
+        # окажется не тот, кто её создал. Не успели — честно перечисляем в отчёте.
+        budget = timedelta(minutes=int(getattr(cfg.remeasure, "budget_minutes", 60) or 0))
+        started = utcnow()
         for row in rows:
+            if budget and utcnow() - started > budget:
+                report.skipped.append(row.id)
+                continue
             try:
                 measured = measure(strategy_id=row.id, mode=cfg.remeasure.mode, window=window)
             except Exception as err:  # noqa: BLE001 — одна стратегия не роняет прогон

@@ -84,6 +84,9 @@ class RemeasureConfig(BaseModel):
     window_days: int = 90
     valid_weeks: int = 4
     mode: str = "backtest"
+    # Бюджет времени на весь воскресный прогон, минут. Сервер общий с боевым ботом
+    # соседнего проекта; без предела ночь превращается в многочасовую нагрузку.
+    budget_minutes: int = 60
 
 
 class RebalanceConfig(BaseModel):

@@ -62,6 +62,9 @@ remeasure:
   # Без успешного переизмерения столько недель — degraded (R14.1).
   valid_weeks: 4
   mode: backtest
+  # Сколько всего минут отведено воскресному прогону: сервер общий, и лаборатория
+  # не должна занимать его часами. Не успели — стратегии перечислены в отчёте.
+  budget_minutes: 60
 
 rebalance:
   risky_branches: [meme, nft, prediction, copy]
