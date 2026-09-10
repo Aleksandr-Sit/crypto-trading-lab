@@ -66,6 +66,7 @@ def weekly_remeasure(
     """Все живые стратегии → замер на свежем окне → `ladder.evaluate`; отчёт в телегу."""
     cfg = config or load_discovery()
     at = now or utcnow()
+    by_tf = dict(getattr(cfg.remeasure, "window_days_by_tf", {}) or {})
     window = (at - timedelta(days=cfg.remeasure.window_days), at)
     report = RemeasureReport(window=window)
     with session_scope() as session:
@@ -81,6 +82,11 @@ def weekly_remeasure(
             if budget and utcnow() - started > budget:
                 report.skipped.append(row.id)
                 continue
+            # Окно СВОЁ у каждого таймфрейма: 30 сделок порога дневная стратегия за квартал
+            # не наберёт физически, и вердикт будет вечный `insufficient` — не потому что
+            # стратегия плоха, а потому что её не успели измерить.
+            days = by_tf.get(row.timeframe or "", cfg.remeasure.window_days)
+            window = (at - timedelta(days=days), at)
             try:
                 measured = measure(strategy_id=row.id, mode=cfg.remeasure.mode, window=window)
             except Exception as err:  # noqa: BLE001 — одна стратегия не роняет прогон
