@@ -36,8 +36,10 @@ class RemeasureReport:
     skipped: list[str] = field(default_factory=list)
 
     def text(self) -> str:
+        # Дата одна — конец окна: начало у каждой стратегии своё, оно зависит от
+        # таймфрейма (дневным правилам нужны годы, минутным хватает квартала).
         head = (
-            f"Переизмерение {self.window[0]:%d.%m}–{self.window[1]:%d.%m}: "
+            f"Переизмерение на {self.window[1]:%d.%m.%Y}: "
             f"измерено {len(self.measured)}, переходов {len(self.transitions)}"
         )
         lines = [head]
