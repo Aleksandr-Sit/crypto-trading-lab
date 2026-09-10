@@ -31,7 +31,7 @@ from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.metrics import metrics as compute_metrics
 from lab.core.measure.metrics import threshold as compute_threshold
-from lab.core.measure.simulator import PERP_BRANCHES, PaperEngine, simulate
+from lab.core.measure.simulator import PaperEngine, simulate
 from lab.core.measure.types import (
     ClosedTrade,
     FoldResult,
