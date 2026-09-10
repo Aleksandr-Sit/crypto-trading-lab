@@ -171,6 +171,7 @@ def _load_builtin() -> None:
     import lab.strategies.classics  # noqa: F401
     import lab.strategies.indicators.strategies  # noqa: F401
     import lab.strategies.neutral  # noqa: F401
+    import lab.strategies.positioning  # noqa: F401
     import lab.strategies.presets  # noqa: F401
     import lab.strategies.xsmom  # noqa: F401
 
