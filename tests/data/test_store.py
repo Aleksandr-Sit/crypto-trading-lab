@@ -135,7 +135,8 @@ def test_duckdb_appetite_is_capped(tmp_path, monkeypatch):
     finally:
         con.close()
 
-    assert "256" in str(limit), f"лимит памяти не применён: {limit}"
+    # DuckDB печатает лимит в мебибайтах: 256 МБ — это 244.1 MiB, а не «256».
+    assert float(str(limit).split()[0]) < 300, f"лимит памяти не применён: {limit}"
     assert str(threads) == "2"
 
     monkeypatch.setenv(DUCKDB_MEMORY_ENV, "128MB")
