@@ -72,3 +72,25 @@ def test_missing_series_reads_empty_not_raises(tmp_path):
     assert store.read("binance", "NOPE/USDT:USDT", T0, T0 + timedelta(days=1)) == []
     assert store.count("binance", "NOPE/USDT:USDT") == 0
     assert store.last_ts("binance", "NOPE/USDT:USDT") is None
+
+
+def test_daily_aggregates_in_the_query_not_in_memory(tmp_path):
+    """Усреднение принадлежит движку запроса: снимков по 288 в сутки.
+
+    За четыре года это 431 864 строки на инструмент, и читать их объектами значит занять
+    под гигабайт: первый замер стратегии на вымывании плеча получил SIGKILL от cgroup —
+    молча, без единой строки вывода, что снаружи неотличимо от «замер ничего не сказал».
+    """
+    store = PositioningStore(tmp_path)
+    store.write(
+        "binance",
+        "BTC/USDT:USDT",
+        [_row(0, "1000"), _row(1, "1200"), _row(25, "2000")],
+    )
+
+    days = store.daily("binance", "BTC/USDT:USDT", T0, T0 + timedelta(days=3))
+
+    assert len(days) == 2, "две даты, а не три снимка"
+    assert Decimal(str(days[0]["open_interest"])) == Decimal(1100)
+    assert Decimal(str(days[1]["open_interest"])) == Decimal(2000)
+    assert days[0]["ts"].date() == T0.date()

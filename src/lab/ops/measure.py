@@ -177,36 +177,27 @@ def _positioning_history(
     Собрано не для всех инструментов: помесячных файлов у метрик нет, и год истории одного
     символа стоит 365 запросов. Нет данных — None, стратегия не получит события.
     """
-    from datetime import datetime as _dt
-
-    from lab.data.positioning import PositioningStore, daily_mean
+    from lab.data.positioning import PositioningStore
 
     store = PositioningStore(root or data_root())
     out: dict[str, dict[datetime, dict[str, Decimal]]] = {}
-    fields = (
-        "open_interest",
-        "open_interest_value",
-        "top_accounts_ratio",
-        "top_positions_ratio",
-        "accounts_ratio",
-        "taker_ratio",
-    )
     for instrument in record.instruments or []:
         if ":" not in instrument:
             continue  # метрики есть только у срочных контрактов
         try:
-            rows = store.read(record.venue, instrument, window[0], window[1])
+            # Усреднение делает движок запроса: снимков по 288 в сутки, за четыре года
+            # это 431 864 строки на инструмент, и читать их объектами значит занять
+            # под гигабайт. Первый замер так и получил SIGKILL — молча, без вывода.
+            rows = store.daily(record.venue, instrument, window[0], window[1])
         except Exception as err:  # noqa: BLE001 — битое хранилище не роняет замер
             log.info("Метрики %s %s: %s", record.venue, instrument, err)
             continue
         if not rows:
             continue
-        by_field = {name: daily_mean(rows, name) for name in fields}
-        days: dict[datetime, dict[str, Decimal]] = {}
-        for day in sorted(by_field["open_interest"]):
-            moment = _dt(day.year, day.month, day.day, tzinfo=window[0].tzinfo)
-            days[moment] = {name: by_field[name][day] for name in fields if day in by_field[name]}
-        out[instrument] = days
+        out[instrument] = {
+            row["ts"]: {k: Decimal(str(v)) for k, v in row.items() if k != "ts" and v is not None}
+            for row in rows
+        }
     return out or None
 
 

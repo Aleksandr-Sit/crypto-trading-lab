@@ -135,6 +135,25 @@ class PositioningStore:
             for r in rows
         ]
 
+    def daily(
+        self, venue: str, instrument: str, from_ts: datetime, to_ts: datetime
+    ) -> list[dict[str, Any]]:
+        """Суточные средние — СРАЗУ в запросе, а не чтением всех снимков в память.
+
+        Пятиминутный шаг даёт 288 строк в сутки: четыре года это 431 864 снимка,
+        и материализовать их объектами значит занять под гигабайт. Первый же замер
+        так и получил SIGKILL от cgroup — молча, без единой строки вывода. Усреднение
+        принадлежит движку запроса, а правилу нужны только суточные числа.
+        """
+        fields = ", ".join(f"avg({name}) as {name}" for name in _FIELDS)
+        return self.query(
+            f"select date_trunc('day', ts) as ts, {fields} from {{positioning}} "
+            "where ts >= ? and ts < ? group by 1 order by 1",
+            venue,
+            instrument,
+            params=[from_ts, to_ts],
+        )
+
     def count(self, venue: str, instrument: str) -> int:
         rows = self.query("select count(*) as n from {positioning}", venue, instrument)
         return int(rows[0]["n"]) if rows else 0
