@@ -175,4 +175,118 @@ class FundingExtremeReversalStrategy(Strategy):
         return self.signal(bar, side, qty, inputs=inputs)
 
 
-__all__ = ["FundingExtremeReversalStrategy", "percentile_rank"]
+@dataclass
+class _Flush:
+    """Состояние ОДНОГО инструмента: вчерашние ориентиры и открытая позиция.
+
+    Два закрытия, а не одно: правило сравнивает сегодняшнее со вчерашним, и хранить надо
+    оба. Событие метрик приходит ПОСЛЕ бара того же дня, поэтому `close_today` к моменту
+    решения уже сегодняшнее — заглядывания вперёд нет.
+    """
+
+    prev_oi: Decimal | None = None
+    close_today: Decimal | None = None
+    close_yesterday: Decimal | None = None
+    last_bar: Candle | None = None
+    qty: Decimal = ZERO
+    opened_at: datetime | None = None
+
+
+@preset(manifest_from_card(CARDS_DIR / "cex-perp-oi-flush.md", source_kind="api"))
+class OpenInterestFlushStrategy(Strategy):
+    """Покупка после ВЫМЫВАНИЯ плеча: открытый интерес сжался вместе с ценой.
+
+    Экономика: резкое сжатие интереса на падающей цене — это не спокойный уход из позиций,
+    а принудительные закрытия. После них давление продаж снято: тех, кого могли заставить
+    продать, уже заставили.
+
+    Почему это не повтор фандинга: ставка говорит, сколько ПЛАТЯТ за плечо, интерес —
+    сколько его НАБРАЛИ. Связь между изменением интереса и ставкой −0.03, то есть её нет.
+
+    Чего в правилах нет намеренно — шорта на обратном сигнале (интерес растёт вместе
+    с ценой). Симметрия красива, но причина у неё слабее: накопление плеча длится
+    месяцами, и замер экстремального фандинга это уже показал — шорт против толпы
+    теряет на цене в восемь раз больше, чем собирает.
+    """
+
+    card = "cex-perp-oi-flush"
+
+    def reset(self) -> None:
+        self.flush: dict[str, _Flush] = {}
+
+    def _state(self, instrument: str) -> _Flush:
+        state = self.flush.get(instrument)
+        if state is None:
+            state = self.flush[instrument] = _Flush()
+        return state
+
+    def _notional(self) -> Decimal:
+        capital = D(str(self.param("capital_usd", 10_000)))
+        share = D(str(self.param("max_notional_pct_of_branch", 50))) / 100
+        n = len(self.manifest.instruments) or 1
+        return capital * share / n
+
+    def on_bar(self, bar: Candle) -> list[Signal]:
+        """Бар нужен для выхода по сроку и для пары закрытий: вход решается на метриках."""
+        state = self._state(bar.instrument)
+        state.close_yesterday, state.close_today = state.close_today, bar.close
+        state.last_bar = bar
+        if state.qty <= 0 or state.opened_at is None:
+            return []
+        hold = timedelta(days=int(self.param("hold_days", 5)))
+        if bar.ts - state.opened_at < hold:
+            return []
+        qty = state.qty
+        state.qty, state.opened_at = ZERO, None
+        return [
+            self.signal(bar, "sell", qty, inputs={"kind": "flush_close", "reason": "срок вышел"})
+        ]
+
+    def on_event(self, event: Event) -> list[Signal]:
+        if event.kind != "positioning":
+            return []
+        state = self._state(str(event.payload.get("instrument", "")))
+        oi = D(str(event.payload.get("open_interest", 0)))
+        prev_oi = state.prev_oi
+        state.prev_oi = oi
+        if prev_oi is None or prev_oi <= 0 or oi <= 0 or state.qty > 0:
+            # Позиция уже есть — докупать в вымывание значит ловить нож: одна на инструмент.
+            return []
+        today, yesterday = state.close_today, state.close_yesterday
+        bar = state.last_bar
+        if bar is None or today is None or yesterday is None or yesterday <= 0:
+            return []
+
+        oi_drop = (prev_oi - oi) / prev_oi * 100
+        price_drop = (yesterday - today) / yesterday * 100
+        # ОБА условия обязательны. Сжатие интереса на растущей цене — это фиксация
+        # прибыли, а не вымывание: продавцов заставили выйти только во втором случае.
+        if oi_drop < D(str(self.param("flush_drop_pct", 5))):
+            return []
+        if price_drop < D(str(self.param("flush_price_drop_pct", 3))):
+            return []
+        if today <= 0:
+            return []
+        qty = self._notional() / today
+        if qty <= 0:
+            return []
+        state.qty, state.opened_at = qty, bar.ts
+        return [
+            self.signal(
+                bar,
+                "buy",
+                qty,
+                inputs={
+                    "kind": "flush_open",
+                    "oi_drop": str(oi_drop),
+                    "price_drop": str(price_drop),
+                },
+            )
+        ]
+
+
+__all__ = [
+    "FundingExtremeReversalStrategy",
+    "OpenInterestFlushStrategy",
+    "percentile_rank",
+]

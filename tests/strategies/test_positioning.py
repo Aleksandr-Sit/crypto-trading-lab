@@ -165,3 +165,78 @@ def test_state_is_per_instrument():
 def test_other_events_are_ignored():
     s = _strategy()
     assert s.on_event(Event(kind="ticker", ts=T0, payload={"instrument": BTC})) == []
+
+
+# -- вымывание плеча ---------------------------------------------------------------
+
+FLUSH_SID = "cex-perp-api-oi-flush"
+
+
+def _flush_strategy(**params):
+    base = {"capital_usd": 10_000, "max_notional_pct_of_branch": 50, "hold_days": 5}
+    s = code_registry.build(FLUSH_SID, params={**base, **params})
+    return s.__class__(s.manifest.model_copy(update={"instruments": [BTC]}))
+
+
+def _metrics(instrument: str, i: int, oi: str) -> Event:
+    return Event(
+        kind="positioning",
+        ts=T0 + HOUR * 24 * i,
+        payload={"instrument": instrument, "open_interest": Decimal(oi)},
+    )
+
+
+def _day(s, i: int, price: str, oi: str):
+    """День: сначала бар, потом метрики — тот же порядок, что в замере."""
+    out = s.on_bar(_bar(BTC, i * 24, price))
+    out += s.on_event(_metrics(BTC, i, oi))
+    return out
+
+
+def test_flush_needs_both_the_interest_and_the_price_to_drop():
+    """Сжатие интереса на растущей цене — фиксация прибыли, а не принудительные закрытия."""
+    s = _flush_strategy(flush_drop_pct=5, flush_price_drop_pct=3)
+    _day(s, 0, "50000", "1000")
+
+    assert _day(s, 1, "52000", "900") == [], "интерес сжался, но цена выросла — не вымывание"
+    assert _day(s, 2, "50000", "895") == [], "цена упала, но интерес почти не изменился"
+
+
+def test_flush_opens_a_long():
+    s = _flush_strategy(flush_drop_pct=5, flush_price_drop_pct=3)
+    _day(s, 0, "50000", "1000")
+
+    signals = _day(s, 1, "47000", "900")  # интерес −10%, цена −6%
+
+    assert len(signals) == 1 and signals[0].side == "buy"
+    assert signals[0].meta.get("kind") == "flush_open"
+    assert s.flush[BTC].qty == Decimal(5000) / Decimal(47_000)
+
+
+def test_position_closes_after_the_holding_period():
+    """Гипотеза про КОРОТКИЙ отскок после принудительных продаж, а не про смену тренда."""
+    s = _flush_strategy(flush_drop_pct=5, flush_price_drop_pct=3, hold_days=5)
+    _day(s, 0, "50000", "1000")
+    _day(s, 1, "47000", "900")
+    assert s.flush[BTC].qty > 0
+
+    assert _day(s, 3, "48000", "890") == [], "рано"
+    closing = _day(s, 6, "49000", "880")
+
+    assert len(closing) == 1 and closing[0].side == "sell"
+    assert closing[0].meta.get("reason") == "срок вышел"
+
+
+def test_no_second_entry_while_in_position():
+    """Докупать в вымывание — ловить нож: одна позиция на инструмент."""
+    s = _flush_strategy(flush_drop_pct=5, flush_price_drop_pct=3, hold_days=30)
+    _day(s, 0, "50000", "1000")
+    _day(s, 1, "47000", "900")
+
+    assert _day(s, 2, "42000", "800") == [], "второе вымывание подряд позицию не удваивает"
+
+
+def test_first_day_cannot_decide():
+    """Не с чем сравнивать: ни вчерашнего интереса, ни вчерашней цены."""
+    s = _flush_strategy()
+    assert _day(s, 0, "50000", "1000") == []
