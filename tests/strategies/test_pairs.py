@@ -58,7 +58,8 @@ def _feed_day(s, i: int, prices: dict[str, Decimal]):
 
 
 def test_normalization_makes_different_scales_comparable():
-    """BTC по 60 000 и DOGE по 0.2 нельзя вычитать: спред был бы про масштаб, а не про расхождение."""
+    """BTC по 60 000 и DOGE по 0.2 нельзя вычитать: спред был бы про масштаб,
+    а не про расхождение."""
     big = normalized([Decimal(60_000), Decimal(66_000)])
     small = normalized([Decimal("0.2"), Decimal("0.22")])
 
@@ -114,7 +115,8 @@ def test_convergence_closes_the_pair():
 
 
 def test_widening_divergence_cuts_the_pair():
-    """Расхождение, которое РАСТЁТ, чаще значит, что один актив умирает, а не что схождение близко."""
+    """Расхождение, которое РАСТЁТ, чаще значит, что один актив умирает,
+    а не что схождение близко."""
     s = _strategy(entry_sigma=1.0, stop_sigma=2.0)
     for i in range(21):
         _feed_day(s, i, {A: Decimal(100), B: Decimal(100), C: Decimal(30)})
