@@ -110,7 +110,7 @@ docker compose -f deploy/docker-compose.yml run --rm --no-deps \
 | `feeds.quota` | шов квот для всех фидов | `FeedsRegistry.use(feed_id, n)`, `NullQuota`, `MemoryFeedsRegistry` |
 | `executors.*` | ордера: `cex`, `dex`, `nft` (+минт), `polymarket`, `robinhood` | контракт `Executor`; `executors.registry.register/get/all`; `executors.access.branch_mode` |
 | `strategies` | правила | `Strategy` (`on_bar/on_event -> [Signal]`), `strategies.registry.build/manifest/all`, `inputs_hash` |
-| `strategies.presets/indicators/meme/nft/copy/prediction/stocks/external` | сами правила по веткам | 13 стратегий в реестре кода: пресеты ботов, индикаторы, черепахи (`classics`), фандинг-арбитраж и кэш-энд-керри (`neutral`), кросс-моментум альтов (`xsmom`); `copy`/`meme`/`nft`/`prediction` собираются под конкретного лидера/токен фабриками |
+| `strategies.presets/indicators/meme/nft/copy/prediction/stocks/external` | сами правила по веткам | 15 стратегий в реестре кода: пресеты ботов, индикаторы, черепахи (`classics`), фандинг-арбитраж и кэш-энд-керри (`neutral`), кросс-моментум альтов (`xsmom`), экстремум фандинга (`positioning`), парный стат-арбитраж (`pairs`); `copy`/`meme`/`nft`/`prediction` собираются под конкретного лидера/токен фабриками |
 | `wallets` | статистика кошельков и лидеров | `recalc -> WalletStats`, `flags`, `lag_cost`, `save_stats/load_stats/tracked` |
 | `nft` | коллекции, создатели, лента минтов, allowlist, позиции | `CollectionTracker`, `creator_score`, `UpcomingFeed`, `attention_index`, `hold_plan`, `nft_costs` |
 | `discovery` | поиск кандидатов | `scan() -> ScanResult`, `default_sources`, `decide`, `candidate_hook`, `fingerprint` |
