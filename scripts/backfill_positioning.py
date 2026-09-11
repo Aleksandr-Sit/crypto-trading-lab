@@ -37,11 +37,22 @@ def archive_symbol(instrument: str) -> str:
     return f"{base}{rest.partition(':')[0]}".upper()
 
 
+_SCALE = Decimal("0.000000000001")  # 12 знаков — как в схеме хранилища
+
+
 def _dec(raw: str) -> Decimal:
+    """Число из файла, приведённое к точности схемы.
+
+    Биржа пишет значения с 16 знаками после запятой (`5529872248.0063800000000000`),
+    а в партиции их 12. Без явного округления pyarrow отказывается писать вовсе
+    («Rescaling Decimal value would cause data loss») — и правильно делает: молча
+    терять знаки у денег нельзя. Здесь это метрики, а не деньги, и 12 знаков с запасом.
+    """
     try:
-        return Decimal(raw) if raw not in ("", "\\N") else Decimal(0)
+        value = Decimal(raw) if raw not in ("", "\\N") else Decimal(0)
     except InvalidOperation:
         return Decimal(0)
+    return value.quantize(_SCALE)
 
 
 def parse_day(data: bytes) -> list[Positioning]:
