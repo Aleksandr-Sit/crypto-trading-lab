@@ -161,7 +161,11 @@ class PositioningStore:
             names = [d[0] for d in cur.description]
             return [
                 {
-                    k: (v.replace(tzinfo=UTC) if isinstance(v, datetime) and v.tzinfo is None else v)
+                    k: (
+                        v.replace(tzinfo=UTC)
+                        if isinstance(v, datetime) and v.tzinfo is None
+                        else v
+                    )
                     for k, v in zip(names, row, strict=True)
                 }
                 for row in cur.fetchall()

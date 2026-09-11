@@ -26,8 +26,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from lab.core.ladder import Ladder, default_threshold_fn  # noqa: E402
-from lab.core.risk import DbHaltSwitch  # noqa: E402
 from lab.core.registry import Registry  # noqa: E402
+from lab.core.risk import DbHaltSwitch  # noqa: E402
 from lab.db import make_engine, make_session_factory, session_scope  # noqa: E402
 from lab.ops.jobs import weekly_remeasure  # noqa: E402
 from lab.ops.measure import make_measure  # noqa: E402
