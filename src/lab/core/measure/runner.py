@@ -609,7 +609,12 @@ def run(
             extra_metrics["stop_rule"] = result.stop_rule
             extra_metrics["blocked_signals"] = result.blocked_signals
     except IncompleteData as err:
-        return _incomplete(base, session, str(err), hasher.digest(bench_rows, funding_history, positioning_history))
+        return _incomplete(
+            base,
+            session,
+            str(err),
+            hasher.digest(bench_rows, funding_history, positioning_history),
+        )
     except (OSError, ConnectionError, TimeoutError) as err:
         digest = hasher.digest(bench_rows, funding_history, positioning_history)
         return _incomplete(base, session, f"источник данных упал: {err}", digest)
