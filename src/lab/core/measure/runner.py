@@ -152,12 +152,14 @@ class DataHasher:
         self,
         benchmark: Sequence[Candle] | None = None,
         funding: dict[str, dict[datetime, Decimal]] | None = None,
+        positioning: dict[str, dict[datetime, dict[str, Decimal]]] | None = None,
     ) -> str:
-        """Отпечаток всех данных замера: свечи, бенчмарк и ставки фандинга.
+        """Отпечаток всех данных замера: свечи, бенчмарк, ставки фандинга и метрики.
 
-        Фандинг обязан входить: без него замер на реальных ставках и замер на константе
-        дают ОДИН отпечаток, и сохранённый снимок вернулся бы вместо нового — с чужими
-        цифрами. Для спота словарь пуст, и отпечаток не меняется.
+        Всё, ЧЕМ КОРМЯТ стратегию, обязано входить в отпечаток. Иначе замер на реальных
+        данных и замер без них дают ОДИН хеш, и вместо нового расчёта вернётся сохранённый
+        снимок — с чужими цифрами. Ставки эту ошибку уже ловили; метрики позиционирования
+        добавлены сюда по той же причине. Для спота оба словаря пусты, отпечаток не меняется.
         """
         if not self._closed:
             self._h.update(b"bench")
@@ -166,7 +168,14 @@ class DataHasher:
             self._h.update(b"funding")
             for instrument in sorted(funding or {}):
                 for ts in sorted(funding[instrument]):
-                    self._h.update(f"{instrument}|{ts.isoformat()}|{funding[instrument][ts]}\n".encode())
+                    row = funding[instrument][ts]
+                    self._h.update(f"{instrument}|{ts.isoformat()}|{row}\n".encode())
+            self._h.update(b"positioning")
+            for instrument in sorted(positioning or {}):
+                for ts in sorted(positioning[instrument]):
+                    values = positioning[instrument][ts]
+                    fields = "|".join(f"{k}={values[k]}" for k in sorted(values))
+                    self._h.update(f"{instrument}|{ts.isoformat()}|{fields}\n".encode())
             self._closed = True
         return self._h.hexdigest()
 
@@ -390,6 +399,10 @@ def run(
     depth: Depth | None = None,
     funding_rate: Decimal = Decimal("0.0001"),
     funding_history: dict[str, dict[datetime, Decimal]] | None = None,
+    # Метрики позиционирования по инструментам: «инструмент → момент → показатели».
+    # Отдельно от ставок намеренно: связь изменения открытого интереса со ставкой −0.03,
+    # это разные данные, и класть их в один словарь значило бы потерять второй.
+    positioning_history: dict[str, dict[datetime, dict[str, Decimal]]] | None = None,
     seed: int = 0,
     extra_metrics: dict[str, object] | None = None,
 ) -> Measurement:
@@ -479,6 +492,7 @@ def run(
                     # Реальные ставки, если их собрали: у нейтральных стратегий весь доход
                     # именно в фандинге, и константа вместо истории мерила бы выдуманное.
                     funding_rates=(funding_history or {}).get(name),
+                    positioning=(positioning_history or {}).get(name),
                     # Двоеточие в имени ccxt — признак перпа: у связки «спот + перп» обе
                     # ноги в перп-ветке, но фандинг платит только перповая. Ветка при этом
                     # ни при чём: спотовая стратегия может держать перп как ИСТОЧНИК
@@ -559,7 +573,7 @@ def run(
             allow_gaps=len(instruments) > 1,
             cross_margin=cross_margin,
         )
-        dh = hasher.digest(bench_rows, funding_history)
+        dh = hasher.digest(bench_rows, funding_history, positioning_history)
         cached = _lookup(session, base, dh)
         if cached is not None:
             return cached
@@ -595,9 +609,9 @@ def run(
             extra_metrics["stop_rule"] = result.stop_rule
             extra_metrics["blocked_signals"] = result.blocked_signals
     except IncompleteData as err:
-        return _incomplete(base, session, str(err), hasher.digest(bench_rows, funding_history))
+        return _incomplete(base, session, str(err), hasher.digest(bench_rows, funding_history, positioning_history))
     except (OSError, ConnectionError, TimeoutError) as err:
-        digest = hasher.digest(bench_rows, funding_history)
+        digest = hasher.digest(bench_rows, funding_history, positioning_history)
         return _incomplete(base, session, f"источник данных упал: {err}", digest)
 
     return _finish(

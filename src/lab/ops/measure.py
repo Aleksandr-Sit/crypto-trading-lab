@@ -120,6 +120,7 @@ def run_measure(
             ),
             extra_metrics={"benchmark_kind": kind},
             funding_history=_funding_history(record, window, root),
+            positioning_history=_positioning_history(record, window, root),
         )
         if mode in FROM_JOURNAL:
             kwargs["trades"] = _journal_trades(session, strategy_id, window)
@@ -161,6 +162,51 @@ def _funding_history(
             continue
         if rows:
             out[instrument] = rates_lookup(rows)
+    return out or None
+
+
+def _positioning_history(
+    record: Any, window: tuple[datetime, datetime], root: str | None
+) -> dict[str, dict[datetime, dict[str, Decimal]]] | None:
+    """Метрики позиционирования по инструментам записи, сведённые к СУТКАМ.
+
+    Пятиминутный шаг источника для правил слишком шумен: у открытого интереса внутри дня
+    ходят проценты, а информативно движение за дни. Ключ — полночь UTC, то есть время
+    дневного бара; на других таймфреймах события просто не совпадут и правило смолчит.
+
+    Собрано не для всех инструментов: помесячных файлов у метрик нет, и год истории одного
+    символа стоит 365 запросов. Нет данных — None, стратегия не получит события.
+    """
+    from datetime import datetime as _dt
+
+    from lab.data.positioning import PositioningStore, daily_mean
+
+    store = PositioningStore(root or data_root())
+    out: dict[str, dict[datetime, dict[str, Decimal]]] = {}
+    fields = (
+        "open_interest",
+        "open_interest_value",
+        "top_accounts_ratio",
+        "top_positions_ratio",
+        "accounts_ratio",
+        "taker_ratio",
+    )
+    for instrument in record.instruments or []:
+        if ":" not in instrument:
+            continue  # метрики есть только у срочных контрактов
+        try:
+            rows = store.read(record.venue, instrument, window[0], window[1])
+        except Exception as err:  # noqa: BLE001 — битое хранилище не роняет замер
+            log.info("Метрики %s %s: %s", record.venue, instrument, err)
+            continue
+        if not rows:
+            continue
+        by_field = {name: daily_mean(rows, name) for name in fields}
+        days: dict[datetime, dict[str, Decimal]] = {}
+        for day in sorted(by_field["open_interest"]):
+            moment = _dt(day.year, day.month, day.day, tzinfo=window[0].tzinfo)
+            days[moment] = {name: by_field[name][day] for name in fields if day in by_field[name]}
+        out[instrument] = days
     return out or None
 
 

@@ -80,6 +80,10 @@ class PaperEngine:
     # Явное значение нужно связкам «спот + перп»: обе ноги в перп-ветке, но платит одна,
     # и угадывать это по имени движок не должен — пусть говорит тот, кто его создаёт.
     is_perp: bool | None = None
+    # Метрики позиционирования «момент → показатели». Отдаются стратегии событием
+    # `positioning`: открытый интерес и потоки — данные другой природы, чем цена,
+    # и единственные, что не дублируют премию за плечо (связь со ставкой −0.03).
+    positioning: Mapping[datetime, Mapping[str, Decimal]] | None = None
     # Плечо этой ноги. None — залога нет вовсе (спот), ликвидация невозможна.
     # Залог считается ПО НОГЕ, а не по стратегии: на бирже спот и фьючерс — разные счета,
     # и шорт фьючерса ликвидируют, даже когда спот-нога того же хеджа в прибыли.
@@ -339,6 +343,17 @@ class PaperEngine:
         costs = self.costs.estimate(self.venue, intent, depth=self.depth)
         self._apply(side, qty, price, ts, costs)
         return qty
+
+    def positioning_at(self, bar: Candle) -> Mapping[str, Decimal] | None:
+        """Метрики позиционирования на момент бара, если они собраны.
+
+        Ключ — время бара: метрики сведены к суткам, а стратегия на дневных свечах,
+        поэтому совпадение точное. Нет данных — None, и стратегия просто не получит
+        события: молчание честнее выдуманного числа.
+        """
+        if self.positioning is None:
+            return None
+        return self.positioning.get(bar.ts)
 
     def funding_events(self, bar: Candle) -> list[tuple[datetime, Decimal]]:
         """Выплаты фандинга внутри бара: момент и ставка. Для спота — пусто.
@@ -670,6 +685,20 @@ def simulate(
                             kind="funding",
                             ts=moment,
                             payload={"instrument": bar.instrument, "rate": rate},
+                        )
+                    )
+                )
+            # Метрики позиционирования — тем же контрактом, что и ставки: стратегия
+            # не ходит в хранилище сама, ей приносят. Нет данных за этот момент —
+            # события нет вовсе, и правило честно молчит.
+            metrics = eng.positioning_at(bar)
+            if metrics:
+                decisions.extend(
+                    on_event(
+                        Event(
+                            kind="positioning",
+                            ts=bar.ts,
+                            payload={"instrument": bar.instrument, **dict(metrics)},
                         )
                     )
                 )
