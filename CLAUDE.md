@@ -12,7 +12,7 @@
 | Что | Команда | Что вышло |
 |---|---|---|
 | Установка | `uv sync` | 80 пакетов, лок сходится |
-| Тесты | `uv run pytest -q` | **529 passed, 138 skipped** в контейнере сервера (локально 29 skipped — там есть тестовая база) |
+| Тесты | `uv run pytest -q` | **555 passed, 138 skipped** в контейнере сервера (локально 29 skipped — там есть тестовая база) |
 | Один файл | `uv run pytest -q tests/<путь>` | |
 | Линт | `uv run ruff check .` | All checks passed |
 | Миграции | `uv run alembic upgrade head` | голова `0011`, одна |
