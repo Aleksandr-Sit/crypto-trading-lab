@@ -63,11 +63,20 @@ FEATURES = (
 )
 
 
+SPOT_DIRS = {"Buy", "Sell", "Spot Dust Conversion"}
+
+
 class Account:
-    """Счётчики одного счёта. Позиция ведётся по монетам, сделки не хранятся."""
+    """Счётчики одного счёта. Сделки не хранятся, остаются только счётчики.
+
+    Позиция НЕ восстанавливается сложением размеров: дробные доли накапливаются, и она
+    никогда не возвращается ровно в ноль — в первом прогоне восемнадцать тысяч сделок дали
+    двадцать «эпизодов». Биржа отдаёт в каждой сделке `startPosition` — позицию ДО неё,
+    и это авторитетный источник.
+    """
 
     def __init__(self) -> None:
-        self.pos: dict[str, list[float]] = {}  # монета → [размер со знаком, средняя цена, время]
+        self.pos: dict[str, list[float]] = {}  # монета → [средняя цена входа, время входа]
         self.holds: list[float] = []
         self.wins: list[float] = []
         self.losses: list[float] = []
@@ -82,46 +91,50 @@ class Account:
         self.pnl = 0.0
 
     def add(self, f: dict) -> None:
+        if f.get("dir") in SPOT_DIRS:
+            return  # спот: копируют бессрочные контракты, а не покупку монеты
         coin = f["coin"]
         px = float(f["px"])
         sz = float(f["sz"])
         signed = sz if f["side"] == "B" else -sz
+        before = float(f.get("startPosition") or 0)
+        after = before + signed
         self.fills += 1
         self.fees += float(f.get("fee") or 0)
         self.notional += px * sz
         self.pnl += float(f.get("closedPnl") or 0)
+        flat = abs(after) < abs(sz) * 1e-6
 
-        cur = self.pos.get(coin)
-        if cur is None or cur[0] == 0:
-            self.pos[coin] = [signed, px, f["time"]]
+        if before == 0:
+            self.pos[coin] = [px, f["time"]]
             self.episodes += 1
             self.per_coin[coin] = self.per_coin.get(coin, 0) + 1
             if signed > 0:
                 self.longs += 1
             return
 
-        size, avg, opened = cur
-        if (size > 0) == (signed > 0):
+        avg, opened = self.pos.get(coin, [px, f["time"]])
+        if abs(after) > abs(before) and (after > 0) == (before > 0):
             # Долив. Убыточен ли он: для лонга — цена ниже средней, для шорта — выше.
             self.adds += 1
-            if (size > 0 and px < avg) or (size < 0 and px > avg):
+            if (before > 0 and px < avg) or (before < 0 and px > avg):
                 self.adds_bad += 1
-            total = size + signed
-            cur[1] = (avg * size + px * signed) / total if total else px
-            cur[0] = total
+            self.pos[coin] = [(avg * abs(before) + px * abs(signed)) / abs(after), opened]
             return
 
-        cur[0] = size + signed
-        if abs(cur[0]) < 1e-12 or (cur[0] > 0) != (size > 0):
-            # Эпизод закрыт (или перевёрнут — считаем закрытием и новым входом).
+        gain = float(f.get("closedPnl") or 0)
+        if flat or (after > 0) != (before > 0):
             self.holds.append((f["time"] - opened) / 3_600_000)
-            gain = float(f.get("closedPnl") or 0)
             (self.wins if gain > 0 else self.losses).append(gain)
-            if abs(cur[0]) < 1e-12:
-                self.pos[coin] = [0.0, 0.0, 0]
+            if flat:
+                self.pos.pop(coin, None)
             else:
-                self.pos[coin] = [cur[0], px, f["time"]]
+                # Переворот: закрытие и новый вход одной сделкой.
+                self.pos[coin] = [px, f["time"]]
                 self.episodes += 1
+                self.per_coin[coin] = self.per_coin.get(coin, 0) + 1
+                if after > 0:
+                    self.longs += 1
 
     def features(self) -> dict[str, float] | None:
         if self.episodes < 20 or not self.holds:
@@ -184,15 +197,21 @@ def stage_fills(root: Path, limit: int, pause: float, floor: float) -> int:
             pages = 0
             truncated = False
             while pages < MAX_PAGES:
-                try:
-                    r = client.post(
-                        INFO,
-                        json={"type": "userFillsByTime", "user": address, "startTime": start},
-                    )
-                    r.raise_for_status()
-                    batch = r.json()
-                except Exception as err:  # noqa: BLE001 — один счёт не роняет прогон
-                    print(f"  {address[:10]}: {type(err).__name__}")
+                batch = None
+                for attempt in range(4):
+                    try:
+                        r = client.post(
+                            INFO,
+                            json={"type": "userFillsByTime", "user": address, "startTime": start},
+                        )
+                        r.raise_for_status()
+                        batch = r.json()
+                        break
+                    except Exception as err:  # noqa: BLE001 — ограничение частоты, отступаем
+                        if attempt == 3:
+                            print(f"  {address[:10]}: {type(err).__name__}")
+                        time.sleep(2 ** attempt)
+                if batch is None:
                     break
                 if not batch:
                     break
@@ -278,7 +297,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--stage", required=True, choices=("fills", "link"))
     ap.add_argument("--limit", type=int, default=400)
-    ap.add_argument("--pause", type=float, default=0.15)
+    ap.add_argument("--pause", type=float, default=0.4)
     ap.add_argument("--floor", type=float, default=50_000)
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
