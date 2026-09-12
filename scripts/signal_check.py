@@ -30,8 +30,9 @@ import argparse
 import sys
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from math import sqrt
 from pathlib import Path
-from statistics import mean
+from statistics import mean, stdev
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -83,6 +84,16 @@ def series(
         forward = {h: float((bars[rows[i + h]["ts"]] - price) / price * 100) for h in horizons}
         out.append((now, value, forward))
     return out
+
+
+def _se_by_date(pooled: list[Row], edge: float, h: int, tail: str) -> float:
+    """Стандартная ошибка средней хвоста, где наблюдение — дата, а не строка."""
+    by_date: dict[datetime, list[float]] = defaultdict(list)
+    for ts, v, f in pooled:
+        if (tail == "low" and v <= edge) or (tail == "high" and v >= edge):
+            by_date[ts].append(f[h])
+    means = [mean(vals) for vals in by_date.values()]
+    return stdev(means) / sqrt(len(means)) if len(means) > 1 else 0.0
 
 
 def by_year(pooled: list[Row], low_edge: float, high_edge: float, h: int) -> None:
@@ -166,16 +177,21 @@ def main() -> int:
     print(f"верхние {args.tail_pct:.0f}%: значение ≥ {high_edge:.4f} ({len(high)} дней)\n")
     print(
         f"{'горизонт':10}{'нижний хвост':>15}{'верхний хвост':>16}"
-        f"{'обычный день':>15}{'разброс':>11}"
+        f"{'обычный день':>15}{'разброс':>11}{'шум (2σ)':>11}"
     )
     for h in horizons:
         lo = mean(f[h] for f in low)
         hi = mean(f[h] for f in high)
         al = mean(f[h] for _, _, f in pooled)
-        print(f"{h:>4} дн   {lo:>14.2f}%{hi:>15.2f}%{al:>14.2f}%{hi - lo:>10.2f}")
+        # Шум — по ДАТАМ, а не по строкам: несколько монет в один день — одно наблюдение
+        # (ревизия 12.09.2026; до неё скрипт печатал средние без меры шума вовсе).
+        noise = sqrt(_se_by_date(pooled, low_edge, h, "low") ** 2
+                     + _se_by_date(pooled, high_edge, h, "high") ** 2) * 2
+        print(f"{h:>4} дн   {lo:>14.2f}%{hi:>15.2f}%{al:>14.2f}%{hi - lo:>10.2f}{noise:>11.2f}")
     print(
         "\nЧитать так: разброс между хвостами — это ВСЁ, что показатель обещает.\n"
-        "Меньше двух-трёх десятых процента — круг по издержкам съест его целиком."
+        "Меньше собственного шума — эффекта нет; меньше двух-трёх десятых процента —\n"
+        "круг по издержкам съест его целиком."
     )
 
     if args.by_year:

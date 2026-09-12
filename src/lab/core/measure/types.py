@@ -103,6 +103,14 @@ class Stability(_Model):
     phases: dict[str, PhaseStat] = Field(default_factory=dict)
 
     @property
+    def independent(self) -> int:
+        """Сколько окон НЕ пересекаются. Окна в 730 дней с шагом 180 перекрываются на три
+        четверти, и «8 из 8» — это два-три независимых наблюдения, а не восемь."""
+        if not self.windows or not self.window_days:
+            return 0
+        return max(1, round(self.windows * self.step_days / self.window_days))
+
+    @property
     def profitable_pct(self) -> Decimal:
         return Decimal(self.profitable) * 100 / self.windows if self.windows else Decimal(0)
 
@@ -125,6 +133,13 @@ class Metrics(_Model):
     profit_factor: Decimal | None
     payoff: Decimal | None
     max_dd_pct: Decimal
+    # Ревизия 12.09.2026: `max_dd_pct` — худшая из двух просадок. По закрытым сделкам
+    # (`closed_max_dd_pct`) позиция, просевшая на 40% и закрытая в +1%, просадки не даёт;
+    # по цене бара (`mtm_max_dd_pct`) — даёт. `unrealized_pnl` — незакрытый на конец окна
+    # итог, он входит в `net_pnl`; раньше выпадал.
+    closed_max_dd_pct: Decimal | None = None
+    mtm_max_dd_pct: Decimal | None = None
+    unrealized_pnl: Decimal = Decimal(0)
     dd_duration_days: Decimal
     sharpe: Decimal | None
     sortino: Decimal | None

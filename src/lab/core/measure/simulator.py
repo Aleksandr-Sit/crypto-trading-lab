@@ -446,6 +446,13 @@ class SimResult:
     gaps: dict[str, int] = field(default_factory=dict)
     # Ликвидации: инструмент и момент. Пусто — счёт дожил до конца окна.
     liquidations: list[tuple[str, datetime]] = field(default_factory=list)
+    # Переоценка по рынку (ревизия 12.09.2026). До неё просадка и итог считались ТОЛЬКО
+    # по закрытым сделкам: позиция, просевшая на 40% и закрытая в +1%, просадки не давала
+    # вовсе, а всё, что оставалось открытым на конец окна, из результата выпадало. Здесь
+    # худшая просадка кривой «капитал + закрытое + незакрытое по цене бара» и незакрытый
+    # итог на последнем баре.
+    mtm_max_dd_pct: Decimal = ZERO_D
+    unrealized_end: Decimal = ZERO_D
 
 
 def _isolated_breach(bar: Candle, eng: PaperEngine) -> list[tuple[str, Decimal]]:
@@ -598,6 +605,26 @@ def simulate(
     batch_ts: datetime | None = None
     consumed = dict.fromkeys(book, 0)
 
+    # Переоценка по рынку. Пересчитывается только у движка, чей бар пришёл (и у тех, кого
+    # ликвидировали): обход всех движков на каждом баре при вселенной в 647 рядов — это
+    # миллиард операций на замер.
+    realized = ZERO_D
+    realized_idx = dict.fromkeys(book, 0)
+    unreal: dict[str, Decimal] = dict.fromkeys(book, ZERO_D)
+    unreal_total = ZERO_D
+    mtm_peak = capital
+    mtm_max_dd = ZERO_D
+
+    def _refresh(name: str, price: Decimal) -> None:
+        nonlocal realized, unreal_total
+        e = book[name]
+        fresh_closed = e.closed[realized_idx[name] :]
+        realized_idx[name] = len(e.closed)
+        realized += sum((t.pnl_net for t in fresh_closed), ZERO_D)
+        now_u = e.margin_state(price)[1]
+        unreal_total += now_u - unreal[name]
+        unreal[name] = now_u
+
     # Причины считаем по ИСПОЛНЕННЫМ сигналам: намерение и сделка — разные вещи, лимитка
     # могла не сработать, а сигнал протухнуть по ttl.
     gaps: dict[str, int] = {}
@@ -651,6 +678,15 @@ def simulate(
         for name, price in killed:
             book[name].liquidate(price, bar.ts)
             liquidations.append((name, bar.ts))
+        _refresh(bar.instrument, bar.close)
+        for name, price in killed:
+            if name != bar.instrument:
+                _refresh(name, last_price.get(name, price))
+        equity = capital + realized + unreal_total
+        if equity >= mtm_peak:
+            mtm_peak = equity
+        elif mtm_peak > 0:
+            mtm_max_dd = max(mtm_max_dd, (mtm_peak - equity) / mtm_peak * 100)
         if killed and stopped_at is None:
             # Хедж после ликвидации сломан, и продолжать по правилам нельзя: ведём себя
             # как при пробое стопа — закрытия проходят, открытия нет.
@@ -744,4 +780,6 @@ def simulate(
         reasons=reasons,
         liquidations=liquidations,
         gaps=gaps,
+        mtm_max_dd_pct=mtm_max_dd,
+        unrealized_end=unreal_total,
     )

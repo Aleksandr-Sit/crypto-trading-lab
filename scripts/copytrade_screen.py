@@ -58,8 +58,15 @@ def _dir(root: Path) -> Path:
     return d
 
 
-def stage_leaderboard(root: Path, min_capital: float, max_turnover: float, refresh: bool) -> int:
-    """Полный список счетов → кандидаты, пригодные к копированию."""
+def stage_leaderboard(
+    root: Path, min_capital: float, max_turnover: float, refresh: bool, losers: bool
+) -> int:
+    """Полный список счетов → кандидаты, пригодные к копированию.
+
+    `losers` — брать и убыточные за всё время счета. Без них проверка переносимости
+    смотрит только на выживших: кто разорился во второй половине, в выборку не попадает,
+    и исход второй половины у всех оказывается смещён вверх (ревизия 12.09.2026).
+    """
     import httpx
 
     raw = _dir(root) / "leaderboard.json"
@@ -82,7 +89,7 @@ def stage_leaderboard(root: Path, min_capital: float, max_turnover: float, refre
         turnover = volume / capital
         if turnover > max_turnover:
             continue
-        if float(w["allTime"]["pnl"]) <= 0:
+        if not losers and float(w["allTime"]["pnl"]) <= 0:
             continue
         out.append(
             {
@@ -428,6 +435,7 @@ def main() -> int:
     ap.add_argument("--pause", type=float, default=0.15, help="пауза между запросами, с")
     ap.add_argument("--top", type=int, default=30)
     ap.add_argument("--refresh", action="store_true", help="перекачать лидерборд")
+    ap.add_argument("--include-losers", action="store_true", help="брать и убыточные счета")
     ap.add_argument("--floor", type=float, default=50_000, help="капитал, ниже которого не считаем")
     ap.add_argument("--min-years", type=float, default=0.0, help="минимум истории для persist")
     ap.add_argument("--root", default="data")
@@ -435,7 +443,9 @@ def main() -> int:
 
     root = Path(args.root)
     if args.stage == "leaderboard":
-        return stage_leaderboard(root, args.min_capital, args.max_turnover, args.refresh)
+        return stage_leaderboard(
+            root, args.min_capital, args.max_turnover, args.refresh, args.include_losers
+        )
     if args.stage == "portfolios":
         return stage_portfolios(root, args.limit, args.pause)
     if args.stage == "persist":

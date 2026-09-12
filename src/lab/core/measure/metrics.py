@@ -230,7 +230,14 @@ def metrics(
     cfg = config or load_threshold()
     n = len(trades)
     pnls = [t.pnl_net for t in trades]
-    net = sum(pnls, Decimal(0))
+    # Переоценка по рынку (ревизия 12.09.2026): незакрытая на конец окна позиция входит
+    # в итог, а просадка берётся худшая из двух — по закрытым сделкам и по цене бара.
+    # До этого позиция, просевшая на 40% и закрытая в +1%, просадки не давала вовсе.
+    ex = dict(extra or {})
+    unrealized = _d(ex.pop("unrealized_pnl", 0) or 0)
+    mtm_raw = ex.pop("mtm_max_dd_pct", None)
+    mtm_dd = _d(mtm_raw) if mtm_raw is not None else None
+    net = sum(pnls, Decimal(0)) + unrealized
     net_pct = net / capital * 100
     wins = [p for p in pnls if p > 0]
     losses = [p for p in pnls if p < 0]
@@ -247,7 +254,8 @@ def metrics(
         total=sum((t.costs.total for t in trades), Decimal(0)),
         turnover=sum((t.turnover for t in trades), Decimal(0)),
     )
-    max_dd, dd_days = _drawdown(trades, capital)
+    closed_dd, dd_days = _drawdown(trades, capital)
+    max_dd = max(closed_dd, mtm_dd) if mtm_dd is not None else closed_dd
     sharpe, sortino = _daily_ratios(trades, capital, window)
 
     if isinstance(benchmark, Decimal):
@@ -262,7 +270,7 @@ def metrics(
 
     values: dict[str, object] = dict(_NA)
     outcome: dict[str, object] = {}
-    for key, val in (extra or {}).items():
+    for key, val in ex.items():
         if key in values:
             values[key] = val
         elif key in _OUTCOME_KEYS:
@@ -283,6 +291,9 @@ def metrics(
             (gross_profit / len(wins)) / (gross_loss / len(losses)) if wins and losses else None
         ),
         max_dd_pct=max_dd,
+        closed_max_dd_pct=closed_dd,
+        mtm_max_dd_pct=mtm_dd,
+        unrealized_pnl=unrealized,
         dd_duration_days=dd_days,
         sharpe=sharpe,
         sortino=sortino,
@@ -367,7 +378,8 @@ def threshold(
                 st.profitable_pct,
                 cfg.stability.min_profitable_pct,
                 ">=",
-                f"зарабатывает в {st.profitable} окнах из {st.windows}",
+                f"зарабатывает в {st.profitable} окнах из {st.windows} "
+                f"(окна перекрываются, независимых ≈ {st.independent})",
             )
         )
         criteria.append(

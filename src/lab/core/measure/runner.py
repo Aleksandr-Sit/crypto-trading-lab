@@ -577,6 +577,13 @@ def run(
         cached = _lookup(session, base, dh)
         if cached is not None:
             return cached
+        # Переоценка по рынку — всегда: без неё незакрытая на конец окна позиция выпадала
+        # из итога, а просадка считалась только по закрытым сделкам (ревизия 12.09.2026).
+        extra_metrics = {
+            **(extra_metrics or {}),
+            "unrealized_pnl": result.unrealized_end,
+            "mtm_max_dd_pct": result.mtm_max_dd_pct,
+        }
         if result.reasons:
             extra_metrics = {**(extra_metrics or {}), "reasons": dict(result.reasons)}
         if result.liquidations:
