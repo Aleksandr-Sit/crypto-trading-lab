@@ -30,7 +30,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from statistics import fmean, stdev
@@ -97,22 +97,32 @@ def run_overnight(rows: list[dict], hit: Bucket, rest: Bucket, years: dict) -> N
 
 
 def run_weekend(rows: list[dict], hit: Bucket, rest: Bucket, years: dict) -> None:
-    """hit — понедельник (open→close) после разрыва ВВЕРХ, rest — после разрыва ВНИЗ.
+    """hit — понедельник после движения выходных ВВЕРХ, rest — после движения ВНИЗ.
 
-    Лор о «закрытии гэпа» предсказывает: после разрыва вверх понедельник падает,
-    после разрыва вниз — растёт. Если так, hit < 0 < rest. Если оба около нуля —
-    разрыв не закрывается, он просто часть движения.
+    Лор о «гэпе CME»: фьючерсы CME на BTC закрыты с вечера пятницы до вечера
+    воскресенья, спот в это время торгуется, и якобы в понедельник цена возвращается
+    к пятничному закрытию. Если так, hit < 0 < rest.
+
+    У крипты выходные бары ЕСТЬ, у индексов их нет, и «движение выходных» считается
+    по-разному: там это пятница→воскресенье, здесь пятница→открытие понедельника.
+    Первая версия проверки искала подряд идущие пятницу и понедельник — у крипты таких
+    пар не бывает вовсе, и замер молча нашёл ноль наблюдений.
     """
-    for a, b in zip(rows, rows[1:], strict=False):
-        if a["ts"].weekday() != 4 or b["ts"].weekday() != 0:
+    by_day = {r["ts"].date(): r for r in rows}
+    for r in rows:
+        if r["ts"].weekday() != 0:  # интересует понедельник
             continue
-        gap = (b["o"] / a["c"] - 1) * 100
-        if abs(gap) < 0.3:
+        d = r["ts"].date()
+        friday = by_day.get(d - timedelta(days=3))
+        if friday is None:
             continue
-        monday = (b["c"] / b["o"] - 1) * 100
-        d = b["ts"].date()
-        (hit if gap > 0 else rest).add(d, monday)
-        years[d.year][0 if gap > 0 else 1].add(d, monday)
+        sunday = by_day.get(d - timedelta(days=1))
+        move = ((sunday["c"] if sunday else r["o"]) / friday["c"] - 1) * 100
+        if abs(move) < 0.3:
+            continue
+        monday = (r["c"] / r["o"] - 1) * 100
+        (hit if move > 0 else rest).add(d, monday)
+        years[d.year][0 if move > 0 else 1].add(d, monday)
 
 
 def run_reversal(rows: list[dict], hit: Bucket, rest: Bucket, years: dict) -> None:
