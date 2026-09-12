@@ -91,6 +91,10 @@ def main() -> int:
     # важнее, чем на крипте: если не работает там, вопрос о переносе снимается сам.
     ap.add_argument("--venue", default="binance")
     ap.add_argument("--quote", default="/USDT", help="суффикс имени ряда; пусто для yahoo")
+    ap.add_argument(
+        "--entry", default="close", choices=("close", "next-open"),
+        help="откуда считать доходность: закрытие дня сигнала или следующее открытие",
+    )
     ap.add_argument("--period", type=int, default=2, help="период RSI")
     ap.add_argument("--threshold", type=float, default=10.0, help="порог перепроданности")
     ap.add_argument("--trend", type=int, default=200, help="средняя для фильтра тренда")
@@ -112,18 +116,19 @@ def main() -> int:
 
     for base in [b.strip() for b in args.bases.split(",") if b.strip()]:
         rows = cs.query(
-            "select ts, close::DOUBLE as close from {candles} order by ts",
+            "select ts, open::DOUBLE as open, close::DOUBLE as close from {candles} order by ts",
             args.venue,
             f"{base}{args.quote}",
             "1d",
         )
         closes = [float(r["close"]) for r in rows if r["close"]]
+        opens = [float(r["open"] or r["close"]) for r in rows if r["close"]]
         stamps = [r["ts"] for r in rows if r["close"]]
-        if len(closes) < args.trend + longest + 5:
+        if len(closes) < args.trend + longest + 6:
             print(f"{base}: ряда мало ({len(closes)})")
             continue
         values = rsi(closes, args.period)
-        for i in range(args.trend, len(closes) - longest):
+        for i in range(args.trend, len(closes) - longest - 1):
             ts = stamps[i]
             if ts.year < args.from_year:
                 continue
@@ -134,13 +139,19 @@ def main() -> int:
             oversold = r is not None and r < args.threshold and above
             if oversold:
                 events += 1
+            # RSI считается ПО ЗАКРЫТИЮ, поэтому войти можно не раньше следующего
+            # открытия. Считать от закрытия дня сигнала — значит подарить себе ночной
+            # разрыв, а он у индексов и есть половина движения.
+            base_px = opens[i + 1] if args.entry == "next-open" else closes[i]
+            if base_px <= 0:
+                continue
             for h in horizons:
-                ret = (closes[i + h] / closes[i] - 1) * 100
+                ret = (closes[i + h] / base_px - 1) * 100
                 every[h].add(d, ret)
                 if above:
                     (hit[h] if oversold else trend[h]).add(d, ret)
             mid = horizons[len(horizons) // 2]
-            ret_mid = (closes[i + mid] / closes[i] - 1) * 100
+            ret_mid = (closes[i + mid] / base_px - 1) * 100
             if above:
                 a, b = yearly[ts.year]
                 (a if oversold else b).add(d, ret_mid)
