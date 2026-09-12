@@ -31,6 +31,33 @@ from statistics import fmean, median, stdev
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from lab.data.backfill_cex import FundingArchive  # noqa: E402
+from lab.data.store import CandleStore  # noqa: E402
+
+STOP_PCT = 100.0  # тот же стоп, что в замере эффекта листинга
+
+
+def short_price_result(cs: CandleStore, base: str, entry: date, days: int) -> float | None:
+    """Результат шорта ПО ЦЕНЕ за то же окно, с тем же стопом, что в замере эффекта."""
+    rows = cs.query(
+        "select ts, close::DOUBLE as c, high::DOUBLE as h "
+        f"from {{candles}} order by ts limit {days + 3}",
+        "binance",
+        f"{base}/USDT",
+        "1d",
+    )
+    bars = [
+        (r["ts"].date(), float(r["c"]), float(r["h"] or r["c"]))
+        for r in rows
+        if r["c"] and r["c"] > 0
+    ]
+    if len(bars) < days + 2 or bars[1][0] != entry:
+        return None
+    p0 = bars[1][1]
+    limit = p0 * (1 + STOP_PCT / 100)
+    path = bars[2 : 2 + days]
+    if any(high >= limit for _, _, high in path):
+        return -STOP_PCT
+    return -(path[-1][1] / p0 - 1) * 100
 
 
 def window_rates(
@@ -59,8 +86,10 @@ def main() -> int:
         rows = rows[: args.limit]
     archive = FundingArchive()
 
+    cs = CandleStore(root)
     totals: list[float] = []
     by_year: dict[int, list[float]] = {}
+    net_year: dict[int, list[tuple[float, float]]] = {}
     counts: list[int] = []
     missing = 0
     print(f"монет в выборке: {len(rows)}, горизонт {args.days} дн")
@@ -78,6 +107,9 @@ def main() -> int:
         totals.append(total)
         counts.append(len(rates))
         by_year.setdefault(entry.year, []).append(total)
+        price = short_price_result(cs, row["base"], entry, args.days)
+        if price is not None:
+            net_year.setdefault(entry.year, []).append((price, total))
         if i % 40 == 0:
             print(f"  {i}/{len(rows)}")
 
@@ -102,9 +134,34 @@ def main() -> int:
     for year in sorted(by_year):
         v = by_year[year]
         print(f"{year:<7}{len(v):>8}{fmean(v):>9.2f}%{median(v):>9.2f}%")
+    # Итог по ОДНИМ И ТЕМ ЖЕ сделкам: цена плюс фандинг. Сравнивать агрегаты из двух
+    # разных замеров нельзя — выборки не совпадают, и разница уйдёт в округление.
+    if net_year:
+        print(f"\nИТОГ ШОРТА: цена (стоп +{STOP_PCT:.0f}%) ПЛЮС фандинг, по одним сделкам")
+        head = f"{'год':7}{'сделок':>8}{'по цене':>10}{'фандинг':>10}{'итого':>10}"
+        print(head + f"{'медиана':>10}{'в плюсе':>9}")
+        all_net: list[float] = []
+        for year in sorted(net_year):
+            pairs = net_year[year]
+            nets = [p + f for p, f in pairs]
+            all_net += nets
+            up = sum(1 for x in nets if x > 0) / len(nets) * 100
+            print(
+                f"{year:<7}{len(pairs):>8}{fmean(p for p, _ in pairs):>9.1f}%"
+                f"{fmean(f for _, f in pairs):>9.1f}%{fmean(nets):>9.1f}%"
+                f"{median(nets):>9.1f}%{up:>8.0f}%"
+            )
+        se_net = stdev(all_net) / sqrt(len(all_net)) if len(all_net) > 1 else 0.0
+        up = sum(1 for x in all_net if x > 0) / len(all_net) * 100
+        print(
+            f"{'всего':7}{len(all_net):>8}{'':>10}{'':>10}{fmean(all_net):>9.1f}%"
+            f"{median(all_net):>9.1f}%{up:>8.0f}%"
+        )
+        print(f"  шум (2σ) итога: ±{2 * se_net:.1f}")
     print(
-        "\nЧитать так: положительное число — это ДОХОД шорта сверх движения цены,\n"
-        "отрицательное — расход. Складывать с результатом замера эффекта листинга."
+        "\nЧитать так: положительный фандинг — ДОХОД шорта сверх движения цены,\n"
+        "отрицательный — расход. Отрицательный фандинг у шорта означает, что шортят\n"
+        "все: рынок берёт плату за место в переполненной сделке."
     )
     return 0
 
