@@ -38,6 +38,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from lab.data.store import CandleStore  # noqa: E402
 
 HORIZONS = (3, 7, 30, 90)
+# Установившиеся альты для КОНТРОЛЯ. Сравнение с одним BTC недостаточно: альты проигрывают
+# биткойну и без всяких листингов, и «эффект листинга» может оказаться эффектом альта.
+BASKET = (
+    "ETH/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT", "LTC/USDT",
+    "TRX/USDT", "LINK/USDT", "ATOM/USDT", "ETC/USDT", "XLM/USDT", "VET/USDT",
+    "FIL/USDT", "EOS/USDT", "ALGO/USDT", "NEO/USDT",
+)
 
 
 def first_days(cs: CandleStore, name: str, need: int) -> list[tuple[date, float]]:
@@ -61,17 +68,34 @@ def main() -> int:
     root = Path(args.root)
     cs = CandleStore(root)
     names = [ln.strip() for ln in (root / args.universe).read_text().splitlines() if ln.strip()]
-    btc = {
-        r["ts"].date(): float(r["c"])
-        for r in cs.query(
-            "select ts, close::DOUBLE as c from {candles} order by ts", "binance", "BTC/USDT", "1d"
-        )
-    }
+    def series(name: str) -> dict[date, float]:
+        return {
+            r["ts"].date(): float(r["c"])
+            for r in cs.query(
+                "select ts, close::DOUBLE as c from {candles} order by ts", "binance", name, "1d"
+            )
+            if r["c"] and r["c"] > 0
+        }
+
+    btc = series("BTC/USDT")
+    basket = {n: series(n) for n in BASKET}
+    basket = {n: s for n, s in basket.items() if len(s) > 500}
     longest = max(HORIZONS)
+
+    def basket_move(d0: date, d1: date) -> float | None:
+        """Медианная доходность корзины установившихся альтов за те же дни."""
+        vals = [
+            (s[d1] / s[d0] - 1) * 100
+            for s in basket.values()
+            if d0 in s and d1 in s and s[d0] > 0
+        ]
+        return median(vals) if len(vals) >= 5 else None
 
     # По месяцам листинга: несколько листингов одного месяца — одно наблюдение.
     by_month: dict[int, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
     by_year: dict[int, dict[int, list[float]]] = defaultdict(lambda: defaultdict(list))
+    vs_basket: dict[int, list[float]] = defaultdict(list)
+    raw: dict[int, list[float]] = defaultdict(list)
     listings = 0
     skipped_btc = 0
     for name in names:
@@ -89,12 +113,16 @@ def main() -> int:
         for h in HORIZONS:
             d1, p1 = days[1 + h]
             coin = (p1 / p0 - 1) * 100
+            raw[h].append(coin)
             b1 = btc.get(d1)
             if b1 is None:
                 continue
             excess = coin - (b1 / btc[d0] - 1) * 100
             by_month[h][key].append(excess)
             by_year[h][d0.year].append(excess)
+            alt = basket_move(d0, d1)
+            if alt is not None:
+                vs_basket[h].append(coin - alt)
 
     print(f"листингов с {args.from_year}: {listings} (без ориентира BTC: {skipped_btc})")
     print(f"\n{'горизонт':10}{'сверх BTC, средняя':>20}{'медиана':>10}{'шум (2σ по мес.)':>18}"
@@ -111,6 +139,25 @@ def main() -> int:
             f"{h:>4} дн   {fmean(all_vals):>19.2f}%{median(all_vals):>9.2f}%"
             f"{2 * se:>18.2f}{up:>13.0f}%{len(per_month):>9}"
         )
+
+    # Контроль: против корзины установившихся альтов, а не против BTC.
+    print(f"\nКОНТРОЛЬ: против корзины из {len(basket)} установившихся альтов")
+    print(f"{'горизонт':10}{'средняя':>10}{'медиана':>10}{'в плюсе':>10}{'наблюдений':>13}")
+    for h in HORIZONS:
+        v = vs_basket[h]
+        if not v:
+            continue
+        up = sum(1 for x in v if x > 0) / len(v) * 100
+        print(f"{h:>4} дн   {fmean(v):>9.2f}%{median(v):>9.2f}%{up:>9.0f}%{len(v):>13}")
+
+    # Хвост решает для ШОРТА: медиана может быть минус двадцать, а один листинг
+    # с плюс тысячей съест всё. Проценты распределения важнее средней.
+    print(f"\nРАСПРЕДЕЛЕНИЕ доходности самой монеты (без ориентира), горизонт 30 дн")
+    vals = sorted(raw[30])
+    if vals:
+        qs = [(0.05, "5%"), (0.25, "25%"), (0.5, "медиана"), (0.75, "75%"), (0.95, "95%")]
+        line = "  ".join(f"{lab}: {vals[int(len(vals) * q)]:+.0f}%" for q, lab in qs)
+        print(f"  {line}   максимум: {vals[-1]:+.0f}%")
 
     print(f"\nПО ГОДАМ, сверх BTC, горизонт 30 дн")
     print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
