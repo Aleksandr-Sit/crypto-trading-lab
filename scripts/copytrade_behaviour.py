@@ -36,6 +36,7 @@ import argparse
 import json
 import sys
 import time
+from collections import defaultdict, deque
 from datetime import UTC, datetime
 from math import sqrt
 from pathlib import Path
@@ -76,13 +77,13 @@ class Account:
     """
 
     def __init__(self) -> None:
-        self.pos: dict[str, list[float]] = {}  # монета → [средняя цена входа, время входа]
+        self.open: dict[str, deque[tuple[int, float]]] = defaultdict(deque)
         self.holds: list[float] = []
         self.wins: list[float] = []
         self.losses: list[float] = []
         self.per_coin: dict[str, int] = {}
         self.longs = 0
-        self.episodes = 0
+        self.opens = 0
         self.adds = 0
         self.adds_bad = 0
         self.fees = 0.0
@@ -91,61 +92,54 @@ class Account:
         self.pnl = 0.0
 
     def add(self, f: dict) -> None:
-        if f.get("dir") in SPOT_DIRS:
+        direction = f.get("dir") or ""
+        if direction in SPOT_DIRS:
             return  # спот: копируют бессрочные контракты, а не покупку монеты
         coin = f["coin"]
         px = float(f["px"])
         sz = float(f["sz"])
-        signed = sz if f["side"] == "B" else -sz
-        before = float(f.get("startPosition") or 0)
-        after = before + signed
         self.fills += 1
         self.fees += float(f.get("fee") or 0)
         self.notional += px * sz
         self.pnl += float(f.get("closedPnl") or 0)
-        flat = abs(after) < abs(sz) * 1e-6
+        queue = self.open[coin]
 
-        if before == 0:
-            self.pos[coin] = [px, f["time"]]
-            self.episodes += 1
+        if direction.startswith("Open") or ">" in direction:
+            if queue:
+                # Долив. Убыточен ли он: для лонга — цена ниже средней, для шорта — выше.
+                avg = sum(p for _, p in queue) / len(queue)
+                self.adds += 1
+                if (direction.endswith("Long") and px < avg) or (
+                    direction.endswith("Short") and px > avg
+                ):
+                    self.adds_bad += 1
+            queue.append((f["time"], px))
+            self.opens += 1
             self.per_coin[coin] = self.per_coin.get(coin, 0) + 1
-            if signed > 0:
+            if direction.endswith("Long"):
                 self.longs += 1
             return
 
-        avg, opened = self.pos.get(coin, [px, f["time"]])
-        if abs(after) > abs(before) and (after > 0) == (before > 0):
-            # Долив. Убыточен ли он: для лонга — цена ниже средней, для шорта — выше.
-            self.adds += 1
-            if (before > 0 and px < avg) or (before < 0 and px > avg):
-                self.adds_bad += 1
-            self.pos[coin] = [(avg * abs(before) + px * abs(signed)) / abs(after), opened]
-            return
-
-        gain = float(f.get("closedPnl") or 0)
-        if flat or (after > 0) != (before > 0):
-            self.holds.append((f["time"] - opened) / 3_600_000)
+        if direction.startswith("Close"):
+            gain = float(f.get("closedPnl") or 0)
             (self.wins if gain > 0 else self.losses).append(gain)
-            if flat:
-                self.pos.pop(coin, None)
-            else:
-                # Переворот: закрытие и новый вход одной сделкой.
-                self.pos[coin] = [px, f["time"]]
-                self.episodes += 1
-                self.per_coin[coin] = self.per_coin.get(coin, 0) + 1
-                if after > 0:
-                    self.longs += 1
+            if queue:
+                # Выход сопоставляется САМОМУ РАННЕМУ несопоставленному входу: узнать,
+                # какой именно вход закрывают, из данных нельзя, а очередь даёт
+                # воспроизводимое и не завышающее время удержания правило.
+                opened, _ = queue.popleft()
+                self.holds.append((f["time"] - opened) / 3_600_000)
 
     def features(self) -> dict[str, float] | None:
-        if self.episodes < 20 or not self.holds:
+        closed = len(self.wins) + len(self.losses)
+        if closed < 20 or not self.holds:
             return None
         total_eps = sum(self.per_coin.values()) or 1
         avg_win = fmean(self.wins) if self.wins else 0.0
         avg_loss = abs(fmean(self.losses)) if self.losses else 0.0
-        closed = len(self.wins) + len(self.losses)
         return {
             "fills": self.fills,
-            "episodes": self.episodes,
+            "episodes": self.opens,
             "hold_hours": median(self.holds),
             "short_share": sum(1 for h in self.holds if h < 1) / len(self.holds) * 100,
             "coins": len(self.per_coin),
