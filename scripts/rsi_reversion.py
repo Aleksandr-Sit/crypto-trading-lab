@@ -23,7 +23,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import defaultdict
-from datetime import UTC, date, datetime
+from datetime import date
 from math import sqrt
 from pathlib import Path
 from statistics import fmean, stdev
@@ -145,8 +145,10 @@ def main() -> int:
     if not events:
         print("\nсобытий не нашлось")
         return 0
-    print(f"\nсобытий (RSI{args.period} < {args.threshold} при цене выше SMA{args.trend}): {events}")
-    print(f"\n{'гор.':6}{'перепроданность':>17}{'обычный в тренде':>19}{'разница':>10}{'шум (2σ)':>11}   вердикт")
+    rule = f"RSI{args.period} < {args.threshold} при цене выше SMA{args.trend}"
+    print(f"\nсобытий ({rule}): {events}")
+    cols = f"{'гор.':6}{'перепроданность':>17}{'обычный в тренде':>19}{'разница':>10}"
+    print("\n" + cols + f"{'шум (2σ)':>11}   вердикт")
     for h in horizons:
         diff = hit[h].mean - trend[h].mean
         se = sqrt(hit[h].se ** 2 + trend[h].se ** 2)
@@ -157,9 +159,11 @@ def main() -> int:
         else:
             note = "ПЕРЕЖИВАЕТ ОБА ПОРОГА"
         print(
-            f"{h:<6}{hit[h].mean:>16.2f}%{trend[h].mean:>18.2f}%{diff:>10.2f}{2 * se:>11.2f}   {note}"
+            f"{h:<6}{hit[h].mean:>16.2f}%{trend[h].mean:>18.2f}%"
+            f"{diff:>10.2f}{2 * se:>11.2f}   {note}"
         )
-    print(f"\nдля справки, обычный день БЕЗ фильтра тренда, {horizons[0]} дн: {every[horizons[0]].mean:.2f}%")
+    plain = every[horizons[0]].mean
+    print(f"\nдля справки, обычный день БЕЗ фильтра тренда, {horizons[0]} дн: {plain:.2f}%")
     print("  (разница с колонкой «обычный в тренде» — это заслуга фильтра, а не RSI)")
 
     print(f"\nПО ГОДАМ, горизонт {horizons[len(horizons) // 2]} дн")

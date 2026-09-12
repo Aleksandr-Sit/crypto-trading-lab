@@ -31,7 +31,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import defaultdict
-from datetime import UTC, date, datetime
+from datetime import date
 from math import sqrt
 from pathlib import Path
 from statistics import fmean, stdev
@@ -107,7 +107,8 @@ def by_year(rows: list[tuple[date, float, float, float]]) -> None:
     years: dict[int, list[tuple[float, float, float]]] = defaultdict(list)
     for m, lo, hi, allm in rows:
         years[m.year].append((lo, hi, allm))
-    print(f"\nПО ГОДАМ\n{'год':7}{'мес':>5}{'низ':>10}{'верх':>10}{'вся вселенная':>15}{'верх−низ':>11}")
+    cols = f"{'год':7}{'мес':>5}{'низ':>10}{'верх':>10}{'вся вселенная':>15}{'верх−низ':>11}"
+    print("\nПО ГОДАМ\n" + cols)
     signs: list[float] = []
     for year in sorted(years):
         vals = years[year]
@@ -256,7 +257,7 @@ def main() -> int:
     by_year(rows)
     print(
         f"\nДва порога подряд: больше собственного шума (2σ) и больше издержек ребаланса\n"
-        f"(~{MONTHLY_COST}% за смену состава по тейкеру, то есть ~{MONTHLY_COST * 12:.1f}% в год).\n"
+        f"(~{MONTHLY_COST}% за смену состава, то есть ~{MONTHLY_COST * 12:.1f}% в год).\n"
         "Шум считается по МЕСЯЦАМ: монеты внутри месяца — одно наблюдение, а не шестьсот."
     )
     return 0

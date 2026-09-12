@@ -89,14 +89,16 @@ def main() -> int:
 
     pooled = sorted((ts, fmean(v)) for ts, v in per_moment.items() if v)
     absann = sorted(abs(annual(d)) for _, d in pooled)
-    print(f"\nвсего моментов расчёта: {len(pooled)} ({pooled[0][0]:%Y-%m-%d} … {pooled[-1][0]:%Y-%m-%d})")
+    first, last = pooled[0][0], pooled[-1][0]
+    print(f"\nвсего моментов расчёта: {len(pooled)} ({first:%Y-%m-%d} … {last:%Y-%m-%d})")
     for q, label in ((0.5, "медиана"), (0.75, "верхняя четверть"), (0.9, "верхняя десятая")):
         v = absann[int(len(absann) * q)]
         days = ROUND_TRIP / v * 365 if v > 0 else float("inf")
         print(f"  {label:18}: |разница| {v:>6.2f}% годовых → окупает вход за {days:>5.1f} дн")
 
-    print(f"\nЧто разница даёт НА САМОМ ДЕЛЕ после входа (верхняя десятая часть всплесков)")
-    print(f"{'держим':10}{'дней':>7}{'разница в момент входа':>25}{'реально получено':>19}{'доля':>8}")
+    print("\nЧто разница даёт НА САМОМ ДЕЛЕ после входа (верхняя десятая часть всплесков)")
+    cols = f"{'держим':10}{'дней':>7}{'разница в момент входа':>25}{'реально получено':>19}"
+    print(cols + f"{'доля':>8}")
     edge = absann[int(len(absann) * 0.9)]
     for h in holds:
         got: list[float] = []
