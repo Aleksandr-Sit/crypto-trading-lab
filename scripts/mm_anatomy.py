@@ -161,7 +161,11 @@ def report(name: str, fills: list[dict], info: dict) -> None:
         print(f"  доля комиссий в результате: {-fees / closed * 100:+.0f}%")
 
     books = tape(fills)
-    print(f"\n{'задержка':10}{'кругов':>8}{'валом, б.п.':>14}{'за вычетом комиссии':>22}")
+    # Медиана обязательна рядом со средней: у счёта, набирающего позицию частями, средняя
+    # держится на нескольких эпизодах из сотен. Разрыв между ними и есть мера того,
+    # насколько результату можно верить.
+    head = f"{'задержка':10}{'кругов':>8}{'средняя':>10}{'медиана':>10}"
+    print(f"\n{head}{'нетто по средней':>18}{'нетто по медиане':>18}{'в плюсе':>9}")
     for lag in LAGS:
         got = []
         for coin, side, t0, _, t1, _, _ in eps:
@@ -175,13 +179,18 @@ def report(name: str, fills: list[dict], info: dict) -> None:
             got.append(side * (po / pi - 1) * 10_000)
         if not got:
             continue
-        net = fmean(got) - 2 * TAKER_BPS
-        print(f"{lag:<10}{len(got):>8}{fmean(got):>13.2f}{net:>21.2f}")
+        cost = 2 * TAKER_BPS
+        share = sum(1 for g in got if g > cost) / len(got) * 100
+        print(
+            f"{lag:<10}{len(got):>8}{fmean(got):>10.2f}{median(got):>10.2f}"
+            f"{fmean(got) - cost:>18.2f}{median(got) - cost:>18.2f}{share:>8.0f}%"
+        )
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--top", type=int, default=5)
+    ap.add_argument("--addresses", default="", help="конкретные адреса через запятую")
     ap.add_argument("--pages", type=int, default=4)
     ap.add_argument("--hours", type=int, default=24, help="окно истории назад, часов")
     ap.add_argument("--min-turnover", type=float, default=100.0)
@@ -193,7 +202,12 @@ def main() -> int:
     import httpx
 
     root = Path(args.root)
-    chosen = pick(root, args.min_turnover, args.min_capital, args.top)
+    if args.addresses:
+        picked = {c["address"]: c for c in pick(root, args.min_turnover, args.min_capital, 10_000)}
+        wanted = [a.strip().lower() for a in args.addresses.split(",") if a.strip()]
+        chosen = [picked[a] for a in wanted if a in picked]
+    else:
+        chosen = pick(root, args.min_turnover, args.min_capital, args.top)
     print(f"счетов с оборотом ≥ {args.min_turnover:.0f}/мес и капиталом ≥ "
           f"${args.min_capital:,.0f}: {len(chosen)}")
     with httpx.Client(timeout=90) as client:
