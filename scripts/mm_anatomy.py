@@ -65,15 +65,19 @@ def pick(root: Path, min_turnover: float, min_capital: float, top: int) -> list[
     return out[:top]
 
 
-def fetch(client, address: str, pages: int, pause: float) -> list[dict]:
-    """Последние сделки счёта: идём назад от текущего момента страницами."""
+def fetch(client, address: str, pages: int, pause: float, hours: int) -> list[dict]:
+    """Сделки счёта за последние часы.
+
+    Начальная метка обязательна: запрос с одной только конечной биржа отвергает.
+    Поэтому берём окно назад от текущего момента и идём вперёд страницами.
+    """
     fills: list[dict] = []
-    end = int(time.time() * 1000)
+    start = int((time.time() - hours * 3600) * 1000)
     for _ in range(pages):
         try:
             r = client.post(
                 INFO,
-                json={"type": "userFillsByTime", "user": address, "endTime": end},
+                json={"type": "userFillsByTime", "user": address, "startTime": start},
             )
             r.raise_for_status()
             batch = r.json()
@@ -82,10 +86,10 @@ def fetch(client, address: str, pages: int, pause: float) -> list[dict]:
             break
         if not batch:
             break
-        fills = batch + fills
-        end = batch[0]["time"] - 1
+        fills += batch
         if len(batch) < PAGE:
             break
+        start = batch[-1]["time"] + 1
         time.sleep(pause)
     fills.sort(key=lambda f: f["time"])
     return fills
@@ -174,6 +178,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--top", type=int, default=5)
     ap.add_argument("--pages", type=int, default=4)
+    ap.add_argument("--hours", type=int, default=24, help="окно истории назад, часов")
     ap.add_argument("--min-turnover", type=float, default=100.0)
     ap.add_argument("--min-capital", type=float, default=1_000_000)
     ap.add_argument("--pause", type=float, default=1.1)
@@ -188,7 +193,7 @@ def main() -> int:
           f"${args.min_capital:,.0f}: {len(chosen)}")
     with httpx.Client(timeout=90) as client:
         for info in chosen:
-            fills = fetch(client, info["address"], args.pages, args.pause)
+            fills = fetch(client, info["address"], args.pages, args.pause, args.hours)
             if fills:
                 report(info["address"][:12], fills, info)
             time.sleep(args.pause)
