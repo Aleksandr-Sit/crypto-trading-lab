@@ -12,15 +12,18 @@
   08:00 UTC; вокруг страйка с наибольшим интересом цену «прижимает».
 
 Считается доходность бара `(close-open)/open`, сравнение — с ОБЫЧНЫМ баром, потому что
-у рынка есть свой дрейф. Никаких издержек здесь нет: сначала надо понять, есть ли валовый
+у рынка есть свой дрейф. Издержки не вычитаются: сначала надо понять, есть ли валовый
 эффект вообще. Круг по тейкеру на перпах Binance — около 0.10%, по мейкеру около 0.04%;
 эффект меньше этого не переживёт исполнения ни при каких правилах.
 
-Разбор по годам печатается всегда. Поток тейкеров прошёл четыре проверки подряд и
-развалился именно на годах, поэтому здесь она не опция.
+**Наблюдение — это ДАТА, а не бар.** Восемь монет в один день ходят вместе, поэтому восемь
+баров — это одно наблюдение, а не восемь; если считать шум по барам, он окажется втрое
+меньше настоящего, и любая случайность сойдёт за находку. Поэтому бары сначала сводятся
+по датам, и только потом считается разброс. Разбор по годам печатается всегда: поток
+тейкеров прошёл четыре проверки подряд и развалился именно на годах.
 
     python scripts/calendar_effects.py --root /app/data
-    python scripts/calendar_effects.py --part hours --bases BTC,ETH
+    python scripts/calendar_effects.py --part expiry --bases BTC,ETH
 """
 
 from __future__ import annotations
@@ -30,7 +33,9 @@ import sys
 from calendar import FRIDAY
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
+from math import sqrt
 from pathlib import Path
+from statistics import fmean, stdev
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -40,24 +45,54 @@ DEFAULT_BASES = "BTC,ETH,SOL,XRP,DOGE,AVAX,LINK,ADA"
 SETTLEMENT = (0, 8, 16)  # часы расчёта фандинга, UTC
 BEFORE = tuple((h - 1) % 24 for h in SETTLEMENT)
 DAYS = ("пн", "вт", "ср", "чт", "пт", "сб", "вс")
+MAKER_ROUND = 0.04  # круг по мейкеру, % — порог осмысленности эффекта
 
 
-class Acc:
-    """Сумма и счёт вместо списка значений: рядов десятки, баров миллионы."""
+class Daily:
+    """Наблюдения, сведённые по датам.
 
-    __slots__ = ("n", "total")
+    Хранится сумма и счёт на дату, а не сами бары: часовых баров четыреста тысяч, а дат
+    две с половиной тысячи. Средняя по датам совпадает с обычной средней только при равном
+    числе баров в дне; расходится она как раз там, где данных по монете нет, — и это
+    правильно, потому что день с одной монетой не должен весить как день с восемью.
+    """
+
+    __slots__ = ("by_date",)
 
     def __init__(self) -> None:
-        self.total = 0.0
-        self.n = 0
+        self.by_date: dict[date, list[float]] = defaultdict(lambda: [0.0, 0.0])
 
-    def add(self, x: float) -> None:
-        self.total += x
-        self.n += 1
+    def add(self, d: date, x: float) -> None:
+        cell = self.by_date[d]
+        cell[0] += x
+        cell[1] += 1
+
+    def means(self) -> list[float]:
+        return [total / n for total, n in self.by_date.values()]
+
+    @property
+    def days(self) -> int:
+        return len(self.by_date)
 
     @property
     def mean(self) -> float:
-        return self.total / self.n if self.n else 0.0
+        vals = self.means()
+        return fmean(vals) if vals else 0.0
+
+    @property
+    def se(self) -> float:
+        """Стандартная ошибка средней — насколько средняя могла бы быть иной."""
+        vals = self.means()
+        return stdev(vals) / sqrt(len(vals)) if len(vals) > 1 else 0.0
+
+
+def verdict(diff: float, se: float) -> str:
+    """Два барьера подряд: сначала отличить от шума, потом окупить издержки."""
+    if abs(diff) < 2 * se:
+        return "в пределах шума"
+    if abs(diff) < MAKER_ROUND:
+        return "меньше издержек"
+    return "ПЕРЕЖИВАЕТ ОБА ПОРОГА"
 
 
 def bars(cs: CandleStore, name: str, tf: str, year: int):
@@ -76,28 +111,38 @@ def last_friday(d: date) -> bool:
     return (d + timedelta(days=7)).month != d.month
 
 
-def table(title: str, rows: list[tuple[str, Acc]], usual: Acc) -> None:
+def table(title: str, rows: list[tuple[str, Daily]], usual: Daily) -> None:
     print(f"\n{title}")
-    print(f"{'группа':16}{'баров':>9}{'средняя':>11}{'против обычного':>18}")
+    head = f"{'группа':16}{'дат':>7}{'средняя':>11}{'разница':>10}{'шум (2σ)':>11}   вердикт"
+    print(head)
     for label, acc in rows:
-        if not acc.n:
+        if not acc.days:
             continue
-        print(f"{label:16}{acc.n:>9}{acc.mean:>10.4f}%{acc.mean - usual.mean:>17.4f}")
-    print(f"{'обычный бар':16}{usual.n:>9}{usual.mean:>10.4f}%")
+        diff = acc.mean - usual.mean
+        se = sqrt(acc.se**2 + usual.se**2)
+        print(
+            f"{label:16}{acc.days:>7}{acc.mean:>10.4f}%{diff:>10.4f}"
+            f"{2 * se:>11.4f}   {verdict(diff, se)}"
+        )
+    print(f"{'обычный бар':16}{usual.days:>7}{usual.mean:>10.4f}%")
 
 
-def by_year(title: str, years: dict[int, tuple[Acc, Acc]]) -> None:
+def by_year(title: str, years: dict[int, tuple[Daily, Daily]]) -> None:
     """Эффект и фон по годам. Скачущий знак означает режим, а не закономерность."""
     print(f"\n{title} — ПО ГОДАМ")
-    print(f"{'год':7}{'баров':>9}{'эффект':>11}{'фон':>11}{'разница':>11}")
+    print(f"{'год':7}{'дат':>7}{'эффект':>11}{'фон':>11}{'разница':>11}{'шум (2σ)':>11}")
     signs: list[float] = []
     for year in sorted(years):
         hit, usual = years[year]
-        if not hit.n or not usual.n:
+        if not hit.days or not usual.days:
             continue
         diff = hit.mean - usual.mean
+        se = sqrt(hit.se**2 + usual.se**2)
         signs.append(diff)
-        print(f"{year:<7}{hit.n:>9}{hit.mean:>10.4f}%{usual.mean:>10.4f}%{diff:>11.4f}")
+        print(
+            f"{year:<7}{hit.days:>7}{hit.mean:>10.4f}%{usual.mean:>10.4f}%"
+            f"{diff:>11.4f}{2 * se:>11.4f}"
+        )
     if len(signs) < 2:
         return
     pos = sum(1 for s in signs if s > 0)
@@ -106,37 +151,32 @@ def by_year(title: str, years: dict[int, tuple[Acc, Acc]]) -> None:
 
 def hours(cs: CandleStore, names: list[str], years: range) -> None:
     """Профиль по часам суток и проверка гипотезы о расчёте фандинга."""
-    per_hour: dict[int, Acc] = defaultdict(Acc)
-    yearly: dict[int, tuple[Acc, Acc]] = defaultdict(lambda: (Acc(), Acc()))
+    per_hour: dict[int, Daily] = defaultdict(Daily)
+    before, at, rest = Daily(), Daily(), Daily()
+    yearly: dict[int, tuple[Daily, Daily]] = defaultdict(lambda: (Daily(), Daily()))
     for name in names:
         for year in years:
             for ts, ret in bars(cs, name, "1h", year):
-                per_hour[ts.hour].add(ret)
+                d = ts.date()
+                per_hour[ts.hour].add(d, ret)
                 hit, usual = yearly[year]
                 if ts.hour in BEFORE:
-                    hit.add(ret)
-                elif ts.hour not in SETTLEMENT:
-                    # Час расчёта исключён из фона: он сам часть проверяемого эффекта.
-                    usual.add(ret)
+                    before.add(d, ret)
+                    hit.add(d, ret)
+                elif ts.hour in SETTLEMENT:
+                    at.add(d, ret)  # час расчёта — сам часть эффекта, в фон не идёт
+                else:
+                    rest.add(d, ret)
+                    usual.add(d, ret)
 
-    total = sum(a.n for a in per_hour.values())
-    if not total:
+    if not rest.days:
         print("часовых рядов нет")
         return
-    print(f"\nЧАС СУТОК (UTC), баров {total}")
-    print(f"{'час':6}{'баров':>9}{'средняя':>11}   пометка")
+    print(f"\nЧАС СУТОК (UTC), дат {rest.days}")
+    print(f"{'час':6}{'средняя':>11}   пометка")
     for h in range(24):
-        acc = per_hour[h]
         mark = "расчёт" if h in SETTLEMENT else ("перед расчётом" if h in BEFORE else "")
-        print(f"{h:<6}{acc.n:>9}{acc.mean:>10.4f}%   {mark}")
-
-    before = Acc()
-    at = Acc()
-    rest = Acc()
-    for h, acc in per_hour.items():
-        dst = before if h in BEFORE else at if h in SETTLEMENT else rest
-        dst.total += acc.total
-        dst.n += acc.n
+        print(f"{h:<6}{per_hour[h].mean:>10.4f}%   {mark}")
     table(
         "Гипотеза: лонги выходят перед расчётом и возвращаются после",
         [("перед расчётом", before), ("час расчёта", at)],
@@ -146,26 +186,23 @@ def hours(cs: CandleStore, names: list[str], years: range) -> None:
 
 
 def weekdays(cs: CandleStore, names: list[str], years: range) -> None:
-    per_day: dict[int, Acc] = defaultdict(Acc)
-    yearly: dict[int, tuple[Acc, Acc]] = defaultdict(lambda: (Acc(), Acc()))
+    per_day: dict[int, Daily] = defaultdict(Daily)
+    weekend, workday = Daily(), Daily()
+    yearly: dict[int, tuple[Daily, Daily]] = defaultdict(lambda: (Daily(), Daily()))
     for name in names:
         for year in years:
             for ts, ret in bars(cs, name, "1d", year):
-                per_day[ts.weekday()].add(ret)
+                d = ts.date()
+                per_day[ts.weekday()].add(d, ret)
                 hit, usual = yearly[year]
-                (hit if ts.weekday() >= 5 else usual).add(ret)
+                (weekend if d.weekday() >= 5 else workday).add(d, ret)
+                (hit if d.weekday() >= 5 else usual).add(d, ret)
 
-    if not sum(a.n for a in per_day.values()):
+    if not workday.days:
         print("дневных рядов нет")
         return
-    weekend = Acc()
-    workday = Acc()
-    for d, acc in per_day.items():
-        dst = weekend if d >= 5 else workday
-        dst.total += acc.total
-        dst.n += acc.n
     table(
-        "ДЕНЬ НЕДЕЛИ",
+        "ДЕНЬ НЕДЕЛИ (сравнение с будним днём)",
         [(DAYS[d], per_day[d]) for d in range(7)] + [("выходные", weekend)],
         workday,
     )
@@ -174,25 +211,23 @@ def weekdays(cs: CandleStore, names: list[str], years: range) -> None:
 
 def expiry(cs: CandleStore, names: list[str], years: range) -> None:
     """Последняя пятница месяца и день после неё против обычного дня."""
-    day_of = Acc()
-    day_after = Acc()
-    usual = Acc()
-    yearly: dict[int, tuple[Acc, Acc]] = defaultdict(lambda: (Acc(), Acc()))
+    day_of, day_after, usual = Daily(), Daily(), Daily()
+    yearly: dict[int, tuple[Daily, Daily]] = defaultdict(lambda: (Daily(), Daily()))
     for name in names:
         for year in years:
             rows = list(bars(cs, name, "1d", year))
             for i, (ts, ret) in enumerate(rows):
-                prev_expiry = i > 0 and last_friday(rows[i - 1][0].date())
+                d = ts.date()
                 hit, other = yearly[year]
-                if last_friday(ts.date()):
-                    day_of.add(ret)
-                    hit.add(ret)
-                elif prev_expiry:
-                    day_after.add(ret)
+                if last_friday(d):
+                    day_of.add(d, ret)
+                    hit.add(d, ret)
+                elif i > 0 and last_friday(rows[i - 1][0].date()):
+                    day_after.add(d, ret)
                 else:
-                    usual.add(ret)
-                    other.add(ret)
-    if not usual.n:
+                    usual.add(d, ret)
+                    other.add(d, ret)
+    if not usual.days:
         print("дневных рядов нет")
         return
     table(
@@ -223,8 +258,9 @@ def main() -> int:
     if args.part in ("all", "expiry"):
         expiry(cs, names, years)
     print(
-        "\nПорог осмысленности: круг по мейкеру ≈ 0.04%, по тейкеру ≈ 0.10%.\n"
-        "Эффект меньше этого не переживёт исполнения ни при каких правилах."
+        "\nДва порога подряд: разница должна быть больше собственного шума (2σ)\n"
+        f"и больше круга по издержкам ({MAKER_ROUND}% по мейкеру, ~0.10% по тейкеру).\n"
+        "Шум считается по ДАТАМ: монеты в один день — одно наблюдение, а не восемь."
     )
     return 0
 
