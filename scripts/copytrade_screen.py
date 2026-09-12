@@ -149,13 +149,19 @@ def returns(
     pnl = data.get("pnlHistory") or []
     if len(av) < 10 or len(pnl) != len(av):
         return [], [], []
+    # Окно берётся СПЛОШНЫМ с первого момента, когда капитал превысил порог. Пропуск
+    # отдельных периодов посреди истории склеивал бы куски разного времени в один шаг
+    # и давал бы разрывы, неотличимые от гигантской доходности.
+    start = next((i for i in range(len(av)) if float(av[i][1]) >= floor), None)
+    if start is None:
+        return [], [], []
     mine: list[float] = []
     market: list[float] = []
     stamps: list[date] = []
-    for i in range(1, len(av)):
+    for i in range(start + 1, len(av)):
         base = float(av[i - 1][1])
         if base < floor:
-            continue
+            break
         d0 = datetime.fromtimestamp(av[i - 1][0] / 1000, UTC).date()
         d1 = datetime.fromtimestamp(av[i][0] / 1000, UTC).date()
         p0 = prices.get(d0)
@@ -260,9 +266,75 @@ def stage_rank(root: Path, top: int, floor: float) -> int:
     return 0
 
 
+def stage_persist(root: Path, floor: float) -> int:
+    """Переносится ли результат из первой половины истории во вторую.
+
+    Это ЕДИНСТВЕННАЯ проверка, отвечающая на вопрос «навык или везение». Список кандидатов
+    отобран по прибыли за всё время, поэтому любые их метрики за ту же историю красивы
+    по построению — мы измеряем победителей. Здесь ранжирование строится по ПЕРВОЙ половине
+    истории, а результат смотрится во ВТОРОЙ, которую отбор не видел.
+
+    Если навык есть, верхняя часть первой половины обгоняет остальных во второй.
+    Если нет — связь будет около нуля, и это значит, что лидерборд показывает
+    не мастеров, а тех, кому повезло.
+    """
+    prices = btc_weekly(root)
+    path = _dir(root) / "portfolios.jsonl"
+    pairs: list[tuple[float, float, float, float]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        mine, market, stamps = returns(rec["portfolio"], prices, floor)
+        if len(mine) < WEEKS_MIN * 2:
+            continue
+        half = len(mine) // 2
+        a, b = mine[:half], mine[half:]
+        ma, mb = market[:half], market[half:]
+        if stdev(a) <= 0 or stdev(b) <= 0:
+            continue
+        pairs.append(
+            (
+                fmean(a) / stdev(a),
+                fmean(b) / stdev(b),
+                beta_alpha(a, ma)[1],
+                beta_alpha(b, mb)[1],
+            )
+        )
+
+    if len(pairs) < 30:
+        print(f"счетов с историей на две половины: {len(pairs)} — слишком мало")
+        return 0
+    print(f"счетов с полной историей на две половины: {len(pairs)}\n")
+    for label, i, j in (("доход/риск", 0, 1), ("результат сверх рынка", 2, 3)):
+        xs = [p[i] for p in pairs]
+        ys = [p[j] for p in pairs]
+        mx, my = fmean(xs), fmean(ys)
+        dx = sqrt(sum((x - mx) ** 2 for x in xs))
+        dy = sqrt(sum((y - my) ** 2 for y in ys))
+        num = sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True))
+        r = num / (dx * dy) if dx and dy else 0.0
+        order = sorted(pairs, key=lambda p: -p[i])
+        k = max(3, len(order) // 4)
+        top = fmean(p[j] for p in order[:k])
+        rest = fmean(p[j] for p in order[k:])
+        print(f"{label}:")
+        print(f"  связь первой половины со второй: {r:+.2f}")
+        print(f"  верхняя четверть первой половины во второй: {top:+.3f}")
+        print(f"  все остальные во второй:                    {rest:+.3f}")
+    print(
+        "\nЧитать так: связь около нуля означает, что прошлый результат не переносится,\n"
+        "и выбирать по нему некого. Отрицательная связь — что лидерборд показывает тех,\n"
+        "кто рискнул сильнее всех и на этот раз угадал."
+    )
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--stage", required=True, choices=("leaderboard", "portfolios", "rank"))
+    ap.add_argument(
+        "--stage", required=True, choices=("leaderboard", "portfolios", "rank", "persist")
+    )
     ap.add_argument("--min-capital", type=float, default=250_000)
     ap.add_argument("--max-turnover", type=float, default=20.0, help="оборотов капитала в месяц")
     ap.add_argument("--limit", type=int, default=600, help="сколько кандидатов качать")
@@ -277,6 +349,8 @@ def main() -> int:
         return stage_leaderboard(root, args.min_capital, args.max_turnover)
     if args.stage == "portfolios":
         return stage_portfolios(root, args.limit, args.pause)
+    if args.stage == "persist":
+        return stage_persist(root, args.floor)
     return stage_rank(root, args.top, args.floor)
 
 
