@@ -58,11 +58,13 @@ def _dir(root: Path) -> Path:
     return d
 
 
-def stage_leaderboard(root: Path, min_capital: float, max_turnover: float) -> int:
+def stage_leaderboard(root: Path, min_capital: float, max_turnover: float, refresh: bool) -> int:
     """Полный список счетов → кандидаты, пригодные к копированию."""
     import httpx
 
     raw = _dir(root) / "leaderboard.json"
+    if refresh and raw.exists():
+        raw.unlink()
     if not raw.exists():
         with httpx.stream("GET", LEADERBOARD, timeout=180) as r:
             r.raise_for_status()
@@ -306,7 +308,8 @@ def stage_forward(root: Path, pause: float) -> int:
     """Что дал замороженный рейтинг после дня снимка."""
     import httpx
 
-    snaps = sorted((_dir(root) / "snapshots").glob("*.json")) if (_dir(root) / "snapshots").exists() else []
+    folder = _dir(root) / "snapshots"
+    snaps = sorted(folder.glob("*.json")) if folder.exists() else []
     if not snaps:
         print("снимков нет: сначала --stage snapshot")
         return 1
@@ -424,6 +427,7 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=600, help="сколько кандидатов качать")
     ap.add_argument("--pause", type=float, default=0.15, help="пауза между запросами, с")
     ap.add_argument("--top", type=int, default=30)
+    ap.add_argument("--refresh", action="store_true", help="перекачать лидерборд")
     ap.add_argument("--floor", type=float, default=50_000, help="капитал, ниже которого не считаем")
     ap.add_argument("--min-years", type=float, default=0.0, help="минимум истории для persist")
     ap.add_argument("--root", default="data")
@@ -431,7 +435,7 @@ def main() -> int:
 
     root = Path(args.root)
     if args.stage == "leaderboard":
-        return stage_leaderboard(root, args.min_capital, args.max_turnover)
+        return stage_leaderboard(root, args.min_capital, args.max_turnover, args.refresh)
     if args.stage == "portfolios":
         return stage_portfolios(root, args.limit, args.pause)
     if args.stage == "persist":
