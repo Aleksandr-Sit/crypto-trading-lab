@@ -130,7 +130,7 @@ def main() -> int:
     raw: dict[int, list[float]] = defaultdict(list)
     # Для проверки шорта нужен ПУТЬ цены, а не только точка выхода: стоп срабатывает
     # по дороге. Держим первые 30 дней после входа.
-    shorts: list[tuple[date, float, list[tuple[date, float, float]]]] = []
+    shorts: list[tuple[date, float, list[tuple[date, float, float]], bool]] = []
     listings = 0
     skipped_btc = 0
     onboard = perp_onboard_dates()
@@ -150,12 +150,13 @@ def main() -> int:
             skipped_btc += 1
             continue
         listings += 1
+        base = name.split("/")[0]
+        tradable = base in onboard and onboard[base] <= d0
         if len(days) >= 32:
-            shorts.append((d0, p0, days[2:32]))
+            shorts.append((d0, p0, days[2:32], tradable))
         # Шортить можно только перп. Даты запуска берутся у БИРЖИ, а не из нашего
         # хранилища: перпы мы собирали лишь по ликвидной сотне, и «перпа нет»
         # означало бы дыру в сборе, а не отсутствие инструмента.
-        base = name.split("/")[0]
         if base in onboard:
             perp_gap.append((onboard[base] - days[0][0]).days)
         else:
@@ -230,7 +231,7 @@ def main() -> int:
         results = []
         by_mon: dict[int, list[float]] = defaultdict(list)
         stopped = 0
-        for d0, p0, path in shorts:
+        for d0, p0, path, _tradable in shorts:
             hit_stop = None
             if stop_pct is not None:
                 limit = p0 * (1 + stop_pct / 100)
@@ -256,6 +257,33 @@ def main() -> int:
             f"{label:10}{fmean(results):>9.1f}%{2 * se:>11.1f}{median(results):>9.1f}%"
             f"{stopped * 100 / len(results):>8.0f}%{min(results):>8.0f}%{up:>8.0f}%"
         )
+
+    # Решающий срез: только то, что РЕАЛЬНО можно было шортить — перп существовал
+    # на момент входа. Если эффект живёт лишь там, где инструмента не было,
+    # он не торгуем, каким бы сильным ни выглядел.
+    real = [s for s in shorts if s[3]]
+    print(f"\nТОЛЬКО ТОРГУЕМЫЕ (перп уже существовал): {len(real)} из {len(shorts)}")
+    if len(real) >= 30:
+        print(f"{'стоп':10}{'средняя':>10}{'шум (2σ)':>11}{'медиана':>10}{'в плюсе':>9}")
+        for stop_pct in (50, 100, None):
+            res = []
+            mon: dict[int, list[float]] = defaultdict(list)
+            for d0, p0, path, _t in real:
+                hit = None
+                if stop_pct is not None:
+                    limit = p0 * (1 + stop_pct / 100)
+                    if any(high >= limit for _, _, high in path):
+                        hit = -stop_pct
+                got = hit if hit is not None else -(path[-1][1] / p0 - 1) * 100
+                res.append(got)
+                mon[d0.year * 100 + d0.month].append(got)
+            per_mon = [fmean(v) for v in mon.values()]
+            se = stdev(per_mon) / sqrt(len(per_mon)) if len(per_mon) > 1 else 0.0
+            up = sum(1 for x in res if x > 0) / len(res) * 100
+            label = f"+{stop_pct}%" if stop_pct else "без стопа"
+            print(
+                f"{label:10}{fmean(res):>9.1f}%{2 * se:>11.1f}{median(res):>9.1f}%{up:>8.0f}%"
+            )
 
     print("\nШОРТ со стопом +100% ПО ГОДАМ")
     print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
