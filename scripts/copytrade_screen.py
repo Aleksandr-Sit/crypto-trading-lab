@@ -130,12 +130,19 @@ def btc_weekly(root: Path) -> dict[date, float]:
     return {r["ts"].date(): float(r["close"]) for r in rows if r["close"]}
 
 
-def returns(portfolio: list, prices: dict[date, float]) -> tuple[list[float], list[float], list[date]]:
+def returns(
+    portfolio: list, prices: dict[date, float], floor: float
+) -> tuple[list[float], list[float], list[date]]:
     """Доходности за период — из ПРИБЫЛИ, а не из капитала.
 
     Капитал растёт и от пополнений; если считать доходность по нему, каждое пополнение
     засчитается в заслугу трейдера. Прибыль в `pnlHistory` накопительная, поэтому берётся
     её приращение, делённое на капитал на начало периода.
+
+    `floor` отсекает младенчество счёта, и без него замер бессмыслен: история начинается
+    с момента, когда на счёте лежало десять долларов, и первая же прибыль в сто долларов
+    даёт «тысячу процентов за неделю». При перемножении таких периодов получаются
+    миллионы процентов годовых — ровно это и вышло в первом прогоне.
     """
     data = dict(portfolio).get("allTime") or {}
     av = data.get("accountValueHistory") or []
@@ -147,7 +154,7 @@ def returns(portfolio: list, prices: dict[date, float]) -> tuple[list[float], li
     stamps: list[date] = []
     for i in range(1, len(av)):
         base = float(av[i - 1][1])
-        if base <= 0:
+        if base < floor:
             continue
         d0 = datetime.fromtimestamp(av[i - 1][0] / 1000, UTC).date()
         d1 = datetime.fromtimestamp(av[i][0] / 1000, UTC).date()
@@ -173,19 +180,23 @@ def beta_alpha(mine: list[float], market: list[float]) -> tuple[float, float]:
     return beta, mm - beta * mk
 
 
-def drawdown(mine: list[float]) -> float:
-    """Худшая просадка кривой, собранной из доходностей — без влияния пополнений."""
+def curve(mine: list[float]) -> tuple[float, float]:
+    """Итоговый множитель капитала и худшая просадка — без влияния пополнений.
+
+    Множитель обрезается снизу нулём: счёт нельзя потерять дважды, а арифметически
+    несколько периодов по −100% дают отрицательный капитал.
+    """
     equity = 1.0
     peak = 1.0
     worst = 0.0
     for r in mine:
-        equity *= 1 + r / 100
+        equity = max(equity * (1 + r / 100), 1e-9)
         peak = max(peak, equity)
         worst = min(worst, equity / peak - 1)
-    return worst * 100
+    return equity, worst * 100
 
 
-def stage_rank(root: Path, top: int) -> int:
+def stage_rank(root: Path, top: int, floor: float) -> int:
     prices = btc_weekly(root)
     facts = {c["address"]: c for c in json.loads((_dir(root) / "candidates.json").read_text())}
     path = _dir(root) / "portfolios.jsonl"
@@ -198,39 +209,46 @@ def stage_rank(root: Path, top: int) -> int:
         if not line.strip():
             continue
         rec = json.loads(line)
-        mine, market, stamps = returns(rec["portfolio"], prices)
+        mine, market, stamps = returns(rec["portfolio"], prices, floor)
         if len(mine) < WEEKS_MIN:
             continue
         span = (stamps[-1] - stamps[0]).days / 365.25
-        per_year = len(mine) / span if span > 0 else 0
+        if span < 0.5:
+            continue
+        per_year = len(mine) / span
         sd = stdev(mine) if len(mine) > 1 else 0.0
         beta, alpha = beta_alpha(mine, market)
         years: dict[int, list[float]] = {}
         for d, r in zip(stamps, mine, strict=True):
             years.setdefault(d.year, []).append(r)
         good = sum(1 for v in years.values() if sum(v) > 0)
+        total, dd = curve(mine)
         scored.append(
             {
                 **facts.get(rec["address"], {"address": rec["address"]}),
                 "periods": len(mine),
                 "years": len(years),
                 "good_years": good,
-                "ret": fmean(mine) * per_year,
+                # Сложный процент, а не средняя за период, помноженная на число периодов:
+                # вторая завышает тем сильнее, чем разбросаннее результаты.
+                "ret": (total ** (1 / span) - 1) * 100,
                 "alpha": alpha * per_year,
                 "beta": beta,
                 "sharpe": (fmean(mine) / sd * sqrt(per_year)) if sd else 0.0,
-                "dd": drawdown(mine),
+                "dd": dd,
+                "worst": min(mine),
+                "best": max(mine),
             }
         )
 
-    scored.sort(key=lambda s: -s["alpha"])
-    print(f"счетов с историей ≥ {WEEKS_MIN} периодов: {len(scored)}\n")
-    head = f"{'адрес':14}{'капитал':>10}{'лет':>5}{'+лет':>6}{'доход':>9}"
+    scored.sort(key=lambda s: -s["sharpe"])
+    print(f"счетов с историей ≥ {WEEKS_MIN} периодов при капитале ≥ ${floor:,.0f}: {len(scored)}\n")
+    head = f"{'адрес':14}{'капитал':>9}{'лет':>5}{'+лет':>6}{'годовых':>10}"
     print(head + f"{'сверх рынка':>13}{'бета':>7}{'дох/риск':>10}{'просадка':>10}")
     for s in scored[:top]:
         print(
-            f"{s['address'][:12]:14}{s['capital'] / 1e6:>9.1f}м{s['years']:>5}"
-            f"{s['good_years']:>6}{s['ret']:>8.0f}%{s['alpha']:>12.0f}%"
+            f"{s['address'][:12]:14}{s['capital'] / 1e6:>8.1f}м{s['years']:>5}"
+            f"{s['good_years']:>6}{s['ret']:>9.0f}%{s['alpha']:>12.0f}%"
             f"{s['beta']:>7.2f}{s['sharpe']:>10.2f}{s['dd']:>9.0f}%"
         )
     print(
@@ -250,6 +268,7 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=600, help="сколько кандидатов качать")
     ap.add_argument("--pause", type=float, default=0.15, help="пауза между запросами, с")
     ap.add_argument("--top", type=int, default=30)
+    ap.add_argument("--floor", type=float, default=50_000, help="капитал, ниже которого не считаем")
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
 
@@ -258,7 +277,7 @@ def main() -> int:
         return stage_leaderboard(root, args.min_capital, args.max_turnover)
     if args.stage == "portfolios":
         return stage_portfolios(root, args.limit, args.pause)
-    return stage_rank(root, args.top)
+    return stage_rank(root, args.top, args.floor)
 
 
 if __name__ == "__main__":
