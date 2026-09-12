@@ -47,15 +47,22 @@ BASKET = (
 )
 
 
-def first_days(cs: CandleStore, name: str, need: int) -> list[tuple[date, float]]:
-    """Первые `need` дневных закрытий ряда."""
+def first_days(cs: CandleStore, name: str, need: int) -> list[tuple[date, float, float]]:
+    """Первые `need` дневных баров ряда: дата, закрытие и максимум.
+
+    Максимум нужен для стопа: шорт выносит внутри дня, а не по закрытию.
+    """
     rows = cs.query(
-        f"select ts, close::DOUBLE as c from {{candles}} order by ts limit {need}",
+        f"select ts, close::DOUBLE as c, high::DOUBLE as h from {{candles}} order by ts limit {need}",
         "binance",
         name,
         "1d",
     )
-    return [(r["ts"].date(), float(r["c"])) for r in rows if r["c"] and r["c"] > 0]
+    return [
+        (r["ts"].date(), float(r["c"]), float(r["h"] or r["c"]))
+        for r in rows
+        if r["c"] and r["c"] > 0
+    ]
 
 
 def main() -> int:
@@ -96,22 +103,26 @@ def main() -> int:
     by_year: dict[int, dict[int, list[float]]] = defaultdict(lambda: defaultdict(list))
     vs_basket: dict[int, list[float]] = defaultdict(list)
     raw: dict[int, list[float]] = defaultdict(list)
+    # Для проверки шорта нужен ПУТЬ цены, а не только точка выхода: стоп срабатывает
+    # по дороге. Держим первые 30 дней после входа.
+    shorts: list[tuple[date, float, list[tuple[date, float, float]]]] = []
     listings = 0
     skipped_btc = 0
     for name in names:
         days = first_days(cs, name, longest + 3)
         if len(days) < longest + 2:
             continue
-        d0, p0 = days[1]  # закрытие первого ПОЛНОГО дня
+        d0, p0, _ = days[1]  # закрытие первого ПОЛНОГО дня
         if d0.year < args.from_year:
             continue
         if d0 not in btc:
             skipped_btc += 1
             continue
         listings += 1
+        shorts.append((d0, p0, days[2 : 2 + 30]))
         key = d0.year * 100 + d0.month
         for h in HORIZONS:
-            d1, p1 = days[1 + h]
+            d1, p1, _ = days[1 + h]
             coin = (p1 / p0 - 1) * 100
             raw[h].append(coin)
             b1 = btc.get(d1)
@@ -158,6 +169,35 @@ def main() -> int:
         qs = [(0.05, "5%"), (0.25, "25%"), (0.5, "медиана"), (0.75, "75%"), (0.95, "95%")]
         line = "  ".join(f"{lab}: {vals[int(len(vals) * q)]:+.0f}%" for q, lab in qs)
         print(f"  {line}   максимум: {vals[-1]:+.0f}%")
+
+    # Главный вопрос: переживает ли ШОРТ свой правый хвост. Стоп срабатывает внутри дня
+    # по максимуму, а не по закрытию, — так это и происходит на бирже.
+    print("\nШОРТ со стопом, горизонт 30 дн (вход по закрытию первого полного дня)")
+    print(f"{'стоп':10}{'средняя':>10}{'медиана':>10}{'вынесло':>10}{'худший':>10}{'в плюсе':>10}")
+    for stop_pct in (25, 50, 100, 200, None):
+        results = []
+        stopped = 0
+        for d0, p0, path in shorts:
+            hit_stop = None
+            if stop_pct is not None:
+                limit = p0 * (1 + stop_pct / 100)
+                for _, _, high in path:
+                    if high >= limit:
+                        hit_stop = -stop_pct
+                        break
+            if hit_stop is not None:
+                stopped += 1
+                results.append(hit_stop)
+            else:
+                results.append(-(path[-1][1] / p0 - 1) * 100)
+        if not results:
+            continue
+        label = f"+{stop_pct}%" if stop_pct else "без стопа"
+        up = sum(1 for x in results if x > 0) / len(results) * 100
+        print(
+            f"{label:10}{fmean(results):>9.1f}%{median(results):>9.1f}%"
+            f"{stopped * 100 / len(results):>9.0f}%{min(results):>9.0f}%{up:>9.0f}%"
+        )
 
     print(f"\nПО ГОДАМ, сверх BTC, горизонт 30 дн")
     print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
