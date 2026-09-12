@@ -49,6 +49,7 @@ LEADERBOARD = "https://stats-data.hyperliquid.xyz/Mainnet/leaderboard"
 INFO = "https://api.hyperliquid.xyz/info"
 DIR = "copytrade"
 WEEKS_MIN = 26  # полгода истории: меньше — не отличить навык от полосы везения
+SANE_JUMP = 300.0  # прирост прибыли за период, выше которого это перевод, а не торговля
 
 
 def _dir(root: Path) -> Path:
@@ -171,6 +172,11 @@ def returns(
         mine.append((float(pnl[i][1]) - float(pnl[i - 1][1])) / base * 100)
         market.append((p1 / p0 - 1) * 100)
         stamps.append(d1)
+    # Скачок прибыли больше +300% за период — это не торговля, а движение средств,
+    # попавшее в `pnlHistory`. Окно обрывается на нём: то, что было до, измеримо.
+    bad = next((i for i, r in enumerate(mine) if r > SANE_JUMP), None)
+    if bad is not None:
+        return mine[:bad], market[:bad], stamps[:bad]
     return mine, market, stamps
 
 
@@ -266,7 +272,7 @@ def stage_rank(root: Path, top: int, floor: float) -> int:
     return 0
 
 
-def stage_persist(root: Path, floor: float) -> int:
+def stage_persist(root: Path, floor: float, min_years: float) -> int:
     """Переносится ли результат из первой половины истории во вторую.
 
     Это ЕДИНСТВЕННАЯ проверка, отвечающая на вопрос «навык или везение». Список кандидатов
@@ -287,6 +293,8 @@ def stage_persist(root: Path, floor: float) -> int:
         rec = json.loads(line)
         mine, market, stamps = returns(rec["portfolio"], prices, floor)
         if len(mine) < WEEKS_MIN * 2:
+            continue
+        if (stamps[-1] - stamps[0]).days / 365.25 < min_years:
             continue
         half = len(mine) // 2
         a, b = mine[:half], mine[half:]
@@ -341,6 +349,7 @@ def main() -> int:
     ap.add_argument("--pause", type=float, default=0.15, help="пауза между запросами, с")
     ap.add_argument("--top", type=int, default=30)
     ap.add_argument("--floor", type=float, default=50_000, help="капитал, ниже которого не считаем")
+    ap.add_argument("--min-years", type=float, default=0.0, help="минимум истории для persist")
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
 
@@ -350,7 +359,7 @@ def main() -> int:
     if args.stage == "portfolios":
         return stage_portfolios(root, args.limit, args.pause)
     if args.stage == "persist":
-        return stage_persist(root, args.floor)
+        return stage_persist(root, args.floor, args.min_years)
     return stage_rank(root, args.top, args.floor)
 
 
