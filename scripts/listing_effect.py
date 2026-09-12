@@ -53,7 +53,8 @@ def first_days(cs: CandleStore, name: str, need: int) -> list[tuple[date, float,
     Максимум нужен для стопа: шорт выносит внутри дня, а не по закрытию.
     """
     rows = cs.query(
-        f"select ts, close::DOUBLE as c, high::DOUBLE as h from {{candles}} order by ts limit {need}",
+        "select ts, close::DOUBLE as c, high::DOUBLE as h "
+        f"from {{candles}} order by ts limit {need}",
         "binance",
         name,
         "1d",
@@ -173,9 +174,12 @@ def main() -> int:
     # Главный вопрос: переживает ли ШОРТ свой правый хвост. Стоп срабатывает внутри дня
     # по максимуму, а не по закрытию, — так это и происходит на бирже.
     print("\nШОРТ со стопом, горизонт 30 дн (вход по закрытию первого полного дня)")
-    print(f"{'стоп':10}{'средняя':>10}{'медиана':>10}{'вынесло':>10}{'худший':>10}{'в плюсе':>10}")
+    head = f"{'стоп':10}{'средняя':>10}{'шум (2σ)':>11}{'медиана':>10}"
+    print(head + f"{'вынесло':>9}{'худший':>9}{'в плюсе':>9}")
+    per_year_short: dict[int, list[float]] = defaultdict(list)
     for stop_pct in (25, 50, 100, 200, None):
         results = []
+        by_mon: dict[int, list[float]] = defaultdict(list)
         stopped = 0
         for d0, p0, path in shorts:
             hit_stop = None
@@ -185,19 +189,32 @@ def main() -> int:
                     if high >= limit:
                         hit_stop = -stop_pct
                         break
+            got = hit_stop if hit_stop is not None else -(path[-1][1] / p0 - 1) * 100
             if hit_stop is not None:
                 stopped += 1
-                results.append(hit_stop)
-            else:
-                results.append(-(path[-1][1] / p0 - 1) * 100)
+            results.append(got)
+            by_mon[d0.year * 100 + d0.month].append(got)
+            if stop_pct == 100:
+                per_year_short[d0.year].append(got)
         if not results:
             continue
         label = f"+{stop_pct}%" if stop_pct else "без стопа"
         up = sum(1 for x in results if x > 0) / len(results) * 100
+        # Шум по МЕСЯЦАМ: листинги одного месяца идут в один рынок и не независимы.
+        per_mon = [fmean(v) for v in by_mon.values()]
+        se = stdev(per_mon) / sqrt(len(per_mon)) if len(per_mon) > 1 else 0.0
         print(
-            f"{label:10}{fmean(results):>9.1f}%{median(results):>9.1f}%"
-            f"{stopped * 100 / len(results):>9.0f}%{min(results):>9.0f}%{up:>9.0f}%"
+            f"{label:10}{fmean(results):>9.1f}%{2 * se:>11.1f}{median(results):>9.1f}%"
+            f"{stopped * 100 / len(results):>8.0f}%{min(results):>8.0f}%{up:>8.0f}%"
         )
+
+    print("
+ШОРТ со стопом +100% ПО ГОДАМ")
+    print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
+    for year in sorted(per_year_short):
+        v = per_year_short[year]
+        up = sum(1 for x in v if x > 0) / len(v) * 100
+        print(f"{year:<7}{len(v):>11}{fmean(v):>9.1f}%{median(v):>9.1f}%{up:>8.0f}%")
 
     print(f"\nПО ГОДАМ, сверх BTC, горизонт 30 дн")
     print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
