@@ -14,6 +14,7 @@ P&L сделки считается по референсным ценам (ми
 
 from __future__ import annotations
 
+from bisect import bisect_left
 from collections import deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -112,6 +113,10 @@ class PaperEngine:
         self.expired = 0
         self._ids = count(1)
         self._funding_h = self.costs.funding_interval_h(self.venue) or 8
+        # Моменты расчёта фандинга — отсортированными, один раз. Перебирать историю
+        # на каждом баре нельзя: пятьдесят тысяч часовых баров против шести тысяч ставок
+        # это триста миллионов сравнений на один замер.
+        self._funding_at: list[datetime] = sorted(self.funding_rates or ())
         self.funding_from_history = 0  # сколько выплат взято из истории
         self.funding_missed = 0  # сколько посчитано по константе, потому что истории нет
         self._is_perp = (
@@ -363,9 +368,21 @@ class PaperEngine:
         """
         if not self._is_perp:
             return []
-        return [(moment, self._peek_rate(moment)) for moment in _funding_moments(
-            bar.ts, bar.ts + self.step, self._funding_h
-        )]
+        return [(moment, self._peek_rate(moment)) for moment in self._moments(bar)]
+
+    def _moments(self, bar: Candle) -> list[datetime]:
+        """Моменты расчёта внутри бара — ИЗ ИСТОРИИ, если она есть.
+
+        Интервал у Binance принадлежит инструменту, а не площадке: BTC и ETH платят раз
+        в восемь часов, альты сплошь раз в четыре. Конфиг знает только площадку, поэтому
+        альтам начислялась половина выплат. История ставок знает точно — она и решает.
+        """
+        if self._funding_at:
+            end = bar.ts + self.step
+            lo = bisect_left(self._funding_at, bar.ts)
+            hi = bisect_left(self._funding_at, end)
+            return self._funding_at[lo:hi]
+        return _funding_moments(bar.ts, bar.ts + self.step, self._funding_h)
 
     def _peek_rate(self, moment: datetime) -> Decimal:
         """Ставка на момент без учёта в счётчиках: счётчики про НАЧИСЛЕНИЕ, а не про показ."""
@@ -385,7 +402,7 @@ class PaperEngine:
         """
         if not self.lots:
             return
-        for moment in _funding_moments(bar.ts, bar.ts + self.step, self._funding_h):
+        for moment in self._moments(bar):
             rate = self._rate_at(moment)
             if not rate:
                 continue
@@ -411,6 +428,11 @@ def _funding_moments(start: datetime, end: datetime, interval_h: int) -> list[da
 
     Раньше считалось только их КОЛИЧЕСТВО — при константной ставке этого хватало. С историей
     нужны сами моменты: ставка у каждой выплаты своя, и в этом весь смысл нейтральных стратегий.
+
+    Запасной путь: используется, только когда истории ставок нет. Когда она есть, моменты
+    берутся ИЗ НЕЁ (`_history_moments`) — интервал у Binance задан не площадкой, а
+    инструментом: у BTC и ETH он восьмичасовой, у альтов сплошь четырёхчасовой, и замер
+    по площадке начислял альтам ровно половину выплат.
     """
     step = interval_h * 3600
     a, b = int(start.timestamp()), int(end.timestamp())
