@@ -87,6 +87,10 @@ class Daily:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--bases", default=DEFAULT_BASES)
+    # Правило Коннорса написано для американских акций, и проверить его на РОДНОМ рынке
+    # важнее, чем на крипте: если не работает там, вопрос о переносе снимается сам.
+    ap.add_argument("--venue", default="binance")
+    ap.add_argument("--quote", default="/USDT", help="суффикс имени ряда; пусто для yahoo")
     ap.add_argument("--period", type=int, default=2, help="период RSI")
     ap.add_argument("--threshold", type=float, default=10.0, help="порог перепроданности")
     ap.add_argument("--trend", type=int, default=200, help="средняя для фильтра тренда")
@@ -109,8 +113,8 @@ def main() -> int:
     for base in [b.strip() for b in args.bases.split(",") if b.strip()]:
         rows = cs.query(
             "select ts, close::DOUBLE as close from {candles} order by ts",
-            "binance",
-            f"{base}/USDT",
+            args.venue,
+            f"{base}{args.quote}",
             "1d",
         )
         closes = [float(r["close"]) for r in rows if r["close"]]
