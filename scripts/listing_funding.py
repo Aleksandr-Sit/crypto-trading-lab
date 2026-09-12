@@ -88,7 +88,10 @@ def main() -> int:
     print(f"\nставки нашлись у {len(totals)} монет, не нашлось у {missing}")
     print(f"выплат за окно: медиана {median(counts):.0f} (ожидается {args.days * 3})")
     print(f"\nФАНДИНГ ЗА {args.days} ДНЕЙ ШОРТА, % от номинала")
-    print(f"  средняя {fmean(totals):+.2f}   медиана {median(totals):+.2f}   шум (2σ) ±{2 * se:.2f}")
+    print(
+        f"  средняя {fmean(totals):+.2f}   медиана {median(totals):+.2f}"
+        f"   шум (2σ) ±{2 * se:.2f}"
+    )
     vals = sorted(totals)
     qs = [(0.05, "5%"), (0.25, "25%"), (0.75, "75%"), (0.95, "95%")]
     print("  " + "   ".join(f"{lab}: {vals[int(len(vals) * q)]:+.2f}" for q, lab in qs))
