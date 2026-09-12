@@ -258,7 +258,10 @@ def stage_link(root: Path, floor: float) -> int:
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
-        rec = json.loads(line)
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue  # файл может дописываться прямо сейчас: хвостовая строка неполна
         later = splits.get(rec["address"], (0, []))[1]
         if len(later) < 20 or stdev(later) <= 0:
             continue
