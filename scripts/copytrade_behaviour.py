@@ -48,7 +48,7 @@ from copytrade_screen import _dir, btc_weekly, returns  # noqa: E402
 
 INFO = "https://api.hyperliquid.xyz/info"
 PAGE = 2000
-MAX_PAGES = 40  # предохранитель: счёт с высокой частотой не должен съесть весь прогон
+MAX_PAGES = 20  # предохранитель: 40 тысяч сделок до раздела истории хватает с запасом
 
 FEATURES = (
     "hold_hours",
@@ -230,7 +230,7 @@ def stage_fills(root: Path, limit: int, pause: float, floor: float) -> int:
                 fh.write(
                     json.dumps({"address": address, "truncated": truncated, **feats}) + "\n"
                 )
-            if n % 50 == 0:
+            if n % 25 == 0:
                 print(f"  {n}/{len(todo)}")
             time.sleep(pause)
     return 0
@@ -293,7 +293,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--stage", required=True, choices=("fills", "link"))
     ap.add_argument("--limit", type=int, default=400)
-    ap.add_argument("--pause", type=float, default=0.4)
+    ap.add_argument("--pause", type=float, default=1.1)
     ap.add_argument("--floor", type=float, default=50_000)
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
