@@ -14,7 +14,6 @@ P&L сделки считается по референсным ценам (ми
 
 from __future__ import annotations
 
-from bisect import bisect_left
 from collections import deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -112,11 +111,13 @@ class PaperEngine:
         # cgroup молча, без единой строки вывода.
         self.expired = 0
         self._ids = count(1)
-        self._funding_h = self.costs.funding_interval_h(self.venue) or 8
-        # Моменты расчёта фандинга — отсортированными, один раз. Перебирать историю
-        # на каждом баре нельзя: пятьдесят тысяч часовых баров против шести тысяч ставок
-        # это триста миллионов сравнений на один замер.
-        self._funding_at: list[datetime] = sorted(self.funding_rates or ())
+        # Интервал расчёта фандинга принадлежит ИНСТРУМЕНТУ, а не площадке: у BTC и ETH
+        # он восьмичасовой, у альтов Binance сплошь четырёхчасовой. Конфиг знает только
+        # площадку, и альтам начислялась ровно половина выплат. Поэтому интервал берётся
+        # из самой истории ставок, а конфиг остаётся запасным путём.
+        self._funding_h = _interval_from(self.funding_rates) or (
+            self.costs.funding_interval_h(self.venue) or 8
+        )
         self.funding_from_history = 0  # сколько выплат взято из истории
         self.funding_missed = 0  # сколько посчитано по константе, потому что истории нет
         self._is_perp = (
@@ -371,17 +372,13 @@ class PaperEngine:
         return [(moment, self._peek_rate(moment)) for moment in self._moments(bar)]
 
     def _moments(self, bar: Candle) -> list[datetime]:
-        """Моменты расчёта внутри бара — ИЗ ИСТОРИИ, если она есть.
+        """Моменты расчёта фандинга внутри бара.
 
-        Интервал у Binance принадлежит инструменту, а не площадке: BTC и ETH платят раз
-        в восемь часов, альты сплошь раз в четыре. Конфиг знает только площадку, поэтому
-        альтам начислялась половина выплат. История ставок знает точно — она и решает.
+        Границы генерируются по интервалу, а не берутся из истории напрямую: так дыра
+        в истории остаётся ВИДНОЙ — ставка на пропущенный момент считается по константе
+        и попадает в счётчик `funding_missed`. Если брать только те моменты, что есть
+        в истории, пропуски исчезают молча, а молчание здесь хуже неточности.
         """
-        if self._funding_at:
-            end = bar.ts + self.step
-            lo = bisect_left(self._funding_at, bar.ts)
-            hi = bisect_left(self._funding_at, end)
-            return self._funding_at[lo:hi]
         return _funding_moments(bar.ts, bar.ts + self.step, self._funding_h)
 
     def _peek_rate(self, moment: datetime) -> Decimal:
@@ -423,16 +420,31 @@ class PaperEngine:
         return rate
 
 
+def _interval_from(rates: Mapping[datetime, Decimal] | None) -> int | None:
+    """Интервал расчёта фандинга по самой истории ставок, в часах.
+
+    Берётся ТИПИЧНЫЙ промежуток между соседними выплатами, а не первый попавшийся:
+    в истории бывают дыры (месяц не выгрузился), и один разрыв не должен решать за всех.
+    Меньше трёх выплат — сказать нечего, отвечаем None и уходим на конфиг площадки.
+    """
+    if not rates or len(rates) < 3:
+        return None
+    moments = sorted(rates)
+    gaps = sorted(
+        int((b - a).total_seconds() // 3600)
+        for a, b in zip(moments, moments[1:], strict=False)
+    )
+    typical = gaps[len(gaps) // 2]
+    return typical if typical >= 1 else None
+
+
 def _funding_moments(start: datetime, end: datetime, interval_h: int) -> list[datetime]:
     """Границы фандинга (часы, кратные интервалу от полуночи UTC) внутри [start, end).
 
     Раньше считалось только их КОЛИЧЕСТВО — при константной ставке этого хватало. С историей
     нужны сами моменты: ставка у каждой выплаты своя, и в этом весь смысл нейтральных стратегий.
 
-    Запасной путь: используется, только когда истории ставок нет. Когда она есть, моменты
-    берутся ИЗ НЕЁ (`_history_moments`) — интервал у Binance задан не площадкой, а
-    инструментом: у BTC и ETH он восьмичасовой, у альтов сплошь четырёхчасовой, и замер
-    по площадке начислял альтам ровно половину выплат.
+    Сам интервал приходит из `_interval_from` — он свойство инструмента, а не площадки.
     """
     step = interval_h * 3600
     a, b = int(start.timestamp()), int(end.timestamp())
