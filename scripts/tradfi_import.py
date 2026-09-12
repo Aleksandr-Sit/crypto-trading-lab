@@ -25,7 +25,7 @@ import argparse
 import sys
 import time
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -34,6 +34,10 @@ from lab.contracts import Candle  # noqa: E402
 from lab.data.store import CandleStore  # noqa: E402
 
 CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+# Хранилище держит деньги как decimal128(30, 12); у Yahoo цены приходят float'ом
+# с шестнадцатью знаками, и Parquet отказывается их ужимать («Rescaling Decimal value
+# would cause data loss»). Округляем явно — двенадцати знаков хватает любому активу.
+_Q = Decimal("0.000000000001")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36"
 
 # Тикер Yahoo → имя в хранилище. Имена без слэшей и двоеточий: так их не спутать
@@ -56,6 +60,10 @@ SYMBOLS = {
     "^N225": "NIKKEI",
     "^FTSE": "FTSE",
 }
+
+
+def _money(value: float | int) -> Decimal:
+    return Decimal(str(value)).quantize(_Q, rounding=ROUND_HALF_UP)
 
 
 def fetch(client, symbol: str, years: int) -> list[dict]:
@@ -126,11 +134,11 @@ def main() -> int:
                     ts=datetime.fromtimestamp(r["ts"], UTC).replace(
                         hour=0, minute=0, second=0, microsecond=0
                     ),
-                    open=Decimal(str(r["open"])),
-                    high=Decimal(str(r["high"])),
-                    low=Decimal(str(r["low"])),
-                    close=Decimal(str(r["close"])),
-                    volume=Decimal(str(r["volume"])),
+                    open=_money(r["open"]),
+                    high=_money(r["high"]),
+                    low=_money(r["low"]),
+                    close=_money(r["close"]),
+                    volume=_money(r["volume"]),
                 )
                 for r in rows
             ]
