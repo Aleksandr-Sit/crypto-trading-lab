@@ -272,6 +272,80 @@ def stage_rank(root: Path, top: int, floor: float) -> int:
     return 0
 
 
+def stage_snapshot(root: Path, floor: float, top: int) -> int:
+    """Заморозить сегодняшний рейтинг, чтобы померить его ВПЕРЁД.
+
+    Разделение истории пополам — лучшее, что можно сделать задним числом, но у него есть
+    изъян: список кандидатов отобран по прибыли за ВСЮ историю, включая вторую половину.
+    Чистая проверка одна — взять список сегодня и смотреть, что он даст потом. Будущего
+    не видел никакой отбор, и подсмотреть его невозможно.
+
+    Файл со снимком — это всё, что нужно; сами кривые досниматся позже.
+    """
+    stage_rank(root, 0, floor)
+    ranked = json.loads((_dir(root) / "ranked.json").read_text())
+    if not ranked:
+        print("рейтинг пуст")
+        return 1
+    ranked.sort(key=lambda s: -s["sharpe"])
+    today = datetime.now(UTC).date().isoformat()
+    snaps = _dir(root) / "snapshots"
+    snaps.mkdir(exist_ok=True)
+    path = snaps / f"{today}.json"
+    keep = [
+        {k: s[k] for k in ("address", "capital", "sharpe", "alpha", "beta", "ret", "dd")}
+        for s in ranked[: top or len(ranked)]
+    ]
+    path.write_text(json.dumps({"date": today, "floor": floor, "traders": keep}, indent=1))
+    print(f"снимок {today}: {len(keep)} счетов → {path}")
+    print("померить вперёд: --stage forward (имеет смысл не раньше чем через два-три месяца)")
+    return 0
+
+
+def stage_forward(root: Path, pause: float) -> int:
+    """Что дал замороженный рейтинг после дня снимка."""
+    import httpx
+
+    snaps = sorted((_dir(root) / "snapshots").glob("*.json")) if (_dir(root) / "snapshots").exists() else []
+    if not snaps:
+        print("снимков нет: сначала --stage snapshot")
+        return 1
+    prices = btc_weekly(root)
+    for snap in snaps:
+        data = json.loads(snap.read_text())
+        made = date.fromisoformat(data["date"])
+        age = (datetime.now(UTC).date() - made).days
+        traders = data["traders"]
+        print(f"\nснимок {data['date']} ({age} дн назад), счетов {len(traders)}")
+        if age < 30:
+            print("  слишком свежий, мерить нечего")
+            continue
+        rows: list[tuple[float, float]] = []
+        with httpx.Client(timeout=60) as client:
+            for t in traders:
+                try:
+                    r = client.post(INFO, json={"type": "portfolio", "user": t["address"]})
+                    r.raise_for_status()
+                    mine, _, stamps = returns(r.json(), prices, data["floor"])
+                except Exception:  # noqa: BLE001 — один счёт не роняет прогон
+                    continue
+                after = [x for x, d in zip(mine, stamps, strict=True) if d > made]
+                if len(after) >= 4 and stdev(after) > 0:
+                    rows.append((t["sharpe"], fmean(after) / stdev(after)))
+                time.sleep(pause)
+        if len(rows) < 20:
+            print(f"  счетов с данными после снимка: {len(rows)} — мало")
+            continue
+        rows.sort(key=lambda p: -p[0])
+        k = max(3, len(rows) // 4)
+        top_mean = fmean(p[1] for p in rows[:k])
+        rest_mean = fmean(p[1] for p in rows[k:])
+        print(f"  верхняя четверть снимка после него: {top_mean:+.3f}")
+        print(f"  все остальные:                      {rest_mean:+.3f}")
+        print(f"  разница: {top_mean - rest_mean:+.3f} (это и есть ответ, без задних мыслей)")
+    return 0
+
+
 def stage_persist(root: Path, floor: float, min_years: float) -> int:
     """Переносится ли результат из первой половины истории во вторую.
 
@@ -341,7 +415,9 @@ def stage_persist(root: Path, floor: float, min_years: float) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
-        "--stage", required=True, choices=("leaderboard", "portfolios", "rank", "persist")
+        "--stage",
+        required=True,
+        choices=("leaderboard", "portfolios", "rank", "persist", "snapshot", "forward"),
     )
     ap.add_argument("--min-capital", type=float, default=250_000)
     ap.add_argument("--max-turnover", type=float, default=20.0, help="оборотов капитала в месяц")
@@ -360,6 +436,10 @@ def main() -> int:
         return stage_portfolios(root, args.limit, args.pause)
     if args.stage == "persist":
         return stage_persist(root, args.floor, args.min_years)
+    if args.stage == "snapshot":
+        return stage_snapshot(root, args.floor, args.top)
+    if args.stage == "forward":
+        return stage_forward(root, args.pause)
     return stage_rank(root, args.top, args.floor)
 
 
