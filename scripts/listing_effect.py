@@ -94,6 +94,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--universe", default="universe-1d.txt")
     ap.add_argument("--from-year", type=int, default=2021)
+    ap.add_argument(
+        "--dump-tradable",
+        default="",
+        help="куда выписать торгуемые листинги (монета и дата входа) для замера фандинга",
+    )
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
 
@@ -135,6 +140,7 @@ def main() -> int:
     skipped_btc = 0
     onboard = perp_onboard_dates()
     perp_gap: list[int] = []
+    tradable_rows: list[dict[str, str]] = []
     no_perp = 0
     for name in names:
         days = first_days(cs, name, longest + 3)
@@ -152,6 +158,8 @@ def main() -> int:
         listings += 1
         base = name.split("/")[0]
         tradable = base in onboard and onboard[base] <= d0
+        if tradable:
+            tradable_rows.append({"base": base, "entry": d0.isoformat()})
         if len(days) >= 32:
             shorts.append((d0, p0, days[2:32], tradable))
         # Шортить можно только перп. Даты запуска берутся у БИРЖИ, а не из нашего
@@ -284,6 +292,12 @@ def main() -> int:
             print(
                 f"{label:10}{fmean(res):>9.1f}%{2 * se:>11.1f}{median(res):>9.1f}%{up:>8.0f}%"
             )
+
+    if args.dump_tradable:
+        import json
+
+        Path(args.dump_tradable).write_text(json.dumps(tradable_rows, indent=1))
+        print(f"\nторгуемые листинги выписаны: {len(tradable_rows)} → {args.dump_tradable}")
 
     print("\nШОРТ со стопом +100% ПО ГОДАМ")
     print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
