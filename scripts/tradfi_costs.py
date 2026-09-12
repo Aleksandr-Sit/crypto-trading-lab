@@ -68,20 +68,24 @@ CRYPTO = {"BTC/USDT": (20.0, 8.0), "ETH/USDT": (20.0, 8.0)}
 
 
 def daily_moves(cs: CandleStore, venue: str, name: str, years: int) -> list[float]:
+    """Типичный дневной ход — ОТ ЗАКРЫТИЯ К ЗАКРЫТИЮ.
+
+    Не `close/open`: у Yahoo в валютных рядах открытие равно закрытию, и внутридневного
+    хода там нет вовсе — EURUSD выходил «0.003% в день» при реальных долях процента.
+    Дефект тихий: у индексов и металлов те же поля заполнены правильно, и заметить его
+    можно только по невозможному числу. Заодно close-to-close честнее для позиции,
+    которая переносится через ночь, — а речь именно о ней.
+    """
     to = datetime.now(UTC)
     rows = cs.query(
-        "select ts, open::DOUBLE as o, close::DOUBLE as c from {candles} "
-        "where ts >= ? order by ts",
+        "select ts, close::DOUBLE as c from {candles} where ts >= ? order by ts",
         venue,
         name,
         "1d",
         params=[datetime(to.year - years, to.month, to.day)],
     )
-    out = []
-    for r in rows:
-        if r["o"] and r["o"] > 0:
-            out.append(abs(r["c"] / r["o"] - 1) * 100)
-    return out
+    closes = [r["c"] for r in rows if r["c"] and r["c"] > 0]
+    return [abs(b / a - 1) * 100 for a, b in zip(closes, closes[1:], strict=False)]
 
 
 def main() -> int:
@@ -97,7 +101,7 @@ def main() -> int:
     head = f"{'актив':10}{'дней':>7}{'ход за день':>13}{'спред':>9}{'перенос':>10}"
     print(f"\n{head}{'итого б.п.':>12}{'ходов на круг':>15}")
 
-    rows: list[tuple[str, str, float, float, float, int]] = []
+    rows: list[tuple[str, str, float]] = []
     for venue, table in (("yahoo", COSTS), ("binance", CRYPTO)):
         for name, (spread_bps, markup_pct) in table.items():
             moves = daily_moves(cs, venue, name, args.years)
@@ -109,10 +113,11 @@ def main() -> int:
             # позиция открыта целиком, значит и платим за неё целиком.
             carry_bps = (BASE_RATE_PCT + markup_pct) / 365 * hold * 100
             total = spread_bps + carry_bps
-            rows.append((venue, name, move, spread_bps, carry_bps, len(moves)))
+            ratio = total / (move * 100)
+            rows.append((venue, name, ratio))
             print(
                 f"{name:10}{len(moves):>7}{move:>12.3f}%{spread_bps:>9.1f}{carry_bps:>10.1f}"
-                f"{total:>12.1f}{total / (move * 100):>15.2f}"
+                f"{total:>12.1f}{ratio:>15.2f}"
             )
 
     if not rows:
@@ -126,14 +131,8 @@ def main() -> int:
         "большую долю движения забирают издержки и тем точнее должно быть правило."
     )
     if fx and cr:
-        f = median(r[3] + (BASE_RATE_PCT + 2.0) / 365 * hold * 100 for r in fx) / median(
-            r[2] * 100 for r in fx
-        )
-        c = median(r[3] + (BASE_RATE_PCT + 8.0) / 365 * hold * 100 for r in cr) / median(
-            r[2] * 100 for r in cr
-        )
-        print(f"\nмедиана по мировым активам: {f:.2f} ходов на круг")
-        print(f"медиана по крипте:          {c:.2f} ходов на круг")
+        print(f"\nмедиана по мировым активам: {median(r[2] for r in fx):.2f} ходов на круг")
+        print(f"медиана по крипте:          {median(r[2] for r in cr):.2f} ходов на круг")
     return 0
 
 
