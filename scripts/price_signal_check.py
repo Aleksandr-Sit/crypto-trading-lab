@@ -30,7 +30,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from statistics import fmean, stdev

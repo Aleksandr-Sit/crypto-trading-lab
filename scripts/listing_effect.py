@@ -28,7 +28,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import defaultdict
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from math import sqrt
 from pathlib import Path
 from statistics import fmean, median, stdev
@@ -214,7 +214,7 @@ def main() -> int:
 
     # Хвост решает для ШОРТА: медиана может быть минус двадцать, а один листинг
     # с плюс тысячей съест всё. Проценты распределения важнее средней.
-    print(f"\nРАСПРЕДЕЛЕНИЕ доходности самой монеты (без ориентира), горизонт 30 дн")
+    print("\nРАСПРЕДЕЛЕНИЕ доходности самой монеты (без ориентира), горизонт 30 дн")
     vals = sorted(raw[30])
     if vals:
         qs = [(0.05, "5%"), (0.25, "25%"), (0.5, "медиана"), (0.75, "75%"), (0.95, "95%")]
@@ -292,7 +292,7 @@ def main() -> int:
         up = sum(1 for x in v if x > 0) / len(v) * 100
         print(f"{year:<7}{len(v):>11}{fmean(v):>9.1f}%{median(v):>9.1f}%{up:>8.0f}%")
 
-    print(f"\nПО ГОДАМ, сверх BTC, горизонт 30 дн")
+    print("\nПО ГОДАМ, сверх BTC, горизонт 30 дн")
     print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
     for year in sorted(by_year[30]):
         vals = by_year[30][year]
