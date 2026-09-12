@@ -60,7 +60,14 @@ def pick(root: Path, min_turnover: float, min_capital: float, top: int) -> list[
         pnl = float(w["allTime"]["pnl"])
         if turnover < min_turnover or pnl <= 0:
             continue
-        out.append({"address": r["ethAddress"], "capital": capital, "turnover": turnover, "pnl": pnl})
+        out.append(
+            {
+                "address": r["ethAddress"],
+                "capital": capital,
+                "turnover": turnover,
+                "pnl": pnl,
+            }
+        )
     out.sort(key=lambda c: -c["pnl"])
     return out[:top]
 
@@ -126,10 +133,53 @@ def tape(fills: list[dict]) -> dict[str, tuple[list[int], list[float]]]:
     return out
 
 
-def price_at(book: tuple[list[int], list[float]], when: int) -> float | None:
-    times, prices = book
-    i = bisect_left(times, when)
-    return prices[i] if i < len(times) else None
+def positions(fills: list[dict]) -> dict[str, tuple[list[int], list[float]]]:
+    """Позиция счёта по монетам во времени — из `startPosition`, без накопления ошибки."""
+    out: dict[str, tuple[list[int], list[float]]] = {}
+    for f in fills:
+        if (f.get("dir") or "") in SPOT:
+            continue
+        before = float(f.get("startPosition") or 0)
+        signed = float(f["sz"]) * (1 if f["side"] == "B" else -1)
+        times, sizes = out.setdefault(f["coin"], ([], []))
+        times.append(f["time"])
+        sizes.append(before + signed)
+    return out
+
+
+def pos_at(track: tuple[list[int], list[float]], when: int) -> float:
+    times, sizes = track
+    i = bisect_left(times, when) - 1
+    return sizes[i] if i >= 0 else 0.0
+
+
+def follow(fills: list[dict], lag_ms: int, fee_bps: float) -> tuple[float, float, float]:
+    """Повторять ПОЗИЦИЮ счёта с задержкой: прибыль, комиссии, оборот.
+
+    Это и есть вопрос «следовать за ним». Сопоставление входов с выходами тут не нужно
+    и вредно: счёт стоит с двух сторон непрерывно, и любое такое сопоставление склеивает
+    ранний вход с поздним выходом, подмешивая в результат дрейф рынка. Позиция же —
+    объективная величина, а прибыль от неё считается переоценкой по ленте сделок.
+    """
+    books = tape(fills)
+    tracks = positions(fills)
+    pnl = 0.0
+    fees = 0.0
+    turnover = 0.0
+    for coin, (times, prices) in books.items():
+        track = tracks.get(coin)
+        if not track:
+            continue
+        held = 0.0
+        for i in range(1, len(times)):
+            want = pos_at(track, times[i] - lag_ms)
+            if want != held:
+                traded = abs(want - held) * prices[i]
+                turnover += traded
+                fees += traded * fee_bps / 10_000
+                held = want
+            pnl += held * (prices[i] - prices[i - 1])
+    return pnl, fees, turnover
 
 
 def report(name: str, fills: list[dict], info: dict) -> None:
@@ -145,7 +195,8 @@ def report(name: str, fills: list[dict], info: dict) -> None:
 
     own = [side * (p1 / p0 - 1) * 10_000 for _, side, _, p0, _, p1, _ in eps]
     holds = [(t1 - t0) / 1000 for _, _, t0, _, t1, _, _ in eps]
-    print(f"\n=== {name} | капитал ${info['capital'] / 1e6:.1f}м, оборот {info['turnover']:.0f}/мес")
+    cap, turn = info["capital"] / 1e6, info["turnover"]
+    print(f"\n=== {name} | капитал ${cap:.1f}м, оборот {turn:.0f}/мес")
     print(f"сделок {len(fills)} за {span:.2f} сут ({len(fills) / max(span, 1e-9):.0f} в сутки)")
     print(f"замкнутых кругов {len(eps)}, медианное удержание {median(holds):.0f} с")
     print(f"прибыль круга: медиана {median(own):+.2f} б.п., средняя {fmean(own):+.2f} б.п.")
@@ -160,31 +211,16 @@ def report(name: str, fills: list[dict], info: dict) -> None:
     if closed:
         print(f"  доля комиссий в результате: {-fees / closed * 100:+.0f}%")
 
-    books = tape(fills)
-    # Медиана обязательна рядом со средней: у счёта, набирающего позицию частями, средняя
-    # держится на нескольких эпизодах из сотен. Разрыв между ними и есть мера того,
-    # насколько результату можно верить.
-    head = f"{'задержка':10}{'кругов':>8}{'средняя':>10}{'медиана':>10}"
-    print(f"\n{head}{'нетто по средней':>18}{'нетто по медиане':>18}{'в плюсе':>9}")
+    # Сверка с биржей — обязательна. Первая версия замера сопоставляла входы с выходами
+    # по очереди и выдала «+22 б.п. на круг» там, где биржа сообщает закрытую прибыль
+    # в $109: сопоставление склеивало ранний вход с поздним выходом и меряло дрейф рынка.
+    own_pnl, _, _ = follow(fills, 0, 0.0)
+    print(f"  переоценка его же позиции по ленте: ${own_pnl:,.0f} (сверка с биржей)")
+
+    print(f"\n{'задержка':10}{'прибыль копии':>16}{'комиссии':>12}{'итог':>12}{'оборот':>14}")
     for lag in LAGS:
-        got = []
-        for coin, side, t0, _, t1, _, _ in eps:
-            book = books.get(coin)
-            if not book:
-                continue
-            pi = price_at(book, t0 + lag * 1000)
-            po = price_at(book, t1 + lag * 1000)
-            if not pi or not po or pi <= 0:
-                continue
-            got.append(side * (po / pi - 1) * 10_000)
-        if not got:
-            continue
-        cost = 2 * TAKER_BPS
-        share = sum(1 for g in got if g > cost) / len(got) * 100
-        print(
-            f"{lag:<10}{len(got):>8}{fmean(got):>10.2f}{median(got):>10.2f}"
-            f"{fmean(got) - cost:>18.2f}{median(got) - cost:>18.2f}{share:>8.0f}%"
-        )
+        pnl, fees, turn = follow(fills, lag * 1000, TAKER_BPS)
+        print(f"{lag:<10}{pnl:>16,.0f}{fees:>12,.0f}{pnl - fees:>12,.0f}{turn:>14,.0f}")
 
 
 def main() -> int:
