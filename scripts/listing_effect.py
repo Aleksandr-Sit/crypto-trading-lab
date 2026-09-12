@@ -208,8 +208,7 @@ def main() -> int:
             f"{stopped * 100 / len(results):>8.0f}%{min(results):>8.0f}%{up:>8.0f}%"
         )
 
-    print("
-ШОРТ со стопом +100% ПО ГОДАМ")
+    print("\nШОРТ со стопом +100% ПО ГОДАМ")
     print(f"{'год':7}{'листингов':>11}{'средняя':>10}{'медиана':>10}{'в плюсе':>9}")
     for year in sorted(per_year_short):
         v = per_year_short[year]
