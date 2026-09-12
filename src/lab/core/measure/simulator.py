@@ -610,6 +610,7 @@ def simulate(
     # миллиард операций на замер.
     realized = ZERO_D
     realized_idx = dict.fromkeys(book, 0)
+    key_of = {id(e): name for name, e in book.items()}
     unreal: dict[str, Decimal] = dict.fromkeys(book, ZERO_D)
     unreal_total = ZERO_D
     mtm_peak = capital
@@ -678,9 +679,12 @@ def simulate(
         for name, price in killed:
             book[name].liquidate(price, bar.ts)
             liquidations.append((name, bar.ts))
-        _refresh(bar.instrument, bar.close)
+        # Ключ — движка, а не бара: при одном движке ряд может зваться иначе (синтетика
+        # в тестах, переименованная пара), и по имени бара движка в книге нет.
+        own = key_of[id(eng)]
+        _refresh(own, bar.close)
         for name, price in killed:
-            if name != bar.instrument:
+            if name != own:
                 _refresh(name, last_price.get(name, price))
         equity = capital + realized + unreal_total
         if equity >= mtm_peak:
