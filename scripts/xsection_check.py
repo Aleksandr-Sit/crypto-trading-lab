@@ -119,15 +119,29 @@ def by_year(rows: list[tuple[date, float, float, float]]) -> None:
         print(f"знак совпадает в {max(pos, len(signs) - pos)} годах из {len(signs)}")
 
 
-def risk_table(lo: list[float], hi: list[float], allm: list[float]) -> None:
+def risk_table(
+    lo: list[float], hi: list[float], allm: list[float], bench: list[float], bench_name: str
+) -> None:
     """Доходность на единицу риска — единственная честная проверка аномалии низкой волы.
 
     Портфель с низкой бетой в падающем рынке обгоняет вселенную просто потому, что меньше
     в ней участвует; то же даёт половина позиции в деньгах. Аномалия утверждает большее —
     что спокойные активы дают больше НА ЕДИНИЦУ РИСКА. Здесь это и сравнивается.
+
+    Ориентир обязателен. Спокойная десятая часть крипторынка — это почти наверняка
+    BTC и ETH, и тогда «аномалия» сводится к «держи биткойн», то есть к нашему обычному
+    ориентиру, а не к преимуществу над ним.
     """
     print(f"\n{'портфель':24}{'за месяц':>10}{'риск (σ)':>11}{'доход/риск, год':>18}")
-    for label, s in (("нижняя десятая", lo), ("верхняя десятая", hi), ("вся вселенная", allm)):
+    rows = [
+        ("нижняя десятая", lo),
+        ("верхняя десятая", hi),
+        ("вся вселенная", allm),
+        (f"ориентир {bench_name}", bench),
+    ]
+    for label, s in rows:
+        if not s:
+            continue
         m = fmean(s)
         sd = stdev(s) if len(s) > 1 else 0.0
         ratio = (m / sd * sqrt(12)) if sd else 0.0
@@ -157,6 +171,7 @@ def main() -> int:
     ap.add_argument("--min-names", type=int, default=20, help="сколько монет нужно для дециля")
     ap.add_argument("--min-dollar-vol", type=float, default=0.0, help="фильтр оборота, $/день")
     ap.add_argument("--from-year", type=int, default=2019)
+    ap.add_argument("--benchmark", default="BTC/USDT", help="ориентир для сравнения")
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
 
@@ -185,10 +200,11 @@ def main() -> int:
         return 0
 
     rows: list[tuple[date, float, float, float]] = []
+    membership: list[tuple[date, list[str], list[str]]] = []
     for i in range(len(all_months) - 1):
         if all_months[i].year < args.from_year:
             continue
-        picks: list[tuple[float, float]] = []
+        picks: list[tuple[float, float, str]] = []
         for name, h in hists.items():
             sig = signal_of(args.signal, h, all_months, i)
             fwd = forward(h, all_months, i)
@@ -196,11 +212,12 @@ def main() -> int:
                 continue
             if args.min_dollar_vol and h[all_months[i]]["dollar_vol"] < args.min_dollar_vol:
                 continue
-            picks.append((sig, fwd))
+            picks.append((sig, fwd, name))
         if len(picks) < args.min_names:
             continue
         picks.sort(key=lambda p: p[0])
         k = max(1, int(len(picks) * args.decile / 100))
+        membership.append((all_months[i], [p[2] for p in picks[:k]], [p[2] for p in picks[-k:]]))
         rows.append(
             (
                 all_months[i],
@@ -222,7 +239,20 @@ def main() -> int:
     report("верхняя десятая", hi, allm, "лонг лучших")
     report("нижняя десятая", lo, allm, "лонг худших")
     report("верх минус низ", hi, lo, "рыночно-нейтральный")
-    risk_table(lo, hi, allm)
+    # Ориентир считается по ТЕМ ЖЕ месяцам, иначе сравниваются разные куски истории.
+    bench_hist = hists.get(args.benchmark, {})
+    bench = [
+        (bench_hist[m2]["close"] / bench_hist[m1]["close"] - 1) * 100
+        for m1, m2 in zip(all_months, all_months[1:], strict=False)
+        if m1 in {r[0] for r in rows} and m1 in bench_hist and m2 in bench_hist
+    ]
+    risk_table(lo, hi, allm, bench, args.benchmark)
+    if membership:
+        last = membership[-1]
+        print(f"\nсостав на {last[0]} (низ): {', '.join(sorted(last[1]))}")
+        print(f"состав на {last[0]} (верх): {', '.join(sorted(last[2]))}")
+        stayed = sorted(set.intersection(*(set(m[1]) for m in membership[-12:])))
+        print(f"в нижней десятой все последние 12 ребалансов: {', '.join(stayed) or '—'}")
     by_year(rows)
     print(
         f"\nДва порога подряд: больше собственного шума (2σ) и больше издержек ребаланса\n"
