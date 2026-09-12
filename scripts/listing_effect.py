@@ -66,6 +66,30 @@ def first_days(cs: CandleStore, name: str, need: int) -> list[tuple[date, float,
     ]
 
 
+def perp_onboard_dates() -> dict[str, date]:
+    """Когда Binance запустила бессрочный контракт по каждой монете.
+
+    Берётся у биржи: в нашем хранилище перпы собраны лишь по ликвидной сотне,
+    и их отсутствие там говорит о полноте сбора, а не о торгуемости.
+    """
+    import httpx
+
+    try:
+        r = httpx.get("https://fapi.binance.com/fapi/v1/exchangeInfo", timeout=60)
+        r.raise_for_status()
+    except Exception as err:  # noqa: BLE001 — без дат просто не будет колонки
+        print(f"даты запуска перпов недоступны: {type(err).__name__}: {err}")
+        return {}
+    out: dict[str, date] = {}
+    for s in r.json().get("symbols", []):
+        if s.get("contractType") != "PERPETUAL" or s.get("quoteAsset") != "USDT":
+            continue
+        stamp = s.get("onboardDate")
+        if stamp:
+            out[s["baseAsset"]] = datetime.fromtimestamp(stamp / 1000, UTC).date()
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--universe", default="universe-1d.txt")
@@ -109,6 +133,7 @@ def main() -> int:
     shorts: list[tuple[date, float, list[tuple[date, float, float]]]] = []
     listings = 0
     skipped_btc = 0
+    onboard = perp_onboard_dates()
     perp_gap: list[int] = []
     no_perp = 0
     for name in names:
@@ -127,11 +152,12 @@ def main() -> int:
         listings += 1
         if len(days) >= 32:
             shorts.append((d0, p0, days[2:32]))
-        # Шортить можно только перп. Смотрим, есть ли он и НАСКОЛЬКО ПОЗЖЕ он появился:
-        # перп, запущенный через полгода после спота, к этой сделке отношения не имеет.
-        perp = first_days(cs, f"{name}:{name.split('/')[1]}", 2)
-        if perp:
-            perp_gap.append((perp[0][0] - days[0][0]).days)
+        # Шортить можно только перп. Даты запуска берутся у БИРЖИ, а не из нашего
+        # хранилища: перпы мы собирали лишь по ликвидной сотне, и «перпа нет»
+        # означало бы дыру в сборе, а не отсутствие инструмента.
+        base = name.split("/")[0]
+        if base in onboard:
+            perp_gap.append((onboard[base] - days[0][0]).days)
         else:
             no_perp += 1
         key = d0.year * 100 + d0.month
@@ -152,12 +178,13 @@ def main() -> int:
                 vs_basket[h].append(coin - alt)
 
     print(f"листингов с {args.from_year}: {listings} (без ориентира BTC: {skipped_btc})")
-    print(f"шортить есть чем: перп нашёлся у {len(perp_gap)}, нет у {no_perp}")
+    print(f"шортить есть чем: перп у {len(perp_gap)} монет, нет у {no_perp}")
     if perp_gap:
         same = sum(1 for g in perp_gap if abs(g) <= 3)
+        within = sum(1 for g in perp_gap if g <= 30)
         print(
-            f"  перп появился в те же дни у {same} из {len(perp_gap)}; "
-            f"медианная задержка {median(perp_gap):.0f} дн"
+            f"  запущен в те же дни у {same}, в первый месяц у {within}; "
+            f"медианная задержка {median(perp_gap):+.0f} дн"
         )
     print(f"\n{'горизонт':10}{'сверх BTC, средняя':>20}{'медиана':>10}{'шум (2σ по мес.)':>18}"
           f"{'доля в плюсе':>14}{'месяцев':>9}")
