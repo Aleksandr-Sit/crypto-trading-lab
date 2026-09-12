@@ -109,9 +109,14 @@ def main() -> int:
     shorts: list[tuple[date, float, list[tuple[date, float, float]]]] = []
     listings = 0
     skipped_btc = 0
+    perp_gap: list[int] = []
+    no_perp = 0
     for name in names:
         days = first_days(cs, name, longest + 3)
-        if len(days) < longest + 2:
+        # Требовать полные 92 дня истории — значит выбросить монеты, умершие за три
+        # месяца, а это лучшие кандидаты на шорт: отбор по выживанию работал бы ПРОТИВ
+        # нас. Минимум — пять дней, дальше каждый горизонт проверяет себя сам.
+        if len(days) < 5:
             continue
         d0, p0, _ = days[1]  # закрытие первого ПОЛНОГО дня
         if d0.year < args.from_year:
@@ -120,9 +125,19 @@ def main() -> int:
             skipped_btc += 1
             continue
         listings += 1
-        shorts.append((d0, p0, days[2 : 2 + 30]))
+        if len(days) >= 32:
+            shorts.append((d0, p0, days[2:32]))
+        # Шортить можно только перп. Смотрим, есть ли он и НАСКОЛЬКО ПОЗЖЕ он появился:
+        # перп, запущенный через полгода после спота, к этой сделке отношения не имеет.
+        perp = first_days(cs, f"{name}:{name.split('/')[1]}", 2)
+        if perp:
+            perp_gap.append((perp[0][0] - days[0][0]).days)
+        else:
+            no_perp += 1
         key = d0.year * 100 + d0.month
         for h in HORIZONS:
+            if len(days) < 2 + h:
+                continue
             d1, p1, _ = days[1 + h]
             coin = (p1 / p0 - 1) * 100
             raw[h].append(coin)
@@ -137,6 +152,13 @@ def main() -> int:
                 vs_basket[h].append(coin - alt)
 
     print(f"листингов с {args.from_year}: {listings} (без ориентира BTC: {skipped_btc})")
+    print(f"шортить есть чем: перп нашёлся у {len(perp_gap)}, нет у {no_perp}")
+    if perp_gap:
+        same = sum(1 for g in perp_gap if abs(g) <= 3)
+        print(
+            f"  перп появился в те же дни у {same} из {len(perp_gap)}; "
+            f"медианная задержка {median(perp_gap):.0f} дн"
+        )
     print(f"\n{'горизонт':10}{'сверх BTC, средняя':>20}{'медиана':>10}{'шум (2σ по мес.)':>18}"
           f"{'доля в плюсе':>14}{'месяцев':>9}")
     for h in HORIZONS:
