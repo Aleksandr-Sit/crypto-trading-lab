@@ -41,6 +41,11 @@ def annual(rate: float) -> float:
     return rate * PER_YEAR * 100
 
 
+def _hour(ts: datetime) -> datetime:
+    """Момент расчёта с точностью до часа: миллисекунды у бирж свои."""
+    return ts.replace(minute=0, second=0, microsecond=0)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--bases", default=DEFAULT_BASES)
@@ -62,8 +67,11 @@ def main() -> int:
     print(f"{'инструмент':14}{'выплат':>8}{'|разница| годовых':>19}{'медиана':>10}")
     for base in [b.strip() for b in args.bases.split(",") if b.strip()]:
         name = f"{base}/USDT:USDT"
-        ra = {r.ts: float(r.rate) for r in fs.read(args.a, name, *window)}
-        rb = {r.ts: float(r.rate) for r in fs.read(args.b, name, *window)}
+        # Метки бирж совпадают по смыслу, но не побайтово: у Binance в архиве
+        # «08:00:00.007». Сравнение на точное равенство давало ПУСТОЕ пересечение
+        # при полностью совпадающих данных — округляем к часу расчёта.
+        ra = {_hour(r.ts): float(r.rate) for r in fs.read(args.a, name, *window)}
+        rb = {_hour(r.ts): float(r.rate) for r in fs.read(args.b, name, *window)}
         common = sorted(set(ra) & set(rb))
         if len(common) < 100:
             print(f"{base:14}{len(common):>8}   мало общих выплат")
