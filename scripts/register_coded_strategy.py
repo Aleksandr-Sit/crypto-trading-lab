@@ -224,7 +224,9 @@ def main() -> int:
                     # поэтому параметры здесь трогать можно и нужно.
                     existing = session.get(StrategyRow, manifest_id(manifest))
                     if existing is not None:
-                        existing.params = {**(existing.params or {}), **from_files}
+                        # Колонка зовётся params_json, а не params: модель реестра отдаёт
+                        # разобранный словарь, строка базы хранит сырой JSON.
+                        existing.params_json = {**(existing.params_json or {}), **from_files}
                         if universe:
                             existing.instruments = list(universe)
                         updated += 1
