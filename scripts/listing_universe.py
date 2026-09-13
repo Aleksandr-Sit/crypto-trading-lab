@@ -34,6 +34,7 @@ from lab.data.funding import FundingStore  # noqa: E402
 from lab.data.store import CandleStore  # noqa: E402
 
 UNIVERSE_FILE = "universe-listings.txt"
+DATES_FILE = "listing-dates.json"
 
 
 def main() -> int:
@@ -90,6 +91,12 @@ def main() -> int:
                 failed.append(f"фандинг {name}: {type(err).__name__}")
         if i % 20 == 0:
             print(f"  {i}/{len(names)}: свечей {bars_written}, ставок {rates_written}")
+
+    # Даты листинга уходят в ПАРАМЕТРЫ стратегии, а не определяются по потоку: у этой
+    # выборки перп запущен раньше спота, и первый бар перпа — другое событие.
+    dates = {f"{r['base']}/USDT:USDT": r["entry"] for r in rows}
+    (root / DATES_FILE).write_text(json.dumps(dates, indent=1, sort_keys=True))
+    print(f"даты листинга записаны: {root / DATES_FILE} ({len(dates)})")
 
     print(f"\nсвечей записано {bars_written}, ставок {rates_written}")
     if failed:

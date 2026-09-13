@@ -14,8 +14,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from lab.contracts import Candle, Event, Signal
@@ -33,6 +34,7 @@ class _Position:
 
     first_seen: datetime
     bars: int = 0
+    since_listing: int = 0  # баров с даты листинга, когда она известна
     qty: Decimal = ZERO
     entry: Decimal = ZERO
     opened_at: datetime | None = None
@@ -60,6 +62,23 @@ class ListingFadeShortStrategy(Strategy):
         self.book: dict[str, _Position] = {}
         self.stream_start: datetime | None = None
         self.open_count = 0
+        self.listed_on: dict[str, date] = self._listing_dates()
+
+    def _listing_dates(self) -> dict[str, date]:
+        """Даты листинга из параметров: «инструмент → дата», JSON-строкой или словарём.
+
+        Зачем явно, а не по первому бару потока. Торгуется бессрочный контракт, а событие —
+        появление монеты на СПОТЕ, и у нашей выборки перп запущен РАНЬШЕ спота (иначе
+        шортить было бы нечем). Первый бар перпа — это запуск контракта, другое событие
+        и другая дата. Определение по потоку остаётся запасным путём: оно верно, когда
+        перп и спот стартуют вместе, и это большинство листингов вне нашей выборки.
+        """
+        raw = self.manifest.params.get("listing_dates")
+        if isinstance(raw, str):
+            raw = json.loads(raw)
+        if not isinstance(raw, dict):
+            return {}
+        return {str(k): date.fromisoformat(str(v)) for k, v in raw.items()}
 
     # -- параметры ------------------------------------------------------------------
 
@@ -96,18 +115,29 @@ class ListingFadeShortStrategy(Strategy):
         if pos is None:
             pos = self.book[bar.instrument] = _Position(first_seen=bar.ts)
         pos.bars += 1
+        listed = self.listed_on.get(bar.instrument)
+        if listed is not None and bar.ts.date() >= listed:
+            pos.since_listing += 1
 
         if pos.qty > 0:
             return self._maybe_close(bar, pos)
         return self._maybe_open(bar, pos)
 
     def _maybe_open(self, bar: Candle, pos: _Position) -> list[Signal]:
-        # Инструмент, торговавшийся ДО начала окна, листингом не считается: его первый бар
-        # в потоке — это граница окна, а не выход монеты на биржу.
-        if self.stream_start is None or pos.first_seen - self.stream_start < self.new_after:
+        if bar.close <= 0:
             return []
-        if pos.bars != self.entry_bar + 1 or bar.close <= 0:
-            return []
+        listed = self.listed_on.get(bar.instrument)
+        if listed is not None:
+            # Дата листинга известна: считаем бары ОТ НЕЁ, поток тут ни при чём.
+            if pos.since_listing != self.entry_bar + 1:
+                return []
+        else:
+            # Запасной путь. Инструмент, торговавшийся ДО начала окна, листингом
+            # не считается: его первый бар в потоке — граница окна, а не выход на биржу.
+            if self.stream_start is None or pos.first_seen - self.stream_start < self.new_after:
+                return []
+            if pos.bars != self.entry_bar + 1:
+                return []
         if self.open_count >= self.max_open:
             # Неделя массовых листингов не должна превращать всю ставку в одну.
             return []
