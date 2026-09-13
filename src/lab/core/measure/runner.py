@@ -583,6 +583,10 @@ def run(
             **(extra_metrics or {}),
             "unrealized_pnl": result.unrealized_end,
             "mtm_max_dd_pct": result.mtm_max_dd_pct,
+            # Средний занятый залог: без него стратегия, работающая десятой частью счёта,
+            # сравнивалась с депозитом на ВЕСЬ счёт, хотя её простаивающие деньги лежали
+            # бы в тех же казначейских бумагах.
+            "avg_margin": result.avg_margin,
         }
         if result.reasons:
             extra_metrics = {**(extra_metrics or {}), "reasons": dict(result.reasons)}

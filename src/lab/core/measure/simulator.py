@@ -487,6 +487,9 @@ class SimResult:
     # итог на последнем баре.
     mtm_max_dd_pct: Decimal = ZERO_D
     unrealized_end: Decimal = ZERO_D
+    # Средний занятый залог за окно. Ноль — стратегия без залога (спот) или ничего
+    # не держала: тогда поправки на простаивающий капитал не будет вовсе.
+    avg_margin: Decimal = ZERO_D
 
 
 def _isolated_breach(bar: Candle, eng: PaperEngine) -> list[tuple[str, Decimal]]:
@@ -649,16 +652,27 @@ def simulate(
     unreal_total = ZERO_D
     mtm_peak = capital
     mtm_max_dd = ZERO_D
+    # Занятость капитала: сколько залога держится в среднем по времени. Нужна, чтобы
+    # сравнение с бенчмарком было честным в ОБЕ стороны. Бенчмарк «кэш» уже считается
+    # по безрисковой ставке, а не по нулю; но простаивающие деньги самой стратегии
+    # до сих пор приносили ноль, и стратегия, занимающая десятую часть счёта,
+    # сравнивалась с депозитом на весь счёт.
+    margin: dict[str, Decimal] = dict.fromkeys(book, ZERO_D)
+    margin_total = ZERO_D
+    margin_sum = ZERO_D
+    margin_obs = 0
 
     def _refresh(name: str, price: Decimal) -> None:
-        nonlocal realized, unreal_total
+        nonlocal realized, unreal_total, margin_total
         e = book[name]
         fresh_closed = e.closed[realized_idx[name] :]
         realized_idx[name] = len(e.closed)
         realized += sum((t.pnl_net for t in fresh_closed), ZERO_D)
-        now_u = e.margin_state(price)[1]
+        now_margin, now_u, _ = e.margin_state(price)
         unreal_total += now_u - unreal[name]
         unreal[name] = now_u
+        margin_total += now_margin - margin[name]
+        margin[name] = now_margin
 
     # Причины считаем по ИСПОЛНЕННЫМ сигналам: намерение и сделка — разные вещи, лимитка
     # могла не сработать, а сигнал протухнуть по ttl.
@@ -720,6 +734,8 @@ def simulate(
         for name, price in killed:
             if name != own:
                 _refresh(name, last_price.get(name, price))
+        margin_sum += margin_total
+        margin_obs += 1
         equity = capital + realized + unreal_total
         if equity >= mtm_peak:
             mtm_peak = equity
@@ -820,4 +836,5 @@ def simulate(
         gaps=gaps,
         mtm_max_dd_pct=mtm_max_dd,
         unrealized_end=unreal_total,
+        avg_margin=(margin_sum / margin_obs) if margin_obs else ZERO_D,
     )

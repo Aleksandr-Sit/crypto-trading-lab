@@ -96,6 +96,15 @@ def annualized_pct(total_pct: Decimal | None, window: tuple[datetime, datetime])
     return _d((math.exp(rate) - 1) * 100)
 
 
+def _own_cagr(m: Metrics) -> Decimal | None:
+    """Доходность стратегии для сравнения: с поправкой на простаивающий капитал, если она есть.
+
+    Без поправки сравнение несимметрично: бенчмарк «кэш» приносит безрисковую ставку
+    на весь счёт, а незанятые деньги стратегии — ноль.
+    """
+    return m.cagr_with_idle_pct if m.cagr_with_idle_pct is not None else m.cagr_pct
+
+
 def _vs_benchmark_value(m: Metrics) -> Decimal | None:
     """Насколько стратегия лучше бенчмарка.
 
@@ -105,6 +114,9 @@ def _vs_benchmark_value(m: Metrics) -> Decimal | None:
     Именно поэтому смена единицы — не решение проблемы «бенчмарк с 2011 недостижим»;
     решает её сравнение по скользящим окнам (`lab measure rolling`).
     """
+    own = _own_cagr(m)
+    if own is not None and m.benchmark_cagr_pct is not None:
+        return own - m.benchmark_cagr_pct
     return m.vs_benchmark_cagr if m.vs_benchmark_cagr is not None else m.vs_benchmark
 
 
@@ -237,6 +249,7 @@ def metrics(
     unrealized = _d(ex.pop("unrealized_pnl", 0) or 0)
     mtm_raw = ex.pop("mtm_max_dd_pct", None)
     mtm_dd = _d(mtm_raw) if mtm_raw is not None else None
+    avg_margin = _d(ex.pop("avg_margin", 0) or 0)
     net = sum(pnls, Decimal(0)) + unrealized
     net_pct = net / capital * 100
     wins = [p for p in pnls if p > 0]
@@ -267,6 +280,18 @@ def metrics(
 
     cagr = annualized_pct(net_pct, window)
     bench_cagr = annualized_pct(bh, window)
+    # Поправка на ПРОСТАИВАЮЩИЙ капитал. Бенчмарк «кэш» считается по безрисковой ставке,
+    # а не по нулю — это уже исправлено; но деньги самой стратегии, не занятые залогом,
+    # до сих пор приносили ноль. Стратегия, держащая залогом десятую часть счёта,
+    # сравнивалась с депозитом на весь счёт, и это сравнение разного с разным.
+    # Поправка поднимает ВСЕ стратегии с низкой занятостью капитала, включая отвергнутые.
+    idle_pct: Decimal | None = None
+    cagr_idle: Decimal | None = None
+    if avg_margin > 0 and capital > 0:
+        idle_pct = max(Decimal(0), (capital - avg_margin) / capital * 100)
+        rate = load_threshold().benchmark.risk_free_annual_pct
+        if cagr is not None and rate:
+            cagr_idle = cagr + _d(rate) * idle_pct / 100
 
     values: dict[str, object] = dict(_NA)
     outcome: dict[str, object] = {}
@@ -303,6 +328,8 @@ def metrics(
         benchmark_pct=bh,
         vs_benchmark=(net_pct - bh) if bh is not None else None,
         cagr_pct=cagr,
+        idle_capital_pct=idle_pct,
+        cagr_with_idle_pct=cagr_idle,
         benchmark_cagr_pct=bench_cagr,
         vs_benchmark_cagr=(
             (cagr - bench_cagr) if (cagr is not None and bench_cagr is not None) else None
