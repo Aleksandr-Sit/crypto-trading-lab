@@ -92,7 +92,7 @@ class ListingFadeShortStrategy(Strategy):
 
     @property
     def stop_pct(self) -> Decimal:
-        return D(str(self.manifest.params.get("trade_stop_pct", 100)))
+        return D(str(self.manifest.params.get("trade_stop_pct", 50)))
 
     @property
     def trade_usd(self) -> Decimal:
