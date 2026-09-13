@@ -96,7 +96,7 @@ class ListingFadeShortStrategy(Strategy):
 
     @property
     def trade_usd(self) -> Decimal:
-        return D(str(self.manifest.params.get("trade_usd", 1000)))
+        return D(str(self.manifest.params.get("trade_usd", 200)))
 
     @property
     def new_after(self) -> timedelta:
