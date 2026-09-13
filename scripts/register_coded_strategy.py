@@ -108,6 +108,16 @@ def main() -> int:
         "стоит только якорь; список живёт в записи реестра, поэтому суффикс здесь не нужен",
     )
     ap.add_argument(
+        "--params-file",
+        action="append",
+        default=[],
+        metavar="ИМЯ=ПУТЬ",
+        help="параметр, значение которого лежит В ФАЙЛЕ (например listing_dates=...json). "
+        "Суффикс слага не нужен по той же причине, что и у --instruments-file: это НЕ "
+        "вариант правил, а их рабочий состав — даты событий, список пар. Записывается "
+        "и в новую запись, и в существующую",
+    )
+    ap.add_argument(
         "--slug-suffix",
         help="хвост к слагу: id собирается как <ветка>-<источник>-<слаг>, "
         "без своего слага запись просто столкнётся с исходной",
@@ -131,6 +141,14 @@ def main() -> int:
     if args.slug_suffix and (args.all or len(args.id) != 1):
         print("--slug-suffix применим ровно к одной стратегии (--id)", file=sys.stderr)
         return 2
+    from_files: dict[str, object] = {}
+    for pair in args.params_file:
+        name, _, where = pair.partition("=")
+        if not name or not where:
+            print(f"--params-file ждёт ИМЯ=ПУТЬ, получено {pair!r}", file=sys.stderr)
+            return 2
+        from_files[name] = Path(where).read_text(encoding="utf-8")
+
     universe: list[str] = []
     if args.instruments_file:
         if args.all or len(args.id) != 1:
@@ -193,9 +211,25 @@ def main() -> int:
                 # фильтра режима), торговать по нему одному стратегия не собиралась.
                 manifest = manifest.model_copy(update={"instruments": universe})
                 print(f"  вселенная: {len(universe)} пар")
+            if from_files:
+                manifest = manifest.model_copy(
+                    update={"params": {**manifest.params, **from_files}}
+                )
+                print(f"  параметры из файлов: {', '.join(sorted(from_files))}")
             try:
                 row = registry.add(manifest)
             except DuplicateStrategy:
+                if from_files:
+                    # Явная просьба записать состав — не автоматическая синхронизация,
+                    # поэтому параметры здесь трогать можно и нужно.
+                    existing = session.get(StrategyRow, manifest_id(manifest))
+                    if existing is not None:
+                        existing.params = {**(existing.params or {}), **from_files}
+                        if universe:
+                            existing.instruments = list(universe)
+                        updated += 1
+                        print(f"  записан состав: {manifest_id(manifest)}")
+                        continue
                 if args.update:
                     changed = _sync(registry, session, manifest)
                     if changed:
