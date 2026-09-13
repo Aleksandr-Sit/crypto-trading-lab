@@ -108,6 +108,14 @@ def main() -> int:
         "стоит только якорь; список живёт в записи реестра, поэтому суффикс здесь не нужен",
     )
     ap.add_argument(
+        "--sync-params",
+        action="store_true",
+        help="ЗАМЕНИТЬ параметры записи параметрами карточки. Нужен потому, что в "
+        "`strategies.registry.build` параметры записи перекрывают карточку "
+        "(`{**base.params, **params}`), а `--update` их намеренно не трогает: правка "
+        "карточки до замера не доходит и он молча идёт по старым правилам",
+    )
+    ap.add_argument(
         "--params-file",
         action="append",
         default=[],
@@ -219,6 +227,21 @@ def main() -> int:
             try:
                 row = registry.add(manifest)
             except DuplicateStrategy:
+                if args.sync_params:
+                    existing = session.get(StrategyRow, manifest_id(manifest))
+                    if existing is not None:
+                        keep = {
+                            k: v
+                            for k, v in (existing.params_json or {}).items()
+                            # Состав и ссылка на правила — не из карточки, их сохраняем.
+                            if k in ("code_id", "listing_dates")
+                        }
+                        existing.params_json = {**manifest.params, **keep, **from_files}
+                        if universe:
+                            existing.instruments = list(universe)
+                        updated += 1
+                        print(f"  параметры из карточки: {manifest_id(manifest)}")
+                        continue
                 if from_files:
                     # Явная просьба записать состав — не автоматическая синхронизация,
                     # поэтому параметры здесь трогать можно и нужно.
