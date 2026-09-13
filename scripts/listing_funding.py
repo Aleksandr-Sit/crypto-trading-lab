@@ -33,11 +33,35 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from lab.data.backfill_cex import FundingArchive  # noqa: E402
 from lab.data.store import CandleStore  # noqa: E402
 
-STOP_PCT = 100.0  # тот же стоп, что в замере эффекта листинга
+STOP_PCT = 50.0  # тот же стоп, что в карточке стратегии (100% недостижим: ликвидация раньше)
+# Границы фазы рынка — те же, что в `ops.measure.market_phase`: годовой ход биткойна.
+PHASE_UP = 15.0
+PHASE_DOWN = -15.0
 
 
-def short_price_result(cs: CandleStore, base: str, entry: date, days: int) -> float | None:
-    """Результат шорта ПО ЦЕНЕ за то же окно, с тем же стопом, что в замере эффекта."""
+def phase_of(btc: dict[date, float], d0: date, d1: date) -> str:
+    """Фаза рынка на время сделки — по годовому ходу биткойна за то же окно.
+
+    Считается по BTC всегда, даже когда стратегия сравнивается с кэшем: фаза — свойство
+    рынка, а не выбранной альтернативы. Окно короткое, поэтому ход приводится к годовым,
+    иначе тридцатидневные проценты не сравнить с порогом, заданным в годовых.
+    """
+    p0, p1 = btc.get(d0), btc.get(d1)
+    days = (d1 - d0).days
+    if not p0 or not p1 or p0 <= 0 or days <= 0:
+        return "неизвестно"
+    cagr = ((p1 / p0) ** (365.25 / days) - 1) * 100
+    if cagr >= PHASE_UP:
+        return "рост"
+    if cagr <= PHASE_DOWN:
+        return "падение"
+    return "боковик"
+
+
+def short_price_result(
+    cs: CandleStore, base: str, entry: date, days: int
+) -> tuple[float, date] | None:
+    """Результат шорта ПО ЦЕНЕ за то же окно и дата выхода — она нужна для фазы рынка."""
     rows = cs.query(
         "select ts, close::DOUBLE as c, high::DOUBLE as h "
         f"from {{candles}} order by ts limit {days + 3}",
@@ -56,8 +80,8 @@ def short_price_result(cs: CandleStore, base: str, entry: date, days: int) -> fl
     limit = p0 * (1 + STOP_PCT / 100)
     path = bars[2 : 2 + days]
     if any(high >= limit for _, _, high in path):
-        return -STOP_PCT
-    return -(path[-1][1] / p0 - 1) * 100
+        return -STOP_PCT, path[-1][0]
+    return -(path[-1][1] / p0 - 1) * 100, path[-1][0]
 
 
 def window_rates(
@@ -87,9 +111,17 @@ def main() -> int:
     archive = FundingArchive()
 
     cs = CandleStore(root)
+    btc = {
+        r["ts"].date(): float(r["c"])
+        for r in cs.query(
+            "select ts, close::DOUBLE as c from {candles} order by ts", "binance", "BTC/USDT", "1d"
+        )
+        if r["c"] and r["c"] > 0
+    }
     totals: list[float] = []
     by_year: dict[int, list[float]] = {}
     net_year: dict[int, list[tuple[float, float]]] = {}
+    by_phase: dict[str, list[float]] = {}
     counts: list[int] = []
     missing = 0
     print(f"монет в выборке: {len(rows)}, горизонт {args.days} дн")
@@ -107,9 +139,11 @@ def main() -> int:
         totals.append(total)
         counts.append(len(rates))
         by_year.setdefault(entry.year, []).append(total)
-        price = short_price_result(cs, row["base"], entry, args.days)
-        if price is not None:
+        got = short_price_result(cs, row["base"], entry, args.days)
+        if got is not None:
+            price, exit_day = got
             net_year.setdefault(entry.year, []).append((price, total))
+            by_phase.setdefault(phase_of(btc, entry, exit_day), []).append(price + total)
         if i % 40 == 0:
             print(f"  {i}/{len(rows)}")
 
@@ -158,6 +192,24 @@ def main() -> int:
             f"{median(all_net):>9.1f}%{up:>8.0f}%"
         )
         print(f"  шум (2σ) итога: ±{2 * se_net:.1f}")
+
+    # ПО ФАЗАМ РЫНКА. Скользящие окна намекнули, что шорт работает в падении и пуст
+    # в росте, но окна перекрываются на три четверти: там одно-два независимых
+    # наблюдения, а не пять. Сделок же почти две сотни, и каждая живёт в своём месяце.
+    if by_phase:
+        print("
+ПО ФАЗАМ РЫНКА (фаза — годовой ход биткойна за то же окно)")
+        print(f"{'фаза':14}{'сделок':>9}{'итого':>10}{'шум (2σ)':>11}{'медиана':>10}{'в плюсе':>9}")
+        for name in ("падение", "боковик", "рост", "неизвестно"):
+            v = by_phase.get(name)
+            if not v:
+                continue
+            se_p = 2 * stdev(v) / sqrt(len(v)) if len(v) > 1 else 0.0
+            up = sum(1 for x in v if x > 0) / len(v) * 100
+            print(
+                f"{name:14}{len(v):>9}{fmean(v):>9.1f}%{se_p:>11.1f}"
+                f"{median(v):>9.1f}%{up:>8.0f}%"
+            )
     print(
         "\nЧитать так: положительный фандинг — ДОХОД шорта сверх движения цены,\n"
         "отрицательный — расход. Отрицательный фандинг у шорта означает, что шортят\n"
