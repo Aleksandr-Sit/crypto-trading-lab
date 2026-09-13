@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 
 from lab.contracts import Candle, Event, Signal
