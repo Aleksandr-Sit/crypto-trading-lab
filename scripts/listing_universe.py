@@ -50,30 +50,52 @@ def main() -> int:
     rows = json.loads((root / args.listings).read_text())
     if args.limit:
         rows = rows[: args.limit]
-    names = sorted({f"{r['base']}/USDT:USDT" for r in rows})
-    earliest = min(date.fromisoformat(r["entry"]) for r in rows)
-    days = (datetime.now(UTC).date() - earliest).days + 40
-    print(f"инструментов: {len(names)}, самый ранний листинг {earliest}, глубина {days} дн")
+    # Глубина СВОЯ у каждого инструмента. Общая глубина «от самого раннего листинга»
+    # заставляла бы качать монете, вышедшей в 2026-м, четыре года пустых архивов:
+    # на 194 инструментах это тысячи лишних файлов и часы работы впустую.
+    today = datetime.now(UTC).date()
+    plan: dict[str, int] = {}
+    for r in rows:
+        name = f"{r['base']}/USDT:USDT"
+        need = (today - date.fromisoformat(r["entry"])).days + 40
+        plan[name] = max(plan.get(name, 0), need)
+    names = sorted(plan)
+    print(f"инструментов: {len(names)}, глубина от {min(plan.values())} до {max(plan.values())} дн")
 
     (root / UNIVERSE_FILE).write_text("\n".join(names) + "\n")
     print(f"вселенная записана: {root / UNIVERSE_FILE}")
 
-    if not args.skip_candles:
-        store = CandleStore(root)
-        results = backfill_venue(store, "binance", names, args.tf, days)
-        ok = sum(1 for r in results if r.error is None)
-        rowsn = sum(r.rows_written for r in results)
-        print(f"свечи: рядов {ok} из {len(results)}, строк записано {rowsn}")
-        for r in results[:10]:
-            if r.error:
-                print(f"  {r.instrument}: {r.error}")
+    store = CandleStore(root)
+    fs = FundingStore(root)
+    bars_written = 0
+    rates_written = 0
+    failed: list[str] = []
+    for i, name in enumerate(names, 1):
+        days = plan[name]
+        if not args.skip_candles:
+            try:
+                for res in backfill_venue(store, "binance", [name], args.tf, days):
+                    bars_written += res.rows_written
+                    if res.error:
+                        failed.append(f"свечи {name}: {res.error}")
+            except Exception as err:  # noqa: BLE001 — один инструмент не роняет прогон
+                failed.append(f"свечи {name}: {type(err).__name__}")
+        if not args.skip_funding:
+            try:
+                for _, n, err in backfill_funding(fs, "binance", [name], days):
+                    rates_written += n
+                    if err:
+                        failed.append(f"фандинг {name}: {err}")
+            except Exception as err:  # noqa: BLE001
+                failed.append(f"фандинг {name}: {type(err).__name__}")
+        if i % 20 == 0:
+            print(f"  {i}/{len(names)}: свечей {bars_written}, ставок {rates_written}")
 
-    if not args.skip_funding:
-        fs = FundingStore(root)
-        got = backfill_funding(fs, "binance", names, days)
-        ok = sum(1 for _, _, err in got if err is None)
-        total = sum(n for _, n, _ in got)
-        print(f"фандинг: рядов {ok} из {len(got)}, ставок записано {total}")
+    print(f"\nсвечей записано {bars_written}, ставок {rates_written}")
+    if failed:
+        print(f"не получилось у {len(failed)}:")
+        for line in failed[:10]:
+            print(f"  {line}")
     return 0
 
 
