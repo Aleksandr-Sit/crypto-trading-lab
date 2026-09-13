@@ -28,6 +28,7 @@ from typing import Any
 
 from lab.contracts import Candle, MeasureMode
 from lab.contracts.timeframes import parse_tf
+from lab.core.measure.metrics import vs_benchmark_value
 from lab.core.measure.types import PhaseStat, Stability
 
 log = logging.getLogger(__name__)
@@ -609,8 +610,13 @@ def run_stability(
         windows.append((cursor, upto, m))
         mt = getattr(m, "metrics", None)
         if getattr(m, "status", "") == "ok" and mt is not None:
+            # «Заработала» — про ТОРГОВЛЮ: проценты на простаивающие деньги сюда не входят,
+            # иначе любое окно окажется прибыльным просто по безрисковой ставке.
             is_profit = mt.net_pnl_pct > 0
-            edge = mt.vs_benchmark_cagr if mt.vs_benchmark_cagr is not None else mt.vs_benchmark
+            # «Впереди бенчмарка» — ТЕМ ЖЕ сравнением, что и порог: с поправкой на
+            # простаивающий капитал. Без этого один инструмент отвечал на вопрос иначе,
+            # чем другой, и снимок противоречил вердикту.
+            edge = vs_benchmark_value(mt)
             is_ahead = edge is not None and edge > 0
             profitable += 1 if is_profit else 0
             compared += 1 if edge is not None else 0

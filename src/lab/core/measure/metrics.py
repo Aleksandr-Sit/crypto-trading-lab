@@ -105,7 +105,7 @@ def _own_cagr(m: Metrics) -> Decimal | None:
     return m.cagr_with_idle_pct if m.cagr_with_idle_pct is not None else m.cagr_pct
 
 
-def _vs_benchmark_value(m: Metrics) -> Decimal | None:
+def vs_benchmark_value(m: Metrics) -> Decimal | None:
     """Насколько стратегия лучше бенчмарка.
 
     В годовых, если их можно посчитать, иначе — в процентах за окно (короткое окно,
@@ -388,7 +388,7 @@ def threshold(
     criteria.append(
         _crit(
             "vs_benchmark",
-            _vs_benchmark_value(m),
+            vs_benchmark_value(m),
             Decimal(0),
             ">",
             _vs_benchmark_detail(m),
