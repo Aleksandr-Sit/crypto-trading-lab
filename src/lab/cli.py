@@ -288,13 +288,29 @@ def format_measurement(m, *, window=None) -> str:
     # Годовые печатаются рядом: именно по ним судит порог, а `vs_benchmark` за окно оставлен
     # справкой — на длинной истории он превращается в нечитаемое число.
     if getattr(mt, "cagr_pct", None) is not None:
+        # Печатаем ТУ ЖЕ доходность, по которой судит порог: с поправкой на простаивающий
+        # капитал, когда она есть. Иначе снимок противоречит вердикту — «разница −0.97%»
+        # рядом с «passed» читается как ошибка замера.
+        own = getattr(mt, "cagr_with_idle_pct", None)
+        idle = getattr(mt, "idle_capital_pct", None)
+        shown = own if own is not None else mt.cagr_pct
+        diff = (
+            shown - mt.benchmark_cagr_pct
+            if shown is not None and mt.benchmark_cagr_pct is not None
+            else mt.vs_benchmark_cagr
+        )
         lines.append(
             # Подпись бенчмарка — из снимка: у веток они РАЗНЫЕ, и «BTC» на строке, где
             # сравнивали с кэшем, читалось как «биткоин не вырос вовсе».
-            f"  годовых: {_pct(mt.cagr_pct)} · "
+            f"  годовых: {_pct(shown)} · "
             f"{_BENCHMARK_LABEL.get(mt.benchmark_kind, mt.benchmark_kind or 'бенчмарк')}: "
-            f"{_pct(mt.benchmark_cagr_pct)} · разница: {_pct(mt.vs_benchmark_cagr)}"
+            f"{_pct(mt.benchmark_cagr_pct)} · разница: {_pct(diff)}"
         )
+        if own is not None and idle is not None:
+            lines.append(
+                f"    в том числе от торговли {_pct(mt.cagr_pct)}, "
+                f"остальное — безрисковая ставка на простаивающие {idle:.0f}% счёта"
+            )
     stopped_at = getattr(mt, "stopped_at", None)
     if stopped_at is not None:
         rule = {
