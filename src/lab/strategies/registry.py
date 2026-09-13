@@ -168,6 +168,7 @@ def _load_builtin() -> None:
     global _loaded
     if _loaded:
         return
+    import lab.strategies.accumulation  # noqa: F401
     import lab.strategies.classics  # noqa: F401
     import lab.strategies.indicators.strategies  # noqa: F401
     import lab.strategies.listing  # noqa: F401
