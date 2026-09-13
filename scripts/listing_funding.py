@@ -39,12 +39,11 @@ PHASE_UP = 15.0
 PHASE_DOWN = -15.0
 
 
-def phase_of(btc: dict[date, float], d0: date, d1: date) -> str:
-    """Фаза рынка на время сделки — по годовому ходу биткойна за то же окно.
+def _phase(btc: dict[date, float], d0: date, d1: date) -> str:
+    """Фаза по годовому ходу биткойна между двумя датами.
 
-    Считается по BTC всегда, даже когда стратегия сравнивается с кэшем: фаза — свойство
-    рынка, а не выбранной альтернативы. Окно короткое, поэтому ход приводится к годовым,
-    иначе тридцатидневные проценты не сравнить с порогом, заданным в годовых.
+    Ход приводится к годовым, иначе тридцатидневные проценты не сравнить с порогом,
+    заданным в годовых (границы те же, что в `ops.measure.market_phase`).
     """
     p0, p1 = btc.get(d0), btc.get(d1)
     days = (d1 - d0).days
@@ -56,6 +55,25 @@ def phase_of(btc: dict[date, float], d0: date, d1: date) -> str:
     if cagr <= PHASE_DOWN:
         return "падение"
     return "боковик"
+
+
+def phase_before(btc: dict[date, float], entry: date, days: int) -> str:
+    """Фаза ДО входа — единственная, по которой можно торговать.
+
+    Фаза «за то же окно, что и сделка» — это будущее: в момент входа мы не знаем, куда
+    пойдёт рынок, и фильтр по ней неисполним. Сверх того вывод «шорт зарабатывает, когда
+    рынок падает» на такой фазе отчасти тавтологичен. Здесь берётся ход биткойна
+    за `days` дней ПЕРЕД входом — ровно то, что видно в момент решения.
+
+    Ближайшая известная дата слева: у биткойна торгуются все дни, но дыры в хранилище
+    бывают, и пропуск не должен молча превращаться в «неизвестно».
+    """
+    start = entry - timedelta(days=days)
+    for back in range(0, 5):
+        probe = start - timedelta(days=back)
+        if probe in btc:
+            return _phase(btc, probe, entry)
+    return "неизвестно"
 
 
 def short_price_result(
@@ -122,6 +140,7 @@ def main() -> int:
     by_year: dict[int, list[float]] = {}
     net_year: dict[int, list[tuple[float, float]]] = {}
     by_phase: dict[str, list[float]] = {}
+    fwd_phase: dict[str, list[float]] = {}
     counts: list[int] = []
     missing = 0
     print(f"монет в выборке: {len(rows)}, горизонт {args.days} дн")
@@ -143,7 +162,10 @@ def main() -> int:
         if got is not None:
             price, exit_day = got
             net_year.setdefault(entry.year, []).append((price, total))
-            by_phase.setdefault(phase_of(btc, entry, exit_day), []).append(price + total)
+            # Две разметки: ПРИЧИННАЯ (по прошлому — по ней можно торговать) и
+            # диагностическая (по тому же окну — показывает, где деньги на самом деле).
+            by_phase.setdefault(phase_before(btc, entry, args.days), []).append(price + total)
+            fwd_phase.setdefault(_phase(btc, entry, exit_day), []).append(price + total)
         if i % 40 == 0:
             print(f"  {i}/{len(rows)}")
 
