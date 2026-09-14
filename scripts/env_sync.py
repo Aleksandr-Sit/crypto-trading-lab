@@ -25,8 +25,15 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
+
+# Консоль Windows в cp1251 роняет stdout на любом не-cp1251 символе: этот скрипт
+# запускается и с машины владельца, и стрелка в выводе обрывала его ПОСЛЕ записи файла —
+# то есть работа сделана, а признак успеха не напечатан.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
 def read_pairs(path: Path) -> dict[str, str]:
