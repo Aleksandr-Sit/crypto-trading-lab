@@ -11,6 +11,7 @@ from lab.data.cryptoquant import MARKET, CryptoQuantStore, DailyRow
 from lab.feeds.chains.fake import FakeHttpTransport
 from lab.feeds.cryptoquant import (
     BY_EXCHANGE,
+    RETRY_ON_LIMIT,
     CryptoQuantConfig,
     CryptoQuantError,
     CryptoQuantFeed,
@@ -158,6 +159,44 @@ def test_error_status_becomes_error():
         feed(t).series(
             "btc", "market-data/liquidations", BY_EXCHANGE["market-data/liquidations"], exchange="x"
         )
+
+
+def test_rate_limit_is_retried(monkeypatch):
+    """429 повторяется: окно тарифа в 30 суток не даст вернуться за пропущенным позже."""
+    calls = {"n": 0}
+
+    class Limited:
+        def get(self, url, *, params=None, headers=None):
+            calls["n"] += 1
+            if calls["n"] <= RETRY_ON_LIMIT:
+                raise RuntimeError(f"{url}: 429")
+            return ok([liq("2026-09-02", 1, 1)])
+
+    waits: list[float] = []
+    f = CryptoQuantFeed("k", transport=Limited(), base_url="https://x/v1", sleep=waits.append)
+    rows = f.series(
+        "btc", "market-data/liquidations", BY_EXCHANGE["market-data/liquidations"], exchange="a"
+    )
+    assert len(rows) == 1
+    assert calls["n"] == RETRY_ON_LIMIT + 1
+    assert waits, "перед повтором обязана быть пауза"
+
+
+def test_other_errors_are_not_retried():
+    """403 — это про тариф, а не про темп: повторять бессмысленно и вредно."""
+    calls = {"n": 0}
+
+    class Forbidden:
+        def get(self, url, *, params=None, headers=None):
+            calls["n"] += 1
+            raise RuntimeError(f"{url}: 403")
+
+    f = CryptoQuantFeed("k", transport=Forbidden(), base_url="https://x/v1", sleep=lambda _: None)
+    with pytest.raises(CryptoQuantError):
+        f.series(
+            "btc", "market-data/liquidations", BY_EXCHANGE["market-data/liquidations"], exchange="a"
+        )
+    assert calls["n"] == 1
 
 
 def test_no_key_means_disabled():

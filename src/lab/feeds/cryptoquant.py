@@ -39,6 +39,9 @@ log = logging.getLogger(__name__)
 FEED_ID = "cryptoquant"
 BASE_URL = "https://api.cryptoquant.com/v1"
 FREE_WINDOW_DAYS = 30
+# Сколько раз повторить запрос, упёршийся в лимит, и с какой базовой паузой.
+RETRY_ON_LIMIT = 2
+RETRY_WAIT_S = 20.0
 
 # Точка API → как её колонки называются у нас. Слева имя в ответе, справа поле `DailyRow`.
 # Точки, которым нужен параметр `exchange`, и точка премии Coinbase, которой он не нужен,
@@ -80,7 +83,7 @@ class CryptoQuantConfig(BaseModel):
     exchanges: list[str] = Field(
         default_factory=lambda: ["all_exchange", "binance", "bybit", "okx"]
     )
-    pause_s: float = 1.0
+    pause_s: float = 3.0
 
 
 def load_cryptoquant(path: Path | str | None = None) -> CryptoQuantConfig:
@@ -156,6 +159,31 @@ class CryptoQuantFeed:
             self._transport = HttpxTransport()
         return self._transport
 
+    def _fetch(self, url: str, params: dict[str, Any]) -> Any:
+        """Один запрос с повтором на 429.
+
+        Лимит замерен 14.09.2026: двенадцать запросов подряд без пауз дают отказ
+        на одиннадцатом, с паузой в три секунды — ни одного. Пауза `pause_s` держит
+        обычный темп, а повтор нужен для случая, когда ключом пользуется кто-то ещё
+        или лимит считается скользящим окном: без него один 429 навсегда терял сутки
+        одного ряда, потому что окно тарифа не позволяет вернуться за ними позже.
+
+        Код ошибки виден только в тексте (транспорт оборачивает httpx), поэтому
+        различаем по подстроке — грубо, но честно: ложное срабатывание стоит одной
+        лишней паузы, а пропуск 429 стоит суток данных.
+        """
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        last: Exception | None = None
+        for attempt in range(RETRY_ON_LIMIT + 1):
+            try:
+                return self.transport().get(url, params=params, headers=headers)
+            except Exception as err:  # noqa: BLE001 — отказ источника не наша авария
+                last = err
+                if "429" not in str(err) or attempt == RETRY_ON_LIMIT:
+                    break
+                self._sleep(RETRY_WAIT_S * (attempt + 1))
+        raise CryptoQuantError(str(last))
+
     def _get(self, path: str, params: dict[str, Any]) -> list[dict[str, Any]]:
         if not self.enabled:
             raise CryptoQuantError("CRYPTOQUANT_API_KEY не задан")
@@ -163,12 +191,8 @@ class CryptoQuantFeed:
             self.quota.use(FEED_ID, 1)
         url = f"{self.base_url}/{path.lstrip('/')}"
         try:
-            payload = self.transport().get(
-                url,
-                params=params,
-                headers={"Authorization": f"Bearer {self.api_key}"},
-            )
-        except Exception as err:  # noqa: BLE001 — отказ источника не наша авария
+            payload = self._fetch(url, params)
+        except CryptoQuantError as err:
             raise CryptoQuantError(f"{path}: {err}") from err
         if self.pause_s:
             self._sleep(self.pause_s)
@@ -273,6 +297,8 @@ __all__ = [
     "BY_EXCHANGE",
     "FEED_ID",
     "FREE_WINDOW_DAYS",
+    "RETRY_ON_LIMIT",
+    "RETRY_WAIT_S",
     "MARKET_WIDE",
     "CollectReport",
     "CryptoQuantConfig",
