@@ -119,7 +119,12 @@ def run_measure(
                 kind,
                 risk_free=getattr(bench_cfg, "risk_free_annual_pct", None),
             ),
-            extra_metrics={"benchmark_kind": kind},
+            # Флаг размещения берётся из параметров записи (туда он попадает из карточки).
+            # Без него порог судит правило фиксированным лимитом группы.
+            extra_metrics={
+                "benchmark_kind": kind,
+                "allocation": bool((record.params or {}).get("allocation", False)),
+            },
             funding_history=_funding_history(record, window, root),
             positioning_history=_positioning_history(record, window, root),
         )

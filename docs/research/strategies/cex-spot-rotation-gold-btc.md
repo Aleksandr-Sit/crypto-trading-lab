@@ -10,6 +10,7 @@ venue: binance
 regime: any
 status: hypothesis
 params:
+  allocation: true          # правило РАЗМЕЩЕНИЯ: держит актив целиком, планка просадки относительная
   risk_instrument: BTC/USDT   # рисковая нога
   safe_instrument: PAXG/USDT  # защитная нога: золото на крипто-рельсах
   windows_weeks: [4, 8, 12]   # окна импульса; решает большинство голосов

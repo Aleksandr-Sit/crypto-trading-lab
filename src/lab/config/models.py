@@ -97,6 +97,18 @@ class StabilityConfig(_Cfg):
     min_ahead_pct: Decimal = Decimal(50)
 
 
+class AllocationConfig(_Cfg):
+    """Планка просадки для правил РАЗМЕЩЕНИЯ — относительная, а не фиксированная.
+
+    Правило, держащее 100% в активе, наследует просадку этого актива: фиксированные 5%
+    группы `cex` отбраковывают такой класс целиком, независимо от качества правила
+    (решение владельца 14.09.2026). Поэтому планка считается ОТ ПРОСАДКИ БЕНЧМАРКА
+    за то же окно и сама подстраивается под рынок.
+    """
+
+    max_dd_share_of_benchmark: Decimal = Field(gt=0, le=1, default=Decimal("0.5"))
+
+
 class ThresholdConfig(_Cfg):
     """Правило В12: ≥30 сделок, EV>0 после издержек, MaxDD в лимите, лучше BTC B&H."""
 
@@ -107,6 +119,7 @@ class ThresholdConfig(_Cfg):
     confidence: Decimal = Field(gt=0, lt=1, default=Decimal("0.95"))
     stability: StabilityConfig = Field(default_factory=StabilityConfig)
     benchmark: BenchmarkConfig = Field(default_factory=BenchmarkConfig)
+    allocation: AllocationConfig = Field(default_factory=AllocationConfig)
 
 
 class JobSpec(_Cfg):

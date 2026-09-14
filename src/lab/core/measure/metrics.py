@@ -46,6 +46,8 @@ _OUTCOME_KEYS = (
     "stop_rule",
     "blocked_signals",
     "benchmark_kind",
+    "benchmark_max_dd_pct",
+    "allocation",
     "stability",
     "reasons",
     "data_gaps",
@@ -66,6 +68,25 @@ def btc_buy_and_hold_pct(candles: Sequence[Candle]) -> Decimal:
     if not candles:
         raise ValueError("нет свечей бенчмарка")
     return (candles[-1].close / candles[0].open - 1) * 100
+
+
+def benchmark_drawdown_pct(candles: Sequence[Candle]) -> Decimal | None:
+    """Просадка самого бенчмарка за окно, в процентах (положительное число).
+
+    Нужна правилам размещения: их планка относительная. Считается по закрытиям —
+    внутридневной минимум сюда не входит намеренно, потому что и просадка стратегии
+    считается по переоценке на баре, и сравнивать надо одинаково измеренные величины.
+    """
+    if not candles:
+        return None
+    peak = candles[0].close
+    worst = Decimal(0)
+    for candle in candles:
+        if candle.close > peak:
+            peak = candle.close
+        if peak > 0:
+            worst = min(worst, candle.close / peak - 1)
+    return -worst * 100
 
 
 def annualized_pct(total_pct: Decimal | None, window: tuple[datetime, datetime]) -> Decimal | None:
@@ -271,10 +292,12 @@ def metrics(
     max_dd = max(closed_dd, mtm_dd) if mtm_dd is not None else closed_dd
     sharpe, sortino = _daily_ratios(trades, capital, window)
 
+    bench_dd: Decimal | None = None
     if isinstance(benchmark, Decimal):
         bh: Decimal | None = benchmark
     elif benchmark:
         bh = btc_buy_and_hold_pct(benchmark)
+        bench_dd = benchmark_drawdown_pct(benchmark)
     else:
         bh = None
 
@@ -325,6 +348,7 @@ def metrics(
         exposure_pct=_exposure_pct(trades, window),
         costs_pct=(breakdown.total / breakdown.turnover * 100) if breakdown.turnover else None,
         costs=breakdown,
+        benchmark_max_dd_pct=bench_dd,
         benchmark_pct=bh,
         vs_benchmark=(net_pct - bh) if bh is not None else None,
         cagr_pct=cagr,
@@ -381,7 +405,27 @@ def threshold(
     if rung is not None and Rung(rung) == Rung.AUTO:
         lo = m.ev_ci95[0] if m.ev_ci95 else None
         criteria.append(_crit("ev_ci95_low", lo, cfg.min_ev_after_costs, ">", "бутстрап CI95"))
-    criteria.append(_crit("max_dd_pct", m.max_dd_pct, dd_limit, "<=", f"лимит группы {group}"))
+    # Правила РАЗМЕЩЕНИЯ судятся по относительной планке: они держат 100% в активе и
+    # наследуют его просадку, а фиксированные 5% группы `cex` отбраковывали такой класс
+    # целиком — и ротацию золото/BTC (просадка 25.2% против 76.6% у самого биткойна),
+    # и накопительную лестницу. Решение владельца 14.09.2026: не больше доли от просадки
+    # бенчмарка за то же окно.
+    #
+    # Послабление НЕ бесплатное и требует обоих условий: карточка объявила правило
+    # размещением И у бенчмарка есть измеренная просадка. Бенчмарк «кэш» просадки не имеет,
+    # поэтому нейтральные стратегии (кэш-энд-керри с его 9.31%) послабления не получают
+    # даже с флагом — иначе флаг стал бы способом обойти порог.
+    bench_dd = m.benchmark_max_dd_pct
+    if m.allocation and bench_dd is not None and bench_dd > 0:
+        share = cfg.allocation.max_dd_share_of_benchmark
+        dd_limit = bench_dd * share
+        dd_detail = (
+            f"размещение: не больше {share:.0%} просадки бенчмарка "
+            f"({bench_dd:.1f}% за окно)"
+        )
+    else:
+        dd_detail = f"лимит группы {group}"
+    criteria.append(_crit("max_dd_pct", m.max_dd_pct, dd_limit, "<=", dd_detail))
     # Сравнение с бенчмарком — в ГОДОВЫХ. Разница процентов за окно зависит от длины окна
     # и на длинной истории бессмысленна: BTC с 2011 года дал +2 855 000%, и её не перебьёт
     # ничто. Годовые сопоставимы между окнами: «+24% в год против +100% в год».
