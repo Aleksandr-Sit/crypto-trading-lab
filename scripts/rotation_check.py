@@ -245,6 +245,22 @@ def main() -> int:
             f"{cash:>8.0f}%   {yr}"
         )
 
+    # Составной сигнал — проверка на устойчивость к параметру. Одно удачное окно из семи
+    # это отбор по известному исходу; голосование окон такого преимущества не покажет.
+    if args.rule == "dual" and composite:
+        curve = run_dual(btc, other, composite[0], args.cost_bps, start, end, composite)
+        if len(curve) >= 10:
+            st = equity_stats([(d, e) for d, e, _ in curve])
+            cash = sum(1 for _, _, h in curve if h == "CASH") / len(curve) * 100
+            yrs = by_year(curve)
+            yr = " ".join(f"{y % 100:02d}:{v:+.0f}" for y, v in sorted(yrs.items()))
+            label = "+".join(str(w) for w in composite)
+            print(f"\nСОСТАВНОЙ сигнал (голосование окон {label} нед)")
+            print(
+                f"{'голос':8}{st['cagr']:>8.1f}%{st['sharpe']:>9.2f}{st['dd']:>10.1f}%"
+                f"{cash:>8.0f}%   {yr}"
+            )
+
     step = 7 if args.rule == "dual" else 1
     print("\nОРИЕНТИРЫ за то же окно")
     for label, series in (("BTC купить и держать", btc), ("второй актив", other)):
