@@ -121,10 +121,7 @@ def run_measure(
             ),
             # Флаг размещения берётся из параметров записи (туда он попадает из карточки).
             # Без него порог судит правило фиксированным лимитом группы.
-            extra_metrics={
-                "benchmark_kind": kind,
-                "allocation": bool((record.params or {}).get("allocation", False)),
-            },
+            extra_metrics=_extra_metrics(store, record, kind, window),
             funding_history=_funding_history(record, window, root),
             positioning_history=_positioning_history(record, window, root),
         )
@@ -298,6 +295,59 @@ def _has_candles(store: Any, venue: str, instrument: str, tf: str) -> bool:
 
 
 BENCHMARK_KINDS = ("btc_bh", "btc_dca", "cash", "none")
+
+
+def _extra_metrics(
+    store: Any, record: Any, kind: str, window: tuple[datetime, datetime]
+) -> dict[str, Any]:
+    """Факты о прогоне, которых нет в сделках: вид бенчмарка, флаг размещения, его просадка.
+
+    Просадка кладётся ТОЛЬКО когда она измерена. Пустое значение здесь затёрло бы расчёт
+    внутри `compute_metrics` и молча лишило бы правило размещения относительной планки —
+    отказ был бы тихим и выглядел бы как «стратегия провалила просадку».
+    """
+    out: dict[str, Any] = {
+        "benchmark_kind": kind,
+        "allocation": bool((record.params or {}).get("allocation", False)),
+    }
+    bench_dd = _benchmark_drawdown(store, record.venue, window)
+    if bench_dd is not None:
+        out["benchmark_max_dd_pct"] = bench_dd
+    return out
+
+
+def _benchmark_drawdown(
+    store: Any, venue: str, window: tuple[datetime, datetime]
+) -> Decimal | None:
+    """Просадка САМОГО актива-бенчмарка за окно — для относительной планки размещения.
+
+    Считать её из того, что уходит в замер, нельзя: у `btc_bh` туда идут ровно две
+    краевые свечи (середина не нужна никому и на минутках стоила бы второго гигабайта),
+    а у `btc_dca` бенчмарк вовсе приходит готовым числом. Поэтому здесь отдельный запрос.
+
+    Ряд берётся ДНЕВНОЙ независимо от таймфрейма стратегии: просадка актива — свойство
+    актива, а не шага стратегии, и на минутках такой расчёт стоил бы непозволительно дорого.
+    """
+    for instrument in BENCHMARK_INSTRUMENTS:
+        if not _has_candles(store, venue, instrument, "1d"):
+            continue
+        try:
+            rows = store.query(
+                "select close::DOUBLE c from {candles} where ts >= ? and ts < ? order by ts",
+                venue, instrument, "1d", params=[window[0], window[1]],
+            )
+        except Exception:  # noqa: BLE001 — хранилище без query (фейки в тестах)
+            return None
+        closes = [Decimal(str(r["c"])) for r in rows if r["c"] and r["c"] > 0]
+        if len(closes) < 3:
+            continue
+        peak = closes[0]
+        worst = Decimal(0)
+        for price in closes:
+            peak = max(peak, price)
+            worst = min(worst, price / peak - 1)
+        return -worst * 100
+    return None
 
 
 def _benchmark_kind(branch: str, cfg: Any) -> str:

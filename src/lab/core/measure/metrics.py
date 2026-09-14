@@ -317,7 +317,11 @@ def metrics(
             cagr_idle = cagr + _d(rate) * idle_pct / 100
 
     values: dict[str, object] = dict(_NA)
-    outcome: dict[str, object] = {}
+    # Просадка бенчмарка: по краевым свечам её не посчитать (для `btc_bh` в замер идут
+    # ровно две), а для `btc_dca` бенчмарк вовсе приходит числом. Поэтому настоящее
+    # значение приходит СНАРУЖИ, из `ops.measure`, где есть хранилище; здесь остаётся
+    # расчёт по ряду — им пользуются прямые вызовы и тесты.
+    outcome: dict[str, object] = {} if bench_dd is None else {"benchmark_max_dd_pct": bench_dd}
     for key, val in ex.items():
         if key in values:
             values[key] = val
@@ -348,7 +352,6 @@ def metrics(
         exposure_pct=_exposure_pct(trades, window),
         costs_pct=(breakdown.total / breakdown.turnover * 100) if breakdown.turnover else None,
         costs=breakdown,
-        benchmark_max_dd_pct=bench_dd,
         benchmark_pct=bh,
         vs_benchmark=(net_pct - bh) if bh is not None else None,
         cagr_pct=cagr,
