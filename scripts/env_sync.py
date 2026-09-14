@@ -29,6 +29,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
 # Консоль Windows в cp1251 роняет stdout на любом не-cp1251 символе: этот скрипт
 # запускается и с машины владельца, и стрелка в выводе обрывала его ПОСЛЕ записи файла —
 # то есть работа сделана, а признак успеха не напечатан.
@@ -37,7 +39,16 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 def read_pairs(path: Path) -> dict[str, str]:
-    """KEY=VALUE из файла. Комментарии и пустые строки пропускаются."""
+    """KEY=VALUE из файла, БЕЗ хвостового комментария.
+
+    Разбор берётся у самого проекта (`lab.config.env._strip_comment`), а не пишется
+    заново: в `.env` владельца значения стоят с пояснениями в той же строке, и наивный
+    `partition("=")` переносил на сервер «ключ плюс комментарий». Docker и наш загрузчик
+    комментарий отбрасывают, поэтому вреда не было, но в файле оставался мусор,
+    а длина значения переставала совпадать с настоящей — и по ней уже не проверишь ключ.
+    """
+    from lab.config.env import _strip_comment
+
     out: dict[str, str] = {}
     if not path.is_file():
         return out
@@ -46,7 +57,7 @@ def read_pairs(path: Path) -> dict[str, str]:
         if not s or s.startswith("#") or "=" not in s:
             continue
         key, _, value = s.partition("=")
-        out[key.strip()] = value.strip()
+        out[key.strip()] = _strip_comment(value)
     return out
 
 
