@@ -209,7 +209,10 @@ def main() -> int:
         cash = sum(1 for _, _, h in curve if h == "CASH") / len(curve) * 100
         yrs = by_year(curve)
         yr = " ".join(f"{y % 100:02d}:{v:+.0f}" for y, v in sorted(yrs.items()))
-        print(f"{w:>3} {unit:4}{st['cagr']:>8.1f}%{st['sharpe']:>9.2f}{st['dd']:>10.1f}%{cash:>8.0f}%   {yr}")
+        print(
+            f"{w:>3} {unit:4}{st['cagr']:>8.1f}%{st['sharpe']:>9.2f}{st['dd']:>10.1f}%"
+            f"{cash:>8.0f}%   {yr}"
+        )
 
     step = 7 if args.rule == "dual" else 1
     print("\nОРИЕНТИРЫ за то же окно")
