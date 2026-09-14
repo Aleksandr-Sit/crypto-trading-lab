@@ -225,6 +225,8 @@ class Worker:
         from lab.ops.jobs import jobs as discovery_jobs
         from lab.ops.jobs.coinalyze import coinalyze_job
         from lab.ops.jobs.cryptoquant import cryptoquant_job
+        from lab.ops.jobs.data_refresh import data_refresh_job
+        from lab.ops.jobs.forward import forward_job
 
         out: list[Job] = []
         reminder = SeedReminder(self.scope, bot=self.bot) if self.bot is not None else None
@@ -246,6 +248,10 @@ class Worker:
         out.append(funding_job(self.scope, executors=self.executors))
         out.append(cryptoquant_job(alert=self.alert))
         out.append(coinalyze_job(alert=self.alert))
+        # Порядок в списке роли не играет (время задаёт cron), но смысловая связь
+        # такая: сперва свежие свечи, потом прогон стратегий по ним.
+        out.append(data_refresh_job(self.scope, alert=self.alert))
+        out.append(forward_job(self.scope, alert=self.alert))
         out.append(self.portfolio.allocation_job(risk=self.risk))
         out.append(
             Job(

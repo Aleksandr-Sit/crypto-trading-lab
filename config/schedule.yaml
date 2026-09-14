@@ -21,6 +21,12 @@ jobs:
   morning_report:
     cron: "0 9 * * *"
     description: Утренний отчёт в Telegram
+  data_refresh:
+    cron: "50 3 * * *"
+    description: Свежие свечи для живых стратегий (иначе замер молча меряет прошлое)
+  forward_journal:
+    cron: "10 4 * * *"
+    description: Решения живых стратегий в журнал с датой — основа проверки вперёд
   reconcile:
     cron: "0 4 * * *"
     description: Сверка ордеров и балансов с площадками
