@@ -77,6 +77,25 @@ def test_source_correction_wins(tmp_path):
     assert store.read("btc", "binance", day(1), day(2))[0].long_liq == Decimal(9)
 
 
+def test_high_precision_value_does_not_break_the_whole_day(tmp_path):
+    """Источник отдаёт отношения с машинной точностью; колонка держит 12 знаков.
+
+    Без явного приведения pyarrow отказывается писать таблицу целиком
+    (`Rescaling Decimal value would cause data loss`), и один лишний знак у одного
+    числа ронял ВЕСЬ суточный проход. Поймано на первом же живом сборе 14.09.2026.
+    """
+    store = CryptoQuantStore(tmp_path)
+    written = store.write(
+        "btc",
+        "all_exchange",
+        [DailyRow(ts=day(1), taker_buy_ratio=Decimal("0.9999999999999999"), long_liq=Decimal(1))],
+    )
+    assert written == 1
+    row = store.read("btc", "all_exchange", day(1), day(2))[0]
+    assert row.taker_buy_ratio == Decimal("1.000000000000")
+    assert row.long_liq == Decimal(1)
+
+
 def test_series_lists_what_is_collected(tmp_path):
     store = CryptoQuantStore(tmp_path)
     store.write("btc", "all_exchange", [DailyRow(ts=day(1), long_liq=Decimal(1))])

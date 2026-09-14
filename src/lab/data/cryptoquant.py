@@ -28,7 +28,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_EVEN, Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -64,6 +64,28 @@ SCHEMA = pa.schema(
 )
 FIELDS = tuple(f.name for f in SCHEMA if f.name != "ts")
 _SAFE = re.compile(r"[^A-Za-z0-9._-]")
+
+
+_SCALE = Decimal(1).scaleb(-12)  # 1e-12 — ровно масштаб колонки
+
+
+def _fit(value: Decimal | None) -> Decimal | None:
+    """Привести число к масштабу колонки ЯВНО, а не надеяться на pyarrow.
+
+    Источник отдаёт отношения с полной машинной точностью (0.9999999999999999),
+    а колонка держит 12 знаков после запятой. pyarrow в таком случае не округляет
+    молча, а отказывается целиком: `ArrowInvalid: Rescaling Decimal value would cause
+    data loss` — и падает ВЕСЬ суточный проход из-за одного числа. Мы теряем
+    тринадцатый знак сознательно: для ставок и объёмов он не значит ничего.
+    """
+    if value is None:
+        return None
+    try:
+        return value.quantize(_SCALE, rounding=ROUND_HALF_EVEN)
+    except InvalidOperation:
+        # Число не влезает в 30 разрядов целиком — такого у рыночных данных быть
+        # не должно, и записать его молча обрезанным хуже, чем не записать вовсе.
+        return None
 
 
 def _safe(part: str) -> str:
@@ -131,7 +153,10 @@ class CryptoQuantStore:
             part = [r for r in ordered if _month(r.ts) == month]
             table = pa.Table.from_arrays(
                 [pa.array([r.ts for r in part], type=SCHEMA.field("ts").type)]
-                + [pa.array([getattr(r, name) for r in part], type=_NUM) for name in FIELDS],
+                + [
+                    pa.array([_fit(getattr(r, name)) for r in part], type=_NUM)
+                    for name in FIELDS
+                ],
                 schema=SCHEMA,
             )
             file = directory / f"{month}.parquet"
