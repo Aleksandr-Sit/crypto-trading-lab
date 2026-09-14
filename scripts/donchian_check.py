@@ -135,7 +135,10 @@ def main() -> int:
         curve = hold(series, start, end)
         if curve:
             c, s, d = stats(curve)
-            print(f"  ориентир {name} купить и держать: {c:+7.2f}%  Sharpe {s:.2f}  просадка {d:.1f}%")
+            print(
+                f"  ориентир {name} купить и держать: {c:+7.2f}%  "
+                f"Sharpe {s:.2f}  просадка {d:.1f}%"
+            )
     print("\nЗаявлено авторами: CAGR +43.70%, Sharpe 1.69, просадка −16.5%\n")
 
     print(f"{'окно':>5} {'единица':>11} {'приоритет':>10} {'CAGR':>9} {'Sharpe':>8} "
