@@ -98,11 +98,13 @@ def refresh(
                 report.rows.append((venue, symbol, tf, 0, str(err)))
             continue
         for result in results:
-            error = getattr(result, "error", None)
-            written = int(getattr(result, "written", 0) or 0)
-            report.rows.append((venue, getattr(result, "symbol", "?"), tf, written, error))
-            if error:
-                log.warning("Свечи %s %s %s: %s", venue, result.symbol, tf, error)
+            # Поля именно такие: `instrument` и `rows_written` (см. `data.backfill_cex`).
+            # Ошибка в имени тут тихая — отчёт печатал бы «?» и ноль, а сбор шёл бы как шёл.
+            report.rows.append(
+                (venue, result.instrument, tf, int(result.rows_written or 0), result.error)
+            )
+            if result.error:
+                log.warning("Свечи %s %s %s: %s", venue, result.instrument, tf, result.error)
     return report
 
 

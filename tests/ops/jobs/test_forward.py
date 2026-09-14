@@ -180,3 +180,45 @@ def test_replay_feeds_both_legs_in_time_order():
 
     assert strategy.decided_on is not None
     assert isinstance(got, list)
+
+
+# -- обновление свечей -------------------------------------------------------------------
+
+
+def test_refresh_targets_only_live_strategies(session, live):
+    """Качать весь архив каждую ночь незачем: у нас 1004 инструмента, живых стратегий единицы."""
+    from lab.ops.jobs.data_refresh import targets
+
+    wanted = targets(session)
+
+    assert (live.venue, RISK, "1d") in wanted
+    assert (live.venue, SAFE, "1d") in wanted
+    # Бенчмарк тоже обязан быть свежим: иначе сравнение молча уезжает в прошлое.
+    assert (live.venue, "BTC/USDT", "1d") in wanted
+
+    session.get(StrategyRow, live.id).rung = Rung.BACKTEST.value
+    session.flush()
+    assert targets(session) == set()
+
+
+def test_refresh_report_reads_the_real_result_fields(session, live, monkeypatch):
+    """Имена полей `SymbolResult` — `instrument` и `rows_written`, а не `symbol`/`written`.
+
+    Ошибка здесь тихая: сбор идёт как шёл, а отчёт печатает «?» и ноль записанных строк,
+    то есть выглядит как «источник ничего не отдал». Так и было в первом живом прогоне.
+    """
+    from lab.data.backfill_cex import SymbolResult
+    from lab.ops.jobs import data_refresh
+
+    monkeypatch.setattr(
+        "lab.data.backfill_cex.backfill_venue",
+        lambda store, venue, symbols, tf, days: [
+            SymbolResult(venue=venue, instrument=s, tf=tf, rows_written=7) for s in symbols
+        ],
+    )
+
+    report = data_refresh.refresh(Scope(session), store=FakeStore([]))
+
+    assert report.ok
+    assert all(instrument != "?" for _, instrument, _, _, _ in report.rows)
+    assert all(written == 7 for *_, written, _ in report.rows)
