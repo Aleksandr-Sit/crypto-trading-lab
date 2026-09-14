@@ -36,6 +36,12 @@ DATA_ENV: tuple[str, ...] = (
     "TONAPI_KEY",
     "DUNE_API_KEY",
     "CIELO_API_KEY",
+    # Рыночные и ончейн-данные, которых нет в архивах бирж (ресерч 14.09.2026):
+    # ликвидации по площадкам, резервы бирж, MVRV и соц-объём для зон накопления.
+    "COINGLASS_API_KEY",
+    "CRYPTOQUANT_API_KEY",
+    "GLASSNODE_API_KEY",
+    "SANTIMENT_API_KEY",
     "ALPHAVANTAGE_API_KEY",
     "TELEGRAM_BOT_TOKEN",
     "TELEGRAM_ADMIN_ID",
