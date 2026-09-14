@@ -27,6 +27,9 @@ jobs:
   cryptoquant:
     cron: "20 3 * * *"
     description: Суточные ряды CryptoQuant (тариф даёт только 30 суток — копим вперёд)
+  coinalyze:
+    cron: "40 3 * * *"
+    description: Ликвидации и открытый интерес (Coinalyze) — окно источника плывёт
   backup:
     cron: "0 3 * * *"
     description: Резервная копия базы в BACKUP_DIR

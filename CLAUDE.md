@@ -12,7 +12,7 @@
 | Что | Команда | Что вышло |
 |---|---|---|
 | Установка | `uv sync` | 80 пакетов, лок сходится |
-| Тесты | `uv run pytest -q` | **597 passed, 138 skipped** в контейнере сервера (локально 29 skipped — там есть тестовая база) |
+| Тесты | `uv run pytest -q` | **609 passed, 138 skipped** в контейнере сервера (локально 29 skipped — там есть тестовая база) |
 | Один файл | `uv run pytest -q tests/<путь>` | |
 | Линт | `uv run ruff check .` | All checks passed |
 | Миграции | `uv run alembic upgrade head` | голова `0011`, одна |
@@ -26,13 +26,14 @@
 | Кандидат | `lab candidate add` | нужен `DATABASE_URL` |
 | Свечи | `lab data backfill --venue bybit --symbols BTC/USDT:USDT --tf 1h --days 365` | нужна сеть к бирже |
 | Суточные ряды CryptoQuant | `lab data cryptoquant` | тариф даёт только 30 суток — ряд копится вперёд, задание `cryptoquant` 03:20 |
+| Ликвидации и OI по биржам | `lab data coinalyze` | окно источника плывёт (~1500 суток), задание `coinalyze` 03:40 |
 | Замер | `lab measure run <id> [--mode backtest\|paper\|forward\|micro] [--days N]` | нужен `DATABASE_URL` |
 | Снимки замеров | `lab measure show <id> [--limit N]` | «ещё не мерил», если пусто |
 | Доступность площадок | `lab ops status` | в песочнице все `недоступна` |
 | Источники и квоты | `lab ops feeds` | 22 фида, здоровье и счётчики квот |
 | Бэкап | `lab ops backup [--dest DIR] [--keep-days N]` | `lab-ГГГГ-ММ-ДД.tar.gz` (pg_dump + `config/`) |
 | Перезагрузка конфигов | `lab ops reload` | «Конфиги перезагружены» |
-| Сервис | `lab service worker\|bot\|web [--once]` | worker: 13 заданий; web без `WEB_*` печатает разовый пароль |
+| Сервис | `lab service worker\|bot\|web [--once]` | worker: 14 заданий; web без `WEB_*` печатает разовый пароль |
 | Восстановление | `scripts/restore.sh backups/lab-….tar.gz "postgresql://…"` | |
 
 Везде `lab` = `uv run python -m lab`. Расписание — `config/schedule.yaml`, TZ

@@ -223,6 +223,7 @@ class Worker:
     def jobs(self) -> list[Job]:
         from lab.ops.jobs import SeedReminder
         from lab.ops.jobs import jobs as discovery_jobs
+        from lab.ops.jobs.coinalyze import coinalyze_job
         from lab.ops.jobs.cryptoquant import cryptoquant_job
 
         out: list[Job] = []
@@ -244,6 +245,7 @@ class Worker:
         out.append(self.feeds.health_job(default_probes(quota=self.feeds)))
         out.append(funding_job(self.scope, executors=self.executors))
         out.append(cryptoquant_job(alert=self.alert))
+        out.append(coinalyze_job(alert=self.alert))
         out.append(self.portfolio.allocation_job(risk=self.risk))
         out.append(
             Job(
