@@ -189,7 +189,7 @@ def run_donchian(
 
 def by_year(curve: list[tuple[date, float, str]]) -> dict[int, float]:
     years: dict[int, list[float]] = {}
-    for (d0, e0, _), (d1, e1, _) in zip(curve, curve[1:], strict=False):
+    for (_, e0, _), (d1, e1, _) in zip(curve, curve[1:], strict=False):
         years.setdefault(d1.year, []).append(e1 / e0 - 1)
     return {y: (fmean(v) * len(v)) * 100 for y, v in years.items()}
 
