@@ -84,8 +84,34 @@ def equity_stats(curve: list[tuple[date, float]]) -> dict[str, float]:
     return {"cagr": cagr, "sharpe": sharpe, "dd": dd * 100}
 
 
+def _dual_vote(btc: dict, gold: dict, d: date, windows: tuple[int, ...]) -> str:
+    """Голосование нескольких окон: что выбирает большинство.
+
+    Проверка на устойчивость к параметру. Если преимущество живёт только на одном окне
+    из семи — это отбор по известному исходу, и составной сигнал его не покажет.
+    """
+    votes: dict[str, int] = {"BTC": 0, "GOLD": 0, "CASH": 0}
+    p_btc, p_gold = last_on_or_before(btc, d), last_on_or_before(gold, d)
+    if p_btc is None or p_gold is None:
+        return "CASH"
+    for w in windows:
+        b0 = last_on_or_before(btc, d - timedelta(weeks=w))
+        g0 = last_on_or_before(gold, d - timedelta(weeks=w))
+        if b0 is None or g0 is None:
+            continue
+        r_btc, r_gold = p_btc / b0 - 1, p_gold / g0 - 1
+        if r_btc > r_gold and r_btc > 0:
+            votes["BTC"] += 1
+        elif r_gold > r_btc and r_gold > 0:
+            votes["GOLD"] += 1
+        else:
+            votes["CASH"] += 1
+    return max(votes, key=lambda k: votes[k])
+
+
 def run_dual(
-    btc: dict, gold: dict, weeks: int, cost: float, start: date, end: date
+    btc: dict, gold: dict, weeks: int, cost: float, start: date, end: date,
+    composite: tuple[int, ...] | None = None,
 ) -> list[tuple[date, float, str]]:
     """Еженедельная ротация BTC / золото / кэш. Возврат — кривая капитала и что держали."""
     equity, held = 1.0, "CASH"
@@ -107,13 +133,16 @@ def run_dual(
                 equity *= p_btc / last_b
             elif was == "GOLD" and last_g:
                 equity *= p_gold / last_g
-        r_btc, r_gold = p_btc / b0 - 1, p_gold / g0 - 1
-        if r_btc > r_gold and r_btc > 0:
-            want = "BTC"
-        elif r_gold > r_btc and r_gold > 0:
-            want = "GOLD"
+        if composite:
+            want = _dual_vote(btc, gold, d, composite)
         else:
-            want = "CASH"
+            r_btc, r_gold = p_btc / b0 - 1, p_gold / g0 - 1
+            if r_btc > r_gold and r_btc > 0:
+                want = "BTC"
+            elif r_gold > r_btc and r_gold > 0:
+                want = "GOLD"
+            else:
+                want = "CASH"
         if want != held:
             equity *= 1 - cost / 10_000 * (2 if held != "CASH" and want != "CASH" else 1)
             held = want
@@ -184,6 +213,7 @@ def main() -> int:
     ap.add_argument("--rule", required=True, choices=("dual", "donchian"))
     ap.add_argument("--from", dest="start", default="2019-01-01")
     ap.add_argument("--cost-bps", type=float, default=10.0, help="круг по споту за переключение")
+    ap.add_argument("--composite", default="4,8,12", help="окна для составного сигнала, нед")
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
 
@@ -195,6 +225,7 @@ def main() -> int:
     print(f"правило {args.rule} | {start} … {end} | издержки {args.cost_bps} б.п. за переключение")
 
     grid = (1, 2, 4, 8, 12, 20, 24) if args.rule == "dual" else (5, 10, 20, 30, 50)
+    composite = tuple(int(x) for x in args.composite.split(",") if x.strip())
     unit = "нед" if args.rule == "dual" else "дн"
     print(f"\n{'окно':8}{'CAGR':>9}{'Sharpe':>9}{'просадка':>11}{'в кэше':>9}   по годам")
     for w in grid:
