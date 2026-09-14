@@ -36,12 +36,15 @@ DATA_ENV: tuple[str, ...] = (
     "TONAPI_KEY",
     "DUNE_API_KEY",
     "CIELO_API_KEY",
-    # Рыночные и ончейн-данные, которых нет в архивах бирж (ресерч 14.09.2026):
-    # ликвидации по площадкам, резервы бирж, MVRV и соц-объём для зон накопления.
-    "COINGLASS_API_KEY",
-    "CRYPTOQUANT_API_KEY",
-    "GLASSNODE_API_KEY",
-    "SANTIMENT_API_KEY",
+    # Рыночные и ончейн-данные, которых нет в архивах бирж (ресерч 14.09.2026).
+    # Состав пересмотрен после проверки тарифов ВЫЗОВОМ, а не по страницам цен:
+    # Coinglass оказался платным целиком, у Glassnode API нет и на младшем платном, —
+    # оба выброшены. Разбор: docs/research/free-data-audit-2026-09-14.md.
+    "CRYPTOQUANT_API_KEY",  # окно 30 суток: годен только для сбора вперёд
+    "COINALYZE_API_KEY",  # ликвидации и открытый интерес по биржам — замена Coinglass
+    "VELO_API_KEY",  # деривативы пяти площадок плюс CME
+    "COINGECKO_API_KEY",  # demo-ключ: без него публичный API отвечает 401
+    "SANTIMENT_API_KEY",  # необязателен: анонимно тоже отвечает, ключ поднимает лимит
     "ALPHAVANTAGE_API_KEY",
     "TELEGRAM_BOT_TOKEN",
     "TELEGRAM_ADMIN_ID",

@@ -623,6 +623,34 @@ def cmd_data_funding(args: argparse.Namespace) -> int:
     return 1 if failed else 0
 
 
+def cmd_data_cryptoquant(args: argparse.Namespace) -> int:
+    """Суточные ряды CryptoQuant: собрать окно и показать, сколько уже накоплено.
+
+    Тариф отдаёт только последние 30 суток, поэтому глубина хранилища растёт ровно
+    настолько, сколько дней задание отработало. Столбец «всего» — единственный честный
+    ответ на вопрос «можно ли уже что-то мерить».
+    """
+    from lab.data.cryptoquant import CryptoQuantStore
+    from lab.ops.jobs.cryptoquant import collect
+
+    store = CryptoQuantStore(args.root)
+    result = collect(store=store)
+    print(result)
+    for note in result.skipped:
+        print(f"  пропуск: {note}", file=sys.stderr)
+    rows = store.series()
+    if rows:
+        print("")
+        print("накоплено:")
+        for asset, exchange in rows:
+            first = store.query("select min(ts) as t from {cq}", asset, exchange)
+            last = store.last_ts(asset, exchange)
+            start = first[0]["t"] if first else None
+            span = f"{start:%Y-%m-%d} .. {last:%Y-%m-%d}" if start and last else "—"
+            print(f"  {asset:5} {exchange:14} суток {store.count(asset, exchange):5}  {span}")
+    return 0 if result.ok else 1
+
+
 def cmd_data_backfill(args: argparse.Namespace) -> int:
     """Таск 04: свечи CEX за N дней в Parquet с прогрессом; прерывание — повтор продолжит."""
     from lab.data import CandleStore
@@ -715,6 +743,9 @@ def build_parser() -> argparse.ArgumentParser:
     fund.add_argument("--days", type=int, default=365)
     fund.add_argument("--root", default="data", help="корень хранилища")
     fund.set_defaults(func=cmd_data_funding)
+    cq = data.add_parser("cryptoquant", help="суточные ряды CryptoQuant (копятся вперёд)")
+    cq.add_argument("--root", default="data", help="корень хранилища")
+    cq.set_defaults(func=cmd_data_cryptoquant)
 
     ms = sub.add_parser("measure", help="замер стратегии: запустить руками и посмотреть")
     msub = ms.add_subparsers(dest="action", required=True)

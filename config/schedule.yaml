@@ -24,6 +24,9 @@ jobs:
   reconcile:
     cron: "0 4 * * *"
     description: Сверка ордеров и балансов с площадками
+  cryptoquant:
+    cron: "20 3 * * *"
+    description: Суточные ряды CryptoQuant (тариф даёт только 30 суток — копим вперёд)
   backup:
     cron: "0 3 * * *"
     description: Резервная копия базы в BACKUP_DIR
