@@ -176,6 +176,7 @@ def _load_builtin() -> None:
     import lab.strategies.pairs  # noqa: F401
     import lab.strategies.positioning  # noqa: F401
     import lab.strategies.presets  # noqa: F401
+    import lab.strategies.rotation  # noqa: F401
     import lab.strategies.xsmom  # noqa: F401
 
     # Флаг ставится ПОСЛЕ импортов, а не до. Иначе сломанный модуль виден только один раз:
