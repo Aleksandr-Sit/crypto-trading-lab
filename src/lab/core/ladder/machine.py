@@ -151,6 +151,11 @@ class Ladder:
             self.s.flush()
         return transition
 
+    def latest_metrics(self, strategy_id: str) -> Metrics | None:
+        """Метрики, по которым `evaluate` судил бы стратегию на её текущей ступени."""
+        row = self._row(strategy_id)
+        return self._metrics(strategy_id, Rung(row.rung))
+
     def evaluate(self, strategy_id: str, metrics: Metrics | None = None) -> Transition | None:
         row = self._row(strategy_id)
         if row.status in _FROZEN:

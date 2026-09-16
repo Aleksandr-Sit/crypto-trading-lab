@@ -157,20 +157,41 @@ def _with_stability(
     ничего не изменит. Сорвался прогон — двигаемся по одиночному замеру, как раньше,
     а не роняем всё переизмерение.
     """
-    from lab.config import load_threshold
-    from lab.core.measure import threshold as measure_threshold
-    from lab.ops.measure import run_stability
-
     metrics = getattr(measured, "metrics", None)
     if metrics is None or getattr(measured, "status", "") != "ok":
         return None
+    with_stability, _ = attach_stability(session_scope, row, metrics, at)
+    return with_stability
+
+
+def attach_stability(
+    session_scope: Callable[[], Any],
+    row: Any,
+    metrics: Any,
+    at: datetime,
+    *,
+    stability_fn: Callable[..., Any] | None = None,
+) -> tuple[Any, str | None]:
+    """Метрики плюс устойчивость, если стратегия прошла остальные критерии порога.
+
+    Второе значение — почему устойчивость НЕ легла в порог, хотя была нужна: прогон упал
+    или окон меньше `stability.min_windows` (тогда порог её молча не применяет). Воскресный
+    цикл эту причину пропускает и двигается по одному окну; ручной подъём одной стратегии
+    обязан на ней остановиться — иначе он поднимает то, что на окнах провалено.
+    """
+    from lab.config import load_threshold
+    from lab.core.measure import threshold as measure_threshold
+
     base = measure_threshold(metrics, row.branch, rung=row.rung)
     if base.status != "passed":
-        return metrics
+        return metrics, None
+
+    if stability_fn is None:
+        from lab.ops.measure import run_stability as stability_fn
 
     cfg = load_threshold().stability
     try:
-        stability, _ = run_stability(
+        stability, _ = stability_fn(
             row.id,
             session_scope=session_scope,
             now=at,
@@ -179,7 +200,7 @@ def _with_stability(
         )
     except Exception as err:  # noqa: BLE001 — оценка не обязана быть, решение всё равно нужно
         log.warning("Устойчивость %s не посчиталась: %s", row.id, err)
-        return metrics
+        return metrics, f"устойчивость не посчиталась: {type(err).__name__}: {err}"
     log.info(
         "Устойчивость %s: в плюс %s из %s окон, впереди бенчмарка %s из %s",
         row.id,
@@ -188,7 +209,13 @@ def _with_stability(
         stability.ahead,
         stability.compared,
     )
-    return metrics.model_copy(update={"stability": stability})
+    problem = None
+    if stability.windows < cfg.min_windows:
+        problem = (
+            f"окон {stability.windows} при минимуме {cfg.min_windows}: "
+            "критерий устойчивости не применится"
+        )
+    return metrics.model_copy(update={"stability": stability}), problem
 
 
 def _notify(bot: Any, title: str, detail: str) -> None:
@@ -197,4 +224,4 @@ def _notify(bot: Any, title: str, detail: str) -> None:
     bot.send_card_sync("alert", {"title": title, "detail": detail, "service": "worker"})
 
 
-__all__ = ["EXPIRY_REASON", "RemeasureReport", "expiry", "weekly_remeasure"]
+__all__ = ["EXPIRY_REASON", "RemeasureReport", "attach_stability", "expiry", "weekly_remeasure"]
