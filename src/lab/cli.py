@@ -160,8 +160,10 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
     """
     from datetime import UTC, datetime
 
+    from lab.config import load_threshold
+    from lab.core.measure.metrics import vs_benchmark_value
     from lab.core.registry import StrategyNotFound
-    from lab.ops.measure import MeasureUnavailable, run_stability
+    from lab.ops.measure import MeasureUnavailable, counts_as_window, run_stability
 
     if args.window < 1 or args.step < 1 or args.days < args.window:
         print(
@@ -171,6 +173,7 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
         return 2
 
     now = datetime.now(UTC)
+    min_trades = load_threshold().min_trades
     try:
         stability, rows = run_stability(
             args.strategy_id,
@@ -199,17 +202,28 @@ def cmd_measure_rolling(args: argparse.Namespace) -> int:
         period = f"{a:%m.%Y}–{b:%m.%Y}"
         mt = getattr(m, "metrics", None)
         if getattr(m, "status", "") != "ok" or mt is None:
-            print(f"{period:25} {'—':>7} {'нет данных':>10}")
+            print(f"{period:25} {'—':>7} {'нет данных':>10}   не в счёт")
             continue
-        diff = mt.vs_benchmark_cagr if mt.vs_benchmark_cagr is not None else mt.vs_benchmark
+        # «Разница» — тем же сравнением, что и счётчик «впереди» (с поправкой на простаивающий
+        # капитал). Иначе таблица показывала минус там, где итог засчитывал окно как «впереди».
+        diff = vs_benchmark_value(mt)
+        note = "" if counts_as_window(m, min_trades) else "   не в счёт: мало сделок"
         print(
             f"{period:25} {mt.n_trades:>7} {_pct(mt.cagr_pct):>10} "
-            f"{_pct(mt.benchmark_cagr_pct):>18} {_pct(diff):>10}"
+            f"{_pct(mt.benchmark_cagr_pct):>18} {_pct(diff):>10}{note}"
         )
     print(
         f"\nЗарабатывает в {stability.profitable} окнах из {stability.windows} "
         f"({float(stability.profitable_pct):.0f}%)."
     )
+    print(
+        "  «годовых» — от торговли (по ним «в плюс»); «разница» — с процентом на простаивающие "
+        "деньги (по ней «впереди»)."
+    )
+    if stability.skipped:
+        print(
+            f"Не в счёт {stability.skipped} окон: нет данных или сделок меньше {min_trades}."
+        )
     if stability.compared:
         share = stability.ahead_pct
         print(

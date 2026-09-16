@@ -613,6 +613,19 @@ def market_phase(btc_cagr: Decimal | None) -> str:
     if btc_cagr <= PHASE_DOWN_PCT:
         return "падение"
     return "боковик"
+
+
+def counts_as_window(measured: Any, min_trades: int) -> bool:
+    """Идёт ли окно в счёт устойчивости: замер состоялся и сделок не меньше порога.
+
+    Окно без данных — не наблюдение, а отсутствие наблюдения. Окно с тремя сделками
+    за два года тоже: на одном окне такой замер порог назвал бы `insufficient`, и
+    считать его полноценным «в плюс / в минус» в устойчивости было бы двойным стандартом.
+    """
+    mt = getattr(measured, "metrics", None)
+    return getattr(measured, "status", "") == "ok" and mt is not None and mt.n_trades >= min_trades
+
+
 def run_stability(
     strategy_id: str,
     *,
@@ -624,6 +637,7 @@ def run_stability(
     feed_factory: Callable[[str], Any] | None = None,
     root: str | None = None,
     history_days: int | None = None,
+    min_trades: int | None = None,
 ) -> tuple[Stability, list[tuple[datetime, datetime, Any]]]:
     """Прогон по скользящим окнам: в скольких стратегия в плюсе и в скольких обошла бенчмарк.
 
@@ -633,9 +647,15 @@ def run_stability(
 
     Снимки НЕ сохраняются (`session=None`): это оценка, а не решение ступени; писать
     в историю два десятка замеров на каждую проверку — мусор.
+
+    В счёт идут только окна, прошедшие `counts_as_window`; остальные — в `skipped`.
     """
+    from lab.config import load_threshold
     from lab.core.registry import Registry
     from lab.data import CandleStore
+
+    if min_trades is None:
+        min_trades = load_threshold().min_trades
 
     # Хранилище и запись читаются ОДИН раз на весь прогон: окон бывают десятки, и создавать
     # store с нуля на каждое — лишняя работа на ровном месте.
@@ -648,7 +668,7 @@ def run_stability(
     start = now - timedelta(days=span)
     windows: list[tuple[datetime, datetime, Any]] = []
     phases: dict[str, PhaseStat] = {}
-    profitable = ahead = compared = 0
+    profitable = ahead = compared = counted = 0
     cursor = start
     while cursor + timedelta(days=window_days) <= now:
         upto = cursor + timedelta(days=window_days)
@@ -663,8 +683,9 @@ def run_stability(
             session=None,
         )
         windows.append((cursor, upto, m))
-        mt = getattr(m, "metrics", None)
-        if getattr(m, "status", "") == "ok" and mt is not None:
+        if counts_as_window(m, min_trades):
+            mt = m.metrics
+            counted += 1
             # «Заработала» — про ТОРГОВЛЮ: проценты на простаивающие деньги сюда не входят,
             # иначе любое окно окажется прибыльным просто по безрисковой ставке.
             is_profit = mt.net_pnl_pct > 0
@@ -686,7 +707,8 @@ def run_stability(
         cursor += timedelta(days=step_days)
 
     stability = Stability(
-        windows=len(windows),
+        windows=counted,
+        skipped=len(windows) - counted,
         profitable=profitable,
         ahead=ahead,
         compared=compared,
@@ -726,5 +748,6 @@ __all__ = [
     "data_root",
     "make_measure",
     "run_measure",
+    "counts_as_window",
     "run_stability",
 ]

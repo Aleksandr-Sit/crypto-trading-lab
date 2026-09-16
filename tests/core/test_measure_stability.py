@@ -79,3 +79,75 @@ def test_shares_are_percentages(profitable, windows, expected):
     st = Stability(windows=windows, profitable=profitable, ahead=0, compared=0)
     assert st.profitable_pct == expected
     assert st.ahead_pct is None
+
+
+# --- какие окна идут в счёт (решение владельца 17.09.2026) ------------------------------
+
+def _measured(status: str = "ok", n_trades: int = 40, pnl: str = "5"):
+    from types import SimpleNamespace
+
+    metrics = make_metrics(n_trades=n_trades).model_copy(update={"net_pnl_pct": Decimal(pnl)})
+    return SimpleNamespace(status=status, metrics=metrics if status == "ok" else None)
+
+
+def test_window_without_data_or_with_few_trades_is_not_an_observation():
+    from lab.ops.measure import counts_as_window
+
+    assert counts_as_window(_measured(), 30)
+    assert not counts_as_window(_measured(status="incomplete"), 30)
+    assert not counts_as_window(_measured(n_trades=3), 30)
+    assert counts_as_window(_measured(n_trades=30), 30)
+
+
+def test_run_stability_leaves_empty_and_thin_windows_out_of_the_denominator(monkeypatch):
+    """Шорт листингов: окно 2018 года без данных и окна с 3–17 сделками шли в знаменатель.
+
+    Пустое окно считалось неудачным, и молодая стратегия проваливала устойчивость тем,
+    что ей нет восьми лет; окно с тремя сделками засчитывалось «в плюс» наравне с сотней."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    import lab.core.registry as registry_mod
+    import lab.ops.measure as ops_measure
+
+    sequence = iter(
+        [
+            _measured(status="incomplete"),  # данных ещё нет
+            _measured(n_trades=3, pnl="1"),  # в плюсе, но три сделки
+            _measured(n_trades=54, pnl="-2"),
+            _measured(n_trades=132, pnl="4"),
+            _measured(n_trades=155, pnl="8"),
+        ]
+    )
+    monkeypatch.setattr(ops_measure, "run_measure", lambda *a, **k: next(sequence))
+    monkeypatch.setattr(ops_measure, "_btc_cagr", lambda *a, **k: None)
+
+    class _Registry:
+        def __init__(self, session):
+            pass
+
+        def get(self, sid):
+            return SimpleNamespace(venue="binance", timeframe="1d")
+
+    monkeypatch.setattr(registry_mod, "Registry", _Registry)
+
+    @contextmanager
+    def scope():
+        yield None
+
+    now = datetime(2026, 9, 17, tzinfo=UTC)
+    stability, rows = ops_measure.run_stability(
+        "cex-perp-test",
+        session_scope=scope,
+        now=now,
+        window_days=730,
+        step_days=180,
+        store=object(),
+        history_days=730 + 4 * 180,
+        min_trades=30,
+    )
+
+    assert len(rows) == 5
+    assert stability.windows == 3
+    assert stability.skipped == 2
+    assert stability.profitable == 2
