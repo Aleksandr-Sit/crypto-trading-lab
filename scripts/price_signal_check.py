@@ -19,18 +19,41 @@
   следующий час против.
 * `month_turn` — начало месяца: последние два и первые три дня месяца против остальных.
 
+Условия F1–F3 — правила, которые группы трейдеров отдают программистам в ботов
+(`docs/research/bots-2026-09-20.md`). У всех трёх есть выписанные правила и внешний
+замер, с которым можно сверяться:
+
+* `noise_break` — внутридневной импульс через «коридор шума» (Zarattini–Aziz–Barbon,
+  SSRN 4824172): граница дня = открытие × (1 ± средний ход к этому времени суток
+  за последние N дней). Выход за коридор — заявка на продолжение до закрытия суток.
+  Поправки на ночные разрывы нет: у крипты нет ночи, и это как раз проверяется.
+* `orb`        — пробой диапазона открытия (Zarattini–Aziz, SSRN 4416622): диапазон
+  первых R баров сессии, вход на первом баре, закрывшемся за его пределами,
+  удержание до закрытия сессии. Сессия — сутки UTC либо `--session-start`.
+* `sweep`      — снятие ликвидности и возврат, механическое ядро SMC/ICT: бар уходит
+  за вчерашний экстремум и закрывается обратно внутрь; вход против выноса.
+
+**Контроль у F1–F3 — плацебо, а не «обычный бар».** Событие у них направленное,
+а обычный бар — нет: в растущие годы ненаправленная группа получает дрейф рынка
+в подарок и сравнение перекашивается. Поэтому контрольной группе направление даётся
+броском монеты от отпечатка времени (`_placebo_sign`): под нулевой гипотезой обе группы
+имеют нулевое ожидание, и разница — это ровно то, что знает правило.
+
     python scripts/price_signal_check.py --condition overnight --venue yahoo \\
         --instruments SPX,NDX,DAX --tf 1d --root /app/data
     python scripts/price_signal_check.py --condition btc_lead --instruments ETH/USDT,SOL/USDT \\
         --tf 1h --root /app/data
+    python scripts/price_signal_check.py --condition noise_break --venue bybit \\
+        --instruments BTC/USDT:USDT,ETH/USDT:USDT --tf 15m --root /app/data
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import sys
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from math import sqrt
 from pathlib import Path
 from statistics import fmean, stdev
@@ -39,7 +62,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from lab.data.store import CandleStore  # noqa: E402
 
-CONDITIONS = ("overnight", "weekend", "btc_lead", "reversal", "month_turn")
+CONDITIONS = (
+    "overnight",
+    "weekend",
+    "btc_lead",
+    "reversal",
+    "month_turn",
+    "noise_break",
+    "orb",
+    "sweep",
+)
 TAKER_ROUND = 0.10  # круг по тейкеру, %
 
 
@@ -76,7 +108,8 @@ class Bucket:
 
 def bars(cs: CandleStore, venue: str, name: str, tf: str) -> list[dict]:
     rows = cs.query(
-        "select ts, open::DOUBLE as o, close::DOUBLE as c from {candles} order by ts",
+        "select ts, open::DOUBLE as o, high::DOUBLE as h, low::DOUBLE as l, "
+        "close::DOUBLE as c from {candles} order by ts",
         venue,
         name,
         tf,
@@ -177,6 +210,144 @@ def run_btc_lead(
             years[d.year][1].add(key, ret)
 
 
+def _placebo_sign(ts: datetime) -> int:
+    """Направление контрольной группе — броском монеты от отпечатка времени.
+
+    Детерминировано (один бар всегда получает один и тот же знак, прогон повторяем),
+    но с ценой не связано никак. Нужно, чтобы контроль не получал в подарок дрейф рынка:
+    событие у F1–F3 направленное, а «обычный бар» — нет, и в растущие годы сравнение
+    ненаправленной группы с направленной перекашивается само собой.
+    """
+    return 1 if hashlib.blake2b(ts.isoformat().encode(), digest_size=2).digest()[0] % 2 else -1
+
+
+def _sessions(
+    rows: list[dict], start: time | None, hours: int = 24
+) -> list[tuple[object, list[dict]]]:
+    """Бары по сессиям. Сессия — сутки UTC, либо окно `hours` от `start` до `start`."""
+    out: dict[object, list[dict]] = defaultdict(list)
+    for r in rows:
+        ts = r["ts"]
+        if start is None:
+            out[ts.date()].append(r)
+            continue
+        shifted = ts - timedelta(hours=start.hour, minutes=start.minute)
+        offset = (ts - datetime.combine(shifted.date(), start)).total_seconds() / 3600
+        if 0 <= offset < hours:
+            out[shifted.date()].append(r)
+    return sorted(out.items())
+
+
+def run_noise_break(
+    rows: list[dict], hit: Bucket, rest: Bucket, years: dict, lookback: int
+) -> None:
+    """Коридор шума: граница суток = открытие × (1 ± средний ход к этому времени суток).
+
+    hit — ПЕРВЫЙ за сутки бар, закрывшийся за коридором, знак по направлению выхода;
+    rest — бары внутри коридора, знак монетой. Вход у обеих групп — по открытию
+    СЛЕДУЮЩЕГО бара (шаг 3 порядка проверки), удержание до закрытия суток.
+
+    Наблюдение — сутки: 96 баров одного дня это одно свидетельство, а не 96.
+    """
+    history: dict[int, list[float]] = defaultdict(list)
+    for key, day in _sessions(rows, None):
+        if len(day) < 8:
+            continue
+        d_open, d_close = day[0]["o"], day[-1]["c"]
+        fired = False
+        for i, bar in enumerate(day[:-1]):
+            past = history[i]
+            if len(past) >= lookback:
+                sigma = fmean(past[-lookback:])
+                entry = day[i + 1]["o"]
+                ret = (d_close / entry - 1) * 100
+                side = 1 if bar["c"] > d_open * (1 + sigma) else 0
+                side = -1 if bar["c"] < d_open * (1 - sigma) else side
+                if side and not fired:
+                    fired = True
+                    hit.add(key, side * ret)
+                    years[key.year][0].add(key, side * ret)
+                elif not side:
+                    sgn = _placebo_sign(bar["ts"])
+                    rest.add(key, sgn * ret)
+                    years[key.year][1].add(key, sgn * ret)
+            history[i].append(abs(bar["c"] / d_open - 1))
+
+
+def run_orb(
+    rows: list[dict],
+    hit: Bucket,
+    rest: Bucket,
+    years: dict,
+    range_bars: int,
+    start: time | None,
+    hours: int,
+) -> None:
+    """Пробой диапазона открытия: диапазон первых `range_bars` баров сессии.
+
+    hit — первый бар, закрывшийся за диапазоном, знак по направлению; rest — бары
+    без пробоя, знак монетой. Вход у обеих — по открытию следующего бара, удержание
+    до закрытия сессии.
+    """
+    for key, day in _sessions(rows, start, hours):
+        if len(day) < range_bars + 3:
+            continue
+        rng = day[:range_bars]
+        hi = max(b["h"] for b in rng if b["h"])
+        lo = min(b["l"] for b in rng if b["l"])
+        if not hi or not lo or lo <= 0:
+            continue
+        s_close = day[-1]["c"]
+        fired = False
+        for i in range(range_bars, len(day) - 1):
+            bar, entry = day[i], day[i + 1]["o"]
+            ret = (s_close / entry - 1) * 100
+            side = 1 if bar["c"] > hi else (-1 if bar["c"] < lo else 0)
+            if side and not fired:
+                fired = True
+                hit.add(key, side * ret)
+                years[key.year][0].add(key, side * ret)
+            elif not side:
+                sgn = _placebo_sign(bar["ts"])
+                rest.add(key, sgn * ret)
+                years[key.year][1].add(key, sgn * ret)
+
+
+def run_sweep(rows: list[dict], hit: Bucket, rest: Bucket, years: dict, horizon: int) -> None:
+    """Снятие вчерашнего экстремума и возврат внутрь — механическое ядро SMC/ICT.
+
+    hit — бар, ушедший за вчерашний минимум и закрывшийся выше него (лонг) или
+    зеркально (шорт); rest — обычные бары, знак монетой. Вход по открытию следующего
+    бара, удержание `horizon` баров.
+    """
+    ext = {
+        k: (max(b["h"] for b in v if b["h"]), min(b["l"] for b in v if b["l"]))
+        for k, v in _sessions(rows, None)
+    }
+    keys = sorted(ext)
+    prev = {cur: ext[p] for p, cur in zip(keys, keys[1:], strict=False)}
+    for i in range(len(rows) - horizon - 1):
+        bar = rows[i]
+        pe = prev.get(bar["ts"].date())
+        if pe is None or not bar["h"] or not bar["l"]:
+            continue
+        phi, plo = pe
+        entry = rows[i + 1]["o"]
+        if entry <= 0:
+            continue
+        ret = (rows[i + 1 + horizon]["c"] / entry - 1) * 100
+        d = bar["ts"].date()
+        side = 1 if (bar["l"] < plo and bar["c"] > plo) else 0
+        side = -1 if (bar["h"] > phi and bar["c"] < phi) else side
+        if side:
+            hit.add(d, side * ret)
+            years[d.year][0].add(d, side * ret)
+        else:
+            sgn = _placebo_sign(bar["ts"])
+            rest.add(d, sgn * ret)
+            years[d.year][1].add(d, sgn * ret)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--condition", required=True, choices=CONDITIONS)
@@ -185,11 +356,21 @@ def main() -> int:
     ap.add_argument("--tf", default="1d")
     ap.add_argument("--from-year", type=int, default=2019)
     ap.add_argument("--root", default="data")
+    ap.add_argument("--lookback", type=int, default=14, help="дней в коридоре шума (noise_break)")
+    ap.add_argument("--range-bars", type=int, default=1, help="баров в диапазоне открытия (orb)")
+    ap.add_argument("--session-start", default=None, help="начало сессии ЧЧ:ММ UTC (orb)")
+    ap.add_argument("--session-hours", type=int, default=24, help="длина сессии в часах (orb)")
+    ap.add_argument("--horizon", type=int, default=4, help="баров удержания (sweep)")
     args = ap.parse_args()
 
     cs = CandleStore(args.root)
     hit, rest = Bucket(), Bucket()
     years: dict[int, tuple[Bucket, Bucket]] = defaultdict(lambda: (Bucket(), Bucket()))
+    session_start: time | None = None
+    if args.session_start:
+        hh, _, mm = args.session_start.partition(":")
+        session_start = time(int(hh), int(mm or 0))
+
     btc: dict[datetime, float] = {}
     if args.condition == "btc_lead":
         for r in bars(cs, "binance", "BTC/USDT", args.tf):
@@ -208,6 +389,12 @@ def main() -> int:
             run_reversal(rows, hit, rest, years)
         elif args.condition == "month_turn":
             run_month_turn(rows, hit, rest, years)
+        elif args.condition == "noise_break":
+            run_noise_break(rows, hit, rest, years, args.lookback)
+        elif args.condition == "orb":
+            run_orb(rows, hit, rest, years, args.range_bars, session_start, args.session_hours)
+        elif args.condition == "sweep":
+            run_sweep(rows, hit, rest, years, args.horizon)
         else:
             run_btc_lead(rows, btc, hit, rest, years)
         print(f"{name}: {len(rows)} баров")
@@ -218,6 +405,9 @@ def main() -> int:
         "reversal": ("бар после сильного, ПРОТИВ него", "обычный бар"),
         "month_turn": ("рубеж месяца", "остальные дни"),
         "btc_lead": ("час альта после сильного часа BTC, в ту же сторону", "обычный час"),
+        "noise_break": ("выход за коридор шума, по направлению выхода", "бар внутри коридора, монетой"),
+        "orb": ("пробой диапазона открытия, по направлению", "бар без пробоя, монетой"),
+        "sweep": ("снятие вчерашнего экстремума и возврат, против выноса", "обычный бар, монетой"),
     }[args.condition]
     if not hit.n or not rest.n:
         print("\nнаблюдений нет")
