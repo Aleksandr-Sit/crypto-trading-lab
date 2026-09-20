@@ -232,7 +232,11 @@ def _sessions(
             out[ts.date()].append(r)
             continue
         shifted = ts - timedelta(hours=start.hour, minutes=start.minute)
-        offset = (ts - datetime.combine(shifted.date(), start)).total_seconds() / 3600
+        # Пояс берётся у самой метки: в хранилище они с поясом, а datetime.combine даёт
+        # наивную, и вычитание падает с TypeError. Отказ громкий, но ловится только
+        # на запуске с --session-start, то есть мимо обычного прогона.
+        begins = datetime.combine(shifted.date(), start).replace(tzinfo=ts.tzinfo)
+        offset = (ts - begins).total_seconds() / 3600
         if 0 <= offset < hours:
             out[shifted.date()].append(r)
     return sorted(out.items())
