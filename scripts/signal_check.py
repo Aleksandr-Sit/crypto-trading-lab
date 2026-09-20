@@ -22,11 +22,13 @@
     python scripts/signal_check.py --metric taker_ratio
     python scripts/signal_check.py --metric taker_ratio --by-year
     python scripts/signal_check.py --metric top_positions_ratio --bases BTC,ETH,SOL
+    python scripts/signal_check.py --csv data/external/fng.csv --days 3200 --by-year
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import sys
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
@@ -86,6 +88,41 @@ def series(
     return out
 
 
+def csv_series(
+    cs: CandleStore,
+    path: Path,
+    asset: str,
+    window: tuple[datetime, datetime],
+    horizons: list[int],
+) -> list[Row]:
+    """То же, но показатель берётся из готового ряда `date,value` (`external_series.py`).
+
+    Ряд один на весь рынок (страх и жадность, хешрейт, DVOL), поэтому и инструмент один:
+    объединять нечего, и «согласованность по инструментам» здесь не возникает даже
+    случайно. Проверка остаётся одна — по годам.
+    """
+    values: dict[object, float] = {}
+    with path.open(newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            try:
+                values[datetime.fromisoformat(row["date"]).date()] = float(row["value"])
+            except (ValueError, KeyError):
+                continue
+    bars = [c for c in cs.read("binance", asset, "1d", *window) if c.close > 0]
+    out: list[Row] = []
+    longest = max(horizons)
+    for i in range(len(bars) - longest):
+        ts = bars[i].ts
+        value = values.get(ts.date())
+        if value is None:
+            continue
+        price = float(bars[i].close)
+        forward = {h: float((bars[i + h].close - bars[i].close) / bars[i].close * 100) for h in horizons}
+        if price > 0:
+            out.append((ts, value, forward))
+    return out
+
+
 def _se_by_date(pooled: list[Row], edge: float, h: int, tail: str) -> float:
     """Стандартная ошибка средней хвоста, где наблюдение — дата, а не строка."""
     by_date: dict[datetime, list[float]] = defaultdict(list)
@@ -141,6 +178,8 @@ def main() -> int:
     ap.add_argument("--days", type=int, default=1480)
     ap.add_argument("--by-year", action="store_true", help="разложить эффект по годам")
     ap.add_argument("--year-horizon", type=int, default=0, help="горизонт для разбора по годам")
+    ap.add_argument("--csv", default=None, help="готовый ряд date,value вместо позиционирования")
+    ap.add_argument("--asset", default="BTC/USDT", help="инструмент сравнения для --csv")
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
 
@@ -150,7 +189,11 @@ def main() -> int:
     ps, cs = PositioningStore(args.root), CandleStore(args.root)
 
     pooled: list[Row] = []
-    for base in [b.strip() for b in args.bases.split(",") if b.strip()]:
+    if args.csv:
+        pooled = csv_series(cs, Path(args.csv), args.asset, window, horizons)
+        print(f"{Path(args.csv).stem}: {len(pooled)} дней против {args.asset}")
+        args.metric = Path(args.csv).stem
+    for base in [] if args.csv else [b.strip() for b in args.bases.split(",") if b.strip()]:
         try:
             rows = series(ps, cs, f"{base}/USDT:USDT", window, args.metric, horizons)
         except Exception as err:  # noqa: BLE001 — нет данных по инструменту, не падаем
