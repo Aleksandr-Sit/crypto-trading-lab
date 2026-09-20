@@ -28,6 +28,7 @@ import csv
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from statistics import fmean
 
 import httpx
 
@@ -95,6 +96,30 @@ def fetch_dvol() -> dict[str, float]:
     return out
 
 
+def ribbon(series: dict[str, float], fast: int = 30, slow: int = 60) -> dict[str, float]:
+    """Производный ряд «hash ribbons»: быстрая средняя против медленной, в процентах.
+
+    Сырой хешрейт хвостами мерить бессмысленно — он монотонно растёт, и «нижние 10%»
+    это просто 2009 год, а «верхние» — 2026. Торгуют не уровень, а ПЕРЕСЕЧЕНИЕ средних:
+    быстрая ниже медленной — майнеры выключают технику, капитуляция; возврат выше —
+    сигнал на покупку. Значение ниже нуля и есть «идёт капитуляция».
+    """
+    keys = sorted(series)
+    values = [series[k] for k in keys]
+    out: dict[str, float] = {}
+    for i in range(slow, len(keys)):
+        ma_fast = fmean(values[i - fast : i])
+        ma_slow = fmean(values[i - slow : i])
+        if ma_slow > 0:
+            out[keys[i]] = (ma_fast / ma_slow - 1) * 100
+    return out
+
+
+# Производные ряды: из какого сырого что считается. Объявлено ПОСЛЕ функций —
+# словарь на уровне модуля вычисляется при импорте, и ссылка вперёд упала бы.
+DERIVED = {"hashrate": ("hashrate_ribbon", ribbon)}
+
+
 def store(root: Path, name: str, fresh: dict[str, float]) -> tuple[int, int, str, str]:
     """Дописать ряд, не переписывая уже собранное. Возвращает (было, стало, первый, последний)."""
     path = root / "external" / f"{name}.csv"
@@ -138,6 +163,10 @@ def main() -> int:
             continue
         before, after, first, last = store(root, name, fresh)
         print(f"{name}: {after} суток ({first} — {last}), новых {after - before}")
+        if name in DERIVED:
+            dname, fn = DERIVED[name]
+            _, d_after, d_first, d_last = store(root, dname, fn(fresh))
+            print(f"{dname}: {d_after} суток ({d_first} — {d_last})")
     return 1 if failed == len(wanted) else 0
 
 
