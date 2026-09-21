@@ -117,7 +117,9 @@ def csv_series(
         if value is None:
             continue
         price = float(bars[i].close)
-        forward = {h: float((bars[i + h].close - bars[i].close) / bars[i].close * 100) for h in horizons}
+        forward = {
+            h: float((bars[i + h].close - bars[i].close) / bars[i].close * 100) for h in horizons
+        }
         if price > 0:
             out.append((ts, value, forward))
     return out
@@ -148,7 +150,8 @@ def _spread(pooled: list[Row], low_edge: float, high_edge: float, h: int) -> tup
     if not low or not high:
         return 0.0, 0.0
     noise = 2 * sqrt(
-        _se_by_date(pooled, low_edge, h, "low") ** 2 + _se_by_date(pooled, high_edge, h, "high") ** 2
+        _se_by_date(pooled, low_edge, h, "low") ** 2
+        + _se_by_date(pooled, high_edge, h, "high") ** 2
     )
     return mean(high) - mean(low), noise
 

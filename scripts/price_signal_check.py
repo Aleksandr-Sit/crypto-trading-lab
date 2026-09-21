@@ -107,7 +107,7 @@ class Bucket:
         m = self.means()
         return stdev(m) / sqrt(len(m)) if len(m) > 1 else 0.0
 
-    def thinned(self, step: int) -> "Bucket":
+    def thinned(self, step: int) -> Bucket:
         """Каждый `step`-й момент — лекарство от перекрытия ГОРИЗОНТОВ.
 
         Ключ Bucket лечит перекрытие ПО ИНСТРУМЕНТАМ (восемь монет в один день — одно

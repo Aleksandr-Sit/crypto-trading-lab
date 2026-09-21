@@ -39,7 +39,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from lab.data.store import CandleStore  # noqa: E402
 
-WORLD = "SPX,NDX,DJI,DAX,FTSE,NIKKEI,XAUUSD,XAGUSD,WTI,NATGAS,EURUSD,GBPUSD,USDJPY,USDCHF,USDCAD,AUDUSD"
+WORLD = (
+    "SPX,NDX,DJI,DAX,FTSE,NIKKEI,XAUUSD,XAGUSD,WTI,NATGAS,"
+    "EURUSD,GBPUSD,USDJPY,USDCHF,USDCAD,AUDUSD"
+)
 
 
 def month_closes(cs: CandleStore, venue: str, name: str, tf: str) -> dict[tuple[int, int], float]:

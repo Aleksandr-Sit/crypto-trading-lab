@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from statistics import fmean
@@ -38,7 +37,9 @@ TIMEOUT = httpx.Timeout(30.0)
 
 def fetch_fng() -> dict[str, float]:
     """Индекс страха и жадности: 0 — крайний страх, 100 — крайняя жадность."""
-    r = httpx.get("https://api.alternative.me/fng/", params={"limit": 0, "format": "json"}, timeout=TIMEOUT)
+    r = httpx.get(
+        "https://api.alternative.me/fng/", params={"limit": 0, "format": "json"}, timeout=TIMEOUT
+    )
     r.raise_for_status()
     out: dict[str, float] = {}
     for row in r.json().get("data", []):
