@@ -548,28 +548,30 @@ def main() -> int:
         for r in bars(cs, "binance", "BTC/USDT", args.tf):
             btc[r["ts"]] = (r["c"] / r["o"] - 1) * 100
 
-    # Ряды читаются ОДИН раз на все значения горизонта: сетка из восьми удержаний
-    # иначе означала бы восемь чтений по два миллиона баров, то есть час на ровном месте.
-    series: dict[str, list[dict]] = {}
+    holds = [0]
+    if args.condition in ("orb", "day_fade"):
+        holds = [int(x) for x in args.hold_bars.split(",") if x.strip() != ""]
+
+    # Внешний цикл — по инструментам, внутренний — по горизонтам. Наоборот было бы
+    # естественнее читать, но тогда в памяти лежат все восемь рядов сразу (два миллиона
+    # баров, ~400 МБ поверх DuckDB при лимите контейнера в 1200 МБ), а промах по памяти
+    # в этом проекте выглядит как ПУСТОЙ вывод, а не как ошибка. Так ряд живёт по одному,
+    # и при этом читается всё равно один раз на всю сетку.
+    hits = {h: Bucket() for h in holds}
+    rests = {h: Bucket() for h in holds}
+    years_by_hold: dict[int, dict] = {
+        h: defaultdict(lambda: (Bucket(), Bucket())) for h in holds
+    }
+    dropped_by_hold = dict.fromkeys(holds, 0)
+
     for name in [s.strip() for s in args.instruments.split(",") if s.strip()]:
         rows = [r for r in bars(cs, args.venue, name, args.tf) if r["ts"].year >= args.from_year]
         if len(rows) < 200:
             print(f"{name}: ряда мало ({len(rows)})")
             continue
-        series[name] = rows
         print(f"{name}: {len(rows)} баров")
-
-    holds = [0]
-    if args.condition in ("orb", "day_fade"):
-        holds = [int(x) for x in args.hold_bars.split(",") if x.strip() != ""]
-
-    labels = LABELS[args.condition]
-    summary: list[tuple[int, float, float, str, int, str]] = []
-    for hold in holds:
-        hit, rest = Bucket(), Bucket()
-        years: dict[int, tuple[Bucket, Bucket]] = defaultdict(lambda: (Bucket(), Bucket()))
-        dropped = 0
-        for name, rows in series.items():
+        for hold in holds:
+            hit, rest, years = hits[hold], rests[hold], years_by_hold[hold]
             if args.condition == "overnight":
                 run_overnight(rows, hit, rest, years)
             elif args.condition == "weekend":
@@ -581,7 +583,7 @@ def main() -> int:
             elif args.condition == "noise_break":
                 run_noise_break(rows, hit, rest, years, args.lookback)
             elif args.condition == "orb":
-                dropped += run_orb(
+                dropped_by_hold[hold] += run_orb(
                     rows,
                     hit,
                     rest,
@@ -592,7 +594,7 @@ def main() -> int:
                     hold,
                 )
             elif args.condition == "day_fade":
-                dropped += run_day_fade(
+                dropped_by_hold[hold] += run_day_fade(
                     rows,
                     hit,
                     rest,
@@ -607,8 +609,21 @@ def main() -> int:
                 run_sweep(rows, hit, rest, years, args.horizon)
             else:
                 run_btc_lead(rows, btc, hit, rest, years)
+        del rows
+
+    labels = LABELS[args.condition]
+    summary: list[tuple[int, float, float, str, int, str]] = []
+    for hold in holds:
         title = f"удержание {hold} баров" if hold else "удержание до закрытия сессии"
-        res = report(labels, hit, rest, years, dropped, title, detail=len(holds) == 1)
+        res = report(
+            labels,
+            hits[hold],
+            rests[hold],
+            years_by_hold[hold],
+            dropped_by_hold[hold],
+            title,
+            detail=len(holds) == 1,
+        )
         if res:
             summary.append((hold, *res))
 
