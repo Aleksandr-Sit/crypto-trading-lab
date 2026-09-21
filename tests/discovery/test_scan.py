@@ -5,6 +5,7 @@ from __future__ import annotations
 from lab.contracts import CandidateDecision
 from lab.core.registry import Registry
 from lab.discovery import CandidateSpec, Discovery, default_sources, fingerprint
+from lab.discovery.config import DiscoveryConfig
 
 
 class FakeSource:
@@ -113,7 +114,10 @@ def test_fingerprint_reacts_to_facts_only():
 
 
 def test_default_sources_cover_six_kinds():
-    sources = default_sources()
+    # Конфиг по умолчанию, а не боевой: в `config/discovery.yaml` часть лент бывает
+    # намеренно выключена (copy/prediction приглушены 21.09.2026), а здесь проверяется,
+    # что код умеет собрать все шесть, — это разные утверждения.
+    sources = default_sources(config=DiscoveryConfig())
 
     ids = {s.id for s in sources}
     assert len(ids) >= 6, ids

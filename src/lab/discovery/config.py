@@ -28,6 +28,10 @@ class OkxLeadConfig(_Base):
 class HyperliquidConfig(_Base):
     limit: int = 20
     manual: list[str] = Field(default_factory=list)
+    # Лидерборд отдаётся как есть, без сортировки по прибыли: 21.09.2026 в первой двадцатке
+    # приехал лидер с −3.58 млн за месяц и ушёл карточкой в телеграм. Копировать убыточного
+    # смысла нет, поэтому порог стоит здесь, а не в голове оператора.
+    min_pnl_month_usd: Decimal = Decimal(0)
 
 
 class PolymarketConfig(_Base):
@@ -47,6 +51,15 @@ class ProviderConfig(_Base):
 
 class SmartMoneyConfig(_Base):
     providers: list[ProviderConfig] = Field(default_factory=list)
+    # Предел на прогон — как у всех остальных лент. Без него ответ провайдера едет в очередь
+    # целиком: 21.09.2026 запрос Dune завёл 4957 кандидатов за одно утро, и очередь
+    # перестала быть читаемой.
+    limit: int = 20
+    # Кошелёк без известной прибыли — это просто адрес: ни отобрать, ни отранжировать.
+    # Тот же прогон показал, чем это кончается: у всех 4957 кошельков `pnl_usd` был пуст,
+    # потому что запрос отдавал справочник адресов бирж, а не рейтинг трейдеров.
+    require_pnl: bool = True
+    min_pnl_usd: Decimal = Decimal(0)
 
 
 class GithubConfig(_Base):
@@ -110,6 +123,11 @@ class DiscoveryConfig(BaseModel):
 
     sources: SourcesConfig = SourcesConfig()
     max_cards_per_scan: int = 10
+    # Сколько кандидат лежит нерешённым, прежде чем уйдёт в отклонённые сам. Решения по
+    # кандидату система не принимает никогда, а очередь копится каждую неделю: без срока
+    # годности в ней к 21.09.2026 лежало 5075 записей, и ни по одной не было решения.
+    # 0 — срок не применяется вовсе.
+    candidate_expire_days: int = 30
     remeasure: RemeasureConfig = RemeasureConfig()
     rebalance: RebalanceConfig = RebalanceConfig()
 

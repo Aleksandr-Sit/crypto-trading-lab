@@ -189,6 +189,95 @@ def test_smart_money_reads_provider_under_quota():
     assert quota.used["cielo"] == 3
 
 
+def test_smart_money_drops_wallets_without_pnl():
+    """Кошелёк без прибыли — просто адрес: отбирать и ранжировать нечем.
+
+    21.09.2026 запрос Dune отдал 4957 таких строк (это оказался справочник адресов бирж),
+    и все они уехали в очередь.
+    """
+    transport = FakeHttpTransport().route(
+        "GET",
+        "/feed",
+        {"items": [{"wallet": "W1", "pnl_usd": 50000}, {"wallet": "W2"}]},
+    )
+    source = SmartMoneySource(
+        transport,
+        config=SmartMoneyConfig(
+            providers=[ProviderConfig(id="cielo", url="https://x/feed", key_env="CIELO_API_KEY")]
+        ),
+        env={"CIELO_API_KEY": "k"},
+    )
+
+    specs = source.fetch()
+
+    assert [s.ref for s in specs] == ["W1"]
+    assert "отсеяно по прибыли 1" in source.health().detail
+
+
+def test_smart_money_keeps_the_limit_of_one_scan():
+    rows = [{"wallet": f"W{i}", "pnl_usd": 50000} for i in range(5)]
+    transport = FakeHttpTransport().route("GET", "/feed", {"items": rows})
+    source = SmartMoneySource(
+        transport,
+        config=SmartMoneyConfig(
+            limit=2,
+            providers=[ProviderConfig(id="cielo", url="https://x/feed", key_env="CIELO_API_KEY")],
+        ),
+        env={"CIELO_API_KEY": "k"},
+    )
+
+    assert [s.ref for s in source.fetch()] == ["W0", "W1"]
+
+
+def test_smart_money_skips_disabled_provider():
+    source = SmartMoneySource(
+        FakeHttpTransport(),
+        config=SmartMoneyConfig(
+            providers=[
+                ProviderConfig(
+                    id="dune", url="https://x/q", key_env="DUNE_API_KEY", enabled=False
+                )
+            ]
+        ),
+        env={"DUNE_API_KEY": "k"},
+    )
+
+    assert source.fetch() == []
+    assert "dune: выключен" in source.health().detail
+
+
+def test_hyperliquid_drops_leaders_in_the_red():
+    class LiveFeed:
+        def leaderboard(self):
+            return [
+                {
+                    "ethAddress": "0xloss",
+                    "windowPerformances": [["month", {"pnl": "-3580000"}]],
+                },
+                {"ethAddress": "0xwin", "windowPerformances": [["month", {"pnl": "42000"}]]},
+            ]
+
+    source = HyperliquidLeaderSource(LiveFeed(), config=HyperliquidConfig(manual=["0xdead"]))
+
+    specs = source.fetch()
+
+    assert [s.ref for s in specs] == ["0xwin"]
+    assert "отсеяно 1" in source.health().detail
+
+
+def test_hyperliquid_keeps_silent_instead_of_manual_when_everyone_filtered():
+    """Ручной список — ответ на МОЛЧАНИЕ эндпоинта, а не на отсев по порогу."""
+
+    class LiveFeed:
+        def leaderboard(self):
+            return [{"ethAddress": "0xloss", "windowPerformances": [["month", {"pnl": "-1"}]]}]
+
+    source = HyperliquidLeaderSource(LiveFeed(), config=HyperliquidConfig(manual=["0xdead"]))
+
+    assert source.fetch() == []
+    assert "ни один лидер не прошёл порог" in source.health().detail
+
+
 def test_nft_launchpad_source_reads_mint_feeds():
     class Launchpad:
         id = "magiceden_launchpad"
@@ -239,6 +328,9 @@ def test_seed_file_source_rejects_foreign_format(tmp_path):
 @pytest.mark.parametrize("source_id", ["okx_lead", "hyperliquid", "polymarket", "github"])
 def test_sources_do_not_touch_network_at_construction(source_id):
     from lab.discovery import default_sources
+    from lab.discovery.config import DiscoveryConfig
 
-    built = {s.id: s for s in default_sources()}
+    # Конфиг по умолчанию: боевой часть лент намеренно выключает, а проверяется здесь
+    # конструктор — он не должен ходить в сеть независимо от того, что включено.
+    built = {s.id: s for s in default_sources(config=DiscoveryConfig())}
     assert source_id in built

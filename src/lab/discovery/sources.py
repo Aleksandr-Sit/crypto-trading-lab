@@ -11,6 +11,7 @@ import os
 import re
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -157,16 +158,26 @@ class HyperliquidLeaderSource(BaseSource):
             return self._manual(f"лидерборд недоступен ({err})")
         if not rows:
             return self._manual("лидерборд пуст")
-        out = [spec for row in rows[: self.config.limit] if (spec := self._spec(row)) is not None]
+        window = rows[: self.config.limit]
+        out = [spec for row in window if (spec := self._spec(row)) is not None]
+        dropped = len(window) - len(out)
         if not out:
+            # Лидеры пришли, но ни один не прошёл порог — это честный ноль, а не молчание
+            # источника: подставлять сюда ручной список значило бы выдать заглушку за находку.
+            if dropped:
+                return self._ok([], f"отсеяно {dropped}: ни один лидер не прошёл порог")
             return self._manual("в ответе нет адресов")
-        return self._ok(out)
+        detail = f"{len(out)} кандидатов, отсеяно {dropped}" if dropped else ""
+        return self._ok(out, detail)
 
     def _spec(self, row: Mapping[str, Any]) -> CandidateSpec | None:
         address = str(row.get("ethAddress") or row.get("user") or row.get("address") or "")
         if not address:
             return None
         pnl = _window_value(row.get("windowPerformances"), "month", "pnl")
+        value = _number(pnl)
+        if value is not None and value < self.config.min_pnl_month_usd:
+            return None
         return CandidateSpec(
             kind="trader",
             ref=address,
@@ -282,17 +293,34 @@ class SmartMoneySource(BaseSource):
     def fetch(self) -> list[CandidateSpec]:
         out: list[CandidateSpec] = []
         skipped: list[str] = []
+        dropped = 0
         for provider in self.config.providers:
+            if not provider.enabled:
+                skipped.append(f"{provider.id}: выключен")
+                continue
             key = self.env.get(provider.key_env, "") if provider.key_env else ""
             if provider.key_env and not key:
                 skipped.append(f"{provider.id}: нет {provider.key_env}")
                 continue
             self.quota.use(provider.id, provider.weight)
             raw = self._http().get(provider.url, headers=_key_headers(provider.id, key))
+            taken = 0
             for row in _rows(raw):
+                if taken >= self.config.limit:
+                    break
                 address = str(row.get(provider.wallet_field) or "")
                 if not address:
                     continue
+                pnl = _number(row.get("pnl_usd") or row.get("pnl"))
+                # Отбор идёт по прибыли, поэтому кошелёк без неё берётся только явным
+                # разрешением: иначе в очередь уезжает содержимое ответа целиком.
+                if pnl is None and self.config.require_pnl:
+                    dropped += 1
+                    continue
+                if pnl is not None and pnl < self.config.min_pnl_usd:
+                    dropped += 1
+                    continue
+                taken += 1
                 out.append(
                     CandidateSpec(
                         kind="wallet",
@@ -304,12 +332,13 @@ class SmartMoneySource(BaseSource):
                         source_url=provider.url,
                         note=str(row.get("label") or row.get("name") or ""),
                         facts={
-                            "pnl_usd": bucket(row.get("pnl_usd") or row.get("pnl"), 10_000),
+                            "pnl_usd": bucket(pnl, 10_000),
                             "provider": provider.id,
                         },
                     )
                 )
-        specs = self._ok(out)
+        detail = f"{len(out)} кандидатов, отсеяно по прибыли {dropped}" if dropped else ""
+        specs = self._ok(out, detail)
         if skipped:
             self._error = "; ".join(skipped)
         return specs
@@ -527,6 +556,16 @@ def _key_headers(provider_id: str, key: str) -> dict[str, str]:
     if provider_id == "dune":
         return {"X-Dune-API-Key": key}
     return {"X-API-KEY": key}
+
+
+def _number(value: Any) -> Decimal | None:
+    """Число из ответа площадки: строки и `None` встречаются вперемешку. Нечисло → `None`."""
+    if value in (None, ""):
+        return None
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return None
 
 
 def _rows(raw: Any) -> list[dict[str, Any]]:

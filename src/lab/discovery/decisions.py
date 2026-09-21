@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+from sqlalchemy import select
+
 from lab.contracts import CandidateDecision, MeasureMode, StrategyManifest
 from lab.core.measure import measure_plan
 from lab.core.registry import DuplicateStrategy, Registry
@@ -39,6 +41,40 @@ CHAIN_ALIASES = {
 
 class CandidateNotFound(Exception):
     pass
+
+
+EXPIRE_REASON = "срок годности: лежал без решения"
+
+
+def expire_candidates(session, *, days: int, now: datetime | None = None) -> list[int]:
+    """Кандидаты, пролежавшие без решения дольше `days` суток, → `rejected`.
+
+    Сама система по кандидату решения не принимает никогда — ни через неделю, ни через
+    месяц, — а поиск идёт каждый понедельник, поэтому очередь может только расти: к
+    21.09.2026 в ней лежало 5075 записей и ни одного решения. Отклонение здесь не приговор:
+    источник вернёт кандидата сам, если существенно изменится отпечаток (`scan`, R15.2).
+    """
+    if days <= 0:
+        return []
+    at = now or utcnow()
+    edge = at - timedelta(days=days)
+    rows = list(
+        session.scalars(
+            select(CandidateRow).where(
+                CandidateRow.decision == CandidateDecision.PENDING.value,
+                CandidateRow.discovered_at < edge,
+            )
+        )
+    )
+    for row in rows:
+        row.decision = CandidateDecision.REJECTED.value
+        row.decided_at = at
+        row.payload = {
+            **dict(row.payload or {}),
+            "reject_reason": f"{EXPIRE_REASON} {days} сут.",
+        }
+    session.flush()
+    return [row.id for row in rows]
 
 
 @dataclass(frozen=True)
@@ -225,9 +261,11 @@ def candidate_hook(
 
 
 __all__ = [
+    "EXPIRE_REASON",
     "CandidateNotFound",
     "DecisionResult",
     "candidate_hook",
     "decide",
+    "expire_candidates",
     "manifest_for",
 ]

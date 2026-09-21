@@ -5,6 +5,9 @@ lab strategy add --file examples/strategy.yaml
 lab strategy list [--branch B] [--status S]
 lab strategy retire <id> --reason "..."
 lab candidate add <kind> <ref>
+lab candidate list [--decision D] [--kind K] [--source S] [--limit N]
+lab candidate accept <id> [--no-measure]  — «в замер»: то же, что кнопка карточки в боте
+lab candidate reject <id> | --all --source dune --reason "..."
 lab measure run <id> [--mode M] [--days N] [--root DIR]   — замерить стратегию сейчас
 lab measure show <id> [--limit N]       — что уже замерено и с каким порогом
 lab service <worker|bot|web>            — worker: планировщик; bot: Trader (тикет 05); web: таск 06
@@ -123,6 +126,112 @@ def cmd_candidate_add(args: argparse.Namespace) -> int:
     with session_scope(_session_factory()) as session:
         c = Registry(session).enqueue_candidate(args.kind, args.ref)
     print(f"Кандидат #{c.id} {c.kind}:{c.ref} — {c.decision}")
+    return 0
+
+
+def _candidate_rows(session, *, decision=None, kind=None, source=None):
+    """Строки очереди с отбором по виду и источнику.
+
+    `Registry.candidates` отдаёт модель без `payload`, а отбирать чаще всего нужно как раз
+    по источнику («все кошельки из dune»), который лежит там. Сравнение идёт и с `source`
+    (id ленты, `smart_money`), и с `venue` (`dune`): оператор помнит площадку, а не ленту.
+    """
+    from sqlalchemy import select
+
+    from lab.contracts import CandidateDecision
+    from lab.db.models import CandidateRow
+
+    stmt = select(CandidateRow).order_by(CandidateRow.id)
+    if decision:
+        stmt = stmt.where(CandidateRow.decision == CandidateDecision(decision).value)
+    if kind:
+        stmt = stmt.where(CandidateRow.kind == kind)
+    rows = list(session.scalars(stmt))
+    if source:
+        rows = [
+            r
+            for r in rows
+            if source in {str((r.payload or {}).get("source")), str((r.payload or {}).get("venue"))}
+        ]
+    return rows
+
+
+def cmd_candidate_list(args: argparse.Namespace) -> int:
+    """Очередь на экран: до сих пор её было видно только в боте и в вебе, без действий."""
+    decision = None if args.decision == "all" else args.decision
+    with session_scope(_session_factory()) as session:
+        rows = _candidate_rows(session, decision=decision, kind=args.kind, source=args.source)
+        if not rows:
+            print("Очередь пуста.")
+            return 0
+        shown = rows[: args.limit] if args.limit else rows
+        print(f"{'id':>6}  {'вид':<9} {'решение':<9} {'источник':<12} {'найден':<11} ref")
+        for r in shown:
+            payload = r.payload or {}
+            src = str(payload.get("venue") or payload.get("source") or "")
+            print(
+                f"{r.id:>6}  {r.kind:<9} {r.decision:<9} {src:<12} "
+                f"{r.discovered_at:%d.%m.%Y}  {r.ref}"
+            )
+        if len(shown) < len(rows):
+            print(f"... всего {len(rows)}, показано {len(shown)} — шире через --limit")
+    return 0
+
+
+def cmd_candidate_accept(args: argparse.Namespace) -> int:
+    """«В замер» из командной строки — тот же путь, что у кнопки в боте (`discovery.decide`)."""
+    from lab.core.ladder import Ladder, default_threshold_fn
+    from lab.core.risk import DbHaltSwitch
+    from lab.discovery.decisions import CandidateNotFound, decide
+
+    measure = None if args.no_measure else make_measure(_scope())
+    with session_scope(_session_factory()) as session:
+        ladder = Ladder(session, threshold=default_threshold_fn(), halt=DbHaltSwitch(session))
+        for cid in args.id:
+            try:
+                result = decide(session, cid, "accept", ladder=ladder, measure=measure)
+            except CandidateNotFound as err:
+                print(f"Отказ: {err}", file=sys.stderr)
+                return 2
+            print(f"#{result.candidate_id}: {result.text()}")
+    return 0
+
+
+def cmd_candidate_reject(args: argparse.Namespace) -> int:
+    """Отклонить по номерам или пакетом: `--all --source dune`.
+
+    Пакет без отбора означал бы «отклонить всю очередь» — на это нужен явный `--yes`,
+    иначе одна опечатка стирает работу нескольких недель.
+    """
+    from lab.discovery.decisions import CandidateNotFound, decide
+
+    # Проверка доводов — до базы: незачем открывать соединение, чтобы отказать по флагам.
+    if args.all and not args.kind and not args.source and not args.yes:
+        print(
+            "«--all» без --kind/--source отклонит ВСЮ очередь: подтверди флагом --yes",
+            file=sys.stderr,
+        )
+        return 2
+    with session_scope(_session_factory()) as session:
+        if args.all:
+            ids = [
+                r.id
+                for r in _candidate_rows(
+                    session, decision="pending", kind=args.kind, source=args.source
+                )
+            ]
+        else:
+            ids = [int(i) for i in args.id]
+        if not ids:
+            print("Нечего отклонять.")
+            return 0
+        for cid in ids:
+            try:
+                decide(session, cid, "reject", reason=args.reason)
+            except CandidateNotFound as err:
+                print(f"Отказ: {err}", file=sys.stderr)
+                return 2
+        print(f"Отклонено: {len(ids)}")
     return 0
 
 
@@ -761,6 +870,28 @@ def build_parser() -> argparse.ArgumentParser:
     cadd.add_argument("kind")
     cadd.add_argument("ref")
     cadd.set_defaults(func=cmd_candidate_add)
+    clist = cand.add_parser("list", help="очередь на экран с отбором")
+    clist.add_argument(
+        "--decision", default="pending", choices=["pending", "accepted", "rejected", "all"]
+    )
+    clist.add_argument("--kind", help="trader, wallet, strategy, mint, channel, creator")
+    clist.add_argument("--source", help="лента или площадка: dune, okx, polymarket, github")
+    clist.add_argument("--limit", type=int, default=50)
+    clist.set_defaults(func=cmd_candidate_list)
+    cacc = cand.add_parser("accept", help="в замер: то же, что кнопка в боте")
+    cacc.add_argument("id", nargs="+")
+    cacc.add_argument(
+        "--no-measure", action="store_true", help="только завести стратегию, без замера"
+    )
+    cacc.set_defaults(func=cmd_candidate_accept)
+    crej = cand.add_parser("reject", help="отклонить по номерам или пакетом")
+    crej.add_argument("id", nargs="*")
+    crej.add_argument("--all", action="store_true", help="все pending под --kind/--source")
+    crej.add_argument("--kind")
+    crej.add_argument("--source")
+    crej.add_argument("--reason", default="")
+    crej.add_argument("--yes", action="store_true", help="подтвердить отклонение всей очереди")
+    crej.set_defaults(func=cmd_candidate_reject)
 
     data = sub.add_parser("data", help="данные: бэкфилл свечей").add_subparsers(
         dest="action", required=True

@@ -19,6 +19,7 @@ from lab.contracts import Status
 from lab.db.base import utcnow
 from lab.db.models import StrategyRow
 from lab.discovery.config import DiscoveryConfig, load_discovery
+from lab.discovery.decisions import expire_candidates
 
 log = logging.getLogger(__name__)
 
@@ -116,10 +117,16 @@ def expiry(
     config: DiscoveryConfig | None = None,
     now: datetime | None = None,
 ) -> list[str]:
-    """Просроченные стратегии → `degraded` (R14.1)."""
+    """Просроченные стратегии → `degraded` (R14.1), нерешённые кандидаты → `rejected`.
+
+    Кандидаты живут в том же задании намеренно: это одна и та же мысль о сроке годности,
+    и ходить по базе дважды ради неё незачем. Возврат прежний — только стратегии: по ним
+    двигается лестница, а число просроченных кандидатов уходит в отчёт.
+    """
     cfg = config or load_discovery()
     at = now or utcnow()
     expired: list[str] = []
+    stale: list[int] = []
     with session_scope() as session:
         ladder = ladder_factory(session)
         rows = session.scalars(
@@ -135,9 +142,16 @@ def expiry(
             # `ladder` не выставляет degraded без пробоя стопа, а R14.1 требует именно его.
             row.status = Status.DEGRADED.value
             expired.append(row.id)
+        stale = expire_candidates(session, days=cfg.candidate_expire_days, now=at)
         session.flush()
+    lines = []
     if expired:
-        _notify(bot, "Срок годности", "Просрочены и переведены в degraded:\n" + "\n".join(expired))
+        lines.append("Просрочены и переведены в degraded:\n" + "\n".join(expired))
+    if stale:
+        days = cfg.candidate_expire_days
+        lines.append(f"Кандидатов без решения {days} сут. отклонено: {len(stale)}")
+    if lines:
+        _notify(bot, "Срок годности", "\n".join(lines))
     return expired
 
 

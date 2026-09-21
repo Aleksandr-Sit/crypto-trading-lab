@@ -83,3 +83,42 @@ def test_candidate_hook_matches_bot_callback(session):
     hook(str(cid), "reject")
 
     assert Registry(session).candidates()[0].decision == CandidateDecision.REJECTED
+
+
+def test_expire_candidates_rejects_only_those_without_a_decision(session):
+    """Срок годности очереди: решений система не принимает, значит очередь только растёт."""
+    from datetime import timedelta
+
+    from lab.db.base import utcnow
+    from lab.db.models import CandidateRow
+    from lab.discovery.decisions import expire_candidates
+
+    stale = _queue(session, TRADER)
+    fresh = _queue(session, REPO)
+    now = utcnow()
+    session.get(CandidateRow, stale).discovered_at = now - timedelta(days=40)
+    session.flush()
+
+    expired = expire_candidates(session, days=30, now=now)
+
+    assert expired == [stale]
+    row = session.get(CandidateRow, stale)
+    assert row.decision == CandidateDecision.REJECTED.value
+    assert "срок годности" in row.payload["reject_reason"]
+    assert session.get(CandidateRow, fresh).decision == CandidateDecision.PENDING.value
+
+
+def test_expire_candidates_is_switched_off_by_zero(session):
+    from datetime import timedelta
+
+    from lab.db.base import utcnow
+    from lab.db.models import CandidateRow
+    from lab.discovery.decisions import expire_candidates
+
+    cid = _queue(session, TRADER)
+    now = utcnow()
+    session.get(CandidateRow, cid).discovered_at = now - timedelta(days=400)
+    session.flush()
+
+    assert expire_candidates(session, days=0, now=now) == []
+    assert session.get(CandidateRow, cid).decision == CandidateDecision.PENDING.value
