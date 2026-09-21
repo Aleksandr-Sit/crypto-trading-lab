@@ -160,10 +160,12 @@ def main() -> int:
     print(f"{'средняя подразумеваемая, % годовых':46}{fmean([iv for _, iv, _ in pairs]):>12.2f}")
     print(f"{'средняя реализованная, % годовых':46}{fmean([rv for _, _, rv in pairs]):>12.2f}")
     print(f"{'премия, пунктов волатильности':46}{mean_all:>12.2f}")
-    print(f"{'премия без перекрытия (каждый %d-й день)' % args.days:46}{mean_thin:>12.2f}")
+    label = f"премия без перекрытия (каждый {args.days}-й день)"
+    print(f"{label:46}{mean_thin:>12.2f}")
     print(f"{'шум 2σ по неперекрывающимся':46}{two_se:>12.2f}")
     print(f"{'независимых наблюдений':46}{len(thin_values):>12}")
-    print(f"{'доля дней с ОТРИЦАТЕЛЬНОЙ премией, %':46}{100 * sum(v < 0 for v in values) / len(values):>12.1f}")
+    negative = 100 * sum(v < 0 for v in values) / len(values)
+    print(f"{'доля дней с ОТРИЦАТЕЛЬНОЙ премией, %':46}{negative:>12.1f}")
     print(f"{'худший день, пунктов':46}{min(values):>12.2f}")
     print(f"{'лучший день, пунктов':46}{max(values):>12.2f}")
     print(f"вердикт → {verdict}")
@@ -187,7 +189,7 @@ def main() -> int:
     edges = sorted(iv for _, iv, _ in pairs)
     low, high = edges[len(edges) // 3], edges[2 * len(edges) // 3]
     buckets: dict[str, list[float]] = defaultdict(list)
-    for (d, iv, _), (_, p) in zip(pairs, prem, strict=False):
+    for (_, iv, _), (_, p) in zip(pairs, prem, strict=False):
         name = "низкая" if iv <= low else ("высокая" if iv >= high else "средняя")
         buckets[name].append(p)
     print()
