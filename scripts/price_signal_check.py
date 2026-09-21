@@ -60,6 +60,7 @@ from statistics import fmean, stdev
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from lab.contracts import parse_tf  # noqa: E402
 from lab.data.store import CandleStore  # noqa: E402
 
 CONDITIONS = (
@@ -105,6 +106,22 @@ class Bucket:
     def se(self) -> float:
         m = self.means()
         return stdev(m) / sqrt(len(m)) if len(m) > 1 else 0.0
+
+    def thinned(self, step: int) -> "Bucket":
+        """Каждый `step`-й момент — лекарство от перекрытия ГОРИЗОНТОВ.
+
+        Ключ Bucket лечит перекрытие ПО ИНСТРУМЕНТАМ (восемь монет в один день — одно
+        свидетельство). Но если удержание длиннее сессии, соседние сессии делят общий
+        кусок пути, независимых наблюдений меньше, а шум занижен примерно в корень
+        из числа перекрывающихся сессий. Это другая болезнь с тем же симптомом, и
+        проект уже дважды принимал её за находку.
+        """
+        if step <= 1:
+            return self
+        out = Bucket()
+        for k in sorted(self.cells)[::step]:
+            out.cells[k] = self.cells[k]
+        return out
 
 
 def bars(cs: CandleStore, venue: str, name: str, tf: str) -> list[dict]:
@@ -461,6 +478,15 @@ LABELS = {
 }
 
 
+def verdict_of(diff: float, two_se: float) -> str:
+    """Два порога подряд, оба обязательны: собственный шум и круг по издержкам."""
+    if abs(diff) < two_se:
+        return "в пределах шума"
+    if abs(diff) < TAKER_ROUND:
+        return "меньше издержек"
+    return "ПЕРЕЖИВАЕТ ОБА ПОРОГА"
+
+
 def report(
     labels: tuple[str, str],
     hit: Bucket,
@@ -469,25 +495,38 @@ def report(
     dropped: int,
     title: str,
     detail: bool,
+    overlap: int = 1,
 ) -> tuple[float, float, str, int, str] | None:
-    """Печать итога одного прогона. Возвращает строку для сводной таблицы сетки."""
+    """Печать итога одного прогона. Возвращает строку для сводной таблицы сетки.
+
+    При `overlap > 1` вердикт выносится по НЕПЕРЕКРЫВАЮЩИМСЯ наблюдениям: удержание
+    длиннее сессии делает соседние сессии зависимыми.
+    """
     print()
     if not hit.n or not rest.n:
         print(f"{title}: наблюдений нет")
         return None
     diff = hit.mean - rest.mean
     se = sqrt(hit.se**2 + rest.se**2)
-    if abs(diff) < 2 * se:
-        verdict = "в пределах шума"
-    elif abs(diff) < TAKER_ROUND:
-        verdict = "меньше издержек"
+    thin_hit, thin_rest = hit.thinned(overlap), rest.thinned(overlap)
+    if overlap > 1 and thin_hit.n > 1 and thin_rest.n > 1:
+        diff_v = thin_hit.mean - thin_rest.mean
+        two_se_v = 2 * sqrt(thin_hit.se**2 + thin_rest.se**2)
+        n_v = thin_hit.n
     else:
-        verdict = "ПЕРЕЖИВАЕТ ОБА ПОРОГА"
+        diff_v, two_se_v, n_v = diff, 2 * se, hit.n
+    verdict = verdict_of(diff_v, two_se_v)
     print(title.upper())
     print(f"{'группа':52}{'моментов':>10}{'средняя':>10}")
     print(f"{labels[0]:52}{hit.n:>10}{hit.mean:>9.3f}%")
     print(f"{labels[1]:52}{rest.n:>10}{rest.mean:>9.3f}%")
-    print(f"разница {diff:+.3f}  шум (2σ) ±{2 * se:.3f}  → {verdict}")
+    print(f"разница {diff:+.3f}  шум (2σ) ±{2 * se:.3f}")
+    if overlap > 1:
+        print(
+            f"без перекрытия (каждый {overlap}-й момент): разница {diff_v:+.3f}  "
+            f"шум (2σ) ±{two_se_v:.3f}  наблюдений {n_v}"
+        )
+    print(f"вердикт → {verdict}")
     if dropped:
         print(f"выброшено входов (конец ряда или дыра в нём): {dropped}")
 
@@ -508,7 +547,7 @@ def report(
             print(f"{year:<7}{n:>10}{am:>14.3f}%{bm:>9.3f}%{d:>10.3f}")
     if signs:
         print(f"знак совпадает в {signs} годах")
-    return diff, 2 * se, verdict, hit.n, signs
+    return diff_v, two_se_v, verdict, n_v, signs
 
 
 def main() -> int:
@@ -613,8 +652,14 @@ def main() -> int:
 
     labels = LABELS[args.condition]
     summary: list[tuple[int, float, float, str, int, str]] = []
+    # Сколько баров умещается в сессии: удержание длиннее неё делает соседние
+    # наблюдения зависимыми, и вердикт тогда считается по каждому overlap-му моменту.
+    bars_per_session = max(
+        1, int(args.session_hours * 3600 // parse_tf(args.tf).total_seconds())
+    )
     for hold in holds:
         title = f"удержание {hold} баров" if hold else "удержание до закрытия сессии"
+        overlap = max(1, -(-hold // bars_per_session)) if hold else 1
         res = report(
             labels,
             hits[hold],
@@ -623,6 +668,7 @@ def main() -> int:
             dropped_by_hold[hold],
             title,
             detail=len(holds) == 1,
+            overlap=overlap,
         )
         if res:
             summary.append((hold, *res))
@@ -631,7 +677,7 @@ def main() -> int:
         print()
         print("СЕТКА ПО ГОРИЗОНТУ УДЕРЖАНИЯ")
         header = (
-            f"{'удержание':>12}{'моментов':>10}{'разница':>10}{'шум 2σ':>10}  "
+            f"{'удержание':>12}{'независ.':>10}{'разница':>10}{'шум 2σ':>10}  "
             f"{'вердикт':24}{'знак по годам':>14}"
         )
         print(header)
