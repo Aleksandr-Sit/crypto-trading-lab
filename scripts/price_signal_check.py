@@ -70,6 +70,7 @@ CONDITIONS = (
     "month_turn",
     "noise_break",
     "orb",
+    "day_fade",
     "sweep",
 )
 TAKER_ROUND = 0.10  # круг по тейкеру, %
@@ -242,6 +243,38 @@ def _sessions(
     return sorted(out.items())
 
 
+def _bar_step(rows: list[dict]) -> float:
+    """Шаг ряда в секундах (медиана разностей) — чтобы поймать дыру в данных."""
+    if len(rows) < 3:
+        return 0.0
+    gaps = sorted((b["ts"] - a["ts"]).total_seconds() for a, b in zip(rows, rows[1:], strict=False))
+    return gaps[len(gaps) // 2]
+
+
+def _exit_price(
+    rows: list[dict], idx: dict, entry_bar: dict, day: list[dict], hold: int, step: float
+) -> float | None:
+    """Цена выхода: через `hold` баров от входа, при `hold=0` — закрытие сессии.
+
+    Горизонт считается по ГЛОБАЛЬНОМУ ряду, а не внутри суток: позиция, открытая под
+    вечер, переходит через полночь, как и в жизни. Обрезать её концом суток значило бы
+    укоротить ровно поздние сигналы, а выбрасывать — выкинуть ровно поздние; и то и
+    другое смещение по времени входа, причём тихое.
+
+    Разрыв в ряду ловится по ВРЕМЕНИ, а не по числу баров: при дыре «четыре бара
+    вперёд» означало бы удержание неделями, и замер соврал бы правдоподобно.
+    """
+    if not hold:
+        return day[-1]["c"]
+    j = idx[entry_bar["ts"]] + hold - 1
+    if j >= len(rows):
+        return None
+    span = (rows[j]["ts"] - entry_bar["ts"]).total_seconds()
+    if step and span > (hold - 1) * step * 1.5 + step:
+        return None
+    return rows[j]["c"]
+
+
 def run_noise_break(
     rows: list[dict], hit: Bucket, rest: Bucket, years: dict, lookback: int
 ) -> None:
@@ -286,13 +319,19 @@ def run_orb(
     range_bars: int,
     start: time | None,
     hours: int,
-) -> None:
+    hold: int = 0,
+) -> int:
     """Пробой диапазона открытия: диапазон первых `range_bars` баров сессии.
 
     hit — первый бар, закрывшийся за диапазоном, знак по направлению; rest — бары
     без пробоя, знак монетой. Вход у обеих — по открытию следующего бара, удержание
-    до закрытия сессии.
+    `hold` баров, а при `hold=0` — до закрытия сессии.
+
+    Возвращает число наблюдений, выброшенных из-за конца ряда или дыры в нём.
     """
+    idx = {r["ts"]: i for i, r in enumerate(rows)}
+    step = _bar_step(rows)
+    dropped = 0
     for key, day in _sessions(rows, start, hours):
         if len(day) < range_bars + 3:
             continue
@@ -301,11 +340,15 @@ def run_orb(
         lo = min(b["l"] for b in rng if b["l"])
         if not hi or not lo or lo <= 0:
             continue
-        s_close = day[-1]["c"]
         fired = False
         for i in range(range_bars, len(day) - 1):
-            bar, entry = day[i], day[i + 1]["o"]
-            ret = (s_close / entry - 1) * 100
+            bar, entry_bar = day[i], day[i + 1]
+            entry = entry_bar["o"]
+            exit_px = _exit_price(rows, idx, entry_bar, day, hold, step)
+            if exit_px is None or entry <= 0:
+                dropped += 1
+                continue
+            ret = (exit_px / entry - 1) * 100
             side = 1 if bar["c"] > hi else (-1 if bar["c"] < lo else 0)
             if side and not fired:
                 fired = True
@@ -315,6 +358,59 @@ def run_orb(
                 sgn = _placebo_sign(bar["ts"])
                 rest.add(key, sgn * ret)
                 years[key.year][1].add(key, sgn * ret)
+    return dropped
+
+
+def run_day_fade(
+    rows: list[dict],
+    hit: Bucket,
+    rest: Bucket,
+    years: dict,
+    lead_bars: int,
+    start: time | None,
+    hours: int,
+    hold: int,
+    min_move: float,
+) -> int:
+    """Гашение раннего направления суток — прямая формулировка живого кандидата.
+
+    Разбор `docs/research/bots-2026-09-20.md` показал, что у ORB работает не механика
+    диапазона (сетка длины даёт пик на вырожденных 1–2 барах и гашение дальше), а более
+    простое утверждение: цена отошла от открытия суток — жди возврата. Здесь оно
+    закодировано прямо, без посредника-пробоя.
+
+    hit — вход ПРОТИВ хода первых `lead_bars` баров суток (от открытия суток к закрытию
+    последнего раннего бара), по открытию следующего бара; rest — остальные входы тех же
+    суток со знаком монетой. Удержание у обеих групп `hold` баров, при `hold=0` — до
+    закрытия суток. `min_move` — порог на величину раннего хода в процентах.
+    """
+    idx = {r["ts"]: i for i, r in enumerate(rows)}
+    step = _bar_step(rows)
+    dropped = 0
+    for key, day in _sessions(rows, start, hours):
+        if len(day) < lead_bars + 3:
+            continue
+        d_open = day[0]["o"]
+        lead = (day[lead_bars - 1]["c"] / d_open - 1) * 100 if d_open > 0 else 0.0
+        for i in range(lead_bars - 1, len(day) - 1):
+            entry_bar = day[i + 1]
+            entry = entry_bar["o"]
+            exit_px = _exit_price(rows, idx, entry_bar, day, hold, step)
+            if exit_px is None or entry <= 0:
+                dropped += 1
+                continue
+            ret = (exit_px / entry - 1) * 100
+            if i == lead_bars - 1:
+                if lead == 0 or abs(lead) < min_move:
+                    continue
+                sgn = -1 if lead > 0 else 1  # против раннего хода
+                hit.add(key, sgn * ret)
+                years[key.year][0].add(key, sgn * ret)
+            else:
+                sgn = _placebo_sign(entry_bar["ts"])
+                rest.add(key, sgn * ret)
+                years[key.year][1].add(key, sgn * ret)
+    return dropped
 
 
 def run_sweep(rows: list[dict], hit: Bucket, rest: Bucket, years: dict, horizon: int) -> None:
@@ -352,6 +448,69 @@ def run_sweep(rows: list[dict], hit: Bucket, rest: Bucket, years: dict, horizon:
             years[d.year][1].add(d, sgn * ret)
 
 
+LABELS = {
+    "overnight": ("ночь (close→open)", "день (open→close)"),
+    "weekend": ("понедельник после разрыва ВВЕРХ", "понедельник после разрыва ВНИЗ"),
+    "reversal": ("бар после сильного, ПРОТИВ него", "обычный бар"),
+    "month_turn": ("рубеж месяца", "остальные дни"),
+    "btc_lead": ("час альта после сильного часа BTC, в ту же сторону", "обычный час"),
+    "noise_break": ("выход за коридор шума, по направлению выхода", "бар внутри коридора, монетой"),
+    "orb": ("пробой диапазона открытия, по направлению", "бар без пробоя, монетой"),
+    "day_fade": ("вход ПРОТИВ раннего хода суток", "остальные входы суток, монетой"),
+    "sweep": ("снятие вчерашнего экстремума и возврат, против выноса", "обычный бар, монетой"),
+}
+
+
+def report(
+    labels: tuple[str, str],
+    hit: Bucket,
+    rest: Bucket,
+    years: dict,
+    dropped: int,
+    title: str,
+    detail: bool,
+) -> tuple[float, float, str, int, str] | None:
+    """Печать итога одного прогона. Возвращает строку для сводной таблицы сетки."""
+    print()
+    if not hit.n or not rest.n:
+        print(f"{title}: наблюдений нет")
+        return None
+    diff = hit.mean - rest.mean
+    se = sqrt(hit.se**2 + rest.se**2)
+    if abs(diff) < 2 * se:
+        verdict = "в пределах шума"
+    elif abs(diff) < TAKER_ROUND:
+        verdict = "меньше издержек"
+    else:
+        verdict = "ПЕРЕЖИВАЕТ ОБА ПОРОГА"
+    print(title.upper())
+    print(f"{'группа':52}{'моментов':>10}{'средняя':>10}")
+    print(f"{labels[0]:52}{hit.n:>10}{hit.mean:>9.3f}%")
+    print(f"{labels[1]:52}{rest.n:>10}{rest.mean:>9.3f}%")
+    print(f"разница {diff:+.3f}  шум (2σ) ±{2 * se:.3f}  → {verdict}")
+    if dropped:
+        print(f"выброшено входов (конец ряда или дыра в нём): {dropped}")
+
+    rows_year = []
+    for year in sorted(years):
+        a, b = years[year]
+        if not a.n or not b.n:
+            continue
+        rows_year.append((year, a.n, a.mean, b.mean, a.mean - b.mean))
+    signs = ""
+    if len(rows_year) > 1:
+        pos = sum(1 for r in rows_year if r[4] > 0)
+        signs = f"{max(pos, len(rows_year) - pos)} из {len(rows_year)}"
+    if detail and rows_year:
+        print()
+        print(f"{'год':7}{'моментов':>10}{'первая группа':>15}{'вторая':>10}{'разница':>10}")
+        for year, n, am, bm, d in rows_year:
+            print(f"{year:<7}{n:>10}{am:>14.3f}%{bm:>9.3f}%{d:>10.3f}")
+    if signs:
+        print(f"знак совпадает в {signs} годах")
+    return diff, 2 * se, verdict, hit.n, signs
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--condition", required=True, choices=CONDITIONS)
@@ -362,14 +521,23 @@ def main() -> int:
     ap.add_argument("--root", default="data")
     ap.add_argument("--lookback", type=int, default=14, help="дней в коридоре шума (noise_break)")
     ap.add_argument("--range-bars", type=int, default=1, help="баров в диапазоне открытия (orb)")
-    ap.add_argument("--session-start", default=None, help="начало сессии ЧЧ:ММ UTC (orb)")
-    ap.add_argument("--session-hours", type=int, default=24, help="длина сессии в часах (orb)")
+    ap.add_argument(
+        "--session-start", default=None, help="начало сессии ЧЧ:ММ UTC (orb, day_fade)"
+    )
+    ap.add_argument("--session-hours", type=int, default=24, help="длина сессии в часах")
     ap.add_argument("--horizon", type=int, default=4, help="баров удержания (sweep)")
+    ap.add_argument(
+        "--hold-bars",
+        default="0",
+        help="баров удержания от входа (orb, day_fade), через запятую; 0 — до закрытия сессии",
+    )
+    ap.add_argument("--lead-bars", type=int, default=1, help="ранних баров суток (day_fade)")
+    ap.add_argument(
+        "--min-move", type=float, default=0.0, help="порог раннего хода в процентах (day_fade)"
+    )
     args = ap.parse_args()
 
     cs = CandleStore(args.root)
-    hit, rest = Bucket(), Bucket()
-    years: dict[int, tuple[Bucket, Bucket]] = defaultdict(lambda: (Bucket(), Bucket()))
     session_start: time | None = None
     if args.session_start:
         hh, _, mm = args.session_start.partition(":")
@@ -380,66 +548,81 @@ def main() -> int:
         for r in bars(cs, "binance", "BTC/USDT", args.tf):
             btc[r["ts"]] = (r["c"] / r["o"] - 1) * 100
 
+    # Ряды читаются ОДИН раз на все значения горизонта: сетка из восьми удержаний
+    # иначе означала бы восемь чтений по два миллиона баров, то есть час на ровном месте.
+    series: dict[str, list[dict]] = {}
     for name in [s.strip() for s in args.instruments.split(",") if s.strip()]:
         rows = [r for r in bars(cs, args.venue, name, args.tf) if r["ts"].year >= args.from_year]
         if len(rows) < 200:
             print(f"{name}: ряда мало ({len(rows)})")
             continue
-        if args.condition == "overnight":
-            run_overnight(rows, hit, rest, years)
-        elif args.condition == "weekend":
-            run_weekend(rows, hit, rest, years)
-        elif args.condition == "reversal":
-            run_reversal(rows, hit, rest, years)
-        elif args.condition == "month_turn":
-            run_month_turn(rows, hit, rest, years)
-        elif args.condition == "noise_break":
-            run_noise_break(rows, hit, rest, years, args.lookback)
-        elif args.condition == "orb":
-            run_orb(rows, hit, rest, years, args.range_bars, session_start, args.session_hours)
-        elif args.condition == "sweep":
-            run_sweep(rows, hit, rest, years, args.horizon)
-        else:
-            run_btc_lead(rows, btc, hit, rest, years)
+        series[name] = rows
         print(f"{name}: {len(rows)} баров")
 
-    labels = {
-        "overnight": ("ночь (close→open)", "день (open→close)"),
-        "weekend": ("понедельник после разрыва ВВЕРХ", "понедельник после разрыва ВНИЗ"),
-        "reversal": ("бар после сильного, ПРОТИВ него", "обычный бар"),
-        "month_turn": ("рубеж месяца", "остальные дни"),
-        "btc_lead": ("час альта после сильного часа BTC, в ту же сторону", "обычный час"),
-        "noise_break": ("выход за коридор шума, по направлению выхода", "бар внутри коридора, монетой"),
-        "orb": ("пробой диапазона открытия, по направлению", "бар без пробоя, монетой"),
-        "sweep": ("снятие вчерашнего экстремума и возврат, против выноса", "обычный бар, монетой"),
-    }[args.condition]
-    if not hit.n or not rest.n:
-        print("\nнаблюдений нет")
-        return 0
-    diff = hit.mean - rest.mean
-    se = sqrt(hit.se**2 + rest.se**2)
-    if abs(diff) < 2 * se:
-        verdict = "в пределах шума"
-    elif abs(diff) < TAKER_ROUND:
-        verdict = "меньше издержек"
-    else:
-        verdict = "ПЕРЕЖИВАЕТ ОБА ПОРОГА"
-    print(f"\n{'группа':52}{'моментов':>10}{'средняя':>10}")
-    print(f"{labels[0]:52}{hit.n:>10}{hit.mean:>9.3f}%")
-    print(f"{labels[1]:52}{rest.n:>10}{rest.mean:>9.3f}%")
-    print(f"\nразница {diff:+.3f}  шум (2σ) ±{2 * se:.3f}  → {verdict}")
+    holds = [0]
+    if args.condition in ("orb", "day_fade"):
+        holds = [int(x) for x in args.hold_bars.split(",") if x.strip() != ""]
 
-    print(f"\n{'год':7}{'моментов':>10}{'первая группа':>15}{'вторая':>10}{'разница':>10}")
-    signs = []
-    for year in sorted(years):
-        a, b = years[year]
-        if not a.n or not b.n:
-            continue
-        signs.append(a.mean - b.mean)
-        print(f"{year:<7}{a.n:>10}{a.mean:>14.3f}%{b.mean:>9.3f}%{a.mean - b.mean:>10.3f}")
-    if len(signs) > 1:
-        pos = sum(1 for s in signs if s > 0)
-        print(f"знак совпадает в {max(pos, len(signs) - pos)} годах из {len(signs)}")
+    labels = LABELS[args.condition]
+    summary: list[tuple[int, float, float, str, int, str]] = []
+    for hold in holds:
+        hit, rest = Bucket(), Bucket()
+        years: dict[int, tuple[Bucket, Bucket]] = defaultdict(lambda: (Bucket(), Bucket()))
+        dropped = 0
+        for name, rows in series.items():
+            if args.condition == "overnight":
+                run_overnight(rows, hit, rest, years)
+            elif args.condition == "weekend":
+                run_weekend(rows, hit, rest, years)
+            elif args.condition == "reversal":
+                run_reversal(rows, hit, rest, years)
+            elif args.condition == "month_turn":
+                run_month_turn(rows, hit, rest, years)
+            elif args.condition == "noise_break":
+                run_noise_break(rows, hit, rest, years, args.lookback)
+            elif args.condition == "orb":
+                dropped += run_orb(
+                    rows,
+                    hit,
+                    rest,
+                    years,
+                    args.range_bars,
+                    session_start,
+                    args.session_hours,
+                    hold,
+                )
+            elif args.condition == "day_fade":
+                dropped += run_day_fade(
+                    rows,
+                    hit,
+                    rest,
+                    years,
+                    args.lead_bars,
+                    session_start,
+                    args.session_hours,
+                    hold,
+                    args.min_move,
+                )
+            elif args.condition == "sweep":
+                run_sweep(rows, hit, rest, years, args.horizon)
+            else:
+                run_btc_lead(rows, btc, hit, rest, years)
+        title = f"удержание {hold} баров" if hold else "удержание до закрытия сессии"
+        res = report(labels, hit, rest, years, dropped, title, detail=len(holds) == 1)
+        if res:
+            summary.append((hold, *res))
+
+    if len(summary) > 1:
+        print()
+        print("СЕТКА ПО ГОРИЗОНТУ УДЕРЖАНИЯ")
+        header = (
+            f"{'удержание':>12}{'моментов':>10}{'разница':>10}{'шум 2σ':>10}  "
+            f"{'вердикт':24}{'знак по годам':>14}"
+        )
+        print(header)
+        for hold, diff, two_se, verdict, n, signs in summary:
+            label = f"{hold} баров" if hold else "до закрытия"
+            print(f"{label:>12}{n:>10}{diff:>+10.3f}{two_se:>10.3f}  {verdict:24}{signs:>14}")
     return 0
 
 
