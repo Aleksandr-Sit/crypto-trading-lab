@@ -24,6 +24,13 @@
 3. **Хвост важнее средней.** Продавец волатильности зарабатывает часто и помалу, а теряет
    редко и помногу. Поэтому печатается не только средняя, но и худшее наблюдение и доля
    дней, где премия отрицательна.
+4. **Чем считать реализованную.** Оценка по дневным ЗАКРЫТИЯМ не видит внутридневного хода
+   и систематически занижает волатильность: день, прошедший вниз на 5% и вернувшийся,
+   даёт нулевую доходность и нулевой вклад. Премия, целиком состоящая из этого занижения,
+   была бы артефактом метода, а не платой за страховку. Поэтому `--estimator parkinson`
+   считает по максимуму и минимуму (Паркинсон, 1980) — при прочих равных такая оценка
+   примерно на пятую часть эффективнее и заведомо не ниже. Если премия переживает смену
+   оценки, дело не в методе.
 
     python scripts/vol_premium.py --series /app/data/external/dvol.csv \\
         --venue binance --instrument BTC/USDT --days 30 --root /app/data
@@ -35,7 +42,7 @@ import argparse
 import csv
 import sys
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date
 from math import log, sqrt
 from pathlib import Path
 from statistics import fmean, stdev
@@ -59,17 +66,32 @@ def read_series(path: str) -> dict[date, float]:
     return out
 
 
-def realized(closes: list[tuple[date, float]], days: int) -> dict[date, float]:
+def realized(bars: list[dict], days: int, estimator: str) -> dict[date, float]:
     """Реализованная волатильность ВПЕРЁД на `days` суток, в годовых процентах.
 
-    Считается по дневным логарифмическим доходностям, как и подразумеваемая у Deribit,
-    иначе величины несопоставимы: DVOL — это годовая волатильность 30-дневного окна.
+    `close` — по дневным логарифмическим доходностям, как считают подразумеваемую.
+    `parkinson` — по дневному размаху: сумма ln(H/L)² с делителем 4·ln2. Эта оценка
+    видит внутридневной ход, которого close-to-close не видит вовсе.
     """
-    rets: list[tuple[date, float]] = []
-    for (_, prev), (d, cur) in zip(closes, closes[1:], strict=False):
-        if prev > 0 and cur > 0:
-            rets.append((d, log(cur / prev)))
     out: dict[date, float] = {}
+    if estimator == "parkinson":
+        terms = [
+            (b["d"], log(b["h"] / b["l"]) ** 2)
+            for b in bars
+            if b["h"] and b["l"] and b["l"] > 0 and b["h"] >= b["l"]
+        ]
+        k = 4 * log(2)
+        for i in range(len(terms) - days):
+            window = [t for _, t in terms[i : i + days]]
+            if len(window) < days:
+                continue
+            out[terms[i][0]] = sqrt(sum(window) / (k * days) * TRADING_YEAR) * 100
+        return out
+
+    rets: list[tuple[date, float]] = []
+    for prev, cur in zip(bars, bars[1:], strict=False):
+        if prev["c"] > 0 and cur["c"] > 0:
+            rets.append((cur["d"], log(cur["c"] / prev["c"])))
     for i in range(len(rets) - days):
         window = [r for _, r in rets[i : i + days]]
         if len(window) < days or len(set(window)) < 2:
@@ -85,6 +107,12 @@ def main() -> int:
     ap.add_argument("--instrument", default="BTC/USDT")
     ap.add_argument("--tf", default="1d")
     ap.add_argument("--days", type=int, default=30, help="горизонт реализованной, суток")
+    ap.add_argument(
+        "--estimator",
+        default="close",
+        choices=("close", "parkinson"),
+        help="чем считать реализованную: по закрытиям или по размаху",
+    )
     ap.add_argument("--root", default="data")
     args = ap.parse_args()
 
@@ -95,14 +123,22 @@ def main() -> int:
 
     cs = CandleStore(args.root)
     rows = cs.query(
-        "select ts, close::DOUBLE as c from {candles} order by ts",
+        "select ts, high::DOUBLE as h, low::DOUBLE as l, close::DOUBLE as c "
+        "from {candles} order by ts",
         args.venue,
         args.instrument,
         args.tf,
     )
-    closes = [(r["ts"].date(), r["c"]) for r in rows if r["c"] and r["c"] > 0]
-    real = realized(closes, args.days)
-    print(f"подразумеваемая: {len(implied)} дней, реализованная: {len(real)} дней")
+    bars = [
+        {"d": r["ts"].date(), "h": r["h"], "l": r["l"], "c": r["c"]}
+        for r in rows
+        if r["c"] and r["c"] > 0
+    ]
+    real = realized(bars, args.days, args.estimator)
+    print(
+        f"подразумеваемая: {len(implied)} дней, реализованная ({args.estimator}): "
+        f"{len(real)} дней"
+    )
 
     pairs = sorted((d, implied[d], real[d]) for d in implied.keys() & real.keys())
     if len(pairs) < args.days * 3:
