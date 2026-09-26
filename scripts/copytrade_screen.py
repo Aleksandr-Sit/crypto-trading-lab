@@ -39,7 +39,7 @@ import time
 from datetime import UTC, date, datetime
 from math import sqrt
 from pathlib import Path
-from statistics import fmean, stdev
+from statistics import fmean, median, stdev
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -50,12 +50,29 @@ INFO = "https://api.hyperliquid.xyz/info"
 DIR = "copytrade"
 WEEKS_MIN = 26  # полгода истории: меньше — не отличить навык от полосы везения
 SANE_JUMP = 300.0  # прирост прибыли за период, выше которого это перевод, а не торговля
+MAX_FAILED_SHARE = 0.2  # больше отказов при полном обновлении — биржа молчит, старое не трогаем
+BLOWUP_PCT = -50.0  # потеря от капитала на день снимка, после которой счёт считаем разорившимся
 
 
 def _dir(root: Path) -> Path:
     d = root / DIR
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def _post(client, body: dict, tries: int = 4) -> object | None:
+    """Запрос к info с отступом: порог частоты Hyperliquid общий на IP сервера.
+
+    `client` — httpx.Client; httpx грузится лениво, как и во всех стадиях с сетью.
+    """
+    for attempt in range(tries):
+        try:
+            r = client.post(INFO, json=body)
+            r.raise_for_status()
+            return r.json()
+        except Exception:  # noqa: BLE001 — один адрес не роняет прогон
+            time.sleep(2**attempt)
+    return None
 
 
 def stage_leaderboard(
@@ -107,28 +124,45 @@ def stage_leaderboard(
     return 0
 
 
-def stage_portfolios(root: Path, limit: int, pause: float) -> int:
-    """Кривые капитала и прибыли кандидатов. Уже скачанные не трогаем."""
+def stage_portfolios(root: Path, limit: int, pause: float, refresh: bool = False) -> int:
+    """Кривые капитала и прибыли кандидатов.
+
+    Без `refresh` уже скачанные не трогаем — так докачивается прерванный прогон. С `refresh`
+    качается ВСЁ заново. Ежемесячный снимок без этого ранжировал бы по кривым месячной
+    давности, и каждый «новый» рейтинг повторял бы первый (найдено 26.09.2026 — до того,
+    как снимок хоть раз ушёл в крон). Новый файл заменяет старый, только если отказов
+    немного: иначе молчание биржи превратилось бы в пустой рейтинг.
+    """
     import httpx
 
     cands = json.loads((_dir(root) / "candidates.json").read_text())[:limit]
     path = _dir(root) / "portfolios.jsonl"
     done = set()
-    if path.exists():
+    if path.exists() and not refresh:
         done = {json.loads(ln)["address"] for ln in path.read_text().splitlines() if ln.strip()}
     todo = [c for c in cands if c["address"] not in done]
+    target = path.with_suffix(".jsonl.new") if refresh else path
     print(f"кандидатов {len(cands)}, уже есть {len(done)}, качаем {len(todo)}")
-    with path.open("a", encoding="utf-8") as fh, httpx.Client(timeout=60) as client:
+    failed = 0
+    with (
+        target.open("w" if refresh else "a", encoding="utf-8") as fh,
+        httpx.Client(timeout=60) as client,
+    ):
         for i, c in enumerate(todo, 1):
-            try:
-                r = client.post(INFO, json={"type": "portfolio", "user": c["address"]})
-                r.raise_for_status()
-                fh.write(json.dumps({"address": c["address"], "portfolio": r.json()}) + "\n")
-            except Exception as err:  # noqa: BLE001 — один адрес не роняет прогон
-                print(f"  {c['address']}: {type(err).__name__}")
-            if i % 100 == 0:
-                print(f"  {i}/{len(todo)}")
+            data = _post(client, {"type": "portfolio", "user": c["address"]})
+            if data is None:
+                failed += 1
+            else:
+                fh.write(json.dumps({"address": c["address"], "portfolio": data}) + "\n")
+            if i % 250 == 0:
+                print(f"  {i}/{len(todo)}, отказов {failed}")
             time.sleep(pause)
+    print(f"скачано {len(todo) - failed}, отказов {failed}")
+    if refresh:
+        if failed > len(todo) * MAX_FAILED_SHARE:
+            print(f"отказов больше {MAX_FAILED_SHARE:.0%}: старый файл оставлен, новый — {target}")
+            return 1
+        target.replace(path)
     return 0
 
 
@@ -281,7 +315,31 @@ def stage_rank(root: Path, top: int, floor: float) -> int:
     return 0
 
 
-def stage_snapshot(root: Path, floor: float, top: int) -> int:
+def leverage_now(state: dict) -> tuple[float, float | None]:
+    """Плечо в момент снимка: фактическое и выставленное.
+
+    Фактическое — сумма позиций к капиталу; у счёта без позиций это ноль, а не пропуск.
+    Выставленное — настройка плеча на открытых позициях, взвешенная по их размеру; она
+    липкая (её меняют редко) и поэтому говорит о привычке больше, чем мгновенная загрузка.
+    У счёта без позиций выставленного плеча не видно — `None`.
+    """
+    ms = state.get("marginSummary") or {}
+    value = float(ms.get("accountValue") or 0)
+    gross = float(ms.get("totalNtlPos") or 0)
+    actual = gross / value if value > 0 else 0.0
+    weight = 0.0
+    total = 0.0
+    for item in state.get("assetPositions") or []:
+        pos = item.get("position") or {}
+        size = abs(float(pos.get("positionValue") or 0))
+        lev = float((pos.get("leverage") or {}).get("value") or 0)
+        if size > 0 and lev > 0:
+            weight += size
+            total += size * lev
+    return actual, (total / weight if weight else None)
+
+
+def stage_snapshot(root: Path, floor: float, top: int, pause: float = 0.1) -> int:
     """Заморозить сегодняшний рейтинг, чтобы померить его ВПЕРЁД.
 
     Разделение истории пополам — лучшее, что можно сделать задним числом, но у него есть
@@ -289,8 +347,12 @@ def stage_snapshot(root: Path, floor: float, top: int) -> int:
     Чистая проверка одна — взять список сегодня и смотреть, что он даст потом. Будущего
     не видел никакой отбор, и подсмотреть его невозможно.
 
-    Файл со снимком — это всё, что нужно; сами кривые досниматся позже.
+    К каждому счёту пишется плечо на день снимка (`clearinghouseState`, запрос лёгкий) —
+    чтобы замер вперёд отвечал и на вопрос «стоят ли чего-то трейдеры с плечом до ×3».
+    Плечо в прошлом по кривым не восстановить; здесь оно берётся ДО исхода, как и рейтинг.
     """
+    import httpx
+
     stage_rank(root, 0, floor)
     ranked = json.loads((_dir(root) / "ranked.json").read_text())
     if not ranked:
@@ -305,14 +367,77 @@ def stage_snapshot(root: Path, floor: float, top: int) -> int:
         {k: s[k] for k in ("address", "capital", "sharpe", "alpha", "beta", "ret", "dd")}
         for s in ranked[: top or len(ranked)]
     ]
+    missing = 0
+    with httpx.Client(timeout=60) as client:
+        for t in keep:
+            state = _post(client, {"type": "clearinghouseState", "user": t["address"]})
+            if isinstance(state, dict):
+                t["lev_now"], t["lev_set"] = leverage_now(state)
+            else:
+                missing += 1
+            time.sleep(pause)
     path.write_text(json.dumps({"date": today, "floor": floor, "traders": keep}, indent=1))
-    print(f"снимок {today}: {len(keep)} счетов → {path}")
+    print(f"снимок {today}: {len(keep)} счетов → {path} (плечо не получено у {missing})")
     print("померить вперёд: --stage forward (имеет смысл не раньше чем через два-три месяца)")
     return 0
 
 
+def _at(history: list, when_ms: int) -> float | None:
+    """Значение ряда на момент `when` — последняя точка не позже него."""
+    value = None
+    for ts, v in history:
+        if ts > when_ms:
+            break
+        value = float(v)
+    return value
+
+
+def forward_return(portfolio: list, made: date) -> float | None:
+    """Прибыль после дня снимка в процентах от капитала на тот день.
+
+    Считается по накопительной ПРИБЫЛИ, а не по доходностям периодов. Прежняя версия брала
+    доходности из `returns`, а та обрывает окно, когда капитал падает ниже порога, — и
+    разорившийся трейдер просто исчезал из замера, не оставив следа. Разоряются чаще всего
+    самые рискованные «звёзды» рейтинга, так что верхняя группа выглядела лучше, чем есть.
+    Здесь слив счёта даёт около −100%, выводы средств на результат не влияют.
+    """
+    data = dict(portfolio).get("allTime") or {}
+    av = data.get("accountValueHistory") or []
+    pnl = data.get("pnlHistory") or []
+    when = int(datetime(made.year, made.month, made.day, tzinfo=UTC).timestamp() * 1000)
+    capital = _at(av, when)
+    start = _at(pnl, when)
+    if not capital or capital <= 0 or start is None or pnl[-1][0] <= when:
+        return None
+    return (float(pnl[-1][1]) - start) / capital * 100
+
+
+def _group(label: str, vals: list[float]) -> dict:
+    clipped = [min(max(v, -100.0), 300.0) for v in vals]
+    blown = sum(1 for v in vals if v <= BLOWUP_PCT)
+    out = {
+        "n": len(vals),
+        "median": median(vals) if vals else None,
+        "mean_clipped": fmean(clipped) if vals else None,
+        "blowups": blown,
+    }
+    if vals:
+        print(
+            f"  {label:<34}{len(vals):>5}  медиана {out['median']:+7.2f}%  "
+            f"среднее {out['mean_clipped']:+7.2f}%  потеряли ≥50%: {blown}"
+        )
+    return out
+
+
 def stage_forward(root: Path, pause: float) -> int:
-    """Что дал замороженный рейтинг после дня снимка."""
+    """Что дал замороженный рейтинг после дня снимка.
+
+    Итог каждого прогона дописывается в `copytrade/forward.jsonl`: ответ копится месяцами,
+    и держать его только в логе крона значило бы потерять его при первой чистке логов.
+    Свежие (моложе суток) кривые берутся из `portfolios.jsonl` — ежемесячный прогон только
+    что скачал их; остальные счета (выбывшие из кандидатов, в том числе разорившиеся)
+    запрашиваются отдельно — без них замер снова смотрел бы только на выживших.
+    """
     import httpx
 
     folder = _dir(root) / "snapshots"
@@ -320,39 +445,63 @@ def stage_forward(root: Path, pause: float) -> int:
     if not snaps:
         print("снимков нет: сначала --stage snapshot")
         return 1
-    prices = btc_weekly(root)
-    for snap in snaps:
-        data = json.loads(snap.read_text())
-        made = date.fromisoformat(data["date"])
-        age = (datetime.now(UTC).date() - made).days
-        traders = data["traders"]
-        print(f"\nснимок {data['date']} ({age} дн назад), счетов {len(traders)}")
-        if age < 30:
-            print("  слишком свежий, мерить нечего")
-            continue
-        rows: list[tuple[float, float]] = []
-        with httpx.Client(timeout=60) as client:
+    cache: dict[str, object | None] = {}
+    fresh = _dir(root) / "portfolios.jsonl"
+    if fresh.exists() and time.time() - fresh.stat().st_mtime < 86_400:
+        for line in fresh.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                rec = json.loads(line)
+                cache[rec["address"]] = rec["portfolio"]
+    today = datetime.now(UTC).date()
+    log = _dir(root) / "forward.jsonl"
+    with httpx.Client(timeout=60) as client:
+        for snap in snaps:
+            data = json.loads(snap.read_text())
+            made = date.fromisoformat(data["date"])
+            age = (today - made).days
+            traders = data["traders"]
+            print(f"\nснимок {data['date']} ({age} дн назад), счетов {len(traders)}")
+            if age < 30:
+                print("  слишком свежий, мерить нечего")
+                continue
+            rows: list[tuple[dict, float]] = []
             for t in traders:
-                try:
-                    r = client.post(INFO, json={"type": "portfolio", "user": t["address"]})
-                    r.raise_for_status()
-                    mine, _, stamps = returns(r.json(), prices, data["floor"])
-                except Exception:  # noqa: BLE001 — один счёт не роняет прогон
-                    continue
-                after = [x for x, d in zip(mine, stamps, strict=True) if d > made]
-                if len(after) >= 4 and stdev(after) > 0:
-                    rows.append((t["sharpe"], fmean(after) / stdev(after)))
-                time.sleep(pause)
-        if len(rows) < 20:
-            print(f"  счетов с данными после снимка: {len(rows)} — мало")
-            continue
-        rows.sort(key=lambda p: -p[0])
-        k = max(3, len(rows) // 4)
-        top_mean = fmean(p[1] for p in rows[:k])
-        rest_mean = fmean(p[1] for p in rows[k:])
-        print(f"  верхняя четверть снимка после него: {top_mean:+.3f}")
-        print(f"  все остальные:                      {rest_mean:+.3f}")
-        print(f"  разница: {top_mean - rest_mean:+.3f} (это и есть ответ, без задних мыслей)")
+                if t["address"] not in cache:
+                    cache[t["address"]] = _post(
+                        client, {"type": "portfolio", "user": t["address"]}
+                    )
+                    time.sleep(pause)
+                port = cache[t["address"]]
+                ret = forward_return(port, made) if port else None
+                if ret is not None:
+                    rows.append((t, ret))
+            print(f"  с данными после снимка: {len(rows)}")
+            if len(rows) < 20:
+                print("  мало для вывода")
+                continue
+            rows.sort(key=lambda p: -p[0]["sharpe"])
+            k = max(3, len(rows) // 4)
+            result = {"measured": today.isoformat(), "snapshot": data["date"], "age_days": age}
+            result["top"] = _group("верхняя четверть рейтинга", [r for _, r in rows[:k]])
+            result["rest"] = _group("все остальные", [r for _, r in rows[k:]])
+            lev = [(t, r) for t, r in rows if t.get("lev_set") is not None]
+            if lev:
+                print("  по выставленному плечу на день снимка:")
+                calm = [(t, r) for t, r in lev if t["lev_set"] <= 3]
+                hot = [(t, r) for t, r in lev if t["lev_set"] > 3]
+                result["lev_le3"] = _group("плечо до ×3", [r for _, r in calm])
+                result["lev_gt3"] = _group("плечо больше ×3", [r for _, r in hot])
+                if len(calm) >= 20:
+                    kc = max(3, len(calm) // 4)
+                    result["lev_le3_top"] = _group(
+                        "до ×3: верхняя четверть рейтинга", [r for _, r in calm[:kc]]
+                    )
+                    result["lev_le3_rest"] = _group(
+                        "до ×3: остальные", [r for _, r in calm[kc:]]
+                    )
+            with log.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(result, ensure_ascii=False) + "\n")
+            print("  ответ — разница медиан верхней четверти и остальных, без задних мыслей")
     return 0
 
 
@@ -434,7 +583,9 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=600, help="сколько кандидатов качать")
     ap.add_argument("--pause", type=float, default=0.15, help="пауза между запросами, с")
     ap.add_argument("--top", type=int, default=30)
-    ap.add_argument("--refresh", action="store_true", help="перекачать лидерборд")
+    ap.add_argument(
+        "--refresh", action="store_true", help="перекачать лидерборд / все кривые заново"
+    )
     ap.add_argument("--include-losers", action="store_true", help="брать и убыточные счета")
     ap.add_argument("--floor", type=float, default=50_000, help="капитал, ниже которого не считаем")
     ap.add_argument("--min-years", type=float, default=0.0, help="минимум истории для persist")
@@ -447,11 +598,11 @@ def main() -> int:
             root, args.min_capital, args.max_turnover, args.refresh, args.include_losers
         )
     if args.stage == "portfolios":
-        return stage_portfolios(root, args.limit, args.pause)
+        return stage_portfolios(root, args.limit, args.pause, args.refresh)
     if args.stage == "persist":
         return stage_persist(root, args.floor, args.min_years)
     if args.stage == "snapshot":
-        return stage_snapshot(root, args.floor, args.top)
+        return stage_snapshot(root, args.floor, args.top, args.pause)
     if args.stage == "forward":
         return stage_forward(root, args.pause)
     return stage_rank(root, args.top, args.floor)
