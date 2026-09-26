@@ -8,7 +8,8 @@
 #
 # Ставится в крон так (общий сервер, рядом торгует живой бот соседа — держим раз в месяц
 # и ночью; 04:10 занято ежедневным forward_journal лаборатории, поэтому 05:10):
-#   10 5 1 * * /opt/crypto-trading-lab/scripts/copytrade_monthly.sh >> /root/copytrade.log 2>&1
+#   10 5 1 * * bash /opt/crypto-trading-lab/scripts/copytrade_monthly.sh >> /root/copytrade.log 2>&1 # lab_copytrade_monthly
+# (через `bash`: у файла в git нет флага запуска. Стоит в кроне Hostkey с 26.09.2026.)
 #
 # Ответ копится в томе данных: copytrade/forward.jsonl (строка на снимок и прогон).
 #
