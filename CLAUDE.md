@@ -31,6 +31,7 @@
 | Решения вперёд в журнал | задание `forward_journal` 04:10 | первый запуск только ставит отметку |
 | Замер | `lab measure run <id> [--mode backtest\|paper\|forward\|micro] [--days N]` | нужен `DATABASE_URL` |
 | Снимки замеров | `lab measure show <id> [--limit N]` | «ещё не мерил», если пусто |
+| Последний замер ВСЕХ стратегий | `bash scripts/last-measurements.sh [подстрока id]` | с рабочей машины, только чтение; каталог стилей — `docs/research/strategies/README.md` |
 | Доступность площадок | `lab ops status` | в песочнице все `недоступна` |
 | Источники и квоты | `lab ops feeds` | 22 фида, здоровье и счётчики квот |
 | Бэкап | `lab ops backup [--dest DIR] [--keep-days N]` | `lab-ГГГГ-ММ-ДД.tar.gz` (pg_dump + `config/`) |
