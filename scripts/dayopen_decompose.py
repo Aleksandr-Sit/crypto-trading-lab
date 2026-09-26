@@ -11,8 +11,8 @@
 * цена — ход от входа к выходу со знаком позиции;
 * фандинг — выплаты строго между входом и выходом (в 00:00 позиция уже закрыта:
   движок сначала исполняет выход, потом начисляет фандинг), лонг платит положительную ставку;
-* издержки — круг по двум ставкам: как в `config/costs.yaml` для Bybit (тейкер 10 б.п.
-  и спред 5 б.п. на сторону) и как в прямой проверке (0.10% за круг).
+* издержки — круг из списка `--rounds`: модель движка для Bybit (0.256%, см. ROUNDS),
+  круг по замеру ленты и стакана Bybit (`scripts/bybit_spread.py`) и порог прямой проверки.
 
 Шум — по датам: восемь монет в одни сутки — одно наблюдение (среднее по монетам за день).
 
@@ -37,8 +37,10 @@ from lab.data.store import CandleStore  # noqa: E402
 INSTRUMENTS = [
     f"{c}/USDT:USDT" for c in ("BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOGE", "LINK")
 ]
-COST_ENGINE = 0.30  # % за круг: 2 × (10 б.п. тейкер + 5 б.п. спред), config/costs.yaml
-COST_DIRECT = 0.10  # % за круг: порог прямой проверки
+# Круг движка для Bybit по config/costs.yaml: 2 × (тейкер 10 б.п. + ПОЛспреда 2.5 б.п.
+# + размер 0.3 б.п. на $312 при глубине по умолчанию $100 тыс.) ≈ 0.256%. В первой версии
+# здесь стояло 0.30 — спред был взят целиком на каждую сторону, а движок берёт половину.
+ROUNDS = "0.256,0.125,0.10"
 T0 = datetime(2020, 1, 1, tzinfo=UTC)
 T1 = datetime(2027, 1, 1, tzinfo=UTC)
 
@@ -110,6 +112,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default="data")
     ap.add_argument("--venue", default="bybit")
+    ap.add_argument("--rounds", default=ROUNDS, help="круги издержек через запятую, %")
     args = ap.parse_args()
     store, funding = CandleStore(args.root), FundingStore(args.root)
 
@@ -119,31 +122,28 @@ def main() -> int:
         first = got[0]["day"] if got else "—"
         print(f"{instrument:16} сделок {len(got):5}  с {first}")
         rows += got
-    for r in rows:
-        r["net_engine"] = r["price"] + r["funding"] - COST_ENGINE
-        r["net_direct"] = r["price"] + r["funding"] - COST_DIRECT
-
+    rounds = [float(x) for x in args.rounds.split(",")]
     print(
-        "\nВсе величины — % на сделку, среднее по датам; ± — шум 2σ по датам.\n"
-        f"«чистыми» — цена + фандинг − круг: {COST_ENGINE}% (модель движка) и "
-        f"{COST_DIRECT}% (порог прямой проверки).\n"
+        "\n% на сделку. «цена, по датам» — среднее по датам и шум 2σ по датам (так мерила\n"
+        "прямая проверка); «по сделкам» — простое среднее по сделкам: так складывает\n"
+        "результат движок, и в поздние годы, где монет восемь, у него больший вес.\n"
+        "«чистыми» — по сделкам: цена + фандинг − круг.\n"
     )
-    head = (
-        f"{'год':6} {'дат':>5} {'сделок':>6}  {'цена':>15}  {'фандинг':>8}  "
-        f"{'чистыми 0.30':>13}  {'чистыми 0.10':>13}"
+    print(
+        f"{'год':6} {'дат':>5} {'сделок':>6}  {'цена, по датам':>16}  {'по сделкам':>10}  "
+        f"{'фандинг':>8}  " + "  ".join(f"{'круг ' + str(c):>10}" for c in rounds)
     )
-    print(head)
     years = sorted({r["day"].year for r in rows})
     for label, part in [(str(y), [r for r in rows if r["day"].year == y]) for y in years] + [
         ("всё", rows)
     ]:
         p, pn, n = _by_date(part, "price")
-        f, _, _ = _by_date(part, "funding")
-        e, _, _ = _by_date(part, "net_engine")
-        dnet, _, _ = _by_date(part, "net_direct")
+        pt = fmean(r["price"] for r in part)
+        ft = fmean(r["funding"] for r in part)
+        nets = "  ".join(f"{pt + ft - c:+10.3f}" for c in rounds)
         print(
-            f"{label:6} {n:5} {len(part):6}  {p:+7.3f} ±{pn:5.3f}  {f:+8.3f}  "
-            f"{e:+13.3f}  {dnet:+13.3f}"
+            f"{label:6} {n:5} {len(part):6}  {p:+8.3f} ±{pn:5.3f}  {pt:+10.3f}  "
+            f"{ft:+8.3f}  {nets}"
         )
 
     print("\nПо инструментам (всё время):")
