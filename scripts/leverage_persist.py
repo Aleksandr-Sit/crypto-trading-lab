@@ -56,6 +56,7 @@ MAX_FILLS = 12_000  # биржа хранит 10 тысяч последних; 
 DAY_MS = 86_400_000
 CALM = 3.0  # граница владельца: «до ×2–3»
 HOT = 10.0
+MAKER = 0.5  # доля пассивных исполнений, с которой счёт считается маркет-мейкерским
 LONG_CLOSE = {"Close Long", "Long > Short"}
 SHORT_CLOSE = {"Close Short", "Short > Long"}
 
@@ -83,12 +84,25 @@ def sample(root: Path, floor: float, band: float, min_periods: int) -> dict[str,
         if not (a and b):
             continue
         sd_a, sd_b = pstdev(mine[:half]), pstdev(mine[half:])
+        beta_a, alpha_a = beta_alpha(mine[:half], market[:half])
+        beta_b, alpha_b = beta_alpha(mine[half:], market[half:])
+        rsd_a = pstdev(y - beta_a * x for x, y in zip(market[:half], mine[:half], strict=True))
+        rsd_b = pstdev(y - beta_b * x for x, y in zip(market[half:], mine[half:], strict=True))
         av = (dict(rec["portfolio"]).get("allTime") or {}).get("accountValueHistory") or []
         out[rec["address"]] = {
             "a": a,
             "b": b,
-            "alpha_a": beta_alpha(mine[:half], market[:half])[1],
-            "alpha_b": beta_alpha(mine[half:], market[half:])[1],
+            "alpha_a": alpha_a,
+            "alpha_b": alpha_b,
+            # «Сверх рынка» не делится на риск: у выживших средняя положительна почти
+            # у всех, и тогда ранг по ней — это ранг раскачки счёта. Ниже контроль.
+            "sd_a": sd_a,
+            "sd_b": sd_b,
+            "ir_a": alpha_a / rsd_a if rsd_a else 0.0,
+            "ir_b": alpha_b / rsd_b if rsd_b else 0.0,
+            # Длина периода кривой своя у каждого счёта и одна в обеих половинах:
+            # мера «за период» растёт с ней и переносилась бы без всякого умения.
+            "step": step,
             "sr_a": fmean(mine[:half]) / sd_a if sd_a else 0.0,
             "sr_b": fmean(mine[half:]) / sd_b if sd_b else 0.0,
             # Первый период начинается за шаг до первой отметки; раздел — конец
@@ -169,6 +183,10 @@ def features(fills: list[dict], acc: dict, floor: float) -> dict | None:
     longs = {"a": 0.0, "b": 0.0}
     shorts = {"a": 0.0, "b": 0.0}
     liq = {"a": 0, "b": 0}
+    # Доля пассивных исполнений (`crossed` = нет): маркет-мейкер зарабатывает спредом
+    # и ребейтами, и его доход стабилен устройством бизнеса, а не умением угадывать.
+    passive = {"a": 0, "b": 0}
+    count = {"a": 0, "b": 0}
     value = None
     j = 0
     first = None
@@ -195,6 +213,9 @@ def features(fills: list[dict], acc: dict, floor: float) -> dict | None:
             shorts[h] += pnl
         if f.get("liq"):
             liq[h] += 1
+        count[h] += 1
+        if f.get("x") is False:
+            passive[h] += 1
     if len(lev["a"]) < 20 or len(lev["b"]) < 20:
         return None
     caps = {
@@ -213,6 +234,7 @@ def features(fills: list[dict], acc: dict, floor: float) -> dict | None:
         "short_a": shorts["a"] / cap_a * 100,
         "short_b": shorts["b"] / cap_b * 100,
         "liq_a": liq["a"],
+        "maker_a": passive["a"] / count["a"] if count["a"] else 0.0,
         # Покрыта ли первая половина целиком: у самых активных биржа отдаёт только хвост.
         "covered": first is not None and first <= start + 30 * DAY_MS,
     }
@@ -233,6 +255,24 @@ def _line(label: str, xs: list[float], ys: list[float]) -> None:
     print(f"  {label:<38} {rho:>+6.2f}  (±{noise:.2f})  {top:>+9.3f}  {rest:>+9.3f}{flag}")
 
 
+def partial(xs: list[float], ys: list[float], zs: list[float]) -> float:
+    """Ранговая связь x и y при равном z: снимает общую зависимость обоих от z."""
+    rxy, rxz, ryz = spearman(xs, ys), spearman(xs, zs), spearman(ys, zs)
+    den = sqrt((1 - rxz**2) * (1 - ryz**2))
+    return (rxy - rxz * ryz) / den if den else 0.0
+
+
+def _partial_line(label: str, xs: list[float], ys: list[float], zs: list[float]) -> None:
+    n = len(xs)
+    if n < 20:
+        print(f"  {label:<38} мало счетов ({n})")
+        return
+    rho = partial(xs, ys, zs)
+    noise = 2 / sqrt(n)
+    flag = "  <-- за шумом" if abs(rho) > noise else ""
+    print(f"  {label:<38} {rho:>+6.2f}  (±{noise:.2f})  {'—':>9}  {'—':>9}{flag}")
+
+
 def _header(label: str) -> None:
     print(f"  {label:<38} {'связь':>6}  {'шум':>7}  {'верх 1/4':>9}  {'остальные':>9}")
 
@@ -246,11 +286,39 @@ def persistence(title: str, rows: list[tuple[dict, dict]]) -> None:
     _header("что переносится")
     _line("доход на риск, вся половина", *_pairs(rows, 0, "sr_a", "sr_b"))
     _line("сверх рынка, вся половина", *_pairs(rows, 0, "alpha_a", "alpha_b"))
+    # Контроль масштаба: если «сверх рынка» переносится, а на единицу риска и при
+    # равной раскачке — нет, то переносится раскачка счёта, а не умение.
+    _line("  раскачка счёта (разброс за период)", *_pairs(rows, 0, "sd_a", "sd_b"))
+    _line("  сверх рынка на единицу риска", *_pairs(rows, 0, "ir_a", "ir_b"))
+    _partial_line(
+        "  сверх рынка при равной раскачке",
+        *_pairs(rows, 0, "alpha_a", "alpha_b"),
+        [a["sd_a"] for a, _ in rows],
+    )
+    _partial_line(
+        "  на единицу риска при равном шаге",
+        *_pairs(rows, 0, "ir_a", "ir_b"),
+        [a["step"] for a, _ in rows],
+    )
+    if len(rows) >= 20:
+        pos_a = sum(1 for a, _ in rows if a["alpha_a"] > 0) / len(rows)
+        pos_b = sum(1 for a, _ in rows if a["alpha_b"] > 0) / len(rows)
+        tie = spearman(*_pairs(rows, 0, "alpha_a", "sd_a"))
+        print(
+            f"    (с плюсом сверх рынка: {pos_a:.0%} в 1-й, {pos_b:.0%} во 2-й; "
+            f"связь «сверх рынка» с раскачкой в 1-й: {tie:+.2f})"
+        )
     for reg in REGIMES:
         _line(
             f"сверх рынка в режиме «{reg}»",
             [a["a"][reg][2] for a, _ in rows],
             [a["b"][reg][2] for a, _ in rows],
+        )
+        _partial_line(
+            "  то же на риск, при равном шаге",
+            [a["a"][reg][2] / a["sd_a"] for a, _ in rows],
+            [a["b"][reg][2] / a["sd_b"] for a, _ in rows],
+            [a["step"] for a, _ in rows],
         )
     _line("прибыль по лонгам, % капитала", *_pairs(rows, 1, "long_a", "long_b"))
     _line("прибыль по шортам, % капитала", *_pairs(rows, 1, "short_a", "short_b"))
@@ -285,6 +353,12 @@ def stage_link(root: Path, accounts: dict[str, dict], floor: float) -> int:
         f"\nплечо в первой половине (медиана по сделкам): "
         f"10% {q[0]:.2f} · 50% {q[4]:.2f} · 90% {q[8]:.2f}"
     )
+    sq = quantiles(sorted(a["step"] for a, _ in rows), n=10)
+    print(f"  шаг кривой, суток: 10% {sq[0]:g} · 50% {sq[4]:g} · 90% {sq[8]:g}")
+    # Группа «до ×3» включает и счета, где позиции — пятая часть капитала. Буква
+    # условия владельца — «торгует с плечом ×2–3», это полоса, а не потолок.
+    band = [r for r in rows if 1.0 < r[1]["lev_a"] <= CALM]
+    print(f"  в полосе ×1–{CALM:g} (плечо действительно берётся): {len(band)}")
     buckets = {
         f"до ×{CALM:g}": [r for r in rows if r[1]["lev_a"] <= CALM],
         f"×{CALM:g}–{HOT:g}": [r for r in rows if CALM < r[1]["lev_a"] <= HOT],
@@ -309,8 +383,34 @@ def stage_link(root: Path, accounts: dict[str, dict], floor: float) -> int:
     _line("плечо 1-й → плечо 2-й половины", lev_a, [f["lev_b"] for _, f in rows])
     _line("плечо 1-й → доход на риск во 2-й", lev_a, [a["sr_b"] for a, _ in rows])
     _line("плечо 1-й → сверх рынка во 2-й", lev_a, [a["alpha_b"] for a, _ in rows])
+    _partial_line(
+        "  → на единицу риска, при равном шаге",
+        lev_a,
+        [a["ir_b"] for a, _ in rows],
+        [a["step"] for a, _ in rows],
+    )
 
     persistence(f"ПЕРЕНОС ВНУТРИ ГРУППЫ «до ×{CALM:g}»", buckets[f"до ×{CALM:g}"])
+    persistence(f"ВНУТРИ ПОЛОСЫ ×1–{CALM:g}", band)
+
+    # Кто несёт остаток переноса: если он живёт у пассивных счетов, это бизнес
+    # маркет-мейкера, и направленному боту учиться у него нечему.
+    mq = quantiles(sorted(f["maker_a"] for _, f in rows), n=10)
+    print(
+        f"\nдоля пассивных сделок в 1-й половине: "
+        f"10% {mq[0]:.2f} · 50% {mq[4]:.2f} · 90% {mq[8]:.2f}"
+    )
+    makers = [r for r in rows if r[1]["maker_a"] >= MAKER]
+    takers = [r for r in rows if r[1]["maker_a"] < MAKER]
+    for name, grp in (("пассивные", makers), ("агрессивные", takers)):
+        if grp:
+            print(
+                f"  {name:<12} счетов {len(grp):>4}, плечо (медиана) "
+                f"{median(f['lev_a'] for _, f in grp):.2f}, "
+                f"первая половина покрыта {sum(1 for _, f in grp if f['covered'])}"
+            )
+    persistence(f"ПАССИВНЫЕ (мейкер ≥ {MAKER:.0%} сделок)", makers)
+    persistence(f"АГРЕССИВНЫЕ (мейкер < {MAKER:.0%} сделок)", takers)
     persistence(
         f"для сравнения — плечо больше ×{CALM:g}",
         [r for r in rows if r[1]["lev_a"] > CALM],
