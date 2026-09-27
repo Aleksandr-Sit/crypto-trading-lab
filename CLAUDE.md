@@ -14,6 +14,7 @@
 | Установка | `uv sync` | 80 пакетов, лок сходится |
 | Тесты | `uv run pytest -q` | **762 passed, 29 skipped** с подключённой `lab_test` (без неё 138 skipped — см. ниже) |
 | Один файл | `uv run pytest -q tests/<путь>` | |
+| Тесты локальной правки на сервере | `bash scripts/lab-test.sh [аргументы pytest]` | с рабочей машины, где нет `uv`: копия дерева → одноразовый контейнер → pytest + ruff → уборка; ~40 с на файл |
 | Линт | `uv run ruff check .` | All checks passed |
 | Миграции | `uv run alembic upgrade head` | голова `0011`, одна |
 | Какая голова | `uv run alembic heads` / `alembic current` | `0011 (head)` |
@@ -78,7 +79,10 @@
    убивает расчёт без следа. Перед пересборкой — `docker top crypto-trading-lab-worker-1`.
 
 **Тесты на сервере гоняются в ОДНОРАЗОВОМ контейнере**: в боевом образе нет ни dev-зависимостей
-(`UV_NO_SYNC=1`), ни каталога `tests`. Рабочий вызов:
+(`UV_NO_SYNC=1`), ни каталога `tests`. **Незакоммиченную правку с рабочей машины проверять
+`bash scripts/lab-test.sh`** — он везёт копию рабочего дерева (без `.env`), сам проверяет,
+что `lab_test` отвечает, и убирает за собой; `/opt/crypto-trading-lab` — это последний
+`git pull`, то есть не та правка. Ниже — ручной вызов по боевому каталогу:
 
 ```bash
 docker compose -f deploy/docker-compose.yml run --rm \
