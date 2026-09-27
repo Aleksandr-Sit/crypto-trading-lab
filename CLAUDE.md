@@ -12,7 +12,7 @@
 | Что | Команда | Что вышло |
 |---|---|---|
 | Установка | `uv sync` | 80 пакетов, лок сходится |
-| Тесты | `uv run pytest -q` | **762 passed, 29 skipped** с подключённой `lab_test` (без неё 138 skipped — см. ниже) |
+| Тесты | `uv run pytest -q` | **766 passed, 29 skipped** с подключённой `lab_test` (без неё 138 skipped — см. ниже) |
 | Один файл | `uv run pytest -q tests/<путь>` | |
 | Тесты локальной правки на сервере | `bash scripts/lab-test.sh [аргументы pytest]` | с рабочей машины, где нет `uv`: копия дерева → одноразовый контейнер → pytest + ruff → уборка; ~40 с на файл |
 | Линт | `uv run ruff check .` | All checks passed |
@@ -96,7 +96,7 @@ docker compose -f deploy/docker-compose.yml run --rm \
 Прогон при этом выглядит зелёным («609 passed»), и слепая зона не видна вовсе: я работал
 так целую сессию. База `lab_test` на сервере УЖЕ ЕСТЬ рядом с боевой; адрес собирается
 из `DATABASE_URL` самого контейнера подстановкой, чтобы пароль не попал ни в командную
-строку, ни в историю оболочки. С ней — **762 passed, 29 skipped** (оставшиеся ждут
+строку, ни в историю оболочки. С ней — **766 passed, 29 skipped** (оставшиеся ждут
 `LAB_LIVE_TESTS=1`).
 
 Ещё важнее: **без `--no-deps`**. С ним контейнер не подключается к сети проекта, хост
@@ -122,7 +122,7 @@ docker compose -f deploy/docker-compose.yml run --rm \
 | `core.ladder` | ступени и переходы | `Ladder.start/evaluate/promote/demote/breach/halt_all/resume_all/expire_signals/history` |
 | `core.risk` | лимиты веток, стопы, раскладка, потолок капитала | `RiskEngine.check(intent) -> Allow\|Deny`, `.allocation(branch)`, `.reload(by)`; `Portfolio` — протокол |
 | `core.measure` | замер, метрики, порог | `run(...) -> Measurement`, `metrics`, `threshold`, `history`, `PaperEngine`, `simulate`, `walk_forward_windows`, `measure_plan` |
-| `core.costs` | издержки площадок (`config/costs.yaml`) | `CostModel.estimate/actual`, `.version` |
+| `core.costs` | издержки площадок (`config/costs.yaml`; строка площадки — спот, блок `perp` — перпы) | `CostModel.estimate(…, perp=)/actual`, `.version` |
 | `core.journal` | signals/orders/fills/trades, сверка | `record_signal/record_order/record_fill/close_trade/pnl/reconcile/export_csv/set_outcome` |
 | `data` | Parquet-хранилище свечей, бэкфилл | `CandleStore.write/read/query` (DuckDB), `backfill`, `backfill_cex.backfill_venue`, `BinanceArchive` |
 | `feeds.cex` | Bybit/OKX/Binance/Hyperliquid через ccxt | `CexFeed` + подклассы, `make_feed`, `CcxtTransport`, `FakeTransport`, `VENUE_SPECS` |
@@ -1059,6 +1059,14 @@ E3 признал DVOL мёртвым — и был прав ровно в то�
 отказывает: «untracked working tree files would be overwritten». Подкладывать отдельным
 каталогом: `-v /tmp/lint:/lint`, запуск `python /lint/x.py`; линт —
 `ruff check --config /src/pyproject.toml /lint/x.py`.
+
+**Хранилище свечей в разовом контейнере — только явным путём.** `LAB_DATA_ROOT` в compose
+не задан, путь по умолчанию относительный (`data`), и воркер находит том `/app/data` лишь
+потому, что работает из `/app`. С `-w /src` замер (`make_measure`, `lab measure run`)
+видит пустое хранилище и **молча качает свечи с биржи**: 27.09.2026 перемер модели издержек
+так дал один снимок `ok` и два `incomplete` на лимите запросов Bybit, и нигде не было
+сказано «хранилище не найдено». Разовый запуск — с `-e LAB_DATA_ROOT=/app/data`
+(`lab-oneoff.sh` ставит его сам) или из `-w /app`.
 
 Готовый рецепт со всеми этими уроками — `scripts/lab-oneoff.sh`, запускается с рабочей
 машины: `bash scripts/lab-oneoff.sh --lint scripts/x.py -- <аргументы>`. `/tmp/lint` он
