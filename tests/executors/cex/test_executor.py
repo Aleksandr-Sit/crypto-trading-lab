@@ -134,3 +134,17 @@ def test_spot_market_and_limit_fee_from_venue_and_paper_from_cost_model():
     pfill = next(f for f in pex.fills(since=T0) if f.order_id == paper.id)
     assert pfill.price == Decimal("50001")  # те же живые котировки площадки
     assert pfill.fee == Decimal("0.50001")  # costs.yaml: bybit taker 10 bps по VWAP стакана
+
+
+def test_reduce_only_flag_goes_to_venue_only_on_perp():
+    """Спотового `reduceOnly` у бирж нет, а ccxt шлёт параметр как есть: на споте закрытие —
+    обычная продажа, объём которой сверил `place_signal` по лотам стратегии."""
+    t = _transport()
+    ex = BybitExecutor(transport=t, mode="live")
+    perp = ex.place(_intent(side="sell", reduce_only=True), mode="live")
+    spot = ex.place(
+        _intent(instrument=SPOT, side="sell", reduce_only=True, signal_id="sig-2"), mode="live"
+    )
+    assert t.orders[perp.id]["reduceOnly"] is True
+    assert t.orders[spot.id]["reduceOnly"] is False
+    assert spot.state == OrderState.FILLED

@@ -116,6 +116,26 @@ def test_signal_recorded_before_outcome_and_fills_link_fifo(journal):
     assert ",20," in lines[1] or ",20.000000000000," in lines[1]
 
 
+def test_open_qty_counts_by_side_and_mode_and_live_fill_skips_paper_lot(journal):
+    """Позиция стратегии для `place_signal`: лоты считаются по стороне и режиму, и живой
+    филл не закрывает бумажный лот — иначе живая продажа «закрыла» бы то, чего на бирже нет."""
+    j, sid = journal
+    s1 = j.record_signal(_signal(sid, "buy", "2", T0))
+    o1 = j.record_order(_intent(sid, s1.id, "buy", "2", "c1"), order_id="o1")  # бумага
+    j.record_fill(_fill("f1", o1.id, "100", "2", "0", T0))
+    assert j.open_qty(sid, "BTC/USDT", "long", mode="paper") == Decimal("2")
+    assert j.open_qty(sid, "BTC/USDT", "long", mode="live") == Decimal(0)
+    assert j.open_qty(sid, "BTC/USDT", "short", mode="paper") == Decimal(0)
+
+    s2 = j.record_signal(_signal(sid, "sell", "0.5", T0 + timedelta(hours=1)))
+    live = _intent(sid, s2.id, "sell", "0.5", "c2").model_copy(update={"mode": "live"})
+    o2 = j.record_order(live, order_id="o2")
+    closed = j.record_fill(_fill("f2", o2.id, "110", "0.5", "0", T0 + timedelta(hours=1)))
+    assert closed == []
+    assert j.open_qty(sid, "BTC/USDT", "long", mode="paper") == Decimal("2")
+    assert j.open_qty(sid, "BTC/USDT", "short", mode="live") == Decimal("0.5")
+
+
 def test_close_trade_explicitly_and_by_strategy_filters(journal):
     j, sid = journal
     s = j.record_signal(_signal(sid, "buy", "1", T0))

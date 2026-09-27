@@ -374,7 +374,9 @@ class CexExecutor:
             self._call("set_leverage", int(intent.leverage), intent.instrument)
             self._leverage[intent.instrument] = intent.leverage
         params: dict[str, Any] = {"clientOrderId": coid}
-        if intent.reduce_only:
+        if intent.reduce_only and self._is_perp(intent.instrument):
+            # На споте флага у биржи нет, а ccxt не срезает его и шлёт как есть. Закрытие
+            # на споте — продажа не больше лотов стратегии: это сверяет `place_signal`.
             params["reduceOnly"] = True
         try:
             raw = self._call(

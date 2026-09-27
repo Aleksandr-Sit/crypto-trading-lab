@@ -19,6 +19,7 @@ import logging
 import time
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import Any
 
 from lab.contracts import OrderIntent
@@ -44,6 +45,24 @@ log = logging.getLogger(__name__)
 
 HEARTBEAT_S = 30
 CEX_VENUES = ("bybit", "okx", "binance", "hyperliquid")
+
+
+def _closes(side: str) -> str:
+    """Какие лоты журнала закрывает ордер этой стороны: покупка — шорт, продажа — лонг."""
+    return "short" if side == "buy" else "long"
+
+
+def _legs(size: Decimal, held: Decimal, signal_id: str) -> list[tuple[Decimal, bool, str]]:
+    """Сигнал → ордера `(объём, reduce_only, ключ client id)`: закрытие не больше позиции
+    стратегии, остаток — открывающий. Первый ордер берёт client id от самого сигнала, как
+    до разбивки: повтор после обрыва найдёт его на площадке и не задвоит."""
+    close = min(size, held) if held > 0 else Decimal(0)
+    legs: list[tuple[Decimal, bool, str]] = []
+    if close > 0:
+        legs.append((close, True, signal_id))
+    if size > close:
+        legs.append((size - close, False, f"{signal_id}:open" if legs else signal_id))
+    return legs
 
 
 class Worker:
@@ -154,69 +173,94 @@ class Worker:
 
     # -- исполнение ----------------------------------------------------------------------
 
-    def place_signal(self, signal_id: str, *, mode: str = "live") -> Any:
-        """`on_confirm` из бота: сигнал → риск-ядро → ордер → карточка `fill`."""
+    def place_signal(self, signal_id: str, *, mode: str = "live") -> list[Any]:
+        """`on_confirm` из бота: сигнал → риск-ядро → ордера → карточка `fill`.
+
+        Закрывающая часть сигнала помечается `reduce_only` по открытым лотам САМОЙ стратегии
+        в журнале (того же режима), а не по слову стратегии: общего признака «закрыть»
+        у стратегий нет, а ошибка в правиле не должна открывать позицию в обход лимитов.
+        Закрытие риск-ядро пропускает всегда — и в `degraded`, и после пробоя стопа.
+        Сигнал больше позиции — переворот, как в замере: закрывающий ордер, потом остаток
+        отдельным открывающим с полной проверкой; его отказ закрытие не отменяет.
+        Возвращает отправленные ордера (пусто — ничего не ушло).
+        """
         from lab.core.journal import Journal
         from lab.db.models import SignalRow, StrategyRow
         from lab.executors.cex import client_order_id
 
+        placed: list[Any] = []
         with self.scope() as session:
             signal = session.get(SignalRow, signal_id)
             if signal is None:
                 log.error("Сигнал %s не найден", signal_id)
-                return None
+                return placed
             strategy = session.get(StrategyRow, signal.strategy_id)
             venue = strategy.venue if strategy is not None else ""
-            intent = OrderIntent(
-                strategy_id=signal.strategy_id,
-                venue=venue,
-                instrument=signal.instrument,
-                side=signal.side,
-                qty=signal.size,
-                price=signal.price_ref,
-                order_type="market",
-                mode=mode,
-                signal_id=signal_id,
-                client_order_id=client_order_id(signal_id, venue),
-            )
-            verdict = self.stop_watch.guard(intent)
-            if not isinstance(verdict, Allow):
-                log.warning("Ордер по сигналу %s отклонён: %s", signal_id, verdict.reason)
-                self.alert(
-                    "alert",
-                    {
-                        "service": "risk",
-                        "detail": f"Ордер по сигналу {signal_id} отклонён: {verdict.reason}",
-                        "at": self.clock().isoformat(),
-                    },
-                )
-                return None
-            executor = self.executors.get(venue)
-            if executor is None:
-                log.error("Нет исполнителя для площадки %s", venue)
-                return None
-            order = executor.place(intent, mode)
             journal = Journal(session)
-            journal.record_order(intent, order_id=order.id, state=order.state)
-            fills = list(executor.fills(self.clock() - timedelta(minutes=5)))
-            for fill in fills:
-                if fill.order_id != order.id:
-                    continue
-                journal.record_fill(fill, ref_price=getattr(fill, "ref_price", None))
-                self.alert(
-                    "fill",
-                    {
-                        "strategy_id": intent.strategy_id,
-                        "instrument": intent.instrument,
-                        "side": intent.side,
-                        "qty": str(fill.qty),
-                        "price": str(fill.price),
-                        "venue": venue,
-                        "costs": str(fill.fee),
-                        "signal_id": signal_id,
-                    },
+            held = journal.open_qty(
+                signal.strategy_id, signal.instrument, _closes(signal.side), mode=mode
+            )
+            legs = _legs(signal.size, held, signal_id)
+            if not legs:
+                log.error("Сигнал %s: объём %s — ордер не собрать", signal_id, signal.size)
+            for qty, reduce_only, key in legs:
+                intent = OrderIntent(
+                    strategy_id=signal.strategy_id,
+                    venue=venue,
+                    instrument=signal.instrument,
+                    side=signal.side,
+                    qty=qty,
+                    price=signal.price_ref,
+                    order_type="market",
+                    reduce_only=reduce_only,
+                    mode=mode,
+                    signal_id=signal_id,
+                    client_order_id=client_order_id(key, venue),
                 )
-            return order
+                order = self._place_leg(journal, intent, closed_before=bool(placed))
+                if order is None:
+                    break
+                placed.append(order)
+        return placed
+
+    def _place_leg(self, journal: Any, intent: OrderIntent, *, closed_before: bool) -> Any:
+        """Один ордер сигнала: риск-ядро → площадка → журнал → карточка `fill`."""
+        signal_id, venue = intent.signal_id, intent.venue
+        verdict = self.stop_watch.guard(intent)
+        if not isinstance(verdict, Allow):
+            detail = f"Ордер по сигналу {signal_id} отклонён: {verdict.reason}"
+            if closed_before:
+                detail += " — закрывающий ордер отправлен, отклонён только остаток переворота"
+            log.warning(detail)
+            self.alert(
+                "alert", {"service": "risk", "detail": detail, "at": self.clock().isoformat()}
+            )
+            return None
+        executor = self.executors.get(venue)
+        if executor is None:
+            log.error("Нет исполнителя для площадки %s", venue)
+            return None
+        order = executor.place(intent, intent.mode)
+        journal.record_order(intent, order_id=order.id, state=order.state)
+        fills = list(executor.fills(self.clock() - timedelta(minutes=5)))
+        for fill in fills:
+            if fill.order_id != order.id:
+                continue
+            journal.record_fill(fill, ref_price=getattr(fill, "ref_price", None))
+            self.alert(
+                "fill",
+                {
+                    "strategy_id": intent.strategy_id,
+                    "instrument": intent.instrument,
+                    "side": intent.side,
+                    "qty": str(fill.qty),
+                    "price": str(fill.price),
+                    "venue": venue,
+                    "costs": str(fill.fee),
+                    "signal_id": signal_id,
+                },
+            )
+        return order
 
     # -- расписание ----------------------------------------------------------------------
 

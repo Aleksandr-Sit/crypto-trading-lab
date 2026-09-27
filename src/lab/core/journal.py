@@ -1,7 +1,8 @@
 """core.journal — сигналы/ордера/филлы/сделки, форвард-журнал, сверка (R31i, R31i.1, A03, §10).
 
-Выставляет: `record_signal`, `record_order`, `record_fill`, `close_trade`, `pnl`, `reconcile`,
-`export_csv`. Прячет: связывание филлов в сделки (FIFO по стратегии и инструменту).
+Выставляет: `record_signal`, `record_order`, `record_fill`, `close_trade`, `open_qty`, `pnl`,
+`reconcile`, `export_csv`. Прячет: связывание филлов в сделки (FIFO по стратегии, инструменту
+и режиму — бумажные и живые лоты не смешиваются).
 
 Правила:
 - сигнал пишется ДО исхода: `decided_at` и `inputs_hash` обязательны (Signal их требует);
@@ -290,6 +291,7 @@ class Journal:
             .where(
                 TradeRow.strategy_id == strategy_id,
                 TradeRow.instrument == order.instrument,
+                TradeRow.mode == order.mode,  # живой филл не закрывает бумажный лот
                 TradeRow.closed_at.is_(None),
                 TradeRow.side == closing,
             )
@@ -393,6 +395,19 @@ class Journal:
 
     def open_trades(self, strategy_id: str) -> list[TradeRecord]:
         return [TradeRecord.from_row(r) for r in self._trades(strategy_id, closed=False)]
+
+    def open_qty(self, strategy_id: str, instrument: str, side: str, *, mode: str) -> Decimal:
+        """Объём открытых лотов стратегии по инструменту и стороне (`long`/`short`) в режиме."""
+        rows = self.s.scalars(
+            select(TradeRow.qty).where(
+                TradeRow.strategy_id == strategy_id,
+                TradeRow.instrument == instrument,
+                TradeRow.side == side,
+                TradeRow.mode == mode,
+                TradeRow.closed_at.is_(None),
+            )
+        ).all()
+        return sum(rows, Decimal(0))
 
     def closed_trades(self, strategy_id: str) -> list[TradeRecord]:
         return [TradeRecord.from_row(r) for r in self._trades(strategy_id, closed=True)]
