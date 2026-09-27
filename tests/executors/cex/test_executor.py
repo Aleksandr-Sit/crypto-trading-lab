@@ -136,6 +136,15 @@ def test_spot_market_and_limit_fee_from_venue_and_paper_from_cost_model():
     assert pfill.fee == Decimal("0.50001")  # costs.yaml: bybit taker 10 bps по VWAP стакана
 
 
+def test_paper_perp_fee_uses_perp_tariff():
+    """costs v2: бумажный перп Bybit платит тейкер перпа 5.5 б.п., а не спотовые 10."""
+    pex = BybitExecutor(transport=_transport(), mode="paper")
+    paper = pex.place(_intent(mode="paper", signal_id="sig-p"), mode="paper")  # PERP
+    pfill = next(f for f in pex.fills(since=T0) if f.order_id == paper.id)
+    assert pfill.price == Decimal("50001")
+    assert pfill.fee == Decimal("0.2750055")  # 50001 * 0.01 * 5.5 bps
+
+
 def test_reduce_only_flag_goes_to_venue_only_on_perp():
     """Спотового `reduceOnly` у бирж нет, а ccxt шлёт параметр как есть: на споте закрытие —
     обычная продажа, объём которой сверил `place_signal` по лотам стратегии."""

@@ -53,6 +53,28 @@ def test_taker_fee_and_book_slippage_bybit(model: CostModel):
     assert costs.total == Decimal("4.204")
 
 
+def test_bybit_perp_has_own_tariff_spot_unchanged(model: CostModel):
+    # v2: у Bybit перпы 5.5/2 б.п., спот 10/10 (сверено по странице биржи 27.09.2026).
+    # Тот же стакан: VWAP 102 при покупке 2 → тейкер перпа 2 * 102 * 0.00055 = 0.1122.
+    perp = model.estimate("bybit", _intent("2"), book=_book(), perp=True)
+    assert perp.fee == Decimal("0.1122")
+    assert perp.slippage == Decimal("4")  # проскальзывание от рынка не зависит
+    spot = model.estimate("bybit", _intent("2"), book=_book())
+    assert spot.fee == Decimal("0.204")  # по умолчанию — спот, как до v2
+    # мейкер перпа: лимитка внутри спреда, 1 * 99 * 0.0002
+    maker = model.estimate(
+        "bybit", _intent("1", order_type="limit", price="99"), book=_book(), perp=True
+    )
+    assert maker.fee == Decimal("0.0198")
+
+
+def test_perp_without_own_block_falls_back_to_spot_row(model: CostModel):
+    # У Binance перпы не сверялись и блока `perp` нет: перп считается по строке спота
+    # (консервативно), а не падает и не берёт чужой тариф.
+    perp = model.estimate("binance", _intent("2"), book=_book(), perp=True)
+    assert perp.fee == model.estimate("binance", _intent("2"), book=_book()).fee
+
+
 def test_maker_fee_for_limit_order(model: CostModel):
     # Лимитка не пересекает стакан → maker-тариф Binance 0.1%... в конфиге maker бинанс 0.1%.
     # Берём OKX: maker 0.08%: 1 * 99 * 0.0008 = 0.0792, проскальзывания нет.
@@ -112,5 +134,5 @@ def test_actual_from_fill(model: CostModel):
 
 
 def test_model_version_is_stable_string(model: CostModel):
-    assert model.version.startswith("costs-v1@")
+    assert model.version.startswith("costs-v2@")
     assert model.version == CostModel(load_costs()).version

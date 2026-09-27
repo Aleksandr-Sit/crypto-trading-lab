@@ -175,7 +175,8 @@ def test_paper_and_live_state_do_not_mix_and_balance_is_never_invented():
 
     # paper-баланс — расчётный, из памяти; live — только с площадки
     pbal = paper.balance()[0]
-    assert pbal.total == Decimal("10000") - Decimal("500.01") - Decimal("0.50001")
+    # комиссия — тейкер ПЕРПА Bybit 5.5 б.п. (costs v2): 500.01 * 0.00055
+    assert pbal.total == Decimal("10000") - Decimal("500.01") - Decimal("0.2750055")
     assert pbal.stale is False
     lbal = live.balance()[0]
     assert lbal.total == t.balance["USDT"] and lbal.stale is False  # только ответ площадки

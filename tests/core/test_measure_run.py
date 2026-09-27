@@ -369,3 +369,24 @@ def test_partial_closes_split_accrued_funding_too():
     assert sum((t.costs.total for t in engine.closed), Decimal(0)) == (
         sum(seen, Decimal(0)) + funding_total
     )
+
+
+def test_perp_leg_pays_perp_tariff_spot_leg_spot_tariff(candles):
+    """costs v2: у Bybit перпы 5.5 б.п. тейкера, спот 10. Та же покупка по тому же бару
+    стоит ровно в 5.5/10 комиссии спота; проскальзывание от рынка не зависит."""
+    got: dict[bool, tuple] = {}
+    for is_perp in (False, True):
+        engine = PaperEngine(venue="bybit", instrument="SYN/USD", tf="1h", is_perp=is_perp,
+                             on_fill=lambda fill, sig, costs, ref, k=is_perp:
+                             got.__setitem__(k, (fill.price, costs)))
+        engine.on_bar(candles[0])
+        engine.submit(Signal(strategy_id="x", decided_at=candles[0].ts + TF,
+                             instrument="SYN/USD", side="buy", size=QTY, price_ref=None,
+                             inputs_hash="h", ttl_s=3600))
+        engine.on_bar(candles[1])
+    (spot_px, spot), (perp_px, perp) = got[False], got[True]
+    assert spot_px == perp_px and spot.slippage == perp.slippage
+    # цена филла и цена в формуле комиссии считаются разными выражениями — сверка до 1e-12
+    q = Decimal("1e-12")
+    assert spot.fee.quantize(q) == (QTY * spot_px * 10 / Decimal(10_000)).quantize(q)
+    assert perp.fee.quantize(q) == (QTY * perp_px * Decimal("5.5") / Decimal(10_000)).quantize(q)

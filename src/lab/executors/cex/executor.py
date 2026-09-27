@@ -317,7 +317,10 @@ class CexExecutor:
         )
         self._remember(order)
         if fill_price is not None:
-            est = self.costs.estimate(self.venue, intent, book)  # та же модель издержек, что у live
+            # та же модель издержек, что у live; у перпов биржи свой тариф
+            est = self.costs.estimate(
+                self.venue, intent, book, perp=self._is_perp(intent.instrument)
+            )
             two_sided = book.bids and book.asks
             mid = (book.bids[0].price + book.asks[0].price) / 2 if two_sided else touch
             self._apply_paper_fill(order, fill_price, est.fee, now, ref_price=mid)

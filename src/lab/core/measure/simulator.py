@@ -208,13 +208,15 @@ class PaperEngine:
             if qty <= 0:
                 return None
             ref = price
-            costs = self.costs.estimate(self.venue, self._intent(p, qty, price), depth=self.depth)
+            costs = self.costs.estimate(
+                self.venue, self._intent(p, qty, price), depth=self.depth, perp=self._is_perp
+            )
             fill_price = price
         else:
             qty = p.remaining
             ref = bar.open
             intent = self._intent(p, qty, ref)
-            costs = self.costs.estimate(self.venue, intent, depth=self.depth)
+            costs = self.costs.estimate(self.venue, intent, depth=self.depth, perp=self._is_perp)
             sign = 1 if side == "buy" else -1
             fill_price = ref + sign * costs.slippage / qty
         p.remaining -= qty
@@ -346,7 +348,7 @@ class PaperEngine:
             signal_id="liquidation",
             client_order_id=f"liq-{next(self._ids)}",
         )
-        costs = self.costs.estimate(self.venue, intent, depth=self.depth)
+        costs = self.costs.estimate(self.venue, intent, depth=self.depth, perp=self._is_perp)
         self._apply(side, qty, price, ts, costs)
         return qty
 

@@ -28,10 +28,21 @@ class _Cfg(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class CexTariff(_Cfg):
+class CexFees(_Cfg):
     taker_bps: Decimal = Field(ge=0)
     maker_bps: Decimal = Field(ge=0)
+
+
+class CexTariff(CexFees):
+    """Строка площадки — тариф СПОТА. Бессрочные контракты у бирж тарифицируются
+    отдельно (у Bybit 5.5/2 против 10/10 на споте), поэтому у них свой блок `perp`.
+    Блока нет — перпы считаются по строке спота, как было до `version: 2`."""
+
     funding_interval_h: int = Field(ge=1, default=8)
+    perp: CexFees | None = None
+
+    def fees(self, *, perp: bool) -> CexFees:
+        return self.perp if perp and self.perp is not None else self
 
 
 class DexTariff(_Cfg):
@@ -150,10 +161,14 @@ class CostModel:
         depth: Depth | None = None,
         *,
         royalty_pct: Decimal | None = None,
+        perp: bool = False,
     ) -> Costs:
+        """`perp` — бессрочный контракт, а не спот. Говорит тот, кто знает рынок
+        инструмента (движок замера, исполнитель); по имени модель его не угадывает."""
         kind = self.config.kind_of(venue)
         if kind == "cex":
-            return self._estimate_cex(self.config.cex[venue], intent, book, depth)
+            fees = self.config.cex[venue].fees(perp=perp)
+            return self._estimate_cex(fees, intent, book, depth)
         if kind == "dex":
             return self._estimate_dex(self.config.dex[venue], intent, pool, book, depth)
         if kind == "nft":
@@ -193,7 +208,7 @@ class CostModel:
         return s.impact_bps_per_depth_share * notional / d
 
     def _estimate_cex(
-        self, tariff: CexTariff, intent: OrderIntent, book: Book | None, depth: Depth | None
+        self, tariff: CexFees, intent: OrderIntent, book: Book | None, depth: Depth | None
     ) -> Costs:
         slip, px, taker = self._slip_and_vwap(intent, book, depth)
         rate = tariff.taker_bps if taker else tariff.maker_bps

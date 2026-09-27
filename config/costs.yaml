@@ -2,10 +2,17 @@
 # Тарифы — базовые уровни без VIP-скидок (09.2026); bps = 0.01%.
 # Проскальзывание: по стакану — проход по уровням от мида; без стакана — spread/2 +
 # impact_bps * (оборот / глубина); по пулу — константный продукт x*y=k.
-version: 1
+version: 2
 
+# Строка площадки — тариф СПОТА. Блок `perp` — бессрочные контракты той же площадки;
+# его нет — перпы считаются по строке спота (консервативно: у бирж перпы дешевле).
+# v2 (27.09.2026, решение владельца 1 в docs/research/allocator-2026-09-27.md): у Bybit
+# спот и перпы разделены. Обе цифры сверены по странице биржи в браузере 27.09.2026
+# (bybit.com/en/announcement-info/fee-rate/, Non-VIP): спот 0.10/0.10%, перпы
+# 0.055/0.020%. У OKX и Binance перпы НЕ сверялись и остаются на строке спота.
 cex:
-  bybit:       {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8}
+  bybit:       {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8,
+                perp: {taker_bps: 5.5, maker_bps: 2}}
   okx:         {taker_bps: 10,  maker_bps: 8,  funding_interval_h: 8}
   binance:     {taker_bps: 10,  maker_bps: 10, funding_interval_h: 8}
   hyperliquid: {taker_bps: 4.5, maker_bps: 1.5, funding_interval_h: 1}
