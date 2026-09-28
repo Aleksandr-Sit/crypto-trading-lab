@@ -32,7 +32,6 @@ Binance вовсе, и **премия Coinbase**, которой нет нигд
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -43,6 +42,8 @@ from typing import Any
 import duckdb
 import pyarrow as pa
 import pyarrow.parquet as pq
+
+from lab.data.paths import safe_part as _safe
 
 _NUM = pa.decimal128(30, 12)
 
@@ -71,7 +72,6 @@ SCHEMA = pa.schema(
     ]
 )
 FIELDS = tuple(f.name for f in SCHEMA if f.name != "ts")
-_SAFE = re.compile(r"[^A-Za-z0-9._-]")
 
 
 _SCALE = Decimal(1).scaleb(-12)  # 1e-12 — ровно масштаб колонки
@@ -94,10 +94,6 @@ def _fit(value: Decimal | None) -> Decimal | None:
         # Число не влезает в 30 разрядов целиком — такого у рыночных данных быть
         # не должно, и записать его молча обрезанным хуже, чем не записать вовсе.
         return None
-
-
-def _safe(part: str) -> str:
-    return _SAFE.sub("_", part)
 
 
 def _month(ts: datetime) -> str:

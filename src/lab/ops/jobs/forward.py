@@ -11,6 +11,17 @@
 сотни решений задним числом, и они выглядели бы как сделанные вовремя прогнозы. Проверка
 вперёд, начатая записью прошлого, — не проверка вперёд.
 
+**Граница «уже видено» — по ДАННЫМ и по каждому инструменту, а не по часам.** До 28.09.2026
+отметкой служило время прогона (00:10 UTC), а свечи приезжают с опозданием: бар суток
+закрывается в 00:00, скачивался же ночью позже. К приезду бара его решение (00:00) было
+«старше» отметки и отбрасывалось — журнал не записал бы НИ ОДНОГО решения дневной
+стратегии. Теперь для каждого инструмента помнится закрытие последнего бара, который
+реально был в хранилище (`bars`); решение свежее, если оно позже этой границы. Опоздавший
+бар записывается — с `seen_at`, по которому опоздание видно. Граница по инструменту, а не
+общая: иначе опоздавшую ногу «перекрыла» бы свежая соседняя. Для инструмента без своей
+границы (новый листинг от ленты, отметка прежнего вида) запасная граница — время
+прошлого прогона: его прошлое задним числом не пишется.
+
 **Состояние не хранится, а восстанавливается.** Стратегии нужны свои недели истории
 (ротации — двенадцать), и хранить её между запусками значило бы завести вторую копию
 правды, которая разъедется с первой. Вместо этого каждый запуск проигрывает разогревочное
@@ -67,8 +78,7 @@ def _flag(session: Any, strategy_id: str) -> Any:
     return row
 
 
-def _watermark(row: Any) -> datetime | None:
-    raw = (row.value or {}).get("at")
+def _stamp(raw: Any) -> datetime | None:
     if not raw:
         return None
     try:
@@ -76,6 +86,34 @@ def _watermark(row: Any) -> datetime | None:
     except ValueError:
         return None
     return stamp if stamp.tzinfo else stamp.replace(tzinfo=UTC)
+
+
+def _watermark(row: Any) -> datetime | None:
+    return _stamp((row.value or {}).get("at"))
+
+
+def _seen_bars(row: Any) -> dict[str, datetime]:
+    """Граница по инструментам: закрытие последнего бара, уже прогнанного через стратегию."""
+    out: dict[str, datetime] = {}
+    for instrument, raw in ((row.value or {}).get("bars") or {}).items():
+        stamp = _stamp(raw)
+        if stamp is not None:
+            out[str(instrument)] = stamp
+    return out
+
+
+def _horizon(bars: Sequence[Candle]) -> dict[str, datetime]:
+    """Закрытие последнего бара КАЖДОГО инструмента — момент, до которого данные есть."""
+    out: dict[str, datetime] = {}
+    for b in bars:
+        close = b.ts + (parse_tf(b.tf) or timedelta(days=1))
+        if b.instrument not in out or close > out[b.instrument]:
+            out[b.instrument] = close
+    return out
+
+
+def _mark(at: datetime, bars: dict[str, datetime]) -> dict[str, Any]:
+    return {"at": at.isoformat(), "bars": {k: v.isoformat() for k, v in sorted(bars.items())}}
 
 
 def replay(strategy: Any, bars: Sequence[Candle]) -> list[Signal]:
@@ -152,15 +190,17 @@ def run_forward(
                 continue
 
             signals = replay(strategy, bars)
+            horizon = _horizon(bars)
             if seen is None:
                 # Первый запуск: только ставим отметку. Записать сейчас решения из разогрева
                 # значило бы задним числом создать «прогнозы», которых никто не делал.
-                flag.value = {"at": at.isoformat()}
+                flag.value = _mark(at, horizon)
                 flag.updated_by = "worker"
                 report.started.append(record.id)
                 continue
 
-            fresh = [s for s in signals if s.decided_at > seen]
+            known = _seen_bars(flag)
+            fresh = [s for s in signals if s.decided_at > known.get(s.instrument, seen)]
             for signal in fresh:
                 signal.meta.setdefault("source", "forward_journal")
                 # Когда решение попало в журнал — отдельно от того, когда оно принято.
@@ -170,7 +210,12 @@ def run_forward(
                 report.journaled.append(
                     (record.id, signal.instrument, signal.side, signal.decided_at)
                 )
-            flag.value = {"at": at.isoformat()}
+            # Граница только растёт: окно разогрева сдвигается, но последний бар в нём есть
+            # всегда; если хранилище вдруг отдало меньше — не откатываемся назад.
+            for instrument, close in horizon.items():
+                if instrument not in known or close > known[instrument]:
+                    known[instrument] = close
+            flag.value = _mark(at, known)
             flag.updated_by = "worker"
     return report
 

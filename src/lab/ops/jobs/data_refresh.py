@@ -12,6 +12,16 @@
 
 Окно короткое (`days`), потому что бэкфилл идемпотентен и дыры закрывает перекрытием:
 после любого простоя следующий запуск доберёт пропущенное сам.
+
+**Фандинг — вместе со свечами (с 28.09.2026).** Воскресный перемер берёт ставку каждой
+выплаты из хранилища, а при её отсутствии подставляет константу из параметров (0.01% за
+8 часов). Для шорта это ДОХОД там, где у свежих листингов 2026 года реально −18% за месяц:
+пропуск ставок льстил бы стратегии. Поэтому по бессрочным контрактам живых стратегий
+ставки обновляются тем же окном, что и свечи.
+
+**Время запуска — после закрытия суток UTC** (04:05 по Самаре). До 28.09 задание шло
+в 23:50 UTC, за десять минут до закрытия дневного бара, и бар приезжал только следующей
+ночью — журнал вперёд терял на этом каждое решение дневной стратегии.
 """
 
 from __future__ import annotations
@@ -37,18 +47,31 @@ BENCHMARK = "BTC/USDT"
 @dataclass
 class RefreshReport:
     rows: list[tuple[str, str, str, int, str | None]] = field(default_factory=list)
+    # (площадка, инструмент, записано ставок, ошибка) — только бессрочные контракты
+    funding: list[tuple[str, str, int, str | None]] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
-        return all(error is None for *_, error in self.rows)
+        return all(error is None for *_, error in self.rows) and all(
+            error is None for *_, error in self.funding
+        )
+
+    def failed(self) -> list[str]:
+        out = [f"{v} {s} {t}" for v, s, t, _, e in self.rows if e]
+        out += [f"фандинг {v} {s}" for v, s, _, e in self.funding if e]
+        return out
 
     def text(self) -> str:
         if not self.rows:
             return "Свечи: живых стратегий нет — обновлять нечего"
         good = [r for r in self.rows if r[4] is None]
         written = sum(r[3] for r in good)
-        tail = "" if self.ok else f", отказов {len(self.rows) - len(good)}"
-        return f"Свечи: рядов {len(self.rows)}, записано {written}{tail}"
+        text = f"Свечи: рядов {len(self.rows)}, записано {written}"
+        if self.funding:
+            rates = sum(n for _, _, n, e in self.funding if e is None)
+            text += f"; фандинг: рядов {len(self.funding)}, ставок {rates}"
+        failed = self.failed()
+        return text + (f", отказов {len(failed)}" if failed else "")
 
 
 def targets(session: Any) -> set[tuple[str, str, str]]:
@@ -73,14 +96,18 @@ def refresh(
     session_scope: Callable[[], Any],
     *,
     store: Any = None,
+    funding_store: Any = None,
     root: str | None = None,
     days: int = DEFAULT_DAYS,
 ) -> RefreshReport:
     from lab.data import CandleStore
     from lab.data.backfill_cex import backfill_venue
+    from lab.data.funding import FundingStore
     from lab.ops.measure import data_root
 
     store = store if store is not None else CandleStore(root or data_root())
+    if funding_store is None:
+        funding_store = FundingStore(root or data_root())
     report = RefreshReport()
     with session_scope() as session:
         wanted = targets(session)
@@ -105,7 +132,29 @@ def refresh(
             )
             if result.error:
                 log.warning("Свечи %s %s %s: %s", venue, result.instrument, tf, result.error)
+
+    _refresh_funding(report, funding_store, wanted, days)
     return report
+
+
+def _refresh_funding(
+    report: RefreshReport, funding_store: Any, wanted: set[tuple[str, str, str]], days: int
+) -> None:
+    from lab.core.costs import is_perpetual
+    from lab.data.backfill_cex import backfill_funding
+
+    by_venue: dict[str, list[str]] = {}
+    for venue, instrument, _tf in sorted(wanted):
+        if is_perpetual(instrument) and instrument not in by_venue.get(venue, []):
+            by_venue.setdefault(venue, []).append(instrument)
+    for venue, symbols in by_venue.items():
+        try:
+            results = backfill_funding(funding_store, venue, symbols, days)
+        except Exception as err:  # noqa: BLE001 — площадка недоступна: не наша авария
+            log.warning("Фандинг %s: %s", venue, err)
+            report.funding.extend((venue, s, 0, str(err)) for s in symbols)
+            continue
+        report.funding.extend((venue, s, int(n or 0), e) for s, n, e in results)
 
 
 def data_refresh_job(
@@ -125,7 +174,7 @@ def data_refresh_job(
         report = refresh(session_scope, store=store, root=root, days=days)
         log.info("%s", report.text())
         if not report.ok and alert is not None:
-            failed = [f"{v} {s} {t}" for v, s, t, _, e in report.rows if e]
+            failed = report.failed()
             alert(
                 "alert",
                 {

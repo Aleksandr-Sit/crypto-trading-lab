@@ -21,7 +21,6 @@ sum_taker_long_short_vol_ratio`. Помесячных файлов у метри
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -32,6 +31,8 @@ from typing import Any
 import duckdb
 import pyarrow as pa
 import pyarrow.parquet as pq
+
+from lab.data.paths import safe_part as _safe
 
 _NUM = pa.decimal128(30, 12)
 SCHEMA = pa.schema(
@@ -46,11 +47,6 @@ SCHEMA = pa.schema(
     ]
 )
 _FIELDS = tuple(f.name for f in SCHEMA if f.name != "ts")
-_SAFE = re.compile(r"[^A-Za-z0-9._-]")
-
-
-def _safe(part: str) -> str:
-    return _SAFE.sub("_", part)
 
 
 def _month(ts: datetime) -> str:

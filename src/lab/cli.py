@@ -801,6 +801,39 @@ def cmd_data_coinalyze(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def cmd_data_listings(args: argparse.Namespace) -> int:
+    """Лента листингов Binance руками: то же, что ночное задание `listings`.
+
+    `--dry-run` показывает, что было бы добавлено, и ничего не пишет — ни в реестр, ни
+    в хранилище. Первый настоящий прогон доберёт листинги, пропущенные с конца состава.
+    """
+    from datetime import UTC, datetime
+
+    from lab.feeds.cex.listings import BinanceListings
+    from lab.ops.jobs.listings import fill_data, sync_listings
+    from lab.ops.measure import data_root
+
+    now = datetime.now(UTC)
+    with _scope()() as session:
+        report = sync_listings(session, BinanceListings(), now=now)
+        if args.dry_run:
+            session.rollback()
+    if not args.dry_run:
+        report.errors += fill_data(report.added, root=args.root or data_root(), now=now)
+    print(report.text() + (" (сухой прогон — ничего не записано)" if args.dry_run else ""))
+    for a in report.added:
+        passed = " (уже прошёл)" if a.entry_passed(now) else ""
+        print(
+            f"  {a.instrument:24} спот с {a.listed}, перп с {a.onboard}, "
+            f"вход по закрытию {a.entry_day}{passed} → {', '.join(a.strategies)}"
+        )
+    if report.pending:
+        print(f"  ждут перпа: {', '.join(report.pending)}")
+    for error in report.errors:
+        print(f"  ошибка: {error}", file=sys.stderr)
+    return 1 if report.errors else 0
+
+
 def cmd_data_backfill(args: argparse.Namespace) -> int:
     """Таск 04: свечи CEX за N дней в Parquet с прогрессом; прерывание — повтор продолжит."""
     from lab.data import CandleStore
@@ -921,6 +954,12 @@ def build_parser() -> argparse.ArgumentParser:
     ca = data.add_parser("coinalyze", help="ликвидации и открытый интерес по биржам")
     ca.add_argument("--root", default="data", help="корень хранилища")
     ca.set_defaults(func=cmd_data_coinalyze)
+    li = data.add_parser("listings", help="новые листинги Binance → состав шорта листингов")
+    li.add_argument("--dry-run", action="store_true", help="показать и ничего не писать")
+    li.add_argument(
+        "--root", default=None, help="корень хранилища (по умолчанию LAB_DATA_ROOT или data)"
+    )
+    li.set_defaults(func=cmd_data_listings)
 
     ms = sub.add_parser("measure", help="замер стратегии: запустить руками и посмотреть")
     msub = ms.add_subparsers(dest="action", required=True)

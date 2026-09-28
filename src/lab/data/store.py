@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -21,6 +20,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from lab.contracts import Candle
+from lab.data.paths import safe_part as _safe
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +35,6 @@ SCHEMA = pa.schema(
         ("volume", _MONEY),
     ]
 )
-_SAFE = re.compile(r"[^A-Za-z0-9._-]")
 
 # DuckDB по умолчанию берёт 80% ПАМЯТИ КОНТЕЙНЕРА и все ядра. В контейнере с лимитом
 # 1200 МБ это 960 МБ — ровно столько, чтобы не осталось ни рабочему процессу, ни самому
@@ -47,10 +46,6 @@ DUCKDB_MEMORY = "256MB"
 DUCKDB_THREADS = 2
 DUCKDB_MEMORY_ENV = "LAB_DUCKDB_MEMORY"
 DUCKDB_THREADS_ENV = "LAB_DUCKDB_THREADS"
-
-
-def _safe(part: str) -> str:
-    return _SAFE.sub("_", part)
 
 
 def _tame(con: Any) -> None:

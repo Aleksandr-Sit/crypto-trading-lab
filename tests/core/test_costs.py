@@ -13,6 +13,7 @@ from lab.core.costs import (
     UnknownFeeAsset,
     base_moved,
     fee_in_quote,
+    is_perpetual,
     is_spot,
     load_costs,
 )
@@ -196,6 +197,13 @@ def test_is_spot_only_by_ccxt_name():
     assert not is_spot("BTC/USDT:USDT") and not is_spot("BTC/USDT:USDT-260925")
     assert not is_spot("0xabc:42")  # NFT: двоеточие есть, но это не перп — и не спот ccxt
     assert not is_spot("So11111111111111111111111111111111111111112")
+
+
+def test_is_perpetual_excludes_dated_contracts_and_nft():
+    """Фандинг есть только у бессрочного: у срочного и NFT запрос ставок — ошибка каждую ночь."""
+    assert is_perpetual("BTC/USDT:USDT") and is_perpetual("牛来/USDT:USDT")
+    assert not is_perpetual("BTC/USDT:USDT-260925")
+    assert not is_perpetual("BTC/USDT") and not is_perpetual("0xabc:42")
 
 
 def test_model_version_is_stable_string(model: CostModel):

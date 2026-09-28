@@ -52,6 +52,15 @@ def is_spot(instrument: str) -> bool:
     return "/" in instrument and ":" not in instrument
 
 
+def is_perpetual(instrument: str) -> bool:
+    """Бессрочный контракт по имени ccxt: `BASE/QUOTE:SETTLE` без даты экспирации. У срочного
+    (`BTC/USDT:USDT-260925`) и опциона после расчётной валюты стоит дата, фандинга у них нет —
+    запрос ставок по ним давал бы ошибку каждую ночь. NFT `коллекция:токен` без `/` — не перп."""
+    if "/" not in instrument or ":" not in instrument:
+        return False
+    return "-" not in instrument.split(":", 1)[1]
+
+
 def fee_in_quote(fill: Fill, instrument: str) -> Decimal | None:
     """Комиссия филла в валюте котировки — той, в которой журнал считает P&L.
 
@@ -395,6 +404,7 @@ __all__ = [
     "default_model",
     "estimate",
     "fee_in_quote",
+    "is_perpetual",
     "is_spot",
     "load_costs",
 ]
