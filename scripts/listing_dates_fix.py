@@ -27,6 +27,8 @@
     python scripts/listing_dates_fix.py                          # только отчёт
     python scripts/listing_dates_fix.py --measure cex-perp-paper-listing-fade-short
     python scripts/listing_dates_fix.py --apply --measure cex-perp-paper-listing-fade-short
+    # на новом коде стратегии, когда даты уже записаны: только «после», со снимком
+    python scripts/listing_dates_fix.py --apply --skip-before --measure …
 
 С рабочей машины: `bash scripts/lab-oneoff.sh scripts/listing_dates_fix.py -- [ключи]`
 (хранилище `LAB_DATA_ROOT=/app/data` скрипт запуска ставит сам). Замер 194 инструментов
@@ -192,6 +194,11 @@ def main() -> int:
     ap.add_argument("--measure", action="append", default=[], help="id стратегии для перемера")
     ap.add_argument("--apply", action="store_true", help="записать исправленные даты")
     ap.add_argument("--no-save", action="store_true", help="не сохранять замер «после»")
+    ap.add_argument(
+        "--skip-before",
+        action="store_true",
+        help="не считать «до» (повторный прогон на новом коде, когда «до» уже есть)",
+    )
     ap.add_argument("--mode", default="backtest")
     args = ap.parse_args()
 
@@ -219,6 +226,8 @@ def main() -> int:
         window = (p.window_from, p.window_to)
         print(f"\n=== {sid} · окно {window[0]:%d.%m.%Y %H:%M}–{window[1]:%d.%m.%Y %H:%M} "
               f"(как у замера {p.id})", flush=True)
+        if args.skip_before:
+            continue
         before[sid] = measure(strategy_id=sid, mode=args.mode, window=window, session=None)
         print(f"  «до» посчитан: {before[sid].status}", flush=True)
 
@@ -238,9 +247,10 @@ def main() -> int:
         window = (p.window_from, p.window_to)
         after = measure(strategy_id=sid, mode=args.mode, window=window, **extra)
         print(f"  «после» {sid}: {after.status}, снимок {after.id or 'не сохранён'}", flush=True)
-        if after.status != "ok" or before[sid].status != "ok":
+        was = before.get(sid)
+        if after.status != "ok" or (was is not None and was.status != "ok"):
             worst = 1
-        print_table(sid, p, before[sid], after)
+        print_table(sid, p, was, after)
     return worst
 
 
