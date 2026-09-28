@@ -51,6 +51,14 @@ def main() -> int:
     rows = json.loads((root / args.listings).read_text())
     if args.limit:
         rows = rows[: args.limit]
+    # До докачки, а не после: иначе старый файл стоил бы часа загрузок перед отказом.
+    missing = [r["base"] for r in rows if "listed" not in r]
+    if missing:
+        print(
+            f"в {args.listings} нет дня листинга у {len(missing)} монет (файл старше "
+            "28.09.2026) — пересобрать: listing_effect.py --dump-tradable"
+        )
+        return 1
     # Глубина СВОЯ у каждого инструмента. Общая глубина «от самого раннего листинга»
     # заставляла бы качать монете, вышедшей в 2026-м, четыре года пустых архивов:
     # на 194 инструментах это тысячи лишних файлов и часы работы впустую.
@@ -94,7 +102,10 @@ def main() -> int:
 
     # Даты листинга уходят в ПАРАМЕТРЫ стратегии, а не определяются по потоку: у этой
     # выборки перп запущен раньше спота, и первый бар перпа — другое событие.
-    dates = {f"{r['base']}/USDT:USDT": r["entry"] for r in rows}
+    # Пишется день ЛИСТИНГА (`listed`), а не первый полный день (`entry`): стратегия сама
+    # отсчитывает от него сутки. До 28.09.2026 здесь стоял `entry`, и вход шёл на сутки
+    # позже карточки (`scripts/listing_dates_fix.py`). Наличие `listed` проверено в начале.
+    dates = {f"{r['base']}/USDT:USDT": r["listed"] for r in rows}
     (root / DATES_FILE).write_text(json.dumps(dates, indent=1, sort_keys=True))
     print(f"даты листинга записаны: {root / DATES_FILE} ({len(dates)})")
 

@@ -34,7 +34,6 @@ class _Position:
 
     first_seen: datetime
     bars: int = 0
-    since_listing: int = 0  # баров с даты листинга, когда она известна
     qty: Decimal = ZERO
     entry: Decimal = ZERO
     opened_at: datetime | None = None
@@ -115,9 +114,6 @@ class ListingFadeShortStrategy(Strategy):
         if pos is None:
             pos = self.book[bar.instrument] = _Position(first_seen=bar.ts)
         pos.bars += 1
-        listed = self.listed_on.get(bar.instrument)
-        if listed is not None and bar.ts.date() >= listed:
-            pos.since_listing += 1
 
         if pos.qty > 0:
             return self._maybe_close(bar, pos)
@@ -128,8 +124,15 @@ class ListingFadeShortStrategy(Strategy):
             return []
         listed = self.listed_on.get(bar.instrument)
         if listed is not None:
-            # Дата листинга известна: считаем бары ОТ НЕЁ, поток тут ни при чём.
-            if pos.since_listing != self.entry_bar + 1:
+            # Дата листинга известна: вход — на баре КАЛЕНДАРНОГО дня «листинг + entry_bar»,
+            # а не на N-м баре потока. До 28.09.2026 здесь считались бары перпа, и это
+            # сдвигало вход в двух случаях (194 листинга замера 13.09): перп запущен только
+            # в первый полный день — бара дня листинга у него нет, вход на сутки позже
+            # (7 монет); листинг раньше начала окна — прогрева у движка нет, счёт шёл
+            # с границы окна, и стратегия шортила монету через месяцы после листинга
+            # (4 монеты, «вход» 10.10.2021). Нет бара этого дня — нет и входа: шортить
+            # было нечем, как в правиле отбора исследования.
+            if bar.ts.date() != listed + timedelta(days=self.entry_bar):
                 return []
         else:
             # Запасной путь. Инструмент, торговавшийся ДО начала окна, листингом

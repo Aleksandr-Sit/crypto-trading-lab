@@ -159,7 +159,12 @@ def main() -> int:
         base = name.split("/")[0]
         tradable = base in onboard and onboard[base] <= d0
         if tradable:
-            tradable_rows.append({"base": base, "entry": d0.isoformat()})
+            # `listed` — день ЛИСТИНГА (первая дневная свеча спота): его ждёт стратегия
+            # в `listing_dates`. `entry` — первый полный день, вход на его закрытии. До
+            # 28.09.2026 в даты состава уходил `entry`, и вход шёл на сутки позже карточки.
+            tradable_rows.append(
+                {"base": base, "listed": days[0][0].isoformat(), "entry": d0.isoformat()}
+            )
         if len(days) >= 32:
             shorts.append((d0, p0, days[2:32], tradable))
         # Шортить можно только перп. Даты запуска берутся у БИРЖИ, а не из нашего
