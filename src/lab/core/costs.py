@@ -1,10 +1,17 @@
 """core.costs — модели издержек по площадкам (решение §4).
 
-Выставляет: `estimate(venue, intent, book|pool) -> Costs`, `actual(fill, ...) -> Costs`.
+Выставляет: `estimate(venue, intent, book|pool) -> Costs`, `actual(fill, ...) -> Costs`,
+`fee_in_quote`, `base_moved`, `is_spot`, `UnknownFeeAsset`.
 Прячет: тарифы (config/costs.yaml) и формулы проскальзывания.
 
 Все суммы — Decimal в валюте котировки (USD/USDT/USDC считаются равными валюте учёта).
 Версия модели (`CostModel.version`) = `costs-v<version>@<sha256 конфига>` — идёт в снимок замера.
+
+Комиссия филла приходит в той монете, в которой её взяла биржа. На споте Binance и Bybit
+берут комиссию покупки в ПОЛУЧАЕМОЙ монете (купил 0.01 BTC — на счёте 0.00999), продажи —
+в котировке; Binance со включённой оплатой BNB — в BNB. Отсюда два правила (пробел 4
+`docs/research/allocator-2026-09-27.md`): `fee_in_quote` — комиссия в валюте котировки,
+`base_moved` — сколько монеты на самом деле пришло на счёт или ушло с него.
 """
 
 from __future__ import annotations
@@ -22,6 +29,60 @@ from lab.contracts import Book, Costs, Fill, OrderIntent, Side
 
 _BPS = Decimal(10_000)
 _QUOTE_ASSETS = {"USD", "USDT", "USDC", "BUSD", "FDUSD", "DAI"}
+
+
+class UnknownFeeAsset(ValueError):
+    """Комиссия в третьей монете (не котировка и не база инструмента): её цены на момент
+    филла нет, а угадывать число нельзя — издержки передаёт тот, кто знает цену."""
+
+
+def _pair(instrument: str) -> tuple[str, str] | None:
+    """База и котировка по имени ccxt: `BTC/USDT`, `BTC/USDT:USDT`, `BTC/USDT:USDT-260925`.
+    Имя не по ccxt (NFT `коллекция:токен`, адрес токена, id рынка) — None."""
+    if "/" not in instrument:
+        return None
+    base, rest = instrument.split("/", 1)
+    return base.upper(), rest.split(":", 1)[0].upper()
+
+
+def is_spot(instrument: str) -> bool:
+    """Спотовая пара по имени ccxt: есть `/`, нет расчётной валюты через `:`. Продажа на ней
+    не открывает шорт — продать можно только то, что лежит на счёте. Имена не по ccxt сюда
+    не попадают: NFT называются `коллекция:токен`, и двоеточие там — не перп."""
+    return "/" in instrument and ":" not in instrument
+
+
+def fee_in_quote(fill: Fill, instrument: str) -> Decimal | None:
+    """Комиссия филла в валюте котировки — той, в которой журнал считает P&L.
+
+    Котировка и доллары — как есть; базовая монета — по цене филла; третья монета — None.
+    У имени не по ccxt базу не определить: такие исполнители (DEX, NFT, Polymarket,
+    Robinhood) отдают комиссию в своей котировке, она берётся как есть."""
+    pair = _pair(instrument)
+    if pair is None:
+        return fill.fee
+    base, quote = pair
+    asset = fill.fee_asset.upper()
+    if asset == quote or asset in _QUOTE_ASSETS:
+        return fill.fee
+    if asset == base:
+        return fill.fee * fill.price
+    return None
+
+
+def base_moved(fill: Fill, instrument: str, side: Side) -> Decimal:
+    """Сколько базовой монеты пришло на счёт (покупка) или ушло с него (продажа).
+
+    На споте комиссия в базовой монете уменьшает купленное и добавляется к проданному.
+    Лот журнала обязан быть тем, что лежит на счёте: иначе продажа «всего лота» получит
+    отказ «недостаточно средств». На деривативе объём — контракты, комиссия берётся
+    из маржи и объёма не касается."""
+    if not is_spot(instrument):
+        return fill.qty
+    base, _ = _pair(instrument)  # type: ignore[misc]  # спот — всегда имя ccxt
+    if fill.fee_asset.upper() != base:
+        return fill.qty
+    return fill.qty - fill.fee if side == "buy" else fill.qty + fill.fee
 
 
 class _Cfg(BaseModel):
@@ -266,15 +327,21 @@ class CostModel:
         fill: Fill,
         *,
         side: Side,
+        instrument: str,
         ref_price: Decimal | None = None,
         funding: Decimal = Decimal(0),
         gas: Decimal = Decimal(0),
         priority_fee: Decimal = Decimal(0),
         royalty: Decimal = Decimal(0),
     ) -> Costs:
-        """Издержки по факту: комиссия из филла (в котировке), проскальзывание относительно
-        референсной цены на момент решения (мид/котировка), остальное — как передано."""
-        fee = fill.fee if fill.fee_asset.upper() in _QUOTE_ASSETS else fill.fee * fill.price
+        """Издержки по факту: комиссия из филла в котировке (`fee_in_quote`; третья монета —
+        `UnknownFeeAsset`), проскальзывание относительно референсной цены на момент решения
+        (мид/котировка), остальное — как передано."""
+        fee = fee_in_quote(fill, instrument)
+        if fee is None:
+            raise UnknownFeeAsset(
+                f"комиссия {fill.fee} {fill.fee_asset} по {instrument}: цены монеты нет"
+            )
         slippage = Decimal(0)
         if ref_price is not None:
             diff = fill.price - ref_price if side == "buy" else ref_price - fill.price
@@ -322,8 +389,12 @@ __all__ = [
     "CostsConfig",
     "Depth",
     "Pool",
+    "UnknownFeeAsset",
     "actual",
+    "base_moved",
     "default_model",
     "estimate",
+    "fee_in_quote",
+    "is_spot",
     "load_costs",
 ]

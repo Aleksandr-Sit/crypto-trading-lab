@@ -7,7 +7,15 @@ from decimal import Decimal
 import pytest
 
 from lab.contracts import Book, BookLevel, Fill, OrderIntent
-from lab.core.costs import CostModel, Pool, load_costs
+from lab.core.costs import (
+    CostModel,
+    Pool,
+    UnknownFeeAsset,
+    base_moved,
+    fee_in_quote,
+    is_spot,
+    load_costs,
+)
 
 
 def _intent(qty: str, side: str = "buy", order_type: str = "market", price: str | None = None):
@@ -123,14 +131,71 @@ def test_actual_from_fill(model: CostModel):
         fee_asset="USDT",
         ts=datetime(2026, 1, 1, tzinfo=UTC),
     )
-    costs = model.actual(fill, side="buy", ref_price=Decimal("100"))
+    costs = model.actual(fill, side="buy", instrument="BTC/USDT", ref_price=Decimal("100"))
     assert costs.fee == Decimal("0.204")
     assert costs.slippage == Decimal("4")
     # Продажа по 98 при референсе 100 — тоже потеря 4 (не отрицательная).
     costs = model.actual(
-        fill.model_copy(update={"price": Decimal("98")}), side="sell", ref_price=Decimal("100")
+        fill.model_copy(update={"price": Decimal("98")}),
+        side="sell",
+        instrument="BTC/USDT",
+        ref_price=Decimal("100"),
     )
     assert costs.slippage == Decimal("4")
+    # Комиссия в BNB — не котировка и не база: прежде умножалась на цену BTC, теперь ошибка.
+    with pytest.raises(UnknownFeeAsset):
+        bnb = fill.model_copy(update={"fee_asset": "BNB"})
+        model.actual(bnb, side="buy", instrument="BTC/USDT")
+
+
+def _fill(fee: str, asset: str, qty: str = "0.01", price: str = "60000") -> Fill:
+    return Fill(
+        id="f",
+        order_id="o",
+        price=Decimal(price),
+        qty=Decimal(qty),
+        fee=Decimal(fee),
+        fee_asset=asset,
+        ts=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+
+
+@pytest.mark.parametrize(
+    ("fill", "instrument", "fee"),
+    [
+        (_fill("0.6", "USDT"), "BTC/USDT", "0.6"),  # котировка — как есть
+        (_fill("0.00001", "BTC"), "BTC/USDT", "0.60000"),  # покупка на споте: база × цена
+        (_fill("0.6", "usdt"), "BTC/USDT:USDT", "0.6"),  # перп, регистр не важен
+        (_fill("0.6", "USDC"), "BTC/USDT", "0.6"),  # доллары в любой обёртке
+        (_fill("0.001", "BNB"), "BTC/USDT", None),  # третья монета: цены нет — не угадываем
+        (_fill("0.001", "SOL"), "So11111111111111111111111111111111111111112", "0.001"),  # не ccxt
+        (_fill("0.5", "ETH"), "0xabc:42", "0.5"),  # NFT `коллекция:токен` — котировка исполнителя
+    ],
+)
+def test_fee_in_quote(fill: Fill, instrument: str, fee: str | None):
+    assert fee_in_quote(fill, instrument) == (None if fee is None else Decimal(fee))
+
+
+@pytest.mark.parametrize(
+    ("fill", "instrument", "side", "moved"),
+    [
+        (_fill("0.00001", "BTC"), "BTC/USDT", "buy", "0.00999"),  # пришло меньше купленного
+        (_fill("0.00001", "BTC"), "BTC/USDT", "sell", "0.01001"),  # ушло больше проданного
+        (_fill("0.6", "USDT"), "BTC/USDT", "buy", "0.01"),  # комиссия котировкой — объём целый
+        (_fill("0.001", "BNB"), "BTC/USDT", "buy", "0.01"),
+        (_fill("0.00001", "BTC"), "BTC/USD:BTC", "buy", "0.01"),  # дериватив: объём — контракты
+        (_fill("0.5", "ETH"), "0xabc:42", "buy", "0.01"),  # NFT — не спот по ccxt
+    ],
+)
+def test_base_moved(fill: Fill, instrument: str, side: str, moved: str):
+    assert base_moved(fill, instrument, side) == Decimal(moved)
+
+
+def test_is_spot_only_by_ccxt_name():
+    assert is_spot("BTC/USDT") and is_spot("PAXG/USDT")
+    assert not is_spot("BTC/USDT:USDT") and not is_spot("BTC/USDT:USDT-260925")
+    assert not is_spot("0xabc:42")  # NFT: двоеточие есть, но это не перп — и не спот ccxt
+    assert not is_spot("So11111111111111111111111111111111111111112")
 
 
 def test_model_version_is_stable_string(model: CostModel):

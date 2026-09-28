@@ -180,3 +180,72 @@ def test_reconcile_reports_mismatch_event(journal):
     assert report.event.venue == "bybit" and report.event.count == 2
     # Журнал не правится тихо: наш филл остался по 100.
     assert j.closed_trades(sid) == [] and j.open_trades(sid)[0].entry_price == Decimal("100")
+
+
+def _spot_fill(fid: str, order_id: str, price: str, qty: str, fee: str, asset: str) -> Fill:
+    return _fill(fid, order_id, price, qty, fee, T0).model_copy(update={"fee_asset": asset})
+
+
+def test_spot_fee_in_received_coin_nets_the_lot_and_books_fee_in_quote(journal):
+    """Пробел 4: на споте покупка платит комиссию в получаемой монете. Купили 0.01 BTC
+    по 60 000 с комиссией 0.00001 BTC — на счёте 0.00999, комиссия стоит $0.60, а не
+    «0.00001 доллара». Итог сделки обязан совпасть с движением денег на счёте."""
+    j, sid = journal
+    s1 = j.record_signal(_signal(sid, "buy", "0.01", T0))
+    o1 = j.record_order(_intent(sid, s1.id, "buy", "0.01", "c1"), order_id="o1")
+    j.record_fill(_spot_fill("f1", o1.id, "60000", "0.01", "0.00001", "BTC"))
+    lot = j.open_trades(sid)[0]
+    assert lot.qty == Decimal("0.00999")  # столько и продать можно
+    assert lot.fee == Decimal("0.6")  # 0.00001 BTC × 60 000
+    assert j.open_qty(sid, "BTC/USDT", "long", mode="paper") == Decimal("0.00999")
+
+    s2 = j.record_signal(_signal(sid, "sell", "0.00999", T0 + timedelta(days=1)))
+    o2 = j.record_order(_intent(sid, s2.id, "sell", "0.00999", "c2"), order_id="o2")
+    closed = j.record_fill(_spot_fill("f2", o2.id, "61000", "0.00999", "0.60939", "USDT"))
+    assert [t.qty for t in closed] == [Decimal("0.00999")] and not j.open_trades(sid)
+    spent = Decimal("600")  # 0.01 × 60 000 котировкой
+    received = Decimal("0.00999") * 61000 - Decimal("0.60939")
+    assert closed[0].pnl_net == received - spent == Decimal("8.78061")
+
+
+def test_spot_partial_close_splits_netted_lot_and_its_fee(journal):
+    j, sid = journal
+    s1 = j.record_signal(_signal(sid, "buy", "0.01", T0))
+    o1 = j.record_order(_intent(sid, s1.id, "buy", "0.01", "c1"), order_id="o1")
+    j.record_fill(_spot_fill("f1", o1.id, "60000", "0.01", "0.00001", "BTC"))
+    s2 = j.record_signal(_signal(sid, "sell", "0.004995", T0 + timedelta(hours=1)))
+    o2 = j.record_order(_intent(sid, s2.id, "sell", "0.004995", "c2"), order_id="o2")
+    closed = j.record_fill(_spot_fill("f2", o2.id, "60000", "0.004995", "0", "USDT"))
+    assert closed[0].qty == Decimal("0.004995") and closed[0].fee == Decimal("0.3")
+    left = j.open_trades(sid)
+    assert left[0].qty == Decimal("0.004995") and left[0].fee == Decimal("0.3")
+
+
+def test_fee_in_third_coin_without_costs_is_refused_before_anything_is_written(journal):
+    """Комиссия в BNB: цены монеты у журнала нет — ошибка ДО записи, число не угадывается.
+    Издержки с оценкой по тарифу передаёт воркер (`ops.worker._fill_costs`)."""
+    from lab.core.costs import UnknownFeeAsset
+    from lab.db.models import FillRow
+
+    j, sid = journal
+    s1 = j.record_signal(_signal(sid, "buy", "0.01", T0))
+    o1 = j.record_order(_intent(sid, s1.id, "buy", "0.01", "c1"), order_id="o1")
+    fill = _spot_fill("f1", o1.id, "60000", "0.01", "0.0008", "BNB")
+    with pytest.raises(UnknownFeeAsset):
+        j.record_fill(fill)
+    assert j.s.get(FillRow, "f1") is None and not j.open_trades(sid)
+    # с переданными издержками — лот целый: BNB базовую монету не уменьшает
+    j.record_fill(fill, costs=Costs(fee=Decimal("0.6")))
+    assert j.open_trades(sid)[0].qty == Decimal("0.01")
+
+
+def test_raw_fill_keeps_venue_fee_so_reconcile_matches(journal):
+    """Строка филла — как у биржи (0.00001 BTC), иначе суточная сверка видела бы
+    расхождение комиссии на каждом спотовом филле."""
+    j, sid = journal
+    s1 = j.record_signal(_signal(sid, "buy", "0.01", T0))
+    o1 = j.record_order(_intent(sid, s1.id, "buy", "0.01", "c1"), order_id="o1")
+    fill = _spot_fill("f1", o1.id, "60000", "0.01", "0.00001", "BTC")
+    j.record_fill(fill)
+    report = j.reconcile("bybit", [fill], since=T0 - timedelta(hours=1))
+    assert report.ok, report.mismatches

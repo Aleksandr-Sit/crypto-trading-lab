@@ -113,13 +113,15 @@ def test_fill_during_outage_is_recovered_without_duplicate():
 
 def test_spot_market_and_limit_fee_from_venue_and_paper_from_cost_model():
     """История 50: спот — лимит/маркет, комиссия из ответа площадки; paper — из core.costs."""
-    t = _transport()
+    t = _transport(balance={"USDT": Decimal("10000"), "BTC": Decimal("1")})
     ex = BybitExecutor(transport=t, mode="live")
     market = ex.place(_intent(instrument=SPOT), mode="live")
     assert market.state == OrderState.FILLED
     fill = next(f for f in ex.fills(since=T0) if f.order_id == market.id)
     assert fill.price == Decimal("50001")  # ask при спреде 2
-    assert fill.fee == Decimal("0.50001") and fill.fee_asset == "USDT"  # 50001 * 0.01 * 10 bps
+    # спотовая покупка платит комиссию в ПОЛУЧАЕМОЙ монете: 0.01 * 10 bps BTC, не USDT
+    assert fill.fee == Decimal("0.00001") and fill.fee_asset == "BTC"
+    assert t.balance["BTC"] == Decimal("1.00999")
 
     limit = ex.place(
         _intent(instrument=SPOT, side="sell", price=Decimal("60000"), signal_id="sig-3"),
@@ -148,7 +150,7 @@ def test_paper_perp_fee_uses_perp_tariff():
 def test_reduce_only_flag_goes_to_venue_only_on_perp():
     """Спотового `reduceOnly` у бирж нет, а ccxt шлёт параметр как есть: на споте закрытие —
     обычная продажа, объём которой сверил `place_signal` по лотам стратегии."""
-    t = _transport()
+    t = _transport(balance={"USDT": Decimal("10000"), "BTC": Decimal("1")})
     ex = BybitExecutor(transport=t, mode="live")
     perp = ex.place(_intent(side="sell", reduce_only=True), mode="live")
     spot = ex.place(
@@ -157,3 +159,25 @@ def test_reduce_only_flag_goes_to_venue_only_on_perp():
     assert t.orders[perp.id]["reduceOnly"] is True
     assert t.orders[spot.id]["reduceOnly"] is False
     assert spot.state == OrderState.FILLED
+
+
+def test_spot_sell_of_whole_bought_qty_is_refused_by_venue():
+    """Пробел 4: после покупки 0.01 BTC на счёте 0.00999 — продажа 0.01 получает отказ
+    «недостаточно средств», как на настоящей бирже. Продать можно ровно полученное."""
+    import ccxt
+
+    t = _transport()
+    ex = BybitExecutor(transport=t, mode="live")
+    ex.place(_intent(instrument=SPOT), mode="live")
+    assert t.balance["BTC"] == Decimal("0.00999")
+    with pytest.raises(ccxt.InsufficientFunds):
+        ex.place(_intent(instrument=SPOT, side="sell", signal_id="sig-s"), mode="live")
+    sold = ex.place(
+        _intent(instrument=SPOT, side="sell", signal_id="sig-s2").model_copy(
+            update={"qty": Decimal("0.00999")}
+        ),
+        mode="live",
+    )
+    assert sold.state == OrderState.FILLED and t.balance["BTC"] == 0
+    fill = next(f for f in ex.fills(since=T0) if f.order_id == sold.id)
+    assert fill.fee_asset == "USDT"  # продажа платит котировкой — её она и получает

@@ -22,7 +22,8 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
-from lab.contracts import OrderIntent
+from lab.contracts import Costs, OrderIntent
+from lab.core.costs import CostModel, default_model, fee_in_quote, is_spot
 from lab.core.risk import Allow, DbHaltSwitch, RiskEngine
 from lab.ops.availability import (
     check_all,
@@ -45,6 +46,10 @@ log = logging.getLogger(__name__)
 
 HEARTBEAT_S = 30
 CEX_VENUES = ("bybit", "okx", "binance", "hyperliquid")
+# Спотовая продажа больше лотов стратегии на эту долю и меньше — комиссия в монете или
+# округление объёма биржей (у бирж лаборатории комиссия до 0.1%, у Bitstamp в модели 0.4%).
+# Больше — стратегия и журнал разошлись, это тревога оператору.
+SPOT_SELL_SLACK = Decimal("0.01")
 
 
 def _closes(side: str) -> str:
@@ -52,15 +57,18 @@ def _closes(side: str) -> str:
     return "short" if side == "buy" else "long"
 
 
-def _legs(size: Decimal, held: Decimal, signal_id: str) -> list[tuple[Decimal, bool, str]]:
+def _legs(
+    size: Decimal, held: Decimal, signal_id: str, *, open_rest: bool = True
+) -> list[tuple[Decimal, bool, str]]:
     """Сигнал → ордера `(объём, reduce_only, ключ client id)`: закрытие не больше позиции
     стратегии, остаток — открывающий. Первый ордер берёт client id от самого сигнала, как
-    до разбивки: повтор после обрыва найдёт его на площадке и не задвоит."""
+    до разбивки: повтор после обрыва найдёт его на площадке и не задвоит.
+    `open_rest=False` — остаток не отправляется: так продажа на споте не открывает шорт."""
     close = min(size, held) if held > 0 else Decimal(0)
     legs: list[tuple[Decimal, bool, str]] = []
     if close > 0:
         legs.append((close, True, signal_id))
-    if size > close:
+    if size > close and open_rest:
         legs.append((size - close, False, f"{signal_id}:open" if legs else signal_id))
     return legs
 
@@ -217,6 +225,10 @@ class Worker:
         Закрытие риск-ядро пропускает всегда — и в `degraded`, и после пробоя стопа.
         Сигнал больше позиции — переворот, как в замере: закрывающий ордер, потом остаток
         отдельным открывающим с полной проверкой; его отказ закрытие не отменяет.
+        **На споте продажа шорт не открывает** — продаётся не больше лотов стратегии: лот
+        журнала за вычетом комиссии в монете меньше того, что стратегия считает купленным
+        (`core.costs.base_moved`). Остаток больше `SPOT_SELL_SLACK` — тревога оператору,
+        продаётся всё равно то, что есть (решение владельца 28.09.2026).
         Возвращает отправленные ордера (пусто — ничего не ушло).
         """
         from lab.core.journal import Journal
@@ -235,8 +247,11 @@ class Worker:
             held = journal.open_qty(
                 signal.strategy_id, signal.instrument, _closes(signal.side), mode=mode
             )
-            legs = _legs(signal.size, held, signal_id)
-            if not legs:
+            spot_sell = signal.side == "sell" and is_spot(signal.instrument)
+            legs = _legs(signal.size, held, signal_id, open_rest=not spot_sell)
+            if spot_sell and signal.size > held:
+                self._spot_shortfall(signal, held)
+            elif not legs:
                 log.error("Сигнал %s: объём %s — ордер не собрать", signal_id, signal.size)
             for qty, reduce_only, key in legs:
                 intent = OrderIntent(
@@ -257,6 +272,51 @@ class Worker:
                     break
                 placed.append(order)
         return placed
+
+    def _journal_alert(self, detail: str) -> None:
+        log.warning(detail)
+        at = self.clock().isoformat()
+        self.alert("alert", {"service": "journal", "detail": detail, "at": at})
+
+    def _spot_shortfall(self, signal: Any, held: Decimal) -> None:
+        """Спотовая продажа больше лотов стратегии: остаток не отправлен. В пределах
+        `SPOT_SELL_SLACK` — комиссия в монете или округление биржи, строка в лог; больше —
+        стратегия и журнал разошлись (потерян филл, ошибка правила): тревога оператору."""
+        rest = signal.size - held
+        line = (
+            f"Сигнал {signal.id}: продажа {signal.size} {signal.instrument}, у стратегии "
+            f"в журнале {held} — продаю {held}, остаток {rest} не отправлен (на споте "
+            "продажа шорт не открывает)"
+        )
+        if rest <= signal.size * SPOT_SELL_SLACK:
+            log.info("%s — комиссия в монете или округление биржи", line)
+            return
+        self._journal_alert(f"{line}. Стратегия и журнал разошлись: сверь журнал с балансом биржи")
+
+    def _fill_costs(self, executor: Any, intent: OrderIntent, fill: Any) -> Costs:
+        """Издержки филла в валюте котировки (`core.costs.fee_in_quote`). Комиссия в третьей
+        монете (BNB со скидкой Binance) — оценка по тарифу площадки, тейкер без скидки: цены
+        монеты на момент филла нет, а скидка комиссию только уменьшает — ошибка идёт против
+        стратегии, а не в её пользу. Филл записывается всегда: без него лот потерян."""
+        fee = fee_in_quote(fill, intent.instrument)
+        if fee is not None:
+            return Costs(fee=fee)
+        model = getattr(executor, "costs", None)
+        model = model if isinstance(model, CostModel) else default_model()
+        priced = intent.model_copy(update={"qty": fill.qty, "price": fill.price})
+        try:
+            fee = model.estimate(intent.venue, priced, perp=not is_spot(intent.instrument)).fee
+            booked = f"в журнале оценка по тарифу {fee}"
+        except (KeyError, ValueError) as err:  # тарифа площадки нет — сказать, а не молчать
+            fee = Decimal(0)
+            booked = f"оценки по тарифу нет ({err}), в журнале издержки 0"
+        detail = (
+            f"Филл {fill.id} ({intent.instrument}): комиссия {fill.fee} {fill.fee_asset} — "
+            f"не котировка и не база, {booked}. Выключи на бирже оплату комиссий "
+            f"в {fill.fee_asset}"
+        )
+        self._journal_alert(detail)
+        return Costs(fee=fee)
 
     def _place_leg(self, journal: Any, intent: OrderIntent, *, closed_before: bool) -> Any:
         """Один ордер сигнала: риск-ядро → площадка → журнал → карточка `fill`."""
@@ -281,7 +341,8 @@ class Worker:
         for fill in fills:
             if fill.order_id != order.id:
                 continue
-            journal.record_fill(fill, ref_price=getattr(fill, "ref_price", None))
+            costs = self._fill_costs(executor, intent, fill)
+            journal.record_fill(fill, costs=costs, ref_price=getattr(fill, "ref_price", None))
             self.alert(
                 "fill",
                 {
@@ -291,7 +352,7 @@ class Worker:
                     "qty": str(fill.qty),
                     "price": str(fill.price),
                     "venue": venue,
-                    "costs": str(fill.fee),
+                    "costs": str(costs.fee),  # в котировке; сырая комиссия — в журнале филлов
                     "signal_id": signal_id,
                 },
             )

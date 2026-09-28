@@ -245,6 +245,15 @@ class FakeTransport:
             "fee": None,
             "reduceOnly": bool(params.get("reduceOnly", False)),
         }
+        if ":" not in symbol and side == "sell":
+            # Спот: продать можно только то, что лежит на счёте. Лимитную заявку биржа тоже
+            # не примет без монеты (блокирует её под заявку); блокировку фейк не ведёт.
+            base = symbol.split("/")[0]
+            have = self.balance.get(base, Decimal(0))
+            if Decimal(str(amount)) > have:
+                raise ccxt.InsufficientFunds(
+                    f"{self.id}: insufficient balance {base}: {have} < {amount}"
+                )
         self.orders[order["id"]] = order
         exec_price = self._exec_price(symbol, side)
         if type == "market":
@@ -330,28 +339,43 @@ class FakeTransport:
         return Decimal(str(t["ask"] if side == "buy" else t["bid"]))
 
     def _fill(self, order: dict[str, Any], price: Decimal) -> None:
+        """Как настоящая биржа (Binance без оплаты BNB, Bybit): на споте комиссия берётся
+        в ПОЛУЧАЕМОЙ монете — покупка платит базовой, продажа котировкой; на перпе — всегда
+        котировкой. До 28.09.2026 фейк брал котировку всегда, и тесты не видели, что после
+        покупки 0.01 BTC на счёте 0.00999 (пробел 4, `allocator-2026-09-27.md`)."""
         qty = Decimal(str(order["amount"]))
-        fee = price * qty * self.taker_bps / Decimal(10_000)
+        symbol = order["symbol"]
+        spot = ":" not in symbol
+        base = symbol.split("/")[0]
+        rate = self.taker_bps / Decimal(10_000)
+        if spot and order["side"] == "buy":
+            fee, fee_ccy = qty * rate, base
+        else:
+            fee, fee_ccy = price * qty * rate, self.quote
         order.update(
             status="closed",
             filled=float(qty),
             average=float(price),
-            fee={"cost": float(fee), "currency": self.quote},
+            fee={"cost": float(fee), "currency": fee_ccy},
         )
         self.my_trades.append(
             {
                 "id": f"t-{next(self._ids)}",
                 "order": order["id"],
-                "symbol": order["symbol"],
+                "symbol": symbol,
                 "side": order["side"],
                 "price": float(price),
                 "amount": float(qty),
-                "fee": {"cost": float(fee), "currency": self.quote},
+                "fee": {"cost": float(fee), "currency": fee_ccy},
                 "timestamp": to_ms(self.now),
             }
         )
         signed = qty if order["side"] == "buy" else -qty
-        self.balance[self.quote] = self.balance[self.quote] - signed * price - fee
+        quote_fee = fee if fee_ccy == self.quote else Decimal(0)
+        self.balance[self.quote] = self.balance[self.quote] - signed * price - quote_fee
+        if spot:
+            base_fee = fee if fee_ccy == base else Decimal(0)
+            self.balance[base] = self.balance.get(base, Decimal(0)) + signed - base_fee
         pos = self.positions.get(order["symbol"])
         net = Decimal(0)
         if pos:

@@ -230,3 +230,126 @@ def test_opening_signal_is_one_order_with_the_signal_client_id(session, lab):
 def test_legs_split_signal_by_held_position(size, held, legs):
     got = _legs(Decimal(size), Decimal(held), "s")
     assert got == [(Decimal(q), ro, key) for q, ro, key in legs]
+
+
+# -- спот: комиссия в получаемой монете (пробел 4, allocator-2026-09-27.md) -------------
+
+SPOT = "BTC/USDT"
+
+
+@pytest.fixture
+def spot_lab(session, scope):
+    """Спотовая стратегия на фейке, который берёт комиссию как биржа: покупка платит
+    базовой монетой. Риск без лимитов — проверяем объёмы и журнал, а не потолки веток."""
+    t = FakeTransport("bybit")
+    t.set_ticker(SPOT, Decimal("50000"), spread=Decimal("2"))
+    strategy = Registry(session).add(
+        StrategyManifest(
+            slug="spot",
+            branch="cex-spot",
+            venue="bybit",
+            source_kind="test",
+            instruments=[SPOT],
+            timeframe="1d",
+            stop=StopSpec(daily_pct=Decimal(5)),
+        )
+    )
+    bot = FakeBot()
+    worker = Worker(
+        scope,
+        bot=bot,
+        executors={"bybit": BybitExecutor(transport=t, mode="live")},
+        clock=lambda: t.now,
+    )
+    worker.stop_watch = StopWatch(AllowAll(), worker._ladder_for)
+    return worker, t, strategy.id, bot
+
+
+def _spot_signal(session, sid: str, side: str, size: str, at) -> str:
+    signal = Signal(
+        strategy_id=sid,
+        decided_at=at,
+        instrument=SPOT,
+        side=side,
+        size=Decimal(size),
+        price_ref=Decimal("50000"),
+        inputs_hash="h",
+        ttl_s=60,
+    )
+    return Journal(session).record_signal(signal).id
+
+
+def test_spot_round_trip_sells_what_the_account_holds_and_pnl_is_cash(session, spot_lab):
+    """Правило ротации: продать «сколько купила» (0.01). На счёте после покупки 0.00999 —
+    до правки уходила продажа 0.01 и биржа отвечала «недостаточно средств»."""
+    worker, t, sid, bot = spot_lab
+    cash0 = t.balance["USDT"]
+
+    worker.place_signal(_spot_signal(session, sid, "buy", "0.01", t.now))
+    (lot,) = Journal(session).open_trades(sid)
+    assert lot.qty == Decimal("0.00999") == t.balance["BTC"]
+    assert lot.fee == Decimal("0.50001")  # 0.00001 BTC × 50 001, а не «0.00001 доллара»
+    assert Decimal(bot.cards[-1][1]["costs"]) == Decimal("0.50001")
+
+    (sold,) = worker.place_signal(_spot_signal(session, sid, "sell", "0.01", t.now))
+
+    assert t.orders[sold.id]["amount"] == 0.00999 and t.balance["BTC"] == 0
+    j = Journal(session)
+    (trade,) = j.closed_trades(sid)
+    assert not j.open_trades(sid)
+    assert trade.pnl_net == t.balance["USDT"] - cash0  # журнал = движение денег на счёте
+    assert [kind for kind, _ in bot.cards] == ["fill", "fill"]  # разница — комиссия: без тревоги
+
+
+def test_spot_sell_without_position_sends_nothing_and_alerts(session, spot_lab):
+    """Шорта на споте нет: продавать нечего — ни ордера, ни попытки, тревога оператору."""
+    worker, t, sid, bot = spot_lab
+
+    assert worker.place_signal(_spot_signal(session, sid, "sell", "0.01", t.now)) == []
+
+    assert t.orders == {}
+    ((kind, payload),) = bot.cards
+    assert kind == "alert" and "разошлись" in payload["detail"]
+
+
+def test_spot_sell_far_above_lot_sells_the_lot_and_alerts(session, spot_lab):
+    """Решение владельца 28.09.2026: расхождение больше 1% — продать известную позицию
+    и поднять тревогу, а не стоять в позиции до разбора."""
+    worker, t, sid, bot = spot_lab
+    worker.place_signal(_spot_signal(session, sid, "buy", "0.01", t.now))
+
+    (sold,) = worker.place_signal(_spot_signal(session, sid, "sell", "0.02", t.now))
+
+    assert t.orders[sold.id]["amount"] == 0.00999 and t.orders[sold.id]["side"] == "sell"
+    assert not Journal(session).open_trades(sid)
+    assert [kind for kind, _ in bot.cards] == ["fill", "alert", "fill"]
+    assert "разошлись" in bot.cards[1][1]["detail"]
+
+
+class _BnbFees(FakeTransport):
+    """Binance со включённой оплатой комиссий BNB: комиссия в третьей монете."""
+
+    def _fill(self, order, price) -> None:
+        super()._fill(order, price)
+        self.my_trades[-1]["fee"] = {"cost": 0.0008, "currency": "BNB"}
+
+
+def test_fee_in_third_coin_is_booked_by_tariff_and_alerts(session, spot_lab):
+    worker, _, sid, bot = spot_lab
+    t = _BnbFees("bybit")
+    t.set_ticker(SPOT, Decimal("50000"), spread=Decimal("2"))
+    worker.executors["bybit"] = BybitExecutor(transport=t, mode="live")
+
+    worker.place_signal(_spot_signal(session, sid, "buy", "0.01", t.now))
+
+    (lot,) = Journal(session).open_trades(sid)
+    assert lot.qty == Decimal("0.01")  # BNB базовую монету не уменьшает
+    # тейкер спота Bybit 10 б.п. с номинала ≈ $0.50, с запасом на спред — не 0.0008
+    assert Decimal("0.5") < lot.fee < Decimal("0.51")
+    alert = next(p for kind, p in bot.cards if kind == "alert")
+    assert "0.0008 BNB" in alert["detail"] and "оценка по тарифу" in alert["detail"]
+
+
+def test_legs_can_drop_the_opening_rest():
+    assert _legs(Decimal("3"), Decimal("1"), "s", open_rest=False) == [(Decimal("1"), True, "s")]
+    assert _legs(Decimal("1"), Decimal("0"), "s", open_rest=False) == []

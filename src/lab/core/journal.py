@@ -9,6 +9,9 @@
 - филл, открывающий позицию, создаёт открытую сделку (лот); филл в обратную сторону закрывает
   лоты по FIFO, частично — сделка делится по объёму, издержки закрытия делятся пропорционально;
 - P&L сделки = pnl_gross − издержки по компонентам; unrealized — по переданным маркам;
+- лот — то, что лежит на счёте: на споте комиссия в базовой монете уменьшает купленное
+  (`core.costs.base_moved`), а в издержки идёт в валюте котировки (`fee_in_quote`).
+  Строка филла остаётся сырой, как её отдала биржа: на ней держится сверка;
 - сверка ничего не правит: расхождения возвращаются отчётом и событием `ReconcileMismatch`.
 """
 
@@ -26,9 +29,23 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from lab.contracts import Costs, Fill, OrderIntent, OrderState, Signal, SignalOutcome
+from lab.core.costs import UnknownFeeAsset, base_moved, fee_in_quote
 from lab.db.models import FillRow, OrderRow, SignalRow, TradeRow
 
 _COST_FIELDS = tuple(Costs.model_fields)
+
+
+def _fee_costs(fill: Fill, instrument: str) -> Costs:
+    """Издержки филла, когда вызывающий их не передал: комиссия в валюте котировки.
+    Третья монета — ошибка ДО записи: число не угадывается, а издержки с оценкой
+    передаёт тот, кто знает тариф (`ops.worker`)."""
+    fee = fee_in_quote(fill, instrument)
+    if fee is None:
+        raise UnknownFeeAsset(
+            f"филл {fill.id}: комиссия {fill.fee} {fill.fee_asset} по {instrument} — "
+            "в котировку не пересчитать, передай costs"
+        )
+    return Costs(fee=fee)
 
 
 class _Model(BaseModel):
@@ -257,7 +274,7 @@ class Journal:
         """Записать филл и связать его в сделки: возвращает закрытые этим филлом сделки."""
         order = self.s.get_one(OrderRow, fill.order_id)
         signal = self.s.get_one(SignalRow, order.signal_id)
-        costs = costs or Costs(fee=fill.fee)
+        costs = costs or _fee_costs(fill, order.instrument)
         self.s.add(
             FillRow(
                 id=fill.id,
@@ -297,7 +314,10 @@ class Journal:
             )
             .order_by(TradeRow.opened_at, TradeRow.id)
         ).all()
-        remaining = fill.qty
+        # Не объём филла, а то, что двинулось по счёту: на споте комиссия в базовой монете
+        # уменьшает купленное. Издержки делятся по этому же объёму и сходятся в сумму.
+        moved = base_moved(fill, order.instrument, order.side)  # type: ignore[arg-type]
+        remaining = moved
         closed: list[TradeRecord] = []
         for row in open_rows:
             if remaining <= 0:
@@ -305,7 +325,7 @@ class Journal:
             take = min(remaining, row.qty)
             if take < row.qty:
                 row = self._split(row, take)
-            closed.append(self._close(row, fill, _scale(costs, take / fill.qty)))
+            closed.append(self._close(row, fill, _scale(costs, take / moved)))
             remaining -= take
         if remaining > 0:
             self.s.add(
@@ -323,7 +343,7 @@ class Journal:
                     pnl_net=Decimal(0),
                     opened_at=fill.ts,
                     closed_at=None,
-                    **{f: getattr(_scale(costs, remaining / fill.qty), f) for f in _COST_FIELDS},
+                    **{f: getattr(_scale(costs, remaining / moved), f) for f in _COST_FIELDS},
                 )
             )
         self.s.flush()
@@ -372,9 +392,10 @@ class Journal:
         row = self.s.get_one(TradeRow, trade_id)
         if row.closed_at is not None:
             raise ValueError(f"сделка {trade_id} уже закрыта")
-        if fill.qty < row.qty:
+        moved = base_moved(fill, row.instrument, "sell" if row.side == "long" else "buy")
+        if moved < row.qty:
             raise ValueError("объём филла меньше объёма сделки: используй record_fill (FIFO)")
-        costs = costs or Costs(fee=fill.fee)
+        costs = costs or _fee_costs(fill, row.instrument)
         if self.s.get(FillRow, fill.id) is None:
             self.s.add(
                 FillRow(
@@ -389,7 +410,7 @@ class Journal:
                 )
             )
             self.s.flush()
-        return self._close(row, fill, _scale(costs, row.qty / fill.qty))
+        return self._close(row, fill, _scale(costs, row.qty / moved))
 
     # -- чтение ----------------------------------------------------------------------------
 
