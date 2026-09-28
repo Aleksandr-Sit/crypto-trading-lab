@@ -22,6 +22,7 @@ from decimal import Decimal
 from itertools import count
 
 from lab.contracts import Branch, Candle, Costs, Event, Fill, OrderIntent, Signal, StopSpec
+from lab.contracts.allocation import peak_drawdown_pct
 from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.types import ClosedTrade, IncompleteData, LookaheadError
@@ -549,10 +550,12 @@ class _StopTracker:
     процессора при простаивающей сети.
     """
 
-    def __init__(self, stop: StopSpec | None, capital: Decimal) -> None:
+    def __init__(self, stop: StopSpec | None, capital: Decimal, *, closed_dd: bool = True) -> None:
         self.stop = stop
         self.capital = capital
         self.active = stop is not None and capital > 0
+        # У яруса размещения просадку смотрит `_PeakStop`, здесь остаётся только дневной.
+        self.closed_dd = closed_dd
         self._equity = Decimal(0)
         self._peak = Decimal(0)
         self._worst = Decimal(0)
@@ -589,11 +592,34 @@ class _StopTracker:
                 self._day_sum -= self._day.popleft()[1]
             if -(self._day_sum * 100 / self.capital) >= stop.daily_pct:
                 return "strategy_stop_daily"
-        if stop.max_dd_pct is not None and (
-            (-self._worst * 100 / self.capital) >= stop.max_dd_pct
+        if (
+            self.closed_dd
+            and stop.max_dd_pct is not None
+            and (-self._worst * 100 / self.capital) >= stop.max_dd_pct
         ):
             return "strategy_stop_dd"
         return ""
+
+
+class _PeakStop:
+    """Стоп по просадке для яруса размещения: от ВЕРШИНЫ капитала, с открытой позицией
+    по цене бара (`lab.contracts.allocation`, `LivePortfolio._allocation_drawdown`).
+
+    Правило держит актив неделями; стоп по закрытым сделкам не увидел бы падения внутри
+    позиции, пока та не закроется. Капитал смотрится один раз на МОМЕНТ времени, а не на бар:
+    ноги приходят разными барами одного момента, и между ними капитал бывает посчитан по
+    ценам разного времени (тот же урок, что у `_StopTracker`).
+    """
+
+    def __init__(self, stop: StopSpec | None, capital: Decimal) -> None:
+        self.limit = stop.max_dd_pct if stop is not None else None
+        self.peak = capital
+
+    def breach(self, equity: Decimal) -> str:
+        if self.limit is None:
+            return ""
+        self.peak = max(self.peak, equity)
+        return "strategy_stop_dd" if peak_drawdown_pct(self.peak, equity) >= self.limit else ""
 
 
 def _opens_exposure(position: Decimal, signal: Signal) -> bool:
@@ -612,6 +638,7 @@ def simulate(
     capital: Decimal = Decimal(10_000),
     allow_gaps: bool = False,
     cross_margin: bool = False,
+    allocation: bool = False,
 ) -> SimResult:
     """Прогон стратегии по свечам: сначала исполняются ожидающие сигналы по бару,
     потом стратегия видит бар и решает — её сигналы исполнятся не раньше следующего бара.
@@ -637,7 +664,11 @@ def simulate(
     stopped_at: datetime | None = None
     stop_rule = ""
     blocked = 0
-    tracker = _StopTracker(stop, capital)
+    # Правило размещения (`allocation`): стоп по просадке — от вершины капитала с открытой
+    # позицией, как у живого портфеля; дневной стоп, если он есть, — прежний.
+    tracker = _StopTracker(stop, capital, closed_dd=not allocation)
+    peak_stop = _PeakStop(stop, capital) if allocation and stop is not None else None
+    ts_equity = capital  # капитал на последнем баре текущего момента — для `peak_stop`
     batch: list[ClosedTrade] = []
     liquidations: list[tuple[str, datetime]] = []
     last_price: dict[str, Decimal] = {}
@@ -759,11 +790,14 @@ def simulate(
                 consumed[name] = len(e.closed)
             if batch_ts is not None and bar.ts != batch_ts:
                 stop_rule = tracker.breach(batch, batch_ts)
+                if not stop_rule and peak_stop is not None:
+                    stop_rule = peak_stop.breach(ts_equity)
                 batch = []
                 if stop_rule:
                     stopped_at = batch_ts
             batch_ts = bar.ts
             batch.extend(fresh)
+        ts_equity = equity
 
         # Ставку фандинга из свечей не видно, а фандинг-арбитраж решает именно по ней.
         # Отдаём её СОБЫТИЕМ — тем же контрактом, которым стратегия слушает живые фиды.
@@ -812,6 +846,10 @@ def simulate(
     # на самых последних сделках замер бы не заметил.
     if stopped_at is None and batch and batch_ts is not None:
         stop_rule = tracker.breach(batch, batch_ts)
+        if stop_rule:
+            stopped_at = batch_ts
+    if stopped_at is None and peak_stop is not None and batch_ts is not None:
+        stop_rule = peak_stop.breach(ts_equity)
         if stop_rule:
             stopped_at = batch_ts
     trades: list[ClosedTrade] = []

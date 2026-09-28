@@ -128,6 +128,41 @@ class Worker:
 
         return _LadderProxy()
 
+    def stop_probes(self) -> list[OrderIntent]:
+        """Пробы для задания `stop_watch`: по одной на стратегию денежной ступени, которая
+        ещё торгует. Без них стоп замечался только на следующем ордере стратегии — а правило,
+        держащее позицию неделями, не увидело бы падения внутри неё вовсе (пробел 5,
+        28.09.2026). Проба до площадки не доходит: `StopWatch.sweep` гонит её только через
+        `risk.check`, где стоп-правила стоят раньше цены и размера."""
+        from sqlalchemy import select
+
+        from lab.contracts import RUNG_ORDER, Rung, Status
+        from lab.db.models import StrategyRow
+
+        live = [r.value for r in RUNG_ORDER[RUNG_ORDER.index(Rung.MICRO) :]]
+        idle = (Status.CANDIDATE.value, Status.DEGRADED.value, Status.RETIRED.value)
+        with self.scope() as session:
+            rows = session.scalars(
+                select(StrategyRow).where(
+                    StrategyRow.rung.in_(live), StrategyRow.status.not_in(idle)
+                )
+            ).all()
+        stamp = self.clock().strftime("%Y%m%dT%H%M%S")
+        return [
+            OrderIntent(
+                strategy_id=row.id,
+                venue=row.venue,
+                instrument=(row.instruments or ["?"])[0],
+                side="buy",
+                qty=Decimal("0.00000001"),
+                order_type="market",
+                mode="live",
+                signal_id=f"stop-probe:{row.id}",
+                client_order_id=f"stop-probe:{row.id}:{stamp}",
+            )
+            for row in rows
+        ]
+
     def _on_breach(self, strategy_id: str, transition: Any) -> None:
         if self.bot is not None and transition is not None:
             self.bot.notify_transition(transition)
@@ -300,7 +335,7 @@ class Worker:
         out.append(
             Job(
                 id="stop_watch",
-                func=lambda: self.stop_watch.sweep([]),
+                func=lambda: self.stop_watch.sweep(self.stop_probes()),
                 description="Пробой стопа стратегии → degraded",
             )
         )

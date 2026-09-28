@@ -16,6 +16,7 @@ from lab.config.env import (
 )
 from lab.config.loader import ConfigError, load_config
 from lab.config.models import (
+    AllocationTierLimits,
     BranchGroupLimits,
     BranchStop,
     JobSpec,
@@ -44,6 +45,7 @@ __all__ = [
     "DATA_ENV",
     "SERVICE_ENV",
     "VENUE_ENV",
+    "AllocationTierLimits",
     "BranchGroupLimits",
     "BranchStop",
     "ConfigError",

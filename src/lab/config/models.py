@@ -31,15 +31,30 @@ class BranchGroupLimits(_Cfg):
     stop: BranchStop
 
 
+class AllocationTierLimits(_Cfg):
+    """Ярус размещения (решение владельца 4, 27.09.2026): лимиты правил, что держат актив
+    целиком (`allocation: true` в карточке, `lab.contracts.allocation`). Стопа ветки у яруса
+    нет — работает собственный стоп стратегии, от вершины её капитала."""
+
+    share_pct: Decimal = Field(gt=0, le=100)
+    max_trade_pct: Decimal = Field(gt=0, le=100)  # % доли яруса
+    max_leverage: Decimal = Field(ge=1)
+
+
 class LimitsConfig(_Cfg):
     real_capital_cap_usd: Decimal = Field(gt=0)
     groups: dict[str, BranchGroupLimits]
+    allocation_tier: AllocationTierLimits | None = None
 
     @model_validator(mode="after")
     def _shares_sum_and_branches_unique(self) -> "LimitsConfig":
         total = sum(g.share_pct for g in self.groups.values())
+        if self.allocation_tier is not None:
+            total += self.allocation_tier.share_pct
         if total != Decimal(100):
-            raise ValueError(f"groups: сумма share_pct должна быть 100, получено {total}")
+            raise ValueError(
+                f"groups + allocation_tier: сумма share_pct должна быть 100, получено {total}"
+            )
         seen: dict[Branch, str] = {}
         for name, group in self.groups.items():
             for branch in group.branches:

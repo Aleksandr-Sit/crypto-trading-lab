@@ -23,18 +23,23 @@ def test_limits_match_spec_table():
     shares = {name: g.share_pct for name, g in limits.groups.items()}
     assert shares == {
         "cex": Decimal(40),
-        "copy": Decimal(25),
+        "copy": Decimal(5),
         "meme": Decimal(20),
         "nft": Decimal(10),
         "prediction": Decimal(5),
     }
-    assert sum(shares.values()) == Decimal(100)
+    tier = limits.allocation_tier
+    assert tier is not None
+    assert tier.share_pct == Decimal(20) and tier.max_trade_pct == Decimal(100)
+    assert tier.max_leverage == Decimal(1)
+    assert sum(shares.values()) + tier.share_pct == Decimal(100)
     assert limits.group_of("cex-perp") == "cex"
     assert limits.group_of("dex-perp") == "cex"
     assert limits.group_of("rh") == "prediction"
     cex = limits.groups["cex"]
     assert cex.max_trade_pct == Decimal(2) and cex.max_trade_base == "bank"
-    assert cex.max_leverage == Decimal(5)
+    assert cex.max_leverage == Decimal(3)
+    assert limits.groups["copy"].max_leverage == Decimal(3)
     assert cex.stop.loss_pct == Decimal(5) and cex.stop.period == "day"
     meme = limits.groups["meme"]
     assert meme.max_trade_pct == Decimal(10) and meme.max_trade_base == "branch"
@@ -208,3 +213,14 @@ def test_alembic_url_prefers_the_config_it_was_given(tmp_path: Path):
         )
         == "postgresql+psycopg://ini/lab"
     )
+
+
+def test_allocation_tier_counts_toward_hundred_percent(tmp_path: Path):
+    """Ярус размещения берёт долю из тех же 100 %: доли групп плюс ярус — ровно 100."""
+    text = (CONFIG_DIR / "limits.yaml").read_text(encoding="utf-8")
+    bad = tmp_path / "limits.yaml"
+    wrong = text.replace("allocation_tier:\n  share_pct: 20", "allocation_tier:\n  share_pct: 25")
+    assert wrong != text
+    bad.write_text(wrong, encoding="utf-8")
+    with pytest.raises(ConfigError, match="allocation_tier"):
+        load_config(bad, LimitsConfig)

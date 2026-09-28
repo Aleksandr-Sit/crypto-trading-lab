@@ -71,7 +71,8 @@ def test_refresh_writes_allocations_table(scope, session):
     assert rows
 
     saved = {r.branch: r for r in session.query(AllocationRow).all()}
-    assert sum(r.share for r in saved.values()) == Decimal(100)
+    # ветки делят 80 %: ещё 20 % банка — ярус размещения, он не ветка (limits.yaml)
+    assert sum(r.share for r in saved.values()) == Decimal(80)
     assert saved["cex-spot"].base_amount > 0
     assert saved["cex-spot"].updated_at is not None
 

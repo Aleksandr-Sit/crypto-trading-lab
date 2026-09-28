@@ -9,6 +9,7 @@ from typing import Any, Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from lab.contracts import Branch, OrderIntent, Rung, Status, StopSpec
+from lab.contracts.allocation import is_allocation
 
 
 class _Model(BaseModel):
@@ -68,6 +69,8 @@ class StrategyInfo(_Model):
     rung: Rung
     status: Status
     stop: StopSpec | None = None
+    # Правило размещения (`allocation: true` в карточке): лимиты яруса вместо группы ветки.
+    allocation: bool = False
 
     @classmethod
     def from_strategy(cls, s: Any) -> StrategyInfo:
@@ -78,6 +81,7 @@ class StrategyInfo(_Model):
             rung=Rung(s.rung),
             status=Status(s.status),
             stop=getattr(s, "stop", None),
+            allocation=is_allocation(getattr(s, "params", None)),
         )
 
 
@@ -118,6 +122,7 @@ class Portfolio(Protocol):
     def venue_available(self, venue: str) -> bool: ...
     def strategy_stats(self, strategy_id: str) -> StrategyStats: ...
     def live_deployed_usd(self) -> Decimal: ...
+    def allocation_exposure_usd(self) -> Decimal: ...  # занято стратегиями яруса размещения
     def mark_price(self, venue: str, instrument: str) -> Decimal | None: ...
     def liquidation_price(self, intent: OrderIntent) -> Decimal | None: ...
 

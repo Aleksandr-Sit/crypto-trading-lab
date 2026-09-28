@@ -12,6 +12,7 @@ P&L — из журнала (`trades`), доли веток — из `config/lim
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -23,6 +24,7 @@ from sqlalchemy import select
 
 from lab.config import load_limits
 from lab.contracts import Branch, OrderIntent
+from lab.contracts.allocation import is_allocation, peak_drawdown_pct
 from lab.core.risk import BranchState, StrategyStats
 from lab.db.models import AllocationRow, StrategyRow, SystemFlagRow, TradeRow
 
@@ -30,6 +32,9 @@ log = logging.getLogger(__name__)
 
 STABLES = ("USDT", "USDC", "USD", "DAI", "BUSD", "FDUSD")
 BALANCE_FLAG = "venue_balance:"
+#: Вершина результата стратегии яруса размещения, USD. При ручном возврате стратегии
+#: из `degraded` оператором запись удаляется — иначе стоп сработает снова сразу же.
+PEAK_FLAG = "strategy_peak:"
 
 #: Какие площадки формируют капитал ветки. Площадки, которых нет среди исполнителей,
 #: просто не участвуют — ветка тогда живёт на своей доле банка.
@@ -216,30 +221,101 @@ class LivePortfolio:
                 total += Decimal(p.qty) * Decimal(p.entry_price) / leverage
         if total:
             return total
-        with self._sf() as session:
-            rows = session.scalars(
-                select(TradeRow)
-                .join(StrategyRow, StrategyRow.id == TradeRow.strategy_id)
-                .where(StrategyRow.branch == branch, TradeRow.closed_at.is_(None))
-            ).all()
+        # Позиции площадки по стратегиям не разложить, поэтому ярус размещения отделяется
+        # только здесь, по журналу. Ярус — спотовый (ротация), а позиции площадки — перпы.
+        rows = self._branch_trades(branch, TradeRow.closed_at.is_(None))
         return sum((r.qty * r.entry_price for r in rows), Decimal(0))
+
+    def _branch_trades(self, branch: str, *where: Any) -> list[TradeRow]:
+        """Сделки ветки БЕЗ стратегий яруса размещения: у яруса своя доля, и его просадка
+        не должна вставать стопом ветки для соседних правил (решение 4, 27.09.2026)."""
+        with self._sf() as session:
+            pairs = session.execute(
+                select(TradeRow, StrategyRow.params_json)
+                .join(StrategyRow, StrategyRow.id == TradeRow.strategy_id)
+                .where(StrategyRow.branch == branch, *where)
+            ).all()
+        return [trade for trade, params in pairs if not is_allocation(params)]
 
     def _pnl_pct(self, branch: str, *, days: int, base: Decimal) -> Decimal:
         if base <= 0:
             return Decimal(0)
         edge = self.clock() - timedelta(days=days)
-        with self._sf() as session:
-            rows = session.scalars(
-                select(TradeRow)
-                .join(StrategyRow, StrategyRow.id == TradeRow.strategy_id)
-                .where(
-                    StrategyRow.branch == branch,
-                    TradeRow.closed_at.is_not(None),
-                    TradeRow.closed_at >= edge,
-                )
-            ).all()
+        rows = self._branch_trades(
+            branch, TradeRow.closed_at.is_not(None), TradeRow.closed_at >= edge
+        )
         pnl = sum((r.pnl_net for r in rows), Decimal(0))
         return (pnl * 100 / base).quantize(Decimal("0.0001"))
+
+    # -- ярус размещения -----------------------------------------------------------------
+
+    def allocation_base_usd(self) -> Decimal:
+        """Доля яруса размещения в долларах: `allocation_tier.share_pct` от банка."""
+        tier = getattr(self.limits, "allocation_tier", None)
+        if tier is None:
+            return Decimal(0)
+        return self.bank_usd() * Decimal(tier.share_pct) / Decimal(100)
+
+    def allocation_exposure_usd(self) -> Decimal:
+        """Занято стратегиями яруса: открытые лоты по цене входа (как `_exposure` по журналу)."""
+        with self._sf() as session:
+            pairs = session.execute(
+                select(TradeRow, StrategyRow.params_json)
+                .join(StrategyRow, StrategyRow.id == TradeRow.strategy_id)
+                .where(TradeRow.closed_at.is_(None))
+            ).all()
+        return sum(
+            (t.qty * t.entry_price for t, params in pairs if is_allocation(params)), Decimal(0)
+        )
+
+    def _unrealized(self, row: TradeRow, venue: str) -> Decimal:
+        price = self.mark_price(row.venue or venue, row.instrument)
+        if price is None:
+            # Нет цены — позиция видна по входу. Стоп тогда слепнет к ходу цены, поэтому
+            # это предупреждение, а не тихий ноль.
+            log.warning("Нет цены %s на %s: просадка яруса по цене входа", row.instrument, venue)
+            return Decimal(0)
+        move = (price - row.entry_price) * row.qty
+        return move if row.side == "long" else -move
+
+    def _allocation_drawdown(self, strategy: StrategyRow, rows: list[TradeRow]) -> Decimal:
+        """Просадка стратегии яруса: от ВЕРШИНЫ её капитала, с открытыми лотами по текущей
+        цене (`lab.contracts.allocation`). Капитал — доля яруса плюс результат стратегии;
+        вершина результата хранится в `system_flags` и переживает рестарт — иначе после
+        перезапуска просадка считалась бы от сегодняшней цены, а не от вершины."""
+        base = self.allocation_base_usd()
+        if base <= 0:
+            return Decimal(0)
+        pnl = sum((r.pnl_net for r in rows if r.closed_at is not None), Decimal(0))
+        pnl += sum(
+            (self._unrealized(r, strategy.venue) for r in rows if r.closed_at is None),
+            Decimal(0),
+        )
+        known = self._peak(strategy.id)
+        peak = max(known, pnl, Decimal(0))
+        if peak != known:
+            self._save_peak(strategy.id, peak)
+        return peak_drawdown_pct(base + peak, base + pnl).quantize(Decimal("0.0001"))
+
+    def _peak(self, strategy_id: str) -> Decimal:
+        with self._sf() as session:
+            row = session.get(SystemFlagRow, _peak_key(strategy_id))
+            if row is None or not row.value:
+                return Decimal(0)
+            return Decimal(row.value.get("pnl", "0"))
+
+    def _save_peak(self, strategy_id: str, peak: Decimal) -> None:
+        with self._sf() as session:
+            key = _peak_key(strategy_id)
+            row = session.get(SystemFlagRow, key)
+            if row is None:
+                row = SystemFlagRow(key=key, updated_by="portfolio")
+                session.add(row)
+            row.value = {
+                "strategy_id": strategy_id,
+                "pnl": str(peak),
+                "as_of": self.clock().isoformat(),
+            }
 
     # -- стратегии -----------------------------------------------------------------------
 
@@ -252,7 +328,13 @@ class LivePortfolio:
                 .where(TradeRow.strategy_id == strategy_id)
                 .order_by(TradeRow.opened_at, TradeRow.id)
             ).all()
-        base = self.branch(strategy.branch).current_usd if strategy is not None else Decimal(0)
+        tiered = strategy is not None and is_allocation(strategy.params_json)
+        if strategy is None:
+            base = Decimal(0)
+        elif tiered:
+            base = self.allocation_base_usd()
+        else:
+            base = self.branch(strategy.branch).current_usd
         day = sum(
             (r.pnl_net for r in rows if r.closed_at is not None and r.closed_at >= edge),
             Decimal(0),
@@ -260,9 +342,14 @@ class LivePortfolio:
         exposure = sum(
             (r.qty * r.entry_price for r in rows if r.closed_at is None), Decimal(0)
         )
+        dd = (
+            self._allocation_drawdown(strategy, list(rows))
+            if tiered and strategy is not None
+            else _drawdown_pct(rows, base)
+        )
         return StrategyStats(
             pnl_day_pct=(day * 100 / base).quantize(Decimal("0.0001")) if base > 0 else Decimal(0),
-            dd_pct=_drawdown_pct(rows, base),
+            dd_pct=dd,
             exposure_usd=exposure,
         )
 
@@ -333,6 +420,14 @@ class LivePortfolio:
             cron=cron,
             description="Снимок капитала по веткам в таблицу allocations",
         )
+
+
+def _peak_key(strategy_id: str) -> str:
+    """Ключ вершины в `system_flags` (ключ — до 64 знаков, id стратегии — до 128)."""
+    key = f"{PEAK_FLAG}{strategy_id}"
+    if len(key) <= 64:
+        return key
+    return f"{PEAK_FLAG}{hashlib.sha256(strategy_id.encode()).hexdigest()[:40]}"
 
 
 def _drawdown_pct(rows: list[TradeRow], base: Decimal) -> Decimal:

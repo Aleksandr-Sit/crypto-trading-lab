@@ -27,6 +27,7 @@ from sqlalchemy.orm import Session
 
 from lab.config import ThresholdConfig
 from lab.contracts import Branch, Candle, MeasureMode, Rung, StrategyManifest
+from lab.contracts.allocation import is_allocation
 from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.metrics import metrics as compute_metrics
@@ -469,6 +470,8 @@ def run(
     # переключишь, и она строже: спот-нога хеджа не считается обеспечением фьючерсной.
     # `cross` — общий счёт: прибыль одной ноги держит убыток другой.
     cross_margin = str(manifest.params.get("margin_mode", "isolated")).lower() == "cross"
+    # Правило размещения: стоп по просадке от вершины с открытой позицией — как в бою.
+    allocation = is_allocation(manifest.params)
 
     # -- данные: готовые свечи или источник; сбой → incomplete -----------------------
     bench_rows = benchmark if isinstance(benchmark, Sequence) else None
@@ -525,6 +528,7 @@ def run(
                     engines=engines(),
                     stop=manifest.stop,
                     capital=capital,
+                    allocation=allocation,
                 )
                 oos_r = simulate(
                     factory(),
@@ -532,6 +536,7 @@ def run(
                     engines=engines(),
                     stop=manifest.stop,
                     capital=capital,
+                    allocation=allocation,
                 )
                 folds.append(
                     f.model_copy(
@@ -567,6 +572,7 @@ def run(
             engines=engines(),
             stop=manifest.stop,
             capital=capital,
+            allocation=allocation,
             # Дыра в ОДНОМ ряду не отменяет замер портфеля: остановка торгов отдельным
             # альтом — обычное дело, а вселенная кросс-моментума состоит из сотен пар,
             # и хоть одна дыра там есть всегда. Пропуски считаются и уезжают в снимок.

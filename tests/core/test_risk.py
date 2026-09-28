@@ -1,7 +1,7 @@
 """Шов core.risk.check (спецификация, «Швы для тестов»). Портфель и реестр — фейки.
 
 Числа — из таблицы лимитов веток (В9а): банк 10 000 USD → cex 40 % = 4 000,
-сделка ≤ 2 % банка = 200, плечо ≤ 5; meme 20 % = 2 000, сделка ≤ 10 % ветки, без плеча,
+сделка ≤ 2 % банка = 200, плечо ≤ 3; meme 20 % = 2 000, сделка ≤ 10 % ветки, без плеча,
 стоп ветки −20 %/день; nft стоп −30 %/неделя. Потолок реального капитала — 1 000 USD.
 """
 
@@ -35,6 +35,7 @@ class FakePortfolio:
     venues_down: set[str] = field(default_factory=set)
     stats: dict[str, StrategyStats] = field(default_factory=dict)
     live_deployed: Decimal = D(0)
+    allocation_exposure: Decimal = D(0)
     marks: dict[str, Decimal] = field(default_factory=lambda: {"BTC-USDT": D(100)})
     liq: dict[str, Decimal] = field(default_factory=dict)
 
@@ -49,6 +50,9 @@ class FakePortfolio:
 
     def strategy_stats(self, strategy_id: str) -> StrategyStats:
         return self.stats.get(strategy_id, StrategyStats())
+
+    def allocation_exposure_usd(self) -> Decimal:
+        return self.allocation_exposure
 
     def live_deployed_usd(self) -> Decimal:
         return self.live_deployed
@@ -76,6 +80,15 @@ STRATEGIES: dict[str, StrategyInfo] = {
         rung=Rung.MICRO,
         status=Status.PASSED,
         stop=StopSpec(daily_pct=D(5)),
+    ),
+    "cex-spot-rotation": StrategyInfo(
+        id="cex-spot-rotation",
+        branch=Branch.CEX_SPOT,
+        venue="binance",
+        rung=Rung.MICRO,
+        status=Status.PASSED,
+        stop=StopSpec(max_dd_pct=D(35)),
+        allocation=True,
     ),
     "nft-me-mint": StrategyInfo(
         id="nft-me-mint",
@@ -181,17 +194,17 @@ def test_strategy_max_position_is_stricter_than_branch_limit(engine, portfolio):
 
 
 def test_leverage_above_branch_limit_is_denied(engine):
-    deny(engine.check(intent(leverage="6")), "leverage")
+    deny(engine.check(intent(leverage="4")), "leverage")
     deny(engine.check(intent("meme-sol-early", leverage="2")), "leverage")  # meme — без плеча
-    assert engine.check(intent(leverage="5")) == Allow()
+    assert engine.check(intent(leverage="3")) == Allow()
 
 
 def test_liquidation_closer_than_strategy_stop_is_denied(engine, portfolio):
-    # 5× → до ликвидации 100/5 − 0.5 = 19.5 %; стоп стратегии на позицию 10 % → допустимо
-    assert engine.check(intent(leverage="5")) == Allow()
+    # 3× → до ликвидации 100/3 − 0.5 = 32.8 %; стоп стратегии на позицию 10 % → допустимо
+    assert engine.check(intent(leverage="3")) == Allow()
     # площадка сообщает цену ликвидации 92 при входе 100 → 8 % < стопа 10 %
     portfolio.liq["BTC-USDT"] = D(92)
-    deny(engine.check(intent(leverage="5")), "liquidation")
+    deny(engine.check(intent(leverage="3")), "liquidation")
     # без плеча ликвидации нет — правило не применяется
     assert engine.check(intent(leverage="1")) == Allow()
 
@@ -336,14 +349,13 @@ def test_db_halt_switch_and_config_log_are_shared_through_postgres(session, port
 
 def test_maintenance_margin_from_limits_yaml_sets_liquidation_distance(engine, portfolio):
     assert engine.limits.for_branch("cex-perp").maintenance_margin_pct == D("0.5")
-    # 5× → 19.5 % до ликвидации; стоп стратегии на позицию 25 % → ликвидация ближе стопа
+    # 3× → 32.83 % до ликвидации; стоп стратегии на позицию 33 % → ликвидация ближе стопа
     wide = STRATEGIES["cex-perp-hl-trend"].model_copy(
-        update={"stop": StopSpec(daily_pct=D(3), max_position_pct=D(25))}
+        update={"stop": StopSpec(daily_pct=D(3), max_position_pct=D(33))}
     )
     e = RiskEngine({"cex-perp-hl-trend": wide}.get, portfolio)
-    deny(e.check(intent(leverage="5")), "liquidation")
-    deny(e.check(intent(leverage="4")), "liquidation")  # 24.5 % < 25 %
-    assert e.check(intent(leverage="3")) == Allow()  # 32.83 % > 25 %
+    deny(e.check(intent(leverage="3")), "liquidation")  # 32.83 % < 33 %
+    assert e.check(intent(leverage="2")) == Allow()  # 49.5 % > 33 %
 
 
 # --- reduce_only: закрыть позицию после пробоя можно всегда (История 10) --------------------
@@ -401,3 +413,59 @@ def test_reduce_only_bypasses_exactly_these_rules(portfolio):
     portfolio.venues_down.clear()
     unknown = closing.model_copy(update={"strategy_id": "nope"})
     deny(engine.check(unknown), "unknown_strategy")
+
+
+# --- ярус размещения (решение владельца 4, 27.09.2026) ------------------------------------
+# Банк 10 000 → ярус 20 % = 2 000; сделка — до всей доли яруса; без плеча; стопа ветки нет.
+
+
+def test_allocation_trade_may_take_the_whole_tier(engine):
+    assert engine.check(intent("cex-spot-rotation", qty="20")) == Allow()  # 2 000 = доля яруса
+    verdict = deny(engine.check(intent("cex-spot-rotation", qty="20.01")), "max_trade")
+    assert "яруса" in verdict.reason
+    # обычная стратегия той же группы по-прежнему упирается в 2 % банка
+    deny(engine.check(intent(qty="2.01")), "max_trade")
+
+
+def test_allocation_ignores_branch_stop_but_neighbours_do_not(engine, portfolio):
+    portfolio.branches["cex-spot"] = BranchState(current_usd=D(4_000), pnl_day_pct=D(-6))
+    assert engine.check(intent("cex-spot-rotation", qty="10")) == Allow()
+    plain = STRATEGIES["cex-spot-rotation"].model_copy(update={"allocation": False})
+    e = RiskEngine({"cex-spot-rotation": plain}.get, portfolio)
+    deny(e.check(intent("cex-spot-rotation", qty="1")), "branch_stop")
+
+
+def test_allocation_share_counts_the_whole_tier_not_the_branch(engine, portfolio):
+    # ветка cex-spot занята под завязку — ярусу это не мешает, у него своя доля
+    portfolio.branches["cex-spot"] = BranchState(current_usd=D(4_000), exposure_usd=D(4_000))
+    portfolio.allocation_exposure = D(1_500)
+    verdict = deny(engine.check(intent("cex-spot-rotation", qty="6")), "tier_share")
+    assert "1500" in verdict.reason and "2000" in verdict.reason
+    assert engine.check(intent("cex-spot-rotation", qty="5")) == Allow()
+
+
+def test_allocation_has_no_leverage(engine):
+    verdict = deny(engine.check(intent("cex-spot-rotation", leverage="2")), "leverage")
+    assert "яруса размещения" in verdict.reason
+
+
+def test_allocation_drawdown_stop_uses_portfolio_figure(engine, portfolio):
+    # Как считать просадку (от вершины, с открытой позицией) — забота портфеля;
+    # ядро сравнивает её с 35 % стопа карточки.
+    portfolio.stats["cex-spot-rotation"] = StrategyStats(dd_pct=D("34.99"))
+    assert engine.check(intent("cex-spot-rotation")) == Allow()
+    portfolio.stats["cex-spot-rotation"] = StrategyStats(dd_pct=D(35))
+    deny(engine.check(intent("cex-spot-rotation")), "strategy_stop_dd")
+
+
+def test_allocation_without_tier_in_config_falls_back_to_group_limits(portfolio, tmp_path):
+    text = (ROOT / "config" / "limits.yaml").read_text(encoding="utf-8")
+    # старая раскладка: яруса нет, доля `copy` — прежние 25 %
+    text = text.split("\nallocation_tier:")[0].replace(
+        "share_pct: 5\n    max_trade_pct: 3", "share_pct: 25\n    max_trade_pct: 3"
+    )
+    path = tmp_path / "limits.yaml"
+    path.write_text(text, encoding="utf-8")
+    e = RiskEngine(STRATEGIES.get, portfolio, limits_path=path)
+    assert e.limits.allocation_tier is None
+    deny(e.check(intent("cex-spot-rotation", qty="2.01")), "max_trade")  # 2 % банка

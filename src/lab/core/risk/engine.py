@@ -3,7 +3,11 @@
 Правила (код правила = `Deny.rule`), в порядке проверки:
   halted · unknown_strategy · strategy_inactive · venue_unavailable · rung_mode · stop_missing ·
   strategy_stop_daily · strategy_stop_dd · branch_stop · no_price · leverage · max_trade ·
-  branch_share · real_capital_cap · liquidation.
+  branch_share | tier_share · real_capital_cap · liquidation.
+
+Стратегия яруса размещения (`allocation: true`, `limits.yaml: allocation_tier`) идёт по лимитам
+яруса: без `branch_stop`, плечо и потолок сделки — яруса, доля — `tier_share` против занятого
+всеми стратегиями яруса. Её просадку портфель считает от вершины с открытой позицией.
 
 Ордер `reduce_only` (закрытие) проходит только halted · unknown_strategy · retired ·
 venue_unavailable: закрыть позицию после пробоя стопа и в статусе `degraded` можно всегда
@@ -139,6 +143,10 @@ class RiskEngine:
             )
 
         limits = self._limits.for_branch(strategy.branch)
+        # Правило размещения идёт по лимитам яруса, а не группы своей ветки (решение 4,
+        # 27.09.2026). Яруса нет в конфиге — прежние лимиты группы: отказ `max_trade` честнее,
+        # чем правило без потолка вовсе.
+        tier = self._limits.allocation_tier if strategy.allocation else None
         branch = self._portfolio.branch(strategy.branch)
         stats = self._portfolio.strategy_stats(strategy.id)
         stop = strategy.stop
@@ -156,7 +164,9 @@ class RiskEngine:
                 rule="strategy_stop_dd",
             )
         branch_pnl = branch.pnl_day_pct if limits.stop.period == "day" else branch.pnl_week_pct
-        if -branch_pnl >= limits.stop.loss_pct:
+        # У яруса стопа ветки нет: правило держит актив целиком, и день падения BTC на 5%
+        # не должен запрещать ему переложиться в защитную ногу.
+        if tier is None and -branch_pnl >= limits.stop.loss_pct:
             period = "день" if limits.stop.period == "day" else "неделю"
             return Deny(
                 reason=f"Стоп ветки {strategy.branch} пробит: {_fmt(branch_pnl)} % за {period} "
@@ -170,12 +180,12 @@ class RiskEngine:
                 reason=f"Нет цены для {intent.instrument} на {intent.venue}: размер не посчитать",
                 rule="no_price",
             )
-        if intent.leverage > limits.max_leverage:
-            max_lev = limits.max_leverage
+        max_lev = tier.max_leverage if tier is not None else limits.max_leverage
+        if intent.leverage > max_lev:
             lim = "без плеча" if max_lev == 1 else f"≤{_fmt(max_lev)}×"
+            scope = "яруса размещения" if tier is not None else f"ветки {strategy.branch}"
             return Deny(
-                reason=f"Плечо {_fmt(intent.leverage)}× выше лимита ветки "
-                f"{strategy.branch} ({lim})",
+                reason=f"Плечо {_fmt(intent.leverage)}× выше лимита {scope} ({lim})",
                 rule="leverage",
             )
 
@@ -183,16 +193,23 @@ class RiskEngine:
         notional = intent.qty * price
         margin = notional / intent.leverage
 
-        base = bank if limits.max_trade_base == "bank" else branch.current_usd
-        base_name = "банка" if limits.max_trade_base == "bank" else "текущего капитала ветки"
-        cap = _pct(base, limits.max_trade_pct)
-        cap_text = f"{_fmt(limits.max_trade_pct)} % {base_name} = {_fmt(cap)} USD"
+        if tier is not None:
+            tier_usd = _pct(bank, tier.share_pct)
+            position_base, position_name = tier_usd, "доли яруса размещения"
+            cap = _pct(tier_usd, tier.max_trade_pct)
+            cap_text = f"{_fmt(tier.max_trade_pct)} % доли яруса размещения = {_fmt(cap)} USD"
+        else:
+            position_base, position_name = branch.current_usd, "капитала ветки"
+            base = bank if limits.max_trade_base == "bank" else branch.current_usd
+            base_name = "банка" if limits.max_trade_base == "bank" else "текущего капитала ветки"
+            cap = _pct(base, limits.max_trade_pct)
+            cap_text = f"{_fmt(limits.max_trade_pct)} % {base_name} = {_fmt(cap)} USD"
         if stop is not None and stop.max_position_pct is not None:
-            strategy_cap = _pct(branch.current_usd, stop.max_position_pct)
+            strategy_cap = _pct(position_base, stop.max_position_pct)
             if strategy_cap < cap:
                 cap = strategy_cap
                 cap_text = (
-                    f"{_fmt(stop.max_position_pct)} % капитала ветки по стопу стратегии = "
+                    f"{_fmt(stop.max_position_pct)} % {position_name} по стопу стратегии = "
                     f"{_fmt(cap)} USD"
                 )
         if notional > cap:
@@ -201,13 +218,23 @@ class RiskEngine:
                 rule="max_trade",
             )
 
-        share_cap = _pct(bank, limits.share_pct)
-        if branch.exposure_usd + margin > share_cap:
-            return Deny(
-                reason=f"Ветка {strategy.branch} выйдет за долю {_fmt(limits.share_pct)} % банка: "
-                f"занято {_fmt(branch.exposure_usd)} + {_fmt(margin)} > {_fmt(share_cap)} USD",
-                rule="branch_share",
-            )
+        if tier is not None:
+            held = self._portfolio.allocation_exposure_usd()
+            if held + margin > tier_usd:
+                return Deny(
+                    reason=f"Ярус размещения выйдет за долю {_fmt(tier.share_pct)} % банка: "
+                    f"занято {_fmt(held)} + {_fmt(margin)} > {_fmt(tier_usd)} USD",
+                    rule="tier_share",
+                )
+        else:
+            share_cap = _pct(bank, limits.share_pct)
+            if branch.exposure_usd + margin > share_cap:
+                return Deny(
+                    reason=f"Ветка {strategy.branch} выйдет за долю {_fmt(limits.share_pct)} % "
+                    f"банка: занято {_fmt(branch.exposure_usd)} + {_fmt(margin)} > "
+                    f"{_fmt(share_cap)} USD",
+                    rule="branch_share",
+                )
 
         if intent.mode == Mode.LIVE:
             cap_live = real_capital_cap(self._limits)
