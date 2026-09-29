@@ -28,11 +28,25 @@
 
     python scripts/youtube_check.py --root /app/data --tf 4h --horizon 6
     python scripts/youtube_check.py --root /app/data --tf 1d --horizon 20
+
+**Выход по стопу и цели (`--exit rr`, п.7-доп).** Так учат сами преподаватели: стоп за
+разворотной точкой или в ATR от свечи сигнала, цель 1.5–3R. Стоп `swing` — минимум
+последних 5 баров − 0.1 ATR (шорт зеркально), `atr` — минимум свечи сигнала − 1 ATR
+(как у Rayner Teo). Удержание не больше `--max-hold` баров, дальше выход по закрытию.
+Стоп и цель в одной свече — стоп (порядок внутри свечи неизвестен, берём худший); гэп
+за стоп — выход по открытию. Контроль — обычный бар той же корзины хода с ТЕМ ЖЕ выходом,
+лонги и шорты по корзинам отдельно: у стопа и цели своя асимметрия, и сравнивать сигнал
+с баром, закрытым через фиксированное время, было бы нечестно. Блок независимости —
+максимальное удержание. `--stop` и `--rr` принимают списки: правила считаются один раз.
+
+    python scripts/youtube_check.py --root /app/data --tf 4h --horizon 6 \
+        --exit rr --stop swing,atr --rr 1.5,2,3 --lookahead 60
 """
 
 from __future__ import annotations
 
 import argparse
+import random
 import sys
 from collections import defaultdict
 from datetime import datetime
@@ -490,6 +504,223 @@ def block_stats(pairs: list[tuple[int, float]]) -> tuple[float, float, int]:
     return m, 2 * se, nb
 
 
+# -- выход по стопу и цели --------------------------------------------------------------
+
+SWING_BARS = 5  # стоп `swing`: экстремум последних 5 баров, включая бар сигнала
+
+
+def stop_level(h, lo, a, i: int, side: int, kind: str) -> float | None:
+    """Уровень стопа по данным до закрытия бара сигнала i включительно."""
+    if a[i] is None:
+        return None
+    if kind == "swing":
+        if side > 0:
+            return min(lo[i - SWING_BARS + 1 : i + 1]) - 0.1 * a[i]
+        return max(h[i - SWING_BARS + 1 : i + 1]) + 0.1 * a[i]
+    return lo[i] - a[i] if side > 0 else h[i] + a[i]
+
+
+def rr_exits(o, h, lo, c, i: int, side: int, stop: float, rrs: list[float],
+             max_hold: int) -> list[tuple[float, int]] | None:
+    """Исход (% со знаком позиции, баров в сделке) для каждой цели из `rrs` за один проход.
+
+    Вход — открытие бара i+1. Цены переведены в «пространство позиции» (умножены на знак):
+    так лонг и шорт проходят одной веткой кода, и «против позиции» всегда значит «меньше».
+    None — открытие входа уже за стопом: такой сделки нет ни у сигнала, ни у контроля.
+    """
+    entry = o[i + 1]
+    s_entry, s_stop = side * entry, side * stop
+    risk = s_entry - s_stop
+    if risk <= 0:
+        return None
+    s_tgt = [s_entry + r * risk for r in rrs]
+    px: list[float | None] = [None] * len(rrs)
+    held = [max_hold] * len(rrs)
+    left = len(rrs)
+    last = i + max_hold
+    for k in range(i + 1, last + 1):
+        s_open = side * o[k]
+        fav, adv = (h[k], lo[k]) if side > 0 else (-lo[k], -h[k])
+        if s_open <= s_stop:  # гэп за стоп — выход по открытию, хуже стопа
+            hit, targets = s_open, False
+        else:
+            for j, t in enumerate(s_tgt):  # гэп за цель — по открытию, лучше цели
+                if px[j] is None and s_open >= t:
+                    px[j], held[j], left = s_open, k - i, left - 1
+            hit, targets = (s_stop, False) if adv <= s_stop else (None, True)
+        if hit is not None:  # стоп и цель в одной свече — стоп
+            for j in range(len(rrs)):
+                if px[j] is None:
+                    px[j], held[j] = hit, k - i
+            left = 0
+        elif targets:
+            for j, t in enumerate(s_tgt):
+                if px[j] is None and fav >= t:
+                    px[j], held[j], left = t, k - i, left - 1
+        if not left:
+            break
+    s_last = side * c[last]
+    return [
+        (((s_last if p is None else p) - s_entry) / entry * 100, hb)
+        for p, hb in zip(px, held, strict=True)
+    ]
+
+
+def lookahead(bars: list[dict], sig: dict[str, list[int]], a14, stops: list[str],
+              n_points: int, seed: int = 7) -> str:
+    """Подглядывает ли правило в будущее: сигнал и стоп на баре i по полной истории против
+    истории, обрезанной на i. Точки — бары, где правило сработало (у редкого правила
+    случайная точка почти всегда «нет сигнала», и проверка вышла бы пустой), плюс случайные.
+    """
+    rng = random.Random(seed)
+    start = 250
+    pts: set[int] = set(rng.sample(range(start, len(bars)), n_points // 2))
+    per_rule = max(2, n_points // (2 * len(RULES)))
+    for name in RULES:
+        fired = [i for i in range(start, len(bars)) if sig[name][i]]
+        pts.update(rng.sample(fired, min(per_rule, len(fired))))
+    h = [b["h"] for b in bars]
+    lo = [b["l"] for b in bars]
+    bad: list[str] = []
+    for i in sorted(pts):
+        cut = bars[: i + 1]
+        st = rules(cut)
+        hc, lc, cc = h[: i + 1], lo[: i + 1], [b["c"] for b in cut]
+        ac = atr(hc, lc, cc, 14)
+        for name in RULES:
+            if st[name][i] != sig[name][i]:
+                bad.append(f"{name}@{i}: {sig[name][i]} против {st[name][i]}")
+        for kind in stops:
+            for side in (1, -1):
+                if stop_level(hc, lc, ac, i, side, kind) != stop_level(h, lo, a14, i, side, kind):
+                    bad.append(f"стоп {kind}{side:+d}@{i}")
+    head = f"{len(pts)} точек × {len(RULES)} правил + стопы"
+    return f"{head}: совпало" if not bad else f"{head}: РАСХОЖДЕНИЯ {len(bad)}: {bad[:8]}"
+
+
+def verdict_of(nblk: int, exc: float, two_se: float, yrs_pos: int, n_yrs: int) -> str:
+    if nblk < 20:
+        return "мало наблюдений"
+    if abs(exc) < two_se:
+        return "шум"
+    if exc < 0:
+        return "ОБРАТНЫЙ знак"
+    if exc < COST_PCT:
+        return "меньше издержек"
+    if n_yrs and yrs_pos / n_yrs < 2 / 3:
+        return "проходит, но НЕ по годам"
+    return "ПЕРЕЖИВАЕТ — кандидат"
+
+
+def main_rr(args: argparse.Namespace) -> int:
+    """Режим `--exit rr`: вход по сигналу, выход по стопу, цели или через `max_hold` баров."""
+    tf_hours = {"1h": 1, "4h": 4, "1d": 24}[args.tf]
+    hz, mh = args.horizon, args.max_hold
+    move_days = hz * tf_hours / 24
+    width = 2.0 * sqrt(max(move_days, 1 / 24))
+    block_days = max(1, ceil(mh * tf_hours / 24))
+    stops = args.stop.split(",")
+    if not set(stops) <= {"swing", "atr"}:
+        raise SystemExit(f"--stop: swing и/или atr, а не {args.stop}")
+    rrs = [float(x) for x in args.rr.split(",")]
+
+    cs = CandleStore(args.root)
+    # (стоп, цель, корзина, сторона) -> [сумма исходов, сделок, прибыльных]
+    peer: dict[tuple, list[float]] = defaultdict(lambda: [0.0, 0, 0])
+    # (стоп, цель, правило) -> [(блок, год, знак, корзина, исход, баров)]
+    events: dict[tuple, list[tuple]] = defaultdict(list)
+    covered = []
+    la = ""
+    for inst in args.instruments.split(","):
+        bars = load(cs, args.venue, inst, args.tf)
+        if len(bars) < 400:
+            print(f"{inst}: баров {len(bars)} — пропуск")
+            continue
+        covered.append(f"{inst}({len(bars)}, с {bars[0]['ts']:%Y-%m})")
+        sig = rules(bars)
+        o = [b["o"] for b in bars]
+        h = [b["h"] for b in bars]
+        lo = [b["l"] for b in bars]
+        c = [b["c"] for b in bars]
+        a14 = atr(h, lo, c, 14)
+        e200 = ema(c, 200)
+        if args.lookahead and not la:
+            la = f"{inst}: " + lookahead(bars, sig, a14, stops, args.lookahead)
+        for i in range(max(hz, 200), len(bars) - max(hz, mh) - 1):
+            moved = (c[i] / c[i - hz] - 1) * 100
+            trend = (1 if c[i] > e200[i] else -1) if args.trend_filter else 0
+            bucket = (max(-10, min(10, int(moved // width))), trend)
+            day = bars[i]["ts"].date()
+            blk = day.toordinal() // block_days
+            fired = [(name, sig[name][i]) for name in RULES if sig[name][i]]
+            for side in (1, -1):
+                mine = [name for name, s in fired if s == side and (not trend or s == trend)]
+                for kind in stops:
+                    st = stop_level(h, lo, a14, i, side, kind)
+                    res = None if st is None else rr_exits(o, h, lo, c, i, side, st, rrs, mh)
+                    if res is None:
+                        continue
+                    for r, (ret, held) in zip(rrs, res, strict=True):
+                        cell = peer[(kind, r, bucket, side)]
+                        cell[0] += ret
+                        cell[1] += 1
+                        cell[2] += ret > 0
+                        for name in mine:
+                            events[(kind, r, name)].append((blk, day.year, side, bucket, ret, held))
+
+    print(f"Ряды: {', '.join(covered)}")
+    print(f"ТФ {args.tf}, выход по стопу/цели, удержание не больше {mh} баров, вход по следующему "
+          "открытию" + ("; ФИЛЬТР EMA200" if args.trend_filter else ""))
+    print(f"Корзина хода за {hz} баров шириной {width:.1f} п.п.; блок независимости "
+          f"{block_days} сут; круг издержек {COST_PCT:.2f}%")
+    if la:
+        print(f"Подглядывание в будущее — {la}")
+
+    for kind in stops:
+        for r in rrs:
+            print(f"\n== стоп {kind}, цель {r:g}R ==")
+            for side, label in ((1, "лонг"), (-1, "шорт")):
+                cells = [v for key, v in peer.items() if key[:2] == (kind, r) and key[3] == side]
+                n = sum(v[1] for v in cells)
+                if n:
+                    print(f"  обычный бар, {label}: {n} сделок, в среднем "
+                          f"{sum(v[0] for v in cells) / n:+.3f}%, прибыльных "
+                          f"{100 * sum(v[2] for v in cells) / n:.1f}%")
+            print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'корзина':>9}"
+                  f"{'избыток':>9}{'2σ':>7}{'приб%':>7}{'контр%':>7}{'баров':>6}{'годы+':>7}"
+                  "  вердикт")
+            for name in RULES:
+                ev = events[(kind, r, name)]
+                if not ev:
+                    print(f"{name:16}{0:>7}   сигналов нет")
+                    continue
+                cells = [peer[(kind, r, e[3], e[2])] for e in ev]
+                n_long = sum(1 for e in ev if e[2] > 0)
+                raw = fmean(e[4] for e in ev)
+                pmean = fmean(v[0] / v[1] for v in cells)
+                exc_pairs = [(e[0], e[4] - v[0] / v[1]) for e, v in zip(ev, cells, strict=True)]
+                exc, two_se, nblk = block_stats(exc_pairs)
+                win = 100 * fmean(1.0 if e[4] > 0 else 0.0 for e in ev)
+                cwin = 100 * fmean(v[2] / v[1] for v in cells)
+                held = fmean(e[5] for e in ev)
+                per_year: dict[int, list[tuple[int, float]]] = defaultdict(list)
+                for (blk, x), e in zip(exc_pairs, ev, strict=True):
+                    per_year[e[1]].append((blk, x))
+                yrs = [block_stats(p)[0] for p in per_year.values() if len({b for b, _ in p}) >= 5]
+                yrs_pos = sum(1 for y in yrs if y > 0)
+                verdict = verdict_of(nblk, exc, two_se, yrs_pos, len(yrs))
+                print(
+                    f"{name:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}"
+                    f"{raw:>+8.2f}{pmean:>+9.2f}{exc:>+9.3f}{two_se:>7.3f}{win:>7.1f}{cwin:>7.1f}"
+                    f"{held:>6.1f}{f'{yrs_pos}/{len(yrs)}':>7}  {verdict}"
+                )
+    print("\nсырой — средний исход сделки сигнала, % со знаком позиции; корзина — обычный бар")
+    print("того же хода, та же сторона, тот же выход; избыток = сырой − корзина, шум и вердикт —")
+    print("по независимым блокам. приб% / контр% — доля прибыльных у сигнала и у контроля;")
+    print("баров — среднее удержание сигнала. Безубыточная доля без издержек: 1/(1+R).")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default="data")
@@ -502,7 +733,16 @@ def main() -> int:
         help="сигналы только по стороне EMA200 (так учат Rayner Teo и Trading Rush); "
         "корзина контроля тогда делится и по стороне EMA200",
     )
+    ap.add_argument("--exit", default="hold", choices=("hold", "rr"),
+                    help="hold — выход через --horizon баров; rr — по стопу и цели")
+    ap.add_argument("--stop", default="swing", help="rr: swing и/или atr через запятую")
+    ap.add_argument("--rr", default="2", help="rr: цели в R через запятую, например 1.5,2,3")
+    ap.add_argument("--max-hold", type=int, default=50, help="rr: предел удержания, баров")
+    ap.add_argument("--lookahead", type=int, default=0,
+                    help="rr: проверить подглядывание в N точках первого инструмента")
     args = ap.parse_args()
+    if args.exit == "rr":
+        return main_rr(args)
 
     tf_hours = {"1h": 1, "4h": 4, "1d": 24}[args.tf]
     hz = args.horizon
@@ -543,13 +783,13 @@ def main() -> int:
           + ("; ФИЛЬТР EMA200" if args.trend_filter else ""))
     print(f"Блок независимости {block_days} сут; корзина хода {width:.1f} п.п.; "
           f"круг издержек {COST_PCT:.2f}%\n")
-    print(f"{'правило':16}{'сигн':>6}{'L/S':>11}{'блоков':>7}{'сырой':>8}{'корзина':>9}"
+    print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'корзина':>9}"
           f"{'избыток':>9}{'2σ':>7}{'лонг':>8}{'шорт':>8}{'годы+':>7}  вердикт")
 
     for name in RULES:
         ev = events[name]
         if not ev:
-            print(f"{name:16}{0:>6}   сигналов нет")
+            print(f"{name:16}{0:>7}   сигналов нет")
             continue
         n_long = sum(1 for e in ev if e[2] > 0)
         raw = fmean(e[2] * e[4] for e in ev)
@@ -563,22 +803,11 @@ def main() -> int:
             per_year[e[1]].append((blk, x))
         yrs = [block_stats(p)[0] for p in per_year.values() if len({b for b, _ in p}) >= 5]
         yrs_pos = sum(1 for y in yrs if y > 0)
-        if nblk < 20:
-            verdict = "мало наблюдений"
-        elif abs(exc) < two_se:
-            verdict = "шум"
-        elif exc < 0:
-            verdict = "ОБРАТНЫЙ знак"
-        elif exc < COST_PCT:
-            verdict = "меньше издержек"
-        elif yrs and yrs_pos / len(yrs) < 2 / 3:
-            verdict = "проходит, но НЕ по годам"
-        else:
-            verdict = "ПЕРЕЖИВАЕТ — кандидат"
+        verdict = verdict_of(nblk, exc, two_se, yrs_pos, len(yrs))
         fl = f"{fmean(longs):+.2f}" if longs else "—"
         fs = f"{fmean(shorts):+.2f}" if shorts else "—"
         print(
-            f"{name:16}{len(ev):>6}{f'{n_long}/{len(ev) - n_long}':>11}{nblk:>7}{raw:>+8.2f}"
+            f"{name:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}{raw:>+8.2f}"
             f"{pmean:>+9.2f}{exc:>+9.3f}{two_se:>7.3f}{fl:>8}{fs:>8}"
             f"{f'{yrs_pos}/{len(yrs)}':>7}  {verdict}"
         )
