@@ -35,8 +35,16 @@
 # * LAB_DATA_ROOT=/app/data: иначе при -w /src хранилище свечей пусто, и замер тихо идёт
 #   за данными на биржу (там лимиты и сбои) вместо тома.
 #
-# Долгие прогоны (дольше нескольких минут) — НЕ сюда: ssh рвётся на многоминутных операциях
-# и убивает всё, что запущено в переднем плане. Для них — scripts/run-detached.sh.
+# Долгие прогоны (дольше нескольких минут) — с ключом --detached <имя>: ssh рвётся на
+# многоминутных операциях и убивает всё, что запущено в переднем плане.
+#   bash scripts/lab-oneoff.sh --lint --detached yt1h scripts/youtube_check.py -- <аргументы> …
+#   bash scripts/lab-oneoff.sh --wait yt1h     # дождаться и напечатать лог целиком
+#   bash scripts/lab-oneoff.sh --clean yt1h    # убрать каталог, лог и обёртку на сервере
+# Код кладётся в СВОЙ каталог /root/oneoff-<имя>, а не в /tmp/lint: тот перетирается
+# каждым следующим вызовом, и отвязанная задача получила бы чужой скрипт посреди работы.
+# Запуск — через scripts/run-detached.sh сервера, лог /root/<имя>.log. Две задачи
+# с разными именами можно пустить рядом; больше двух — нет: на сервере живёт crypto-trader.
+# 29.09.2026 это собиралось руками (свой каталог, обёртка, run-detached) — отсюда ключ.
 
 set -u
 
@@ -53,6 +61,8 @@ q() { local r="'\\''"; printf "'%s'" "${1//\'/"$r"}"; }
 LINT=0
 LINT_ONLY=0
 SAMPLE=0
+DETACHED=""
+ACTION=""
 FILES=()
 RUNS=()
 CUR=""
@@ -68,6 +78,8 @@ while [ $# -gt 0 ]; do
         --lint) LINT=1 ;;
         --lint-only) LINT=1; LINT_ONLY=1 ;;
         --trades-sample) SAMPLE="${2:?после --trades-sample нужно число часов}"; shift ;;
+        --detached) DETACHED="${2:?после --detached нужно имя задачи}"; shift ;;
+        --wait|--clean) ACTION="$1"; DETACHED="${2:?после $1 нужно имя задачи}"; shift ;;
         --) IN_ARGS=1 ;;
         -h|--help) sed -n '2,/^$/p' "$0"; exit 0 ;;
         -*) echo "неизвестный ключ: $1 (аргументы скрипта — после --)" >&2; exit 2 ;;
@@ -77,6 +89,16 @@ while [ $# -gt 0 ]; do
 done
 [ "$IN_ARGS" = 1 ] && RUNS+=("$CUR")
 [ ${#RUNS[@]} -eq 0 ] && RUNS=("")
+
+# Имя идёт в пути /root/… и в команду сервера: только безопасные символы.
+case "$DETACHED" in *[!A-Za-z0-9_-]*) echo "имя задачи: латиница, цифры, _ и -" >&2; exit 2 ;; esac
+if [ -n "$DETACHED" ]; then LINT_DIR="/root/oneoff-$DETACHED"; fi
+if [ "$ACTION" = "--wait" ]; then
+    exec ssh -n "$HOST" "bash $REPO/scripts/run-detached.sh --wait $DETACHED"
+fi
+if [ "$ACTION" = "--clean" ]; then
+    exec ssh -n "$HOST" "rm -rf $LINT_DIR /root/$DETACHED.log /root/$DETACHED.sh && echo 'убрано: $DETACHED'"
+fi
 [ ${#FILES[@]} -gt 0 ] || { sed -n '8,14p' "$0" >&2; exit 2; }
 case "$SAMPLE" in *[!0-9]*) echo "--trades-sample: нужно число, а не «$SAMPLE»" >&2; exit 2 ;; esac
 
@@ -108,6 +130,12 @@ while [ $i -lt ${#PATHS[@]} ]; do
 done
 MAIN="${NAMES[0]}"
 echo "на сервер: ${NAMES[*]}"
+
+if [ -n "$DETACHED" ]; then
+    # Живая задача с тем же именем: её код лежит в этом же каталоге, перетирать нельзя.
+    ssh -n "$HOST" "[ ! -f /root/$DETACHED.log ] || grep -q 'ГОТОВО код=' /root/$DETACHED.log" \
+        || { echo "задача $DETACHED ещё идёт — дождись (--wait) или возьми другое имя" >&2; exit 1; }
+fi
 
 PREP="mkdir -p $LINT_DIR && rm -rf $LINT_DIR/*.py $LINT_DIR/__pycache__"
 if [ "$SAMPLE" -gt 0 ]; then
@@ -151,4 +179,22 @@ for r in "${RUNS[@]}"; do
     [ ${#RUNS[@]} -gt 1 ] && CMD+="echo '>>> $MAIN'$r && "
     CMD+="/app/.venv/bin/python /lint/$MAIN$r"
 done
-remote "" "$CMD"
+if [ -z "$DETACHED" ]; then
+    remote "" "$CMD"
+    exit
+fi
+
+# Отвязанно: та же команда, что у remote(), но в файле-обёртке в каталоге задачи. Файл
+# сервер разбирает так же, как строку ssh, — кавычки q() работают без изменений. Код
+# возврата — python, а не grep: run-detached пишет в лог «ГОТОВО код=» последней команды.
+RUN="$(mktemp)"
+{
+    echo '#!/bin/bash'
+    echo "$COMPOSE --entrypoint sh worker -c $(q "$CMD") </dev/null 2>&1 | grep -v '^ *Container '"
+    echo 'exit "${PIPESTATUS[0]}"'
+} > "$RUN"
+scp -q "$RUN" "$HOST:$LINT_DIR/run.sh" || { rm -f "$RUN"; exit 1; }
+rm -f "$RUN"
+ssh -n "$HOST" "bash $REPO/scripts/run-detached.sh $DETACHED 'bash $LINT_DIR/run.sh'" || exit 1
+echo "ждать:  bash scripts/lab-oneoff.sh --wait $DETACHED"
+echo "убрать: bash scripts/lab-oneoff.sh --clean $DETACHED"

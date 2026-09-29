@@ -252,5 +252,5 @@ bash scripts/lab-oneoff.sh --lint scripts/youtube_check.py \
 
 Дальше те же аргументы с `--tf 4h --horizon 6`, `--tf 4h --horizon 2`, `--tf 1h --horizon 24`,
 `--tf 1h --horizon 6`, каждое с `--trend-filter` и без. 1d — 30 с, 4h — около 3 минут,
-1h — около 10 минут на прогон: 4h и 1h запускать отвязанно (`scripts/run-detached.sh`,
-код положить в свой каталог, а не в `/tmp/lint`).
+1h — около 10 минут на прогон: 4h и 1h запускать отвязанно — `lab-oneoff.sh --detached <имя>`,
+затем `--wait <имя>` и `--clean <имя>`.
