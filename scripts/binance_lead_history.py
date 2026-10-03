@@ -21,7 +21,7 @@ import json
 import sys
 import time
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from statistics import median
 
@@ -51,7 +51,7 @@ def fetch(portfolio: str, out: Path, pause: float) -> int:
             time.sleep(pause)
     uniq = {r["positionId"]: r for r in rows}
     snap = {
-        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "portfolio_id": portfolio,
         "detail": detail,
         "total": data["total"],
@@ -81,7 +81,7 @@ def summary(path: Path) -> int:
         p["sec"] = (p["closed"] - p["opened"]) / 1000
         p["notional"] = float(p["avgCost"]) * float(p["maxOpenInterest"])
         p["ret"] = p["pnl"] / p["notional"] if p["notional"] else 0.0
-        p["day"] = datetime.fromtimestamp(p["opened"] / 1000, timezone.utc)
+        p["day"] = datetime.fromtimestamp(p["opened"] / 1000, UTC)
 
     n = len(pos)
     wins = [p for p in pos if p["pnl"] > 0]
@@ -89,7 +89,7 @@ def summary(path: Path) -> int:
     gross_w = sum(p["pnl"] for p in wins)
     gross_l = -sum(p["pnl"] for p in pos if p["pnl"] <= 0)
     print(f"# {d['nickname']}  portfolio {snap['portfolio_id']}  (snapshot {snap['fetched_at']})")
-    print(f"start {datetime.fromtimestamp(d['startTime'] / 1000, timezone.utc):%Y-%m-%d}, "
+    print(f"start {datetime.fromtimestamp(d['startTime'] / 1000, UTC):%Y-%m-%d}, "
           f"margin {float(d['marginBalance']):.0f} USDT, AUM {float(d['aumAmount']):.0f}, "
           f"copiers {d['currentCopyCount']}/{d['maxCopyCount']} (all-time {d['totalCopyCount']})")
     print(f"copierPnl {float(d['copierPnl']):+.2f} USDT, leader profit share earned "
@@ -152,7 +152,9 @@ def summary(path: Path) -> int:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     sub = ap.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("fetch")
     f.add_argument("--portfolio", required=True)

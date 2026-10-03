@@ -33,7 +33,9 @@ LOSS = {"loss"}
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("dir", type=Path)
     ap.add_argument("--include-backfilled", action="store_true",
                     help="учитывать отчёты из перенесённого архива (по умолчанию — нет)")
@@ -71,15 +73,16 @@ def main() -> int:
         g = ev[ev["result"] == r]
         if len(g):
             print(f"{r:<7} n {len(g):>3}: отчёт о прибыли {(g['said'] == 'win').mean():.0%}, "
-                  f"об убытке {(g['said'] == 'loss').mean():.0%}, молчание {(g['said'] == 'silent').mean():.0%}")
+                  f"об убытке {(g['said'] == 'loss').mean():.0%}, "
+                  f"молчание {(g['said'] == 'silent').mean():.0%}")
 
     lies = ev[(ev["result"] == "stop") & (ev["said"] == "win")]
     if len(lies):
         print(f"\n«цель» при стопе раньше цели по цене — {len(lies)}; первые 15:")
         for _, r in lies.head(15).iterrows():
             q = next(c for c in by_call[int(r["post_id"])] if c["claim"] in WIN)
-            print(f"  {r['posted_at'][:10]} {r['asset']:<6} post {int(r['post_id'])} -> claim {q['post_id']} "
-                  f"({q['posted_at'][:10]}): {q['quote'][:90]!r}")
+            print(f"  {r['posted_at'][:10]} {r['asset']:<6} post {int(r['post_id'])} "
+                  f"-> claim {q['post_id']} ({q['posted_at'][:10]}): {q['quote'][:90]!r}")
 
     other = res[res["status"] != "evaluated"]
     wins_other = other[other["said"] == "win"]
@@ -88,7 +91,8 @@ def main() -> int:
               f"{Counter(wins_other['status']).most_common()}")
 
     linked = {int(p) for p in res["post_id"]}
-    orphan = Counter(c["claim"] for c in claims if c["reply_to"] is not None and int(c["reply_to"]) not in linked)
+    orphan = Counter(c["claim"] for c in claims
+                     if c["reply_to"] is not None and int(c["reply_to"]) not in linked)
     print(f"\nотчёты, ответившие НЕ на текстовый сигнал (картинки, другие посты): {dict(orphan)}")
     return 0
 
