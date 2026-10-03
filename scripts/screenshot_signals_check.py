@@ -84,7 +84,9 @@ def forward(df: pd.DataFrame, day: pd.Timestamp) -> dict:
     return out
 
 
-def control_pct(df: pd.DataFrame, move: float, h: int, value: float, until: pd.Timestamp) -> tuple[float, int]:
+def control_pct(
+    df: pd.DataFrame, move: float, h: int, value: float, until: pd.Timestamp
+) -> tuple[float, int]:
     """Перцентиль `value` среди дней ДО `until` с тем же ходом за 30 дней."""
     c = df["close"]
     move30 = c / c.shift(MOVE_DAYS) - 1
@@ -102,8 +104,11 @@ def pct(x: float | None) -> str:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--episodes", nargs="+", required=True, help="ДАТА[:КОНЕЦ][@уровень]")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument("--episodes", nargs="+", required=True,
+                    help="ДАТА[:КОНЕЦ][@уровень]")
     ap.add_argument("--pair", default="btcusd")
     ap.add_argument("--since", default="2014-01-01", help="начало истории для контроля")
     ap.add_argument("--cache", default="data/screenshot_cache")
@@ -111,9 +116,11 @@ def main() -> int:
 
     df = fetch(args.pair, args.since, Path(args.cache))
     last = df.index[-1].date()
-    print(f"Bitstamp {args.pair} 1d: {df.index[0].date()} .. {last}, закрытие {df['close'].iloc[-1]:,.0f}\n")
+    print(f"Bitstamp {args.pair} 1d: {df.index[0].date()} .. {last}, "
+          f"закрытие {df['close'].iloc[-1]:,.0f}\n")
 
-    head = "эпизод                  ур.  вход     ход30д " + " ".join(f"  {h:>3}д " for h in HORIZONS)
+    head = ("эпизод                  ур.  вход     ход30д "
+            + " ".join(f"  {h:>3}д " for h in HORIZONS))
     print(head + "  просадка90  (дно)")
     results = []
     for raw in args.episodes:
@@ -125,12 +132,15 @@ def main() -> int:
         results.append((raw, a, f))
         span = f"{a.date()}..{b.date()}" if b != a else f"{a.date()}"
         cols = " ".join(pct(f[f"r{h}"]) for h in HORIZONS)
-        print(f"{span:<23} {level:>3} {f['entry']:>8,.0f} {pct(f['move30'])}  {cols}   {pct(f['dd90'])}  ({f['dd90_day']})")
+        print(f"{span:<23} {level:>3} {f['entry']:>8,.0f} {pct(f['move30'])}  {cols}   "
+              f"{pct(f['dd90'])}  ({f['dd90_day']})")
 
-    print(f"\nКонтроль: дни с 2014 г. до сигнала с тем же ходом за {MOVE_DAYS} дней (±{MOVE_BAND * 100:.0f} п.).")
-    print("Перцентиль = доля таких дней, у которых вперёд вышло ХУЖЕ, чем у сигнала (50% = как обычно).\n")
+    print(f"\nКонтроль: дни с 2014 г. до сигнала с тем же ходом за {MOVE_DAYS} дней "
+          f"(±{MOVE_BAND * 100:.0f} п.).")
+    print("Перцентиль = доля таких дней, у которых вперёд вышло ХУЖЕ, чем у сигнала "
+          "(50% = как обычно).\n")
     print("эпизод        " + " ".join(f"  {h:>3}д      " for h in HORIZONS))
-    for raw, a, f in results:
+    for _raw, a, f in results:
         cells = []
         for h in HORIZONS:
             v = f[f"r{h}"]

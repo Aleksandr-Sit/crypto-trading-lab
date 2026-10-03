@@ -104,7 +104,11 @@ def outcome(hi, lo, cl, i0, entry, sign, target, stop, horizon):
         res, j = "target", jt
     else:
         res, j = "timeout", end - i0 - 1
-    mae = sign * (adverse[: j + 1].min() / entry - 1) if sign > 0 else sign * (adverse[: j + 1].max() / entry - 1)
+    mae = (
+        sign * (adverse[: j + 1].min() / entry - 1)
+        if sign > 0
+        else sign * (adverse[: j + 1].max() / entry - 1)
+    )
     return res, j, mae, ret_h
 
 
@@ -139,7 +143,9 @@ def base_rate(hi, lo, cl, sign, up, dn, horizon, skip: tuple[int, int], rng, key
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--calls", required=True)
     ap.add_argument("--cache", required=True)
     ap.add_argument("--out", required=True)
@@ -154,7 +160,11 @@ def main() -> int:
     for x in items:
         a = norm_asset(x.get("asset"))
         if a and x.get("posted_at"):
-            t = pd.Timestamp(x["posted_at"]).tz_localize(None) if pd.Timestamp(x["posted_at"]).tzinfo is None else pd.Timestamp(x["posted_at"]).tz_convert(None)
+            t = (
+                pd.Timestamp(x["posted_at"]).tz_localize(None)
+                if pd.Timestamp(x["posted_at"]).tzinfo is None
+                else pd.Timestamp(x["posted_at"]).tz_convert(None)
+            )
             first_seen[a] = min(first_seen.get(a, t), t)
     rng = np.random.default_rng(7)
     cache, data, rows = Path(args.cache), {}, []
@@ -163,9 +173,11 @@ def main() -> int:
             print(f"  {n_item}/{len(items)}", flush=True)
         asset = norm_asset(x.get("asset"))
         kind = x.get("kind")
-        row = {k: x.get(k) for k in ("_file", "channel", "post_id", "posted_at", "kind", "asset", "direction",
-                                     "entry", "targets", "stop", "indicator", "edited", "quote")}
-        if kind not in ("call", "indicator_signal", "result_claim") or not asset or asset == "PORTFOLIO":
+        row = {k: x.get(k) for k in ("_file", "channel", "post_id", "posted_at", "kind", "asset",
+                                     "direction", "entry", "targets", "stop", "indicator",
+                                     "edited", "quote")}
+        if (kind not in ("call", "indicator_signal", "result_claim")
+                or not asset or asset == "PORTFOLIO"):
             rows.append(row | {"status": "skip"})
             continue
         if asset not in data:
@@ -176,7 +188,11 @@ def main() -> int:
             rows.append(row | {"status": "no_prices"})
             continue
         hi, lo, cl, op = (df[c].to_numpy() for c in ("high", "low", "close", "open"))
-        ts = pd.Timestamp(x["posted_at"]).tz_convert(None) if pd.Timestamp(x["posted_at"]).tzinfo else pd.Timestamp(x["posted_at"])
+        ts = (
+            pd.Timestamp(x["posted_at"]).tz_convert(None)
+            if pd.Timestamp(x["posted_at"]).tzinfo
+            else pd.Timestamp(x["posted_at"])
+        )
         i_post = int(df.index.searchsorted(ts.ceil("h")))
         if i_post >= len(df) - 1:
             rows.append(row | {"status": "too_recent"})
@@ -190,7 +206,10 @@ def main() -> int:
             if p:
                 w0 = max(0, i_post - 72)
                 row["claim_price"] = p
-                row["claim_price_seen_72h"] = bool(lo[w0:i_post].min() <= p <= hi[w0:i_post].max()) if i_post > w0 else None
+                row["claim_price_seen_72h"] = (
+                    bool(lo[w0:i_post].min() <= p <= hi[w0:i_post].max())
+                    if i_post > w0 else None
+                )
                 row["status"] = "claim_checked"
             else:
                 row["status"] = "claim_no_price"
@@ -219,7 +238,8 @@ def main() -> int:
         horizon = int((x.get("horizon_days") or DEFAULT_HORIZON) * 24)
         entry = x.get("entry")
         zone = x.get("entry_zone")
-        if isinstance(zone, list) and len(zone) == 2 and all(isinstance(z, (int, float)) for z in zone):
+        if (isinstance(zone, list) and len(zone) == 2
+                and all(isinstance(z, (int, float)) for z in zone)):
             entry = max(zone) if sign > 0 else min(zone)
         if entry in (None, "market") or not isinstance(entry, (int, float)):
             i_fill, e = i_post, op[i_post]
@@ -242,7 +262,8 @@ def main() -> int:
         stop = x.get("stop") if isinstance(x.get("stop"), (int, float)) else None
         if stop and sign * (e - stop) <= 0:
             stop = None
-        res, j, mae, ret_h = outcome(hi, lo, cl, i_fill + (1 if i_fill == i_post else 0), e, sign, tgt[0], stop, horizon)
+        res, j, mae, ret_h = outcome(hi, lo, cl, i_fill + (1 if i_fill == i_post else 0),
+                                     e, sign, tgt[0], stop, horizon)
         if res == "timeout" and i_fill + horizon >= len(df):
             # срок не истёк — не промах; до 01.10.2026 такие шли в счёт как «цель не пришла»
             rows.append(row | {"status": "open", "fill_price": e, "t1": tgt[0]})
@@ -253,8 +274,11 @@ def main() -> int:
             "status": "evaluated", "fill_price": e, "fill_time": str(df.index[i_fill]),
             "t1": tgt[0], "t1_pct": up, "stop_pct": dn, "result": res,
             "days_to_result": (j / 24) if j is not None else None, "mae": mae, "ret_horizon": ret_h,
-            "last_target_hit": bool(outcome(hi, lo, cl, i_fill + 1, e, sign, tgt[-1], None, horizon)[0] == "target"),
-            "base_rate": base_rate(hi, lo, cl, sign, up, dn, horizon, (i_fill - horizon, i_fill + horizon), rng, key=asset),
+            "last_target_hit": bool(
+                outcome(hi, lo, cl, i_fill + 1, e, sign, tgt[-1], None, horizon)[0] == "target"
+            ),
+            "base_rate": base_rate(hi, lo, cl, sign, up, dn, horizon,
+                                   (i_fill - horizon, i_fill + horizon), rng, key=asset),
         }
         rows.append(row)
 
@@ -265,12 +289,14 @@ def main() -> int:
     if not ev.empty:
         ev["win"] = ev["result"] == "target"
         ev["year"] = ev["posted_at"].str[:4]
-        g = ev.groupby(["kind", "year"]).agg(n=("win", "size"), hit=("win", "mean"), base=("base_rate", "mean"),
+        g = ev.groupby(["kind", "year"]).agg(n=("win", "size"), hit=("win", "mean"),
+                                             base=("base_rate", "mean"),
                                              stops=("result", lambda s: (s == "stop").mean()),
                                              mae=("mae", "median"), ret=("ret_horizon", "median"))
         print("\nЦель раньше стопа: прогноз против базы (случайный вход, те же проценты)")
         print(g.to_string(float_format=lambda v: f"{v:.2f}"))
-        print(f"\nВСЕГО: {len(ev)} прогнозов, цель первой {ev['win'].mean():.0%}, база {ev['base_rate'].mean():.0%}")
+        print(f"\nВСЕГО: {len(ev)} прогнозов, цель первой {ev['win'].mean():.0%}, "
+              f"база {ev['base_rate'].mean():.0%}")
     do = out[out["status"] == "direction_only"]
     if not do.empty:
         print(f"\nТолько направление ({len(do)}): "

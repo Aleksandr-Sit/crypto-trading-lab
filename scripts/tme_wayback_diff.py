@@ -30,7 +30,9 @@ def norm(s: str) -> str:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--pages", required=True)
     ap.add_argument("--posts", required=True)
     ap.add_argument("--out", required=True)
@@ -62,8 +64,12 @@ def main() -> int:
             deleted.append({"id": pid, "date": a["date"], "snapshot": a["snapshot"],
                             "text": a["text"], "photos": len(a["photos"]), "video": a["video"]})
 
-    Path(args.out + "_deleted.json").write_text(json.dumps(deleted, ensure_ascii=False, indent=1), encoding="utf-8")
-    Path(args.out + "_changed.json").write_text(json.dumps(changed, ensure_ascii=False, indent=1), encoding="utf-8")
+    Path(args.out + "_deleted.json").write_text(
+        json.dumps(deleted, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    Path(args.out + "_changed.json").write_text(
+        json.dumps(changed, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
     print(f"снимков {len(files)}, постов в архиве {len(archived)} "
           f"(номера {min(archived)}..{max(archived)}), сейчас в ленте {len(cur)}")
     print(f"удалено с тех пор: {len(deleted)}; переписано: {len(changed)}")

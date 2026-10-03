@@ -34,7 +34,8 @@ def wma(s: pd.Series, n: int) -> pd.Series:
 
 
 def mas(close: pd.Series, n: int, with_wma: bool) -> dict[str, pd.Series]:
-    out = {"SMA": close.rolling(n).mean(), "EMA": close.ewm(span=n, adjust=False).mean(), "RMA": rma(close, n)}
+    out = {"SMA": close.rolling(n).mean(), "EMA": close.ewm(span=n, adjust=False).mean(),
+           "RMA": rma(close, n)}
     if with_wma:
         out["WMA"] = wma(close, n)
     return out
@@ -42,7 +43,8 @@ def mas(close: pd.Series, n: int, with_wma: bool) -> dict[str, pd.Series]:
 
 def atr(df: pd.DataFrame, n: int) -> pd.Series:
     pc = df["close"].shift()
-    tr = pd.concat([df["high"] - df["low"], (df["high"] - pc).abs(), (df["low"] - pc).abs()], axis=1).max(axis=1)
+    tr = pd.concat([df["high"] - df["low"], (df["high"] - pc).abs(), (df["low"] - pc).abs()],
+                   axis=1).max(axis=1)
     return rma(tr, n)
 
 
@@ -53,7 +55,9 @@ def at(series: pd.Series, dates: list[pd.Timestamp]) -> np.ndarray:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--daily", required=True)
     ap.add_argument("--points", required=True)
     ap.add_argument("--top", type=int, default=8)

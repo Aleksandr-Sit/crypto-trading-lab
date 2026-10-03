@@ -20,7 +20,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 LONG = {"long", "buy", "up"}
 SHORT = {"short", "sell", "down"}
 
@@ -32,7 +31,9 @@ def ci95(d: pd.Series, block: pd.Series) -> float:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("csv")
     ap.add_argument("--calls", help="каталог журнала — для исходов отчётов")
     args = ap.parse_args()
@@ -62,7 +63,8 @@ def main() -> int:
               f"{100 * g['d'].mean():+.1f} ± {100 * ci95(g['d'], g['month']):.1f} п. |")
     c = ev[ev["kind"] == "call"].dropna(subset=["d"])
     by_year = c.groupby(c["posted_at"].str[:4])["d"].agg(["size", "mean"])
-    print("\nпо годам (call):", ", ".join(f"{y} {100 * r['mean']:+.0f} п. (n={int(r['size'])})" for y, r in by_year.iterrows()))
+    print("\nпо годам (call):", ", ".join(f"{y} {100 * r['mean']:+.0f} п. (n={int(r['size'])})"
+                                          for y, r in by_year.iterrows()))
     if "open" in set(df["status"]):
         print(f"открытых (срок не истёк): {(df['status'] == 'open').sum()}")
     if args.calls:

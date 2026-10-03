@@ -63,18 +63,18 @@ def events(df: pd.DataFrame, w: int, m: float) -> list[dict]:
         k = int(seg_hi.argmax())
         if k == 0:
             continue
-        H = seg_hi[k]
-        L = lo[t - w: t - w + k].min()
-        if (H - L) / L < m or cl[t] >= L:
+        h_max = seg_hi[k]
+        l_min = lo[t - w: t - w + k].min()
+        if (h_max - l_min) / l_min < m or cl[t] >= l_min:
             continue
         # первое закрытие ниже L после максимума
-        if (cl[t - w + k: t] < L).any():
+        if (cl[t - w + k: t] < l_min).any():
             continue
-        swing = (t - w + k, round(L, 2))
+        swing = (t - w + k, round(l_min, 2))
         if swing == last_swing:
             continue
         last_swing = swing
-        out.append({"t": t, "H": H, "L": L, "break_low": lo[t]})
+        out.append({"t": t, "H": h_max, "L": l_min, "break_low": lo[t]})
     # не больше одного события на окно: иначе одна просадка считается много раз
     thinned, last_t = [], -10**9
     for e in out:
@@ -100,7 +100,8 @@ def evaluate(df: pd.DataFrame, w: int, m: float, level: float, ctrl_idx: np.ndar
         up, dn = target / entry - 1, 1 - stop / entry
         # контроль: те же проценты до цели и стопа, тот же ход за W часов
         mv = move[e["t"]]
-        pool = ctrl_idx[(np.abs(move[ctrl_idx] - mv) <= MOVE_BAND) & (ctrl_idx < e["t"] - TIMEOUT_H)]
+        pool = ctrl_idx[(np.abs(move[ctrl_idx] - mv) <= MOVE_BAND)
+                        & (ctrl_idx < e["t"] - TIMEOUT_H)]
         c_rets, c_hit = [], []
         for c in pool[:: max(1, len(pool) // 400)]:
             ce = op[c + 1]
@@ -119,7 +120,9 @@ def evaluate(df: pd.DataFrame, w: int, m: float, level: float, ctrl_idx: np.ndar
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--csv", required=True)
     ap.add_argument("--windows", default="48,96,168,336")
     ap.add_argument("--impulse", default="0.03,0.05,0.08")
@@ -129,8 +132,10 @@ def main() -> int:
 
     df = pd.read_csv(args.csv, index_col=0, parse_dates=True)
     ctrl_idx = np.arange(400, len(df) - TIMEOUT_H - 2, 6)
-    print(f"BTC 1h {df.index[0]} .. {df.index[-1]}, баров {len(df)}; издержки {ROUND_COST:.2%} на круг\n")
-    print("  W   имп.  цель  | событий | дошло до цели за 90д: правило / контроль | сделка со стопом: "
+    print(f"BTC 1h {df.index[0]} .. {df.index[-1]}, баров {len(df)}; "
+          f"издержки {ROUND_COST:.2%} на круг\n")
+    print("  W   имп.  цель  | событий | дошло до цели за 90д: правило / контроль | "
+          "сделка со стопом: "
           "средняя / контроль / разница ± шум | цель/стоп/тайм-аут")
     cells = []
     for w in map(int, args.windows.split(",")):
@@ -144,8 +149,10 @@ def main() -> int:
                 se = diff.std(ddof=1) / np.sqrt(len(d)) if len(d) > 1 else np.nan
                 outc = d["res"].value_counts()
                 cells.append((w, m, lv, diff.mean(), se))
-                print(f"{w:>4} {m:>5.0%} {lv:>5} | {len(d):>7} | {d['hit90'].mean():>6.0%} / {d['ctrl_hit90'].mean():>6.0%}"
-                      f"                    | {d['ret'].mean():>+6.2%} / {d['ctrl_ret'].mean():>+6.2%} / "
+                print(f"{w:>4} {m:>5.0%} {lv:>5} | {len(d):>7} | "
+                      f"{d['hit90'].mean():>6.0%} / {d['ctrl_hit90'].mean():>6.0%}"
+                      f"                    | {d['ret'].mean():>+6.2%} / "
+                      f"{d['ctrl_ret'].mean():>+6.2%} / "
                       f"{diff.mean():>+6.2%} ± {2 * se:.2%} | "
                       f"{outc.get('target', 0)}/{outc.get('stop', 0)}/{outc.get('timeout', 0)}")
     if args.detail:
@@ -156,7 +163,8 @@ def main() -> int:
         print(r[["time", "entry", "target", "up", "dn", "res", "ret", "ctrl_ret"]].to_string(
             float_format=lambda x: f"{x:,.3f}"))
         g = r.assign(diff=r["ret"] - r["ctrl_ret"]).groupby("year")["diff"].agg(["count", "mean"])
-        print("\nПо годам (разница с контролем):\n", g.to_string(float_format=lambda x: f"{x:+.3f}"))
+        print("\nПо годам (разница с контролем):\n",
+              g.to_string(float_format=lambda x: f"{x:+.3f}"))
     return 0
 
 

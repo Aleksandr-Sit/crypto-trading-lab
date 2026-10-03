@@ -9,7 +9,7 @@
 из 30»); теперь оно здесь, и старые и новые данные считаются одним и тем же.
 
     python scripts/tme_deletion_bias.py --pages <снимки> --posts <posts.json> [--show]
-"""
+"""  # noqa: E501 — docstring это текст --help, переносить нельзя
 
 from __future__ import annotations
 
@@ -62,7 +62,9 @@ def archived(pages: Path) -> dict[int, dict]:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--pages", required=True)
     ap.add_argument("--posts", required=True)
     ap.add_argument("--show", action="store_true", help="печатать каждое совпадение")
@@ -80,7 +82,8 @@ def main() -> int:
         if args.show:
             for pid, a in hits:
                 mark = "УДАЛЁН" if pid not in alive else "жив   "
-                print(f"  {mark} #{pid} {a['date'][:10]} reply_to={a.get('reply_to')}: {a['text'][:160]!r}")
+                print(f"  {mark} #{pid} {a['date'][:10]} reply_to={a.get('reply_to')}: "
+                      f"{a['text'][:160]!r}")
     (dl, nl), (dw, nw) = res["поражение"], res["победа"]
     if nl and nw:
         p = fisher_two_sided(dl, nl - dl, dw, nw - dw)

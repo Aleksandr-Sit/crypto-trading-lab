@@ -17,7 +17,7 @@
 попадала вместо текста ответа — архивы, снятые раньше, перекачать);
 `unsupported` — вложение (видео, файл, опрос) превью не показывает, только плашка «Please open
 Telegram»; текст поста при этом может быть на месте. Вложение читать только через Telegram API.
-"""
+"""  # noqa: E501 — docstring это текст --help, переносить нельзя
 
 from __future__ import annotations
 
@@ -31,7 +31,9 @@ import urllib.request
 from pathlib import Path
 
 UA = {"User-Agent": "Mozilla/5.0"}
-WRAP = re.compile(r'<div class="tgme_widget_message_wrap.*?(?=<div class="tgme_widget_message_wrap|\Z)', re.S)
+WRAP = re.compile(
+    r'<div class="tgme_widget_message_wrap.*?(?=<div class="tgme_widget_message_wrap|\Z)', re.S
+)
 ID = re.compile(r'data-post="[^/]+/(\d+)"')
 TIME = re.compile(r'<time datetime="([^"]+)"')
 # не цитата из поста-ответа (`js-message_reply_text`): иначе ответ получает чужой текст
@@ -39,7 +41,11 @@ TEXT = re.compile(
     r'<div class="tgme_widget_message_text(?![^"]*reply_text)[^"]*"[^>]*>(.*?)</div>', re.S
 )
 REPLY = re.compile(r'class="tgme_widget_message_reply[^"]*" href="https?://t\.me/[^/]+/(\d+)')
-PHOTO = re.compile(r"tgme_widget_message_photo_wrap[^>]*?background-image:url\('([^']+)'\)[^>]*?href=\"[^\"]*/(\d+)", re.S)
+PHOTO = re.compile(
+    r"tgme_widget_message_photo_wrap[^>]*?background-image:url\('([^']+)'\)"
+    r"[^>]*?href=\"[^\"]*/(\d+)",
+    re.S,
+)
 VIDEO = re.compile(r"tgme_widget_message_video")
 VIEWS = re.compile(r'tgme_widget_message_views">([^<]+)<')
 LINK = re.compile(r'<a href="(https?://[^"]+)"')
@@ -103,7 +109,9 @@ def crawl(channel: str, since: str) -> list[dict]:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("channel")
     ap.add_argument("--out", default="../lab-data/channels")
     ap.add_argument("--since", default="2000-01-01")
@@ -114,9 +122,12 @@ def main() -> int:
     (root / "img").mkdir(parents=True, exist_ok=True)
     print(f"{args.channel}: читаю ленту")
     posts = crawl(args.channel, args.since)
-    (root / "posts.json").write_text(json.dumps(posts, ensure_ascii=False, indent=1), encoding="utf-8")
+    (root / "posts.json").write_text(
+        json.dumps(posts, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
     photos = [ph for p in posts for ph in p["photos"]]
-    print(f"{len(posts)} постов, {len(photos)} фото, {posts[0]['date'][:10]} .. {posts[-1]['date'][:10]}")
+    print(f"{len(posts)} постов, {len(photos)} фото, "
+          f"{posts[0]['date'][:10]} .. {posts[-1]['date'][:10]}")
     if args.no_photos:
         return 0
     fresh = 0
