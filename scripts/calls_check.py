@@ -12,6 +12,9 @@ asset, direction, entry | "market", entry_zone, targets, stop, horizon_days, cla
   * базовая частота: та же цель и тот же стоп в процентах от входа в случайные часы истории
     актива (вне окна сделки) — доля, где цель пришла первой. Разница «прогноз − база» и есть
     то, что прогноз добавил сверх «цена иногда ходит на столько-то».
+Прогноз «только направление» (по рынку, без цели): ход в сторону прогноза за horizon_days
+(или NO_TARGET_DAYS) против среднего такого же хода из случайных часов истории — status
+direction_only. Мала выборка — смотреть по каждому, а не по среднему.
 Для kind == result_claim с ценой: касалась ли цена заявленной цены за 72 часа ДО поста.
 
     python scripts/calls_check.py --calls <dir с *.json> --cache <dir> --out <csv>
@@ -33,6 +36,7 @@ import pandas as pd
 API = "https://api.binance.com/api/v3/klines?symbol={sym}&interval=1h&limit=1000&startTime={start}"
 FILL_DAYS = 30
 DEFAULT_HORIZON = 90
+NO_TARGET_DAYS = 30  # горизонт для прогноза «только направление», если автор срока не назвал
 LONG = {"long", "buy", "up"}
 SHORT = {"short", "sell", "down"}
 ALIASES = {"BITCOIN": "BTC", "БИТКОИН": "BTC", "ЭФИР": "ETH", "ETHEREUM": "ETH"}
@@ -199,6 +203,17 @@ def main() -> int:
         if not sign and targets:
             sign = 1 if targets[0] > px else -1
         if not sign or not targets:
+            # направление без цели: ход в сторону прогноза против того же хода из случайных часов
+            if sign and not (x.get("entry") not in (None, "market") or x.get("entry_zone")):
+                h = int((x.get("horizon_days") or NO_TARGET_DAYS) * 24)
+                if i_post + h < len(df):
+                    n = len(cl) - h - 1
+                    idx = rng.choice(np.arange(n), size=min(2000, n), replace=False)
+                    row |= {"status": "direction_only", "dir_horizon_days": h // 24,
+                            "dir_ret": sign * (cl[i_post + h] / op[i_post] - 1),
+                            "dir_base": float(np.mean(sign * (cl[idx + h] / cl[idx] - 1)))}
+                    rows.append(row)
+                    continue
             rows.append(row | {"status": "no_target"})
             continue
         horizon = int((x.get("horizon_days") or DEFAULT_HORIZON) * 24)
@@ -228,6 +243,10 @@ def main() -> int:
         if stop and sign * (e - stop) <= 0:
             stop = None
         res, j, mae, ret_h = outcome(hi, lo, cl, i_fill + (1 if i_fill == i_post else 0), e, sign, tgt[0], stop, horizon)
+        if res == "timeout" and i_fill + horizon >= len(df):
+            # срок не истёк — не промах; до 01.10.2026 такие шли в счёт как «цель не пришла»
+            rows.append(row | {"status": "open", "fill_price": e, "t1": tgt[0]})
+            continue
         up = sign * (tgt[0] / e - 1)
         dn = sign * (e - stop) / e if stop else None
         row |= {
@@ -252,6 +271,12 @@ def main() -> int:
         print("\nЦель раньше стопа: прогноз против базы (случайный вход, те же проценты)")
         print(g.to_string(float_format=lambda v: f"{v:.2f}"))
         print(f"\nВСЕГО: {len(ev)} прогнозов, цель первой {ev['win'].mean():.0%}, база {ev['base_rate'].mean():.0%}")
+    do = out[out["status"] == "direction_only"]
+    if not do.empty:
+        print(f"\nТолько направление ({len(do)}): "
+              f"ход в сторону прогноза {do['dir_ret'].mean():+.1%} "
+              f"(медиана {do['dir_ret'].median():+.1%}), база {do['dir_base'].mean():+.1%}, "
+              f"угадан знак {(do['dir_ret'] > 0).mean():.0%}")
     cl_ = out[out["status"] == "claim_checked"]
     if not cl_.empty:
         bad = cl_[cl_["claim_price_seen_72h"] == False]  # noqa: E712

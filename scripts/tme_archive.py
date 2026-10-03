@@ -13,7 +13,10 @@
 поста-подписи с их собственными номерами.
 
 `edited` — пост правился после публикации (дата правки превью не отдаёт);
-`unsupported` — тип сообщения превью не показывает, читать только через Telegram API.
+`reply_to` — номер поста, на который этот отвечает (цитата в текст НЕ попадает; до 01.10.2026
+попадала вместо текста ответа — архивы, снятые раньше, перекачать);
+`unsupported` — вложение (видео, файл, опрос) превью не показывает, только плашка «Please open
+Telegram»; текст поста при этом может быть на месте. Вложение читать только через Telegram API.
 """
 
 from __future__ import annotations
@@ -31,7 +34,11 @@ UA = {"User-Agent": "Mozilla/5.0"}
 WRAP = re.compile(r'<div class="tgme_widget_message_wrap.*?(?=<div class="tgme_widget_message_wrap|\Z)', re.S)
 ID = re.compile(r'data-post="[^/]+/(\d+)"')
 TIME = re.compile(r'<time datetime="([^"]+)"')
-TEXT = re.compile(r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>', re.S)
+# не цитата из поста-ответа (`js-message_reply_text`): иначе ответ получает чужой текст
+TEXT = re.compile(
+    r'<div class="tgme_widget_message_text(?![^"]*reply_text)[^"]*"[^>]*>(.*?)</div>', re.S
+)
+REPLY = re.compile(r'class="tgme_widget_message_reply[^"]*" href="https?://t\.me/[^/]+/(\d+)')
 PHOTO = re.compile(r"tgme_widget_message_photo_wrap[^>]*?background-image:url\('([^']+)'\)[^>]*?href=\"[^\"]*/(\d+)", re.S)
 VIDEO = re.compile(r"tgme_widget_message_video")
 VIEWS = re.compile(r'tgme_widget_message_views">([^<]+)<')
@@ -66,7 +73,9 @@ def parse(page: str) -> list[dict]:
             "video": bool(VIDEO.search(block)),
             "views": (VIEWS.search(block).group(1) if VIEWS.search(block) else ""),
             "edited": bool(EDITED.search(block)),
-            "unsupported": "text_not_supported" in block,
+            "reply_to": int(REPLY.search(block).group(1)) if REPLY.search(block) else None,
+            # не «text_not_supported»: теперь это класс обёртки КАЖДОГО поста
+            "unsupported": "message_media_not_supported" in block,
         })
     return out
 

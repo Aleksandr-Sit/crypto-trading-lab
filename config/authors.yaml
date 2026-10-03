@@ -28,6 +28,11 @@ authors:
       - {platform: x, url: "https://x.com/coinmetrika", verified_at: 2026-09-06, note: "ссылка с coinmetrika.capital, страница не открывалась"}
       - {platform: web, url: "https://coinmetrika.capital/", verified_at: 2026-09-06, note: "закрытая подписка, набор завершён"}
       - {platform: tradingview, url: "https://www.tradingview.com/chart/iEZROfRx/", verified_at: 2026-09-06, note: "адрес из скриншота пользователя (user-inputs/coinmetrika-3-…png); приватный layout, индикаторы invite-only"}
+      - {platform: tradingview, url: "https://www.tradingview.com/u/coinmetrika/", verified_at: 2026-10-01, note: "профиль с 09.12.2021: 0 скриптов, 0 идей, 56 подписчиков"}
+    # Не в channels намеренно: каждая telegram-строка уходит в журнал сигналов (feeds/social/telegram.py).
+    # Чат канала — t.me/betpolcadot; услуга установки нод — t.me/nodesmetrika_news (проверено 2026-10-01).
+    # Клоны мошенников по словам автора (#795, #2553) — НЕ его: CoinMetrlka, CoinMetrikaRu, Coin_Metrika, CoinMetrika1.
+    # Разбор каналов: docs/research/coinmetrika-channels-2026-10-01.md
 
   - id: cryptosmx
     name: "CryptosMX"
