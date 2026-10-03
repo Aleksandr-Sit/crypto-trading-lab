@@ -167,13 +167,14 @@ def _day(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000, UTC).strftime("%Y-%m-%d")
 
 
-def _trades(sym: str, day: str) -> tuple[array, array, array]:
-    """Время (мс), цена, объём сделок дня. Читается потоком в массивы чисел: таблица строк
-    дня обвала — сотни мегабайт на процесс, а процессов десяток."""
-    ts, px, qty = array("q"), array("d"), array("d")
+def _trades(sym: str, day: str) -> tuple[array, array, array, array]:
+    """Время (мс), цена, объём сделок дня и сторона агрессора (1 — продавец, сделка прошла
+    по bid; 0 — покупатель, по ask). Читается потоком в массивы чисел: таблица строк дня
+    обвала — сотни мегабайт на процесс, а процессов десяток."""
+    ts, px, qty, sell = array("q"), array("d"), array("d"), array("b")
     blob = _get(f"{ARCHIVE}/daily/aggTrades/{sym}/{sym}-aggTrades-{day}.zip")
     if blob is None:
-        return ts, px, qty
+        return ts, px, qty, sell
     with zipfile.ZipFile(io.BytesIO(blob)) as z, z.open(z.namelist()[0]) as fh:
         for line in fh:
             # agg_id, price, qty, first_id, last_id, time, is_buyer_maker
@@ -183,7 +184,8 @@ def _trades(sym: str, day: str) -> tuple[array, array, array]:
             ts.append(int(f[5]))
             px.append(float(f[1]))
             qty.append(float(f[2]))
-    return ts, px, qty
+            sell.append(f[6].strip().lower() == b"true")
+    return ts, px, qty, sell
 
 
 def _first(ts: list[int], t0: int, lo: int = 0) -> int:
@@ -198,8 +200,14 @@ def _first(ts: list[int], t0: int, lo: int = 0) -> int:
     return lo
 
 
-def _play(ts, px, qty, ev: dict, drop: float, mode: str, lag: float) -> dict | None:
-    """Одна сделка по ленте. None — вход не состоялся."""
+def _play(ts, px, qty, ev: dict, drop: float, mode: str, lag: float,
+          sell=None) -> dict | None:
+    """Одна сделка по ленте. None — вход не состоялся.
+
+    Без `sell` рыночные цены — первая сделка ленты после момента, чья бы она ни была: покупка
+    получает и сделки по bid, то есть полспреда в подарок. С `sell` рыночная покупка — первая
+    сделка покупателя-агрессора (по ask), продажа по таймеру — первая сделка продавца (по bid).
+    """
     level = ev["prev_close"] * (1 - drop)
     m0, m1 = ev["t"], ev["t"] + 60_000
     i = _first(ts, m0)
@@ -221,6 +229,8 @@ def _play(ts, px, qty, ev: dict, drop: float, mode: str, lag: float) -> dict | N
             j += 1
     else:
         e_i = _first(ts, ts[trig] + round(lag * 1000), trig + (1 if lag == 0 else 0))
+        while sell is not None and e_i < len(ts) and sell[e_i]:
+            e_i += 1
         if e_i >= len(ts):
             return None
         entry, fee_in, cap = px[e_i], TAKER, None
@@ -233,6 +243,8 @@ def _play(ts, px, qty, ev: dict, drop: float, mode: str, lag: float) -> dict | N
             return {"entry": entry, "exit": tp, "t_in": t_in, "t_out": ts[k], "how": "tp",
                     "net": TP - fee_in - MAKER, "cap": cap}
         k += 1
+    while sell is not None and k < len(ts) and not sell[k]:
+        k += 1
     if k >= len(ts):
         return None  # лента дня кончилась раньше выхода — сделку не засчитывать
     x = px[k]
@@ -240,30 +252,35 @@ def _play(ts, px, qty, ev: dict, drop: float, mode: str, lag: float) -> dict | N
             "net": x / entry - 1 - fee_in - TAKER, "cap": cap}
 
 
-def _sim_day(sym: str, day: str, evs: list[dict]) -> list[dict]:
-    ts, px, qty = _trades(sym, day)
+SIDE = "|side"  # суффикс варианта, разыгранного со стороной сделки (`simulate --side`)
+
+
+def _sim_day(sym: str, day: str, evs: list[dict], side: bool = False) -> list[dict]:
+    ts, px, qty, sell = _trades(sym, day)
     if not ts:
         return [{"sym": sym, "day": day, "missing": True}]
     if max(e["t"] for e in evs) + 60_000 + HOLD_S * 1000 + 60_000 > ts[-1]:
         nxt = (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-        t2, p2, q2 = _trades(sym, nxt)
-        ts, px, qty = ts + t2, px + p2, qty + q2
+        t2, p2, q2, s2 = _trades(sym, nxt)
+        ts, px, qty, sell = ts + t2, px + p2, qty + q2, sell + s2
     out = []
-    for name, drop, mode, lag in VARIANTS:
-        busy_until = 0
-        for ev in sorted(evs, key=lambda e: e["t"]):
-            if ev["drop"] > -drop or ev["t"] < busy_until:
-                continue
-            r = _play(ts, px, qty, ev, drop, mode, lag)
-            if r is None:
-                continue
-            busy_until = r["t_out"]
-            out.append({"sym": sym, "day": day, "var": name, "t": ev["t"], "drop_min": ev["drop"],
-                        "qvol_24h": ev["qvol_24h"], **r})
+    for suffix, sd in (("", None), (SIDE, sell)) if side else (("", None),):
+        for name, drop, mode, lag in VARIANTS:
+            busy_until = 0
+            for ev in sorted(evs, key=lambda e: e["t"]):
+                if ev["drop"] > -drop or ev["t"] < busy_until:
+                    continue
+                r = _play(ts, px, qty, ev, drop, mode, lag, sd)
+                if r is None:
+                    continue
+                busy_until = r["t_out"]
+                out.append({"sym": sym, "day": day, "var": name + suffix, "t": ev["t"],
+                            "drop_min": ev["drop"], "qvol_24h": ev["qvol_24h"], **r})
     return out
 
 
-def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, seed: int) -> int:
+def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, seed: int,
+                   side: bool = False) -> int:
     evs = [json.loads(x) for x in (out / "events.jsonl").read_text().splitlines()]
     evs = [e for e in evs if e["drop"] <= -min_drop]
     by = defaultdict(list)
@@ -285,7 +302,7 @@ def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, see
     print(f"событий {len(evs)}, дней-символов {len(by)}, осталось {len(jobs)}", flush=True)
     # процессы, а не потоки: разбор ленты сделок держит GIL, и десять потоков шли на одном ядре
     with ProcessPoolExecutor(workers) as pool, sim_p.open("a") as fs, done_p.open("a") as fd:
-        futs = {pool.submit(_sim_day, s, d, by[(s, d)]): (s, d) for s, d in jobs}
+        futs = {pool.submit(_sim_day, s, d, by[(s, d)], side): (s, d) for s, d in jobs}
         for k, f in enumerate(as_completed(futs), 1):
             s, d = futs[f]
             try:
@@ -389,6 +406,66 @@ def _matrix(by: dict[str, list[dict]], names: tuple[str, ...]) -> None:
         print(f"{lab:<8}" + "".join(f"{f'{cnt[n]}/{len(months)}':>14}" for n in names))
 
 
+def _breadth_block(out: Path, by: dict[str, list[dict]]) -> None:
+    """Ширина обвала: сколько монет обвалилось в ПРЕДЫДУЩУЮ минуту — бот знает это при входе.
+
+    Вторая таблица — проверка фильтра по ширине на каждом «широком» дне: если он выигрывает
+    только на одном каскаде (10.10.2025), а в остальные широкие дни срезает прибыльные входы,
+    то он подогнан под одно событие.
+    """
+    per_min = defaultdict(set)
+    for line in (out / "events.jsonl").read_text().splitlines():
+        e = json.loads(line)
+        per_min[e["t"]].add(e["sym"])
+
+    def prev(r: dict) -> int:
+        return len(per_min.get(r["t"] - 60_000, ()))
+
+    ks = (3, 10, 30, 0)
+    print("\n## ширина обвала: вход пропускается, если в предыдущую минуту обвалилось ≥K монет "
+          "(ср.%, в скобках t)")
+    print(f"{'':<14}" + "".join(f"{f'K={k}' if k else 'без фильтра':>14}" for k in ks))
+    for name in MONTH_VARS:
+        cells = []
+        for k in ks:
+            _, m, se, *_ = _stats([r for r in by[name] if not k or prev(r) < k])
+            cells.append(f"{m * 100:+.2f}({(m / se if se else 0):+.1f})")
+        print(f"{name:<14}" + "".join(f"{c:>14}" for c in cells))
+    broad = defaultdict(int)
+    for t, syms in per_min.items():
+        if len(syms) >= 30:
+            broad[_day(t)] += 1
+    print("## limit5 в дни, где есть минуты с обвалом ≥30 монет: сумма итогов сделок, % "
+          "(сделок) — все входы | с K=10")
+    for d in sorted(broad):
+        a = [r for r in by["limit5"] if r["day"] == d]
+        if a:
+            b = [r for r in a if prev(r) < 10]
+            print(f"{d}  широких минут {broad[d]:>3}: {sum(r['net'] for r in a) * 100:+8.1f} "
+                  f"({len(a):>3}) | {sum(r['net'] for r in b) * 100:+8.1f} ({len(b):>3})")
+
+
+def _side_block(by: dict[str, list[dict]]) -> None:
+    """Попарно по одним и тем же входам: итог со стороной сделки минус итог без неё."""
+    print("\n## сторона сделки: рыночная покупка по ask, продажа по таймеру по bid "
+          "(попарно, одни и те же входы; шум разницы — по дням)")
+    print(f"{'':<14} {'пар':>6} {'было%':>7} {'стало%':>7} {'разн.':>7} {'шум':>6}"
+          f"   без 10.2025: {'было%':>7} {'стало%':>7} {'t':>5}")
+    for name, *_ in VARIANTS:
+        plain = {(s["sym"], s["t"]): s for s in by[name]}
+        pairs = [(plain[k], s) for s in by[name + SIDE] if (k := (s["sym"], s["t"])) in plain]
+        if not pairs:
+            continue
+        diff = [{"day": a["day"], "net": b["net"] - a["net"], "how": b["how"]} for a, b in pairs]
+        _, d, se, *_ = _stats(diff)
+        calm = [(a, b) for a, b in pairs if not a["day"].startswith("2025-10")]
+        _, m_new, se_new, *_ = _stats([b for _, b in calm])
+        print(f"{name:<14} {len(pairs):>6} {fmean(a['net'] for a, _ in pairs) * 100:>+7.3f} "
+              f"{fmean(b['net'] for _, b in pairs) * 100:>+7.3f} {d * 100:>+7.3f} {se * 100:>6.3f}"
+              f"   {fmean(a['net'] for a, _ in calm) * 100:>+20.3f} {m_new * 100:>+7.3f} "
+              f"{(m_new / se_new if se_new else 0):>+5.1f}")
+
+
 def stage_report(out: Path, trader: Path | None) -> int:
     sims = [json.loads(x) for x in (out / "sim.jsonl").read_text().splitlines()]
     miss = [s for s in sims if s.get("missing")]
@@ -425,6 +502,10 @@ def stage_report(out: Path, trader: Path | None) -> int:
 
     print("\n## по месяцам: среднее итога сделки, % (в скобках — сделок)")
     _matrix(by, MONTH_VARS)
+    _breadth_block(out, by)
+
+    if any(s["var"].endswith(SIDE) for s in sims):
+        _side_block(by)
 
     for name in ("limit5", "mkt5_1s", "limit8", "mkt8_1s"):
         rows = by[name]
@@ -475,6 +556,8 @@ def main() -> int:
     s.add_argument("--per-month", type=int, default=0,
                    help="выборка дней-символов на месяц (0 — все)")
     s.add_argument("--seed", type=int, default=7)
+    s.add_argument("--side", action="store_true",
+                   help=f"разыграть ещё и со стороной сделки (варианты с суффиксом {SIDE})")
     r = sub.add_parser("report")
     r.add_argument("--out", type=Path, required=True)
     r.add_argument("--trader", type=Path)
@@ -482,7 +565,7 @@ def main() -> int:
     if a.cmd == "events":
         return stage_events(a.out, a.a, a.b, a.drop, a.workers)
     if a.cmd == "simulate":
-        return stage_simulate(a.out, a.workers, a.min_drop, a.per_month, a.seed)
+        return stage_simulate(a.out, a.workers, a.min_drop, a.per_month, a.seed, a.side)
     return stage_report(a.out, a.trader)
 
 
