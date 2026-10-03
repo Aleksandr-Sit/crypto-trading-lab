@@ -1,7 +1,8 @@
 # Авторы для форвард-журнала публичных сигналов (R06.2, G08.1). Читает тикет 08/12.
 # Поля: name, aliases, kind (indicator | signals | education), channels: [{platform, url}],
 #       verified_at — когда ссылка проверена; url «[ССЫЛКА — впиши]» — публично не найдено, впишет пользователь.
-# platform: telegram | youtube | tradingview | x | web. Чтение Telegram — Telethon или t.me/s/<канал> (фолбэк).
+# platform: telegram | youtube | tradingview | x | web | bybit. Чтение Telegram — Telethon или t.me/s/<канал> (фолбэк).
+# В журнал сигналов уходят только строки telegram (feeds/social/telegram.py), остальные — справочные.
 version: 1
 authors:
   - id: pifagor
@@ -38,8 +39,12 @@ authors:
     name: "CryptosMX"
     aliases: ["Cryptos MX", "cryptosmx"]
     kind: signals
-    note: "Не найдено публично (2026-09-06). Пользователь впишет канал; до этого журнал по автору не ведётся."
+    note: "Мастер-трейдер копитрейдинга Bybit (найден 2026-10-03 по нику, который назвал пользователь): сделки скрыты от некопирующих, публичного канала нет. Журнал по автору не ведётся."
     channels:
+      - {platform: bybit, url: "https://www.bybit.com/copyTrade/trade-center/detail?leaderMark=BDRYh1s8wZY%2Brj%2BhQM%2FZww%3D%3D", verified_at: 2026-10-03, note: "сводка и кривая 90 дней открыты, сделки скрыты; скриптом не взять — 403"}
       - {platform: telegram, url: "[ССЫЛКА — впиши]"}
       - {platform: x, url: "[ССЫЛКА — впиши]"}
       - {platform: youtube, url: "[ССЫЛКА — впиши]"}
+    # Не в channels намеренно: контакт из описания профиля — личный Telegram, не канал (telegram-строка
+    # ушла бы в журнал как канал). TradingView CRYPTOSMX (2018, 0 идей) — тот ли человек, не установлено.
+    # Разбор: docs/research/cryptosmx-bybit-2026-10-03.md

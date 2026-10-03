@@ -49,7 +49,7 @@
 | OKX `public-lead-traders`, `public-weekly-pnl`, `public-stats`, `public-current-subpositions`, `public-subpositions-history` | бесплатно, без auth | per-endpoint (?) | лид-трейдеры SWAP: `uniqueCode`, PnL, winRatio, AUM, число копирующих, инструменты, открытые позиции | недели PnL | — | [Docs](https://www.okx.com/docs-v5/en/#order-book-trading-copy-trading-get-lead-traders-ranks) — **проверено 2026-09-05**: `GET /api/v5/copytrading/public-lead-traders?instType=SWAP&sortType=pnl` отдал 20 строк |
 | Polymarket Data API `/v1/leaderboard`, `/positions`, `/trades`, `/activity` | бесплатно | 1000 req/10 с (/trades 200, /positions 150) | proxyWallet, userName, pnl, volume по периодам | closed-positions | — | [Rate limits](https://docs.polymarket.com/quickstart/introduction/rate-limits) — **проверено 2026-09-05**: `?timePeriod=MONTH&orderBy=PNL&limit=20` работает |
 | Hyperliquid leaderboard + `userFills` | бесплатно | см. §2 | филлы лидера по адресу | 10 000 филлов | — | см. §2 |
-| Bybit copy-trading | ключ мастера; публичного списка мастеров нет | — | только веб-лидерборд | — | OKX | [Copytrade](https://bybit-exchange.github.io/docs/v5/copytrade) |
+| Bybit copy-trading | ключ мастера; публичного списка мастеров нет | — | только веб-лидерборд. Веб отдаёт JSON (`x-api/fapi/beehive/public/...`: поиск по нику, сводка, кривая 90 д) **только браузеру** — curl 403 (Akamai), с сервера и с рабочей машины; сделки мастер может скрыть от некопирующих — **проверено 2026-10-03** (`cryptosmx-bybit-2026-10-03.md`) | 90 дней кривой | OKX | [Copytrade](https://bybit-exchange.github.io/docs/v5/copytrade) |
 | Cielo | free 5000 кредитов/мес, только `/feed`; PnL $89/мес | 5000 кред./мес | фид сделок отслеживаемых кошельков (Solana, EVM) | нет | Helius Enhanced Tx | [Cielo](https://cielo.finance) (?) |
 | Dune | free 2500 кредитов/мес, API | 2500 кред./мес | любые SQL-запросы; смарт-мани дашборды сообщества | полная | — | [Pricing](https://dune.com/pricing) (?) |
 | Nansen / Arkham / DeBank | платно / по заявке / платно | — | смарт-мани метки | — | Dune | см. research-sources.md §9 |
@@ -118,7 +118,7 @@
 | Telegram Bot API | бесплатно | — | только каналы, где бот участник | [Bot API](https://core.telegram.org/bots/api) |
 | Веб-превью `t.me/s/<канал>` | бесплатно, без auth | неформальный | последние посты публичного канала — фолбэк без Telethon | проверено 2026-09-05 на `t.me/s/CoinMetrika`, 2026-09-06 на `t.me/s/pifagortrade` (86,2 тыс.) и `t.me/s/coinmetrika` (36,9 тыс.) |
 | Каталоги Telegram (telemetr.me, tgchannels.org) | бесплатно | неформальный | архив постов канала с датами — фолбэк для истории авторов (R06.2) | проверено 2026-09-06 на `telemetr.me/content/coinmetrika` |
-| Каналы авторов | — | — | `config/authors.yaml`: Pifagor и Coinmetrika найдены; CryptosMX — не найдено публично | `docs/research/indicators/` |
+| Каналы авторов | — | — | `config/authors.yaml`: Pifagor и Coinmetrika найдены; CryptosMX — профиль копитрейдинга Bybit (2026-10-03), сделки скрыты, публичного канала нет | `docs/research/indicators/` |
 | X API | free-тир отменён (02.2026); pay-per-use $0.005/чтение | — | посты | — |
 | YouTube Data API v3 | 10 000 units/день (?) | — | список видео канала (заголовки/описания) | [Docs](https://developers.google.com/youtube/v3) |
 
