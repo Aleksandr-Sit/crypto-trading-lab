@@ -1,7 +1,7 @@
 # Авторы для форвард-журнала публичных сигналов (R06.2, G08.1). Читает тикет 08/12.
 # Поля: name, aliases, kind (indicator | signals | education), channels: [{platform, url}],
 #       verified_at — когда ссылка проверена; url «[ССЫЛКА — впиши]» — публично не найдено, впишет пользователь.
-# platform: telegram | youtube | tradingview | x | web | bybit. Чтение Telegram — Telethon или t.me/s/<канал> (фолбэк).
+# platform: telegram | youtube | tradingview | x | web | bybit | binance. Чтение Telegram — Telethon или t.me/s/<канал> (фолбэк).
 # В журнал сигналов уходят только строки telegram (feeds/social/telegram.py), остальные — справочные.
 version: 1
 authors:
@@ -39,12 +39,17 @@ authors:
     name: "CryptosMX"
     aliases: ["Cryptos MX", "cryptosmx"]
     kind: signals
-    note: "Мастер-трейдер копитрейдинга Bybit (найден 2026-10-03 по нику, который назвал пользователь): сделки скрыты от некопирующих, публичного канала нет. Журнал по автору не ведётся."
+    note: "Мастер-трейдер копитрейдинга Bybit (найден 2026-10-03 по нику, который назвал пользователь): сделки скрыты от некопирующих; Telegram-канал закрытый (по приглашению), YouTube заброшен в 2022. Журнал по автору не ведётся."
     channels:
       - {platform: bybit, url: "https://www.bybit.com/copyTrade/trade-center/detail?leaderMark=BDRYh1s8wZY%2Brj%2BhQM%2FZww%3D%3D", verified_at: 2026-10-03, note: "сводка и кривая 90 дней открыты, сделки скрыты; скриптом не взять — 403"}
-      - {platform: telegram, url: "[ССЫЛКА — впиши]"}
+      - {platform: binance, url: "https://www.binance.com/copy-trading/lead-details/5064581361618552064", verified_at: 2026-10-03, note: "копитрейдинг с 03.06.2026, плечо ×1; история позиций ОТКРЫТА (279 сделок на 03.10), скриптом берётся"}
+      - {platform: youtube, url: "https://www.youtube.com/@Cryptos07", verified_at: 2026-10-03, note: "13 роликов 29.11–14.12.2022 (зоны покупки, шорт BTC/ETH), дальше заброшен; ссылка из описания ведёт в TG-канал Cryptos_Mx, где админ — контакт из профиля Bybit: так установлена связь"}
       - {platform: x, url: "[ССЫЛКА — впиши]"}
-      - {platform: youtube, url: "[ССЫЛКА — впиши]"}
-    # Не в channels намеренно: контакт из описания профиля — личный Telegram, не канал (telegram-строка
-    # ушла бы в журнал как канал). TradingView CRYPTOSMX (2018, 0 идей) — тот ли человек, не установлено.
+    # Не в channels намеренно (telegram-строка ушла бы в журнал как канал):
+    # * TG-канал «Cryptos_Mx» (873 подписчика, 2026-10-03) — закрытый, вход по приглашению
+    #   t.me/+ftNNtnkPkOliNzQy (в описании YouTube назван бесплатным). channel_slug принял бы «+…»
+    #   за имя, а t.me/s/ закрытых каналов не отдаёт. Читать — вступить и выгрузить историю
+    #   (Telegram Desktop → «Экспорт истории чата» → JSON).
+    # * контакт из описания профиля Bybit — личный Telegram, не канал.
+    # TradingView CRYPTOSMX (2018, 0 идей) — тот ли человек, не установлено.
     # Разбор: docs/research/cryptosmx-bybit-2026-10-03.md
