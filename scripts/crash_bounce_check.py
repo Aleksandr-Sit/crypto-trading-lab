@@ -24,6 +24,12 @@
 * `report` — средний итог сделки после комиссий, шум по ДНЯМ (обвалы рынка приходят
   пачкой — сотни монет в одну минуту, это одно свидетельство), по месяцам, по обороту.
   С `--trader` — сверка: нашёл ли детектор минуты входов CryptosMX.
+* `fidelity --trader F` — сверка механики ленты с фактом автора: его вход против ask, его
+  быстрый выход против правила «строго выше», его выход по таймеру против bid через 7 мин.
+
+Для портфеля (`crash_bounce_portfolio.py`) — полный прогон: `simulate --min-drop 0.05 --side
+--vars limit5,mkt5_0.25s --all-events --broad-first --stress 2025-10-10T20:56`
+(каждое событие независимо, широкие даты первыми, стресс «API лёг» на 60 мин).
 
 Комиссии — VIP0 USDⓈ-M: мейкер 0.02%, тейкер 0.05%.
 """
@@ -37,7 +43,9 @@ import json
 import math
 import random
 import re
+import shutil
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -77,6 +85,30 @@ def _get(url: str, tries: int = 4) -> bytes | None:
                 return None
             time.sleep(2 ** k)
         except Exception:  # noqa: BLE001 — сеть: повтор
+            time.sleep(2 ** k)
+    raise RuntimeError(f"не скачалось: {url}")
+
+
+def _get_file(url: str, tries: int = 4) -> Path | None:
+    """То же, что `_get`, но архив пишется во временный файл: архив ленты дня каскада у
+    ETH/BTC — сотни мегабайт, и держать его в памяти каждого процесса нельзя."""
+    url = urllib.parse.quote(url, safe=":/?=&%")
+    for k in range(tries):
+        fh = tempfile.NamedTemporaryFile(prefix="cb-", suffix=".zip", delete=False)
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r:
+                shutil.copyfileobj(r, fh, 1 << 20)
+            fh.close()
+            return Path(fh.name)
+        except urllib.error.HTTPError as e:
+            fh.close()
+            Path(fh.name).unlink(missing_ok=True)
+            if e.code == 404:
+                return None
+            time.sleep(2 ** k)
+        except Exception:  # noqa: BLE001 — сеть: повтор
+            fh.close()
+            Path(fh.name).unlink(missing_ok=True)
             time.sleep(2 ** k)
     raise RuntimeError(f"не скачалось: {url}")
 
@@ -172,19 +204,22 @@ def _trades(sym: str, day: str) -> tuple[array, array, array, array]:
     по bid; 0 — покупатель, по ask). Читается потоком в массивы чисел: таблица строк дня
     обвала — сотни мегабайт на процесс, а процессов десяток."""
     ts, px, qty, sell = array("q"), array("d"), array("d"), array("b")
-    blob = _get(f"{ARCHIVE}/daily/aggTrades/{sym}/{sym}-aggTrades-{day}.zip")
-    if blob is None:
+    path = _get_file(f"{ARCHIVE}/daily/aggTrades/{sym}/{sym}-aggTrades-{day}.zip")
+    if path is None:
         return ts, px, qty, sell
-    with zipfile.ZipFile(io.BytesIO(blob)) as z, z.open(z.namelist()[0]) as fh:
-        for line in fh:
-            # agg_id, price, qty, first_id, last_id, time, is_buyer_maker
-            f = line.split(b",")
-            if not f[0].isdigit():
-                continue  # заголовок у новых архивов
-            ts.append(int(f[5]))
-            px.append(float(f[1]))
-            qty.append(float(f[2]))
-            sell.append(f[6].strip().lower() == b"true")
+    try:
+        with zipfile.ZipFile(path) as z, z.open(z.namelist()[0]) as fh:
+            for line in fh:
+                # agg_id, price, qty, first_id, last_id, time, is_buyer_maker
+                f = line.split(b",")
+                if not f[0].isdigit():
+                    continue  # заголовок у новых архивов
+                ts.append(int(f[5]))
+                px.append(float(f[1]))
+                qty.append(float(f[2]))
+                sell.append(f[6].strip().lower() == b"true")
+    finally:
+        path.unlink(missing_ok=True)
     return ts, px, qty, sell
 
 
@@ -200,13 +235,33 @@ def _first(ts: list[int], t0: int, lo: int = 0) -> int:
     return lo
 
 
+def _stuck_exit(ts, px, sell, e_i: int, entry: float, until: int) -> tuple | None:
+    """Выход, когда бот не может продать по таймеру до `until` (мс; API биржи лёг): стоящая
+    на бирже цель работает, дальше — первая продажа по bid после `until`.
+    → (t_out, цена выхода, как, минимум цены за удержание) или None, если лента кончилась."""
+    tp, low, k = entry * (1 + TP), min(entry, px[e_i]), e_i + 1
+    while k < len(ts) and ts[k] < until:
+        if px[k] > tp:
+            return ts[k], tp, "tp", low
+        low = min(low, px[k])
+        k += 1
+    while k < len(ts) and not sell[k]:
+        k += 1
+    if k >= len(ts):
+        return None
+    return ts[k], px[k], "time", min(low, px[k])
+
+
 def _play(ts, px, qty, ev: dict, drop: float, mode: str, lag: float,
-          sell=None) -> dict | None:
+          sell=None, stress: tuple[int, int] | None = None) -> dict | None:
     """Одна сделка по ленте. None — вход не состоялся.
 
     Без `sell` рыночные цены — первая сделка ленты после момента, чья бы она ни была: покупка
     получает и сделки по bid, то есть полспреда в подарок. С `sell` рыночная покупка — первая
     сделка покупателя-агрессора (по ask), продажа по таймеру — первая сделка продавца (по bid).
+    `low` — минимум цены за удержание (худший момент внутри сделки). `stress` = (T0, T1), мс:
+    окно, когда API биржи недоступен; сделке, задевшей окно, пишется и выход «застрявшего»
+    бота (поля `api_*`, только со стороной сделки).
     """
     level = ev["prev_close"] * (1 - drop)
     m0, m1 = ev["t"], ev["t"] + 60_000
@@ -238,50 +293,113 @@ def _play(ts, px, qty, ev: dict, drop: float, mode: str, lag: float,
     tp = entry * (1 + TP)
     k = e_i + 1
     end = t_in + HOLD_S * 1000
+    low = min(entry, px[e_i])
+    r = None
     while k < len(ts) and ts[k] < end:
         if px[k] > tp:
-            return {"entry": entry, "exit": tp, "t_in": t_in, "t_out": ts[k], "how": "tp",
-                    "net": TP - fee_in - MAKER, "cap": cap}
+            r = {"entry": entry, "exit": tp, "t_in": t_in, "t_out": ts[k], "how": "tp",
+                 "net": TP - fee_in - MAKER, "cap": cap, "low": low}
+            break
+        low = min(low, px[k])
         k += 1
-    while sell is not None and k < len(ts) and not sell[k]:
-        k += 1
-    if k >= len(ts):
-        return None  # лента дня кончилась раньше выхода — сделку не засчитывать
-    x = px[k]
-    return {"entry": entry, "exit": x, "t_in": t_in, "t_out": ts[k], "how": "time",
-            "net": x / entry - 1 - fee_in - TAKER, "cap": cap}
+    if r is None:
+        while sell is not None and k < len(ts) and not sell[k]:
+            k += 1
+        if k >= len(ts):
+            return None  # лента дня кончилась раньше выхода — сделку не засчитывать
+        x = px[k]
+        r = {"entry": entry, "exit": x, "t_in": t_in, "t_out": ts[k], "how": "time",
+             "net": x / entry - 1 - fee_in - TAKER, "cap": cap, "low": min(low, x)}
+    if stress and sell is not None and t_in < stress[1] and r["t_out"] > stress[0]:
+        s = _stuck_exit(ts, px, sell, e_i, entry, max(stress[1], end))
+        if s is not None:
+            r.update(api_out=s[0], api_exit=s[1], api_how=s[2], api_low=s[3],
+                     api_net=s[1] / entry - 1 - fee_in - (MAKER if s[2] == "tp" else TAKER))
+    return r
+
+
+def _stress_limits(sym: str, day: str, ts, px, sell, stress: tuple[int, int],
+                   drop: float = 0.05) -> list[dict]:
+    """Стресс «API лёг» для лимиток: заявка, стоявшая в T0 (уровень −drop от последней
+    сделки до T0 ≈ закрытие прошлой минуты), не снимается и исполняется при первой сделке
+    строго ниже уровня до T1; выход — `_stuck_exit` (цель стоит, таймер ждёт T1)."""
+    t0, t1 = stress
+    i = _first(ts, t0)
+    if i == 0 or i >= len(ts):
+        return []
+    level = px[i - 1] * (1 - drop)
+    while i < len(ts) and ts[i] < t1:
+        if px[i] < level:
+            s = _stuck_exit(ts, px, sell, i, level, max(t1, ts[i] + HOLD_S * 1000))
+            if s is None:
+                return []
+            return [{"sym": sym, "day": day, "var": f"limit{round(drop * 100)}_api{SIDE}",
+                     "t": t0, "entry": level, "exit": s[1], "t_in": ts[i], "t_out": s[0],
+                     "how": s[2], "low": s[3],
+                     "net": s[1] / level - 1 - MAKER - (MAKER if s[2] == "tp" else TAKER)}]
+        i += 1
+    return []
 
 
 SIDE = "|side"  # суффикс варианта, разыгранного со стороной сделки (`simulate --side`)
 
 
-def _sim_day(sym: str, day: str, evs: list[dict], side: bool = False) -> list[dict]:
+def _sim_day(sym: str, day: str, evs: list[dict], side: bool = False,
+             names: tuple[str, ...] | None = None, all_events: bool = False,
+             stress: tuple[int, int] | None = None) -> list[dict]:
+    """`names` — только эти варианты; `all_events` — каждое событие разыгрывается независимо
+    (иначе событие во время позиции на ту же монету пропускается; для портфеля это плохо:
+    он, пропустив сделку за неимением слота, должен видеть следующий обвал монеты)."""
     ts, px, qty, sell = _trades(sym, day)
     if not ts:
         return [{"sym": sym, "day": day, "missing": True}]
-    if max(e["t"] for e in evs) + 60_000 + HOLD_S * 1000 + 60_000 > ts[-1]:
+    need = max(e["t"] for e in evs) + 60_000 + HOLD_S * 1000 + 60_000
+    if stress and _day(stress[0]) == day:
+        need = max(need, stress[1] + HOLD_S * 1000 + 60_000)
+    if need > ts[-1]:
         nxt = (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         t2, p2, q2, s2 = _trades(sym, nxt)
         ts, px, qty, sell = ts + t2, px + p2, qty + q2, sell + s2
     out = []
+    variants = [v for v in VARIANTS if names is None or v[0] in names]
     for suffix, sd in (("", None), (SIDE, sell)) if side else (("", None),):
-        for name, drop, mode, lag in VARIANTS:
+        for name, drop, mode, lag in variants:
             busy_until = 0
             for ev in sorted(evs, key=lambda e: e["t"]):
                 if ev["drop"] > -drop or ev["t"] < busy_until:
                     continue
-                r = _play(ts, px, qty, ev, drop, mode, lag, sd)
+                r = _play(ts, px, qty, ev, drop, mode, lag, sd, stress)
                 if r is None:
                     continue
-                busy_until = r["t_out"]
+                if not all_events:
+                    busy_until = r["t_out"]
                 out.append({"sym": sym, "day": day, "var": name + suffix, "t": ev["t"],
                             "drop_min": ev["drop"], "qvol_24h": ev["qvol_24h"], **r})
+    if side and stress and _day(stress[0]) == day:
+        for _name, drop, mode, _lag in variants:
+            if mode == "limit":
+                out += _stress_limits(sym, day, ts, px, sell, stress, drop)
+    return out
+
+
+def _broad_minutes(evs: list[dict], k: int = 30) -> dict[str, int]:
+    """Дата → число минут, в которые обвалилось ≥k монет (по всем событиям файла)."""
+    per_min = defaultdict(set)
+    for e in evs:
+        per_min[e["t"]].add(e["sym"])
+    out = defaultdict(int)
+    for t, syms in per_min.items():
+        if len(syms) >= k:
+            out[_day(t)] += 1
     return out
 
 
 def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, seed: int,
-                   side: bool = False) -> int:
+                   side: bool = False, names: tuple[str, ...] | None = None,
+                   all_events: bool = False, broad_first: bool = False,
+                   stress: tuple[int, int] | None = None) -> int:
     evs = [json.loads(x) for x in (out / "events.jsonl").read_text().splitlines()]
+    broad = _broad_minutes(evs) if broad_first else {}
     evs = [e for e in evs if e["drop"] <= -min_drop]
     by = defaultdict(list)
     for e in evs:
@@ -299,16 +417,21 @@ def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, see
     done_p, sim_p = out / "sim_done.txt", out / "sim.jsonl"
     done = set(done_p.read_text().split()) if done_p.exists() else set()
     jobs = [k for k in sorted(by) if f"{k[0]}:{k[1]}" not in done]
+    if broad_first:
+        # сначала даты с самым широким обвалом (10.10.2025 — 78 минут): пул берёт задания
+        # в порядке подачи, и ответ по каскаду готов задолго до конца прогона
+        jobs.sort(key=lambda k: (-broad.get(k[1], 0), k[1], k[0]))
     print(f"событий {len(evs)}, дней-символов {len(by)}, осталось {len(jobs)}", flush=True)
     # процессы, а не потоки: разбор ленты сделок держит GIL, и десять потоков шли на одном ядре
     with ProcessPoolExecutor(workers) as pool, sim_p.open("a") as fs, done_p.open("a") as fd:
-        futs = {pool.submit(_sim_day, s, d, by[(s, d)], side): (s, d) for s, d in jobs}
+        futs = {pool.submit(_sim_day, s, d, by[(s, d)], side, names, all_events, stress): (s, d)
+                for s, d in jobs}
         for k, f in enumerate(as_completed(futs), 1):
             s, d = futs[f]
             try:
                 res = f.result()
-            except RuntimeError as e:
-                print(f"  ПРОПУСК {e}", flush=True)
+            except Exception as e:  # noqa: BLE001 — сеть или память: день не теряется
+                print(f"  ПРОПУСК {s} {d}: {type(e).__name__} {e}", flush=True)
                 continue  # не помечать готовым: повтор возьмёт снова
             for r in res:
                 fs.write(json.dumps(r) + "\n")
@@ -537,6 +660,93 @@ def stage_report(out: Path, trader: Path | None) -> int:
     return 0
 
 
+def _fidelity_day(sym: str, day: str, pos: list[dict]) -> list[dict]:
+    """Сделки автора за день-символ против ленты: его вход — с первой покупкой по ask с его
+    миллисекунды; его выход до 6.9 мин — исполнилась бы продажа по нашему правилу «сделка
+    строго выше цены» к его выходу; выход 6.9–7.5 мин — с первой продажей по bid через 7 мин."""
+    ts, px, _, sell = _trades(sym, day)
+    if not ts:
+        return [{"sym": sym, "day": day, "missing": True}]
+    if max(p["closed"] for p in pos) + 60_000 > ts[-1]:
+        nxt = (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        t2, p2, _, s2 = _trades(sym, nxt)
+        ts, px, sell = ts + t2, px + p2, sell + s2
+    out = []
+    for p in pos:
+        dur = (p["closed"] - p["opened"]) / 60_000
+        r = {"sym": sym, "opened": p["opened"], "dur": dur,
+             "gain": p["avgClosePrice"] / p["avgCost"] - 1}
+        i = _first(ts, p["opened"])
+        while i < len(ts) and sell[i]:
+            i += 1
+        if i < len(ts):
+            r["entry_diff"] = p["avgCost"] / px[i] - 1
+        if dur < 6.9:
+            j = _first(ts, p["opened"])
+            while j < len(ts) and px[j] <= p["avgClosePrice"]:
+                j += 1
+            r["kind"] = "fast"
+            r["hit_lag_s"] = (ts[j] - p["closed"]) / 1000 if j < len(ts) else None
+        else:
+            j = _first(ts, p["opened"] + HOLD_S * 1000)
+            while j < len(ts) and not sell[j]:
+                j += 1
+            r["kind"] = "timer"
+            r["exit_diff"] = p["avgClosePrice"] / px[j] - 1 if j < len(ts) else None
+        out.append(r)
+    return out
+
+
+def stage_fidelity(out: Path, trader: Path, workers: int) -> int:
+    """Сверка механики ленты с фактом автора (сделки до 7.5 мин; длинные — ручные).
+    Пороги объявлены заранее (`crash-bounce-capital-2026-10-04.md`): доля быстрых выходов,
+    воспроизведённых правилом «строго выше» с допуском 2 с, ≥90% — цифрам депозита верим как
+    абсолютным, 70–90% — только сравнение клеток, <70% — механику переделывать."""
+    out.mkdir(parents=True, exist_ok=True)
+    pos = json.loads(trader.read_text(encoding="utf-8"))["positions"]
+    pos = [p for p in pos if (p["closed"] - p["opened"]) / 60_000 <= 7.5]
+    by = defaultdict(list)
+    for p in pos:
+        by[(p["symbol"], _day(p["opened"]))].append(p)
+    print(f"сделок до 7.5 мин: {len(pos)}, дней-символов {len(by)}", flush=True)
+    rows = []
+    with ProcessPoolExecutor(workers) as pool:
+        futs = [pool.submit(_fidelity_day, s, d, v) for (s, d), v in sorted(by.items())]
+        for f in as_completed(futs):
+            rows += f.result()
+    (out / "fidelity.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    miss = [r for r in rows if r.get("missing")]
+    rows = [r for r in rows if not r.get("missing")]
+    ed = [r["entry_diff"] for r in rows if "entry_diff" in r]
+    print(f"дней-символов без ленты: {len(miss)}")
+    print(f"вход: его цена / первая покупка по ask с его миллисекунды − 1: медиана "
+          f"{median(ed) * 100:+.3f}%, медиана |разницы| {median(map(abs, ed)) * 100:.3f}% "
+          f"({len(ed)} сделок)")
+    fast = [r for r in rows if r["kind"] == "fast"]
+    lag = [r["hit_lag_s"] for r in fast]
+    ok = sum(x is not None and x <= 2 for x in lag)
+    early = sum(x is not None and x < -2 for x in lag)
+    print(f"выход до 6.9 мин ({len(fast)}): продажа по его цене исполнилась бы по правилу "
+          f"«строго выше» к его выходу (допуск 2 с) — {ok} ({ok / len(fast):.0%}); из них "
+          f"лента прошла выше его цены раньше выхода больше чем на 2 с — {early}")
+    hit = sorted(x for x in lag if x is not None)
+    if hit:
+        q = [hit[int(len(hit) * f)] for f in (0.1, 0.5, 0.9)]
+        print(f"  сдвиг «лента выше его цены» − «его выход», с: 10% {q[0]:+.1f}, медиана "
+              f"{q[1]:+.1f}, 90% {q[2]:+.1f}")
+    share = ok / len(fast)
+    verdict = ("≥90%: цифрам депозита верим как абсолютным" if share >= 0.9 else
+               "70–90%: только сравнение клеток между собой" if share >= 0.7 else
+               "<70%: механику переделывать до портфеля")
+    print(f"  ВЕРДИКТ сверки: {verdict}")
+    tim = [r["exit_diff"] for r in rows if r["kind"] == "timer" and r.get("exit_diff") is not None]
+    if tim:
+        print(f"выход по таймеру ({len(tim)}): его цена / наша первая продажа по bid через 7 мин "
+              f"− 1: медиана {median(tim) * 100:+.3f}%, медиана |разницы| "
+              f"{median(map(abs, tim)) * 100:.3f}%")
+    return 0
+
+
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(
@@ -558,14 +768,36 @@ def main() -> int:
     s.add_argument("--seed", type=int, default=7)
     s.add_argument("--side", action="store_true",
                    help=f"разыграть ещё и со стороной сделки (варианты с суффиксом {SIDE})")
+    s.add_argument("--vars", help="только эти варианты, через запятую (limit5,mkt5_0.25s)")
+    s.add_argument("--all-events", action="store_true",
+                   help="каждое событие независимо, без пропуска во время позиции (для портфеля)")
+    s.add_argument("--broad-first", action="store_true",
+                   help="сначала даты с минутами обвала ≥30 монет, самые широкие первыми")
+    s.add_argument("--stress", help="начало простоя API, UTC: 2025-10-10T20:56")
+    s.add_argument("--stress-min", type=int, default=60, help="длительность простоя, мин")
     r = sub.add_parser("report")
     r.add_argument("--out", type=Path, required=True)
     r.add_argument("--trader", type=Path)
+    fi = sub.add_parser("fidelity", help="сверка механики ленты со сделками автора")
+    fi.add_argument("--out", type=Path, required=True)
+    fi.add_argument("--trader", type=Path, required=True)
+    fi.add_argument("--workers", type=int, default=3)
     a = ap.parse_args()
+    if a.cmd == "fidelity":
+        return stage_fidelity(a.out, a.trader, a.workers)
     if a.cmd == "events":
         return stage_events(a.out, a.a, a.b, a.drop, a.workers)
     if a.cmd == "simulate":
-        return stage_simulate(a.out, a.workers, a.min_drop, a.per_month, a.seed, a.side)
+        names = tuple(a.vars.split(",")) if a.vars else None
+        if names and (bad := set(names) - {v[0] for v in VARIANTS}):
+            ap.error(f"нет таких вариантов: {', '.join(sorted(bad))}")
+        stress = None
+        if a.stress:
+            t0 = int(datetime.strptime(a.stress, "%Y-%m-%dT%H:%M").replace(tzinfo=UTC)
+                     .timestamp() * 1000)
+            stress = (t0, t0 + a.stress_min * 60_000)
+        return stage_simulate(a.out, a.workers, a.min_drop, a.per_month, a.seed, a.side,
+                              names, a.all_events, a.broad_first, stress)
     return stage_report(a.out, a.trader)
 
 
