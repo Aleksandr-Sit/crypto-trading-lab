@@ -49,13 +49,13 @@
 
 ## Где это работает
 
-- **Репозиторий:** `github.com/Aleksandr-Sit/crypto-trading-lab`, приватный, ветка `main`.
-- **Сервер:** Hostkey `151.244.251.34` (`ssh vps-trader`), каталог `/opt/crypto-trading-lab`.
+- **Репозиторий:** `github.com/Aleksandr-Sit/crypto-trading-lab`, публичный (портфолио; с 04.10.2026), ветка `main`.
+- **Сервер:** Hostkey (`ssh vps-trader`, адрес — в `~/.ssh/config`), каталог `/opt/crypto-trading-lab`.
   Код тянется deploy-ключом **только на чтение** (`~/.ssh/github_lab`, алиас хоста `github-lab`),
   запушить с сервера нельзя — правки делаются локально и приезжают через `git pull`.
 - **Обновление:** `cd /opt/crypto-trading-lab && git pull && docker compose -f deploy/docker-compose.yml up -d --build`.
 - **Веб:** на сервере `127.0.0.1:8090` (8080 исторически занимал `crypto-trader`, остановлен 03.10.2026). Снаружи только
-  туннелем: `ssh -L 8080:127.0.0.1:8090 root@151.244.251.34`, дальше `http://127.0.0.1:8080`.
+  туннелем: `ssh -L 8080:127.0.0.1:8090 vps-trader`, дальше `http://127.0.0.1:8080`.
 - **Бот:** `@laboratory63_bot`, отдельный от бота `crypto-trader`. Один токен двумя процессами
   опрашивать нельзя — они выбивают друг друга (`TelegramConflictError`), и пострадает соседний
   проект, а не этот. Свой бот на каждый проект.
