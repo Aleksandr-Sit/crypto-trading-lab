@@ -228,7 +228,11 @@
     PY="/c/Users/sanny/My Project/keel/.venv/Scripts/python.exe"; D=../lab-data/crash-bounce-full
     PYTHONUTF8=1 "$PY" scripts/crash_bounce_check.py simulate --out $D --min-drop 0.05 --side \
       --vars limit5,mkt5_0.25s --all-events --broad-first --stress 2025-10-10T20:56 --workers 6 \
-      >> $D/simulate.log 2>&1
+      --passes 5 >> $D/simulate.log 2>&1
+
+Ночами 04–06.10 связь с `data.binance.vision` пропадала часами (4 404 и 164 «не скачалось»,
+6 оборванных архивов `BadZipFile`), поэтому `--passes`: повтор по нескачанным дням с паузой
+5 мин, стоп, если проход не дал ни одного дня.
     # сверка, если не дошла до строки «ВЕРДИКТ сверки» в логе:
     PYTHONUTF8=1 "$PY" scripts/crash_bounce_check.py fidelity --out ../lab-data/crash-bounce-fidelity \
       --trader ../lab-data/cryptosmx-calls/binance_positions_2026-10-03.json --workers 2

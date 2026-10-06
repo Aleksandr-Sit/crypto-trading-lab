@@ -397,7 +397,7 @@ def _broad_minutes(evs: list[dict], k: int = 30) -> dict[str, int]:
 def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, seed: int,
                    side: bool = False, names: tuple[str, ...] | None = None,
                    all_events: bool = False, broad_first: bool = False,
-                   stress: tuple[int, int] | None = None) -> int:
+                   stress: tuple[int, int] | None = None, passes: int = 1) -> int:
     evs = [json.loads(x) for x in (out / "events.jsonl").read_text().splitlines()]
     broad = _broad_minutes(evs) if broad_first else {}
     evs = [e for e in evs if e["drop"] <= -min_drop]
@@ -415,13 +415,35 @@ def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, see
                 for k in random.Random(f"{seed}:{m}").sample(ks, min(per_month, len(ks)))}
         by = {k: v for k, v in by.items() if k in keep}
     done_p, sim_p = out / "sim_done.txt", out / "sim.jsonl"
-    done = set(done_p.read_text().split()) if done_p.exists() else set()
-    jobs = [k for k in sorted(by) if f"{k[0]}:{k[1]}" not in done]
-    if broad_first:
-        # сначала даты с самым широким обвалом (10.10.2025 — 78 минут): пул берёт задания
-        # в порядке подачи, и ответ по каскаду готов задолго до конца прогона
-        jobs.sort(key=lambda k: (-broad.get(k[1], 0), k[1], k[0]))
-    print(f"событий {len(evs)}, дней-символов {len(by)}, осталось {len(jobs)}", flush=True)
+    # Несколько проходов: ночью связь с архивом пропадала часами, и проход выдавал тысячи
+    # «не скачалось». Следующий проход берёт только непомеченные дни; ноль готовых за проход —
+    # сеть лежит, дальше не крутить вхолостую.
+    for p in range(1, passes + 1):
+        done = set(done_p.read_text().split()) if done_p.exists() else set()
+        jobs = [k for k in sorted(by) if f"{k[0]}:{k[1]}" not in done]
+        if broad_first:
+            # сначала даты с самым широким обвалом (10.10.2025 — 78 минут): пул берёт задания
+            # в порядке подачи, и ответ по каскаду готов задолго до конца прогона
+            jobs.sort(key=lambda k: (-broad.get(k[1], 0), k[1], k[0]))
+        print(f"проход {p}/{passes}: событий {len(evs)}, дней-символов {len(by)}, "
+              f"осталось {len(jobs)}", flush=True)
+        if not jobs:
+            break
+        failed = _run_jobs(jobs, by, workers, sim_p, done_p, side, names, all_events, stress)
+        if not failed or failed == len(jobs) or p == passes:
+            if failed:
+                print(f"не скачалось {failed} дней-символов — повторить тем же запуском",
+                      flush=True)
+            break
+        print(f"не скачалось {failed}; следующий проход через 5 мин", flush=True)
+        time.sleep(300)
+    print("готово", flush=True)
+    return 0
+
+
+def _run_jobs(jobs, by, workers, sim_p, done_p, side, names, all_events, stress) -> int:
+    """Один проход по дням-символам; → сколько не удалось (не помечены готовыми)."""
+    failed = 0
     # процессы, а не потоки: разбор ленты сделок держит GIL, и десять потоков шли на одном ядре
     with ProcessPoolExecutor(workers) as pool, sim_p.open("a") as fs, done_p.open("a") as fd:
         futs = {pool.submit(_sim_day, s, d, by[(s, d)], side, names, all_events, stress): (s, d)
@@ -432,6 +454,7 @@ def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, see
                 res = f.result()
             except Exception as e:  # noqa: BLE001 — сеть или память: день не теряется
                 print(f"  ПРОПУСК {s} {d}: {type(e).__name__} {e}", flush=True)
+                failed += 1
                 continue  # не помечать готовым: повтор возьмёт снова
             for r in res:
                 fs.write(json.dumps(r) + "\n")
@@ -440,8 +463,7 @@ def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, see
             fd.flush()
             if k % 100 == 0:
                 print(f"  {k}/{len(jobs)}", flush=True)
-    print("готово", flush=True)
-    return 0
+    return failed
 
 
 def _stats(rows: list[dict]) -> tuple[int, float, float, float, float]:
@@ -775,6 +797,8 @@ def main() -> int:
                    help="сначала даты с минутами обвала ≥30 монет, самые широкие первыми")
     s.add_argument("--stress", help="начало простоя API, UTC: 2025-10-10T20:56")
     s.add_argument("--stress-min", type=int, default=60, help="длительность простоя, мин")
+    s.add_argument("--passes", type=int, default=1,
+                   help="проходов по нескачанным дням (пауза 5 мин; стоп, если проход пустой)")
     r = sub.add_parser("report")
     r.add_argument("--out", type=Path, required=True)
     r.add_argument("--trader", type=Path)
@@ -797,7 +821,7 @@ def main() -> int:
                      .timestamp() * 1000)
             stress = (t0, t0 + a.stress_min * 60_000)
         return stage_simulate(a.out, a.workers, a.min_drop, a.per_month, a.seed, a.side,
-                              names, a.all_events, a.broad_first, stress)
+                              names, a.all_events, a.broad_first, stress, a.passes)
     return stage_report(a.out, a.trader)
 
 
