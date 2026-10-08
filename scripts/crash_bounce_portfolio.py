@@ -12,6 +12,17 @@
 `D` — каталог полного прогона (`simulate --min-drop 0.05 --side --vars limit5,mkt5_0.25s
 --all-events --stress 2025-10-10T20:56`). `--day` — только эти сутки (ответ по каскаду, пока
 прогон не кончился). `--sample` — каталог выборки 03.10: совпадающие сделки обязаны совпасть.
+
+Проверка вне выборки 2021–2024 (объявлена 08.10.2026):
+
+    python scripts/crash_bounce_portfolio.py --out D2 --period 2021-01-01:2024-12-31 --fixed \\
+        --cascades 2021-05-19,2022-05-09,2022-05-10,2022-05-11,2022-05-12,\\
+2022-11-08,2022-11-09,2024-08-05
+
+`--fixed` — на стратегию выделен фиксированный депозит D0, в 00:00 UTC всё сверх D0 выводится,
+после убытков счёт не пополняется; клетка 1% × 3 без стопа. Сетка со сложным процентом
+печатается для справки, вердикт — по фиксированному депозиту. Таблица А и стресс «API лёг»
+есть только у 10.10.2025 и печатаются, только если эти сутки в периоде.
 """
 
 from __future__ import annotations
@@ -40,6 +51,9 @@ STRESS_T0 = int(datetime(2025, 10, 10, 20, 56, tzinfo=UTC).timestamp() * 1000)
 STRESS_T1 = STRESS_T0 + 60 * 60_000
 CASCADE_DAY = "2025-10-10"
 PERIOD = (date(2025, 1, 1), date(2026, 9, 30))
+# Проверка вне выборки 2021–2024: клетка объявлена 08.10.2026 до прогона, вывод сверх D0.
+FIXED_CELL = (0.01, 3, None)
+FIXED_MAX_DROP = 0.05
 
 
 def _day(ms: int) -> str:
@@ -68,11 +82,22 @@ class Book:
     cut_api: int = 0
     max_open: int = 0
     max_exposure: float = 0.0    # сумма размеров открытых позиций / депозит
+    # только при выводе сверх D0 (`fixed`), D0 = 1.0
+    withdrawn: float = 0.0
+    min_bal: float = 1.0         # наименьший баланс по закрытым сделкам
+    min_bal_pess: float = 1.0    # то же с худшей ценой открытых позиций
+    day_low: dict[str, float] = field(default_factory=dict)  # наименьший закрытый баланс суток
+    day_taken: dict[str, int] = field(default_factory=dict)  # сделок, открытых за сутки
+    day_over: dict[str, int] = field(default_factory=dict)   # из них сверх предела
 
 
 def run_book(trades: list[dict], size: float, cap: int | None, stop: float | None,
-             limit: bool, forced: list[dict] | None = None) -> Book:
+             limit: bool, forced: list[dict] | None = None, fixed: bool = False) -> Book:
     """Счёт по сделкам, отсортированным по (t_in, sym).
+
+    `fixed` — фиксированный депозит D0 = 1.0: в 00:00 UTC всё сверх D0 выводится (`withdrawn`),
+    пополнения нет. Размер — доля депозита на 00:00 после вывода, то есть доля × min(баланс, D0).
+    Итог = выведенное + конечный баланс − D0 = сумма итогов сделок.
 
     `forced` — стресс «API лёг» у лимиток: заявки, стоявшие в T0, исполняются без предела и
     стопа, но только если в T0 заявки вообще стояли (был свободный слот и не было стопа) и
@@ -90,11 +115,17 @@ def run_book(trades: list[dict], size: float, cap: int | None, stop: float | Non
     seq = 0
 
     def roll(t: int) -> None:
-        nonlocal cur_day, stopped_at
+        nonlocal cur_day, stopped_at, peak
         d = _day(t)
         if d != cur_day:
             cur_day, stopped_at = d, None
+            if fixed and b.equity > 1.0:
+                # Баланс по закрытым сделкам между последним событием прошлых суток и первым
+                # событием этих не меняется: вывод здесь равен выводу ровно в 00:00 UTC.
+                b.withdrawn += b.equity - 1.0
+                b.equity = peak = 1.0
             b.day_start[d] = b.equity
+            b.day_low[d] = b.equity
             b.day_pnl.setdefault(d, 0.0)
             b.day_worst.setdefault(d, 0.0)
 
@@ -103,6 +134,7 @@ def run_book(trades: list[dict], size: float, cap: int | None, stop: float | Non
         nonlocal peak
         pess = b.equity + open_worst
         b.max_dd_pess = max(b.max_dd_pess, 1 - pess / peak)
+        b.min_bal_pess = min(b.min_bal_pess, pess)
         d = _day(t)
         b.day_worst[d] = min(b.day_worst.get(d, 0.0), pess / b.day_start[d] - 1)
 
@@ -118,6 +150,8 @@ def run_book(trades: list[dict], size: float, cap: int | None, stop: float | Non
             b.day_pnl[cur_day] += pnl
             peak = max(peak, b.equity)
             b.max_dd = max(b.max_dd, 1 - b.equity / peak)
+            b.min_bal = min(b.min_bal, b.equity)
+            b.day_low[cur_day] = min(b.day_low[cur_day], b.equity)
             mark(t_out)
             if (stop is not None and stopped_at is None
                     and b.day_pnl[cur_day] <= -stop * b.day_start[cur_day]):
@@ -134,6 +168,9 @@ def run_book(trades: list[dict], size: float, cap: int | None, stop: float | Non
         open_worst += worst
         open_amt += amt
         b.taken += 1
+        b.day_taken[cur_day] = b.day_taken.get(cur_day, 0) + 1
+        if cap is not None and len(open_h) > cap:
+            b.day_over[cur_day] = b.day_over.get(cur_day, 0) + 1
         if cap is not None and len(open_h) == cap:
             full_at = tr["t_in"]
         b.max_open = max(b.max_open, len(open_h))
@@ -193,9 +230,9 @@ def _with_stress(trades: list[dict], limit: bool) -> list[dict]:
     return out
 
 
-def _period_days() -> list[str]:
-    d, out = PERIOD[0], []
-    while d <= PERIOD[1]:
+def _period_days(period: tuple[date, date] = PERIOD) -> list[str]:
+    d, out = period[0], []
+    while d <= period[1]:
         out.append(d.isoformat())
         d += timedelta(days=1)
     return out
@@ -332,18 +369,28 @@ def cascade_table(by: dict[str, list[dict]], forced: list[dict]) -> None:
           f"монет, не обвалившихся на ≥5% за минуту: те не качались)")
 
 
-def period_table(by: dict[str, list[dict]]) -> dict:
-    days = _period_days()
+def period_table(by: dict[str, list[dict]], period: tuple[date, date] = PERIOD,
+                 cascades: tuple[str, ...] = (CASCADE_DAY,)) -> dict:
+    days = _period_days(period)
     res = {}
-    print("\n## Б. Весь период 01.2025–09.2026, % депозита. «без 10.10» — тот же счёт без "
-          "сделок суток каскада; «отрезано» — доля ВСЕХ сигналов, не взятых из-за предела/стопа")
-    head = (f"{'предел':>6} {'стоп':>5} {'разм':>5} {'итог':>8} {'без10.10':>8} {'просад':>7} "
+    if cascades == (CASCADE_DAY,):
+        print("\n## Б. Весь период 01.2025–09.2026, % депозита. «без 10.10» — тот же счёт без "
+              "сделок суток каскада; «отрезано» — доля ВСЕХ сигналов, не взятых из-за "
+              "предела/стопа")
+        no_cas = "без10.10"
+    else:
+        print(f"\n## Справка: весь период {period[0]:%m.%Y}–{period[1]:%m.%Y}, сложный процент, "
+              f"% депозита. Клетку по этой таблице не выбираем. «безкаск» — тот же счёт без "
+              f"сделок суток каскадов; «отрезано» — доля ВСЕХ сигналов, не взятых из-за "
+              f"предела/стопа")
+        no_cas = "безкаск"
+    head = (f"{'предел':>6} {'стоп':>5} {'разм':>5} {'итог':>8} {no_cas:>8} {'просад':>7} "
             f"{'сх.худш':>7} {'мес+':>6} {'худш.день':>9} {'t':>5} {'сделок':>6} "
             f"{'отрез.пред':>10} {'стоп':>5} {'перебор':>7}")
     for var in VARIANTS:
         limit = var.startswith("limit")
         rows = by[var]
-        calm = [r for r in rows if r["day"] != CASCADE_DAY]
+        calm = [r for r in rows if r["day"] not in cascades]
         print(f"\n### {var}: сделок-кандидатов {len(rows)}")
         print(head)
         for cap in CAPS:
@@ -382,6 +429,58 @@ def verdict(res: dict) -> None:
               f"{'ПРОХОДИТ к проверке 2021–2024' if c1 and c2 and c3 else 'failed остаётся'}")
 
 
+def fixed_table(by: dict[str, list[dict]], period: tuple[date, date],
+                cascades: tuple[str, ...]) -> None:
+    """Проверка вне выборки: фиксированный депозит D0, вывод сверх D0, клетка `FIXED_CELL`.
+    Деньги — доли D0; итог дня — сумма закрытых за сутки сделок в долях D0 (их сумма = итог)."""
+    size, cap, stop = FIXED_CELL
+    days = _period_days(period)
+    print(f"\n## Фиксированный депозит D0 {period[0]:%m.%Y}–{period[1]:%m.%Y}: в 00:00 UTC всё "
+          f"сверх D0 выводится, пополнения нет; размер {size * 100:g}% × min(баланс, D0), "
+          f"предел {_cap(cap)}, стоп {_stop(stop)} (объявлено 08.10.2026 до прогона). "
+          f"Деньги — % D0")
+    for var in VARIANTS:
+        rows = by.get(var, [])
+        b = run_book(rows, size, cap, stop, var.startswith("limit"), fixed=True)
+        pnl = [b.day_pnl.get(d, 0.0) for d in days]
+        total = b.withdrawn + b.equity - 1.0
+        months = defaultdict(float)
+        for d, r in zip(days, pnl, strict=True):
+            months[d[:7]] += r
+        drop = 1.0 - b.min_bal
+        print(f"\n### {var}: сделок-кандидатов {len(rows)}, взято {b.taken}, отрезано пределом "
+              f"{b.cut_cap}, монета уже в позиции {b.cut_busy}, сверх предела {b.overfill}, "
+              f"позиций сразу до {b.max_open}")
+        print(f"итог {total * 100:+.2f}% D0 = выведено {b.withdrawn * 100:.2f}% + конечный баланс "
+              f"{b.equity * 100:.2f}% − 100%; t по дням {_t(pnl):+.2f}; месяцев в плюсе "
+              f"{sum(v > 0 for v in months.values())} из {len(months)}; худший день "
+              f"{min(pnl) * 100:+.2f}%")
+        print(f"наименьший баланс по закрытым {b.min_bal * 100:.2f}% (падение ниже D0 "
+              f"{drop * 100:.2f}%), с худшей ценой открытых {b.min_bal_pess * 100:.2f}%")
+        print(f"{'год':>6} {'итог':>8} {'t':>6} {'мес+':>6} {'худш.день':>9} {'мин.баланс':>10} "
+              f"{'сделок':>6}")
+        for y in sorted({d[:4] for d in days}):
+            yd = [d for d in days if d[:4] == y]
+            yp = [b.day_pnl.get(d, 0.0) for d in yd]
+            ym = [v for m, v in months.items() if m[:4] == y]
+            low = min((b.day_low[d] for d in yd if d in b.day_low), default=1.0)
+            print(f"{y:>6} {sum(yp) * 100:>+7.2f}% {_t(yp):>+6.2f} "
+                  f"{f'{sum(v > 0 for v in ym)}/{len(ym)}':>6} {min(yp) * 100:>+8.2f}% "
+                  f"{low * 100:>9.2f}% {sum(b.day_taken.get(d, 0) for d in yd):>6}")
+        print(f"{'сутки каскада':>13} {'итог дня':>9} {'худш.момент':>11} {'баланс 00:00':>12} "
+              f"{'сделок':>6} {'сверх':>5}")
+        for d in cascades:
+            st = b.day_start.get(d, 1.0)
+            print(f"{d:>13} {b.day_pnl.get(d, 0.0) * 100:>+8.2f}% "
+                  f"{b.day_worst.get(d, 0.0) * st * 100:>+10.2f}% {st * 100:>11.2f}% "
+                  f"{b.day_taken.get(d, 0):>6} {b.day_over.get(d, 0):>5}")
+        c1 = total > 0 and _t(pnl) >= 2
+        c2 = drop <= FIXED_MAX_DROP
+        print(f"ВЕРДИКТ {var}: итог > 0 и t ≥ 2 — {'да' if c1 else 'НЕТ'}; падение ниже D0 "
+              f"{drop * 100:.2f}% ≤ {FIXED_MAX_DROP * 100:g}% — {'да' if c2 else 'НЕТ'} → "
+              f"{'ПРОШЁЛ' if c1 and c2 else 'НЕ прошёл'}")
+
+
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(
@@ -390,17 +489,32 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--day", help="только сутки каскада (ответ, пока прогон не кончился)")
     ap.add_argument("--sample", type=Path, help="каталог выборки 03.10 для сверки")
+    ap.add_argument("--period", default=f"{PERIOD[0]}:{PERIOD[1]}",
+                    help="период счёта ГГГГ-ММ-ДД:ГГГГ-ММ-ДД (по умолчанию 2025-01-01:2026-09-30)")
+    ap.add_argument("--cascades", default=CASCADE_DAY,
+                    help="сутки каскадов через запятую: отдельные строки и счёт «без каскадов»")
+    ap.add_argument("--fixed", action="store_true",
+                    help="фиксированный депозит с выводом сверх D0 (проверка 2021–2024)")
     a = ap.parse_args()
     if a.day and a.day != CASCADE_DAY:
         ap.error(f"разбор одних суток сделан только для {CASCADE_DAY}")
+    period = tuple(date.fromisoformat(x) for x in a.period.split(":"))
+    cascades = tuple(a.cascades.split(","))
     by, forced, missing = load(a.out)
+    lo, hi = period[0].isoformat(), period[1].isoformat()
+    by = {v: [r for r in rows if lo <= r["day"] <= hi] for v, rows in by.items()}
     coverage(a.out, {a.day} if a.day else None)
     print(f"дней-символов без ленты aggTrades: {missing}")
     if a.sample:
         crosscheck(a.out, a.sample)
-    cascade_table(by, forced)
+    if lo <= CASCADE_DAY <= hi:
+        cascade_table(by, forced)
     if not a.day:
-        verdict(period_table(by))
+        res = period_table(by, period, cascades)
+        if a.fixed:
+            fixed_table(by, period, cascades)
+        else:
+            verdict(res)
     return 0
 
 
