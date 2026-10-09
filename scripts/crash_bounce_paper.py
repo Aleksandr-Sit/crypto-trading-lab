@@ -12,7 +12,9 @@
 Ключей нет: только публичный поток `aggTrade` (`wss://fstream.binance.com/market/ws` —
 старый адрес `/ws` принимает подписку и молча НЕ присылает сделок, проверено 09.10.2026).
 
-Два счёта на одном потоке:
+Счета на одном потоке (зеркало и три счёта ×1 — `X1_ACCTS`: главный `x1` 1% × 3 на 100 монетах
+и объявленные 09.10.2026 до окна `x25` 2.5% × 3 на 40 и `x5` 5% × 3 на 20 первых монетах того же
+ранжирования; ниже — главный, остальные устроены так же):
 
 * **зеркало (`m`)** — ровно как архив: заявка на каждой монете, уровень действует с начала
   минуты, каждое событие независимо (`simulate --all-events`). Счёт по нему считает
@@ -63,6 +65,9 @@ MAKER, TAKER = 0.0002, 0.0005
 SIZE, SLOTS, CANCEL_MS = 0.01, 3, 1000
 # Счёт ×1 (объявлен 09.10.2026)
 ORDERS = 100        # заявок на субсчёте ×1 при 1% D0 на заявку, включая открытые позиции
+# Счета ×1 на одном потоке: (имя в журнале, размер, заявок). Главный — `x1`; две клетки покрупнее
+# объявлены владельцем 09.10.2026 до окна — на ×1 размер режет охват: заявок = 1 / размер.
+X1_ACCTS = (("x1", SIZE, ORDERS), ("x25", 0.025, 40), ("x5", 0.05, 20))
 WAIT_MS = 250       # ждать после конца минуты, пока долетят её сделки (задержка p99 ≈ 164 мс)
 SWITCH_MS = 300     # перестановка заявки
 # Связь
@@ -173,8 +178,9 @@ class Pos:
 
 @dataclass
 class LiveBook:
-    """Счёт ×1 на ходу — правила `crash_bounce_portfolio.run_book(fixed=True)`, клетка 1% × 3:
-    D0 = 1.0, размер 1% × депозит на 00:00 после вывода, в 00:00 UTC всё выше D0 выводится."""
+    """Счёт ×1 на ходу — правила `crash_bounce_portfolio.run_book(fixed=True)`, клетка size × 3:
+    D0 = 1.0, размер size × депозит на 00:00 после вывода, в 00:00 UTC всё выше D0 выводится."""
+    size: float = SIZE
     equity: float = 1.0
     withdrawn: float = 0.0
     day: str | None = None
@@ -202,7 +208,7 @@ class LiveBook:
 
     def take(self, pos: Pos, over: bool) -> None:
         self.roll(pos.t_in)
-        pos.amt, pos.over = SIZE * self.day_start, over
+        pos.amt, pos.over = self.size * self.day_start, over
         self.open[pos.sym] = pos
         self.day_taken[self.day] += 1
         self.day_over[self.day] += over
@@ -230,24 +236,64 @@ class SymState:
     fired_m: int | None = None        # зеркало: минута, где событие уже было
     # ×1: снимок закрытия, сделанный в WAIT_MS после конца минуты, и уровни
     snap: dict[int, float] = field(default_factory=dict)   # минута → закрытие прошлой
-    x1_filled_m: int | None = None
-    ready_at: int = 0                 # ×1: заявка на монете встаёт не раньше (выход, вход в 100)
+
+
+@dataclass
+class X1Acct:
+    """Один субсчёт ×1: свой размер, свои заявки (`orders` первых монет ранжирования минус
+    монеты в позиции), свои позиции и перестановки. Снимок закрытия минуты — общий у бота."""
+    name: str
+    size: float
+    orders: int
+    book: LiveBook = None  # type: ignore[assignment]
+    pos: dict[str, Pos] = field(default_factory=dict)
+    eligible: set[str] = field(default_factory=set)
+    reopen_at: int = 0                                      # заявки снова встают после слота
+    filled_m: dict[str, int] = field(default_factory=dict)  # монета → минута исполнения
+    ready_at: dict[str, int] = field(default_factory=dict)  # заявка встаёт не раньше
+
+    def __post_init__(self) -> None:
+        if self.book is None:
+            self.book = LiveBook(size=self.size)
+
+    def recalc(self, rank: list[str], now: int) -> None:
+        # только первые `orders` монет ранжирования (объявлено: «первые 40 / 20»): монета в
+        # позиции занимает деньги, и на её место не встаёт 41-я
+        room = self.orders - len(self.book.open)
+        new = set([s for s in rank[:self.orders] if s not in self.book.open][:max(room, 0)])
+        for s in new - self.eligible:
+            self.ready_at[s] = max(self.ready_at.get(s, 0), now + SWITCH_MS)
+        self.eligible = new
 
 
 class Engine:
-    """Логика бота без сети: сделки → исполнения зеркала и ×1, выходы, журнал (callback)."""
+    """Логика бота без сети: сделки → исполнения зеркала и счетов ×1, выходы, журнал (callback)."""
 
     def __init__(self, emit, x1_rank: list[str] | None = None):
         self.emit = emit
         self.st: dict[str, SymState] = defaultdict(SymState)
         self.mirror: dict[str, list[Pos]] = defaultdict(list)
-        self.x1: dict[str, Pos] = {}
-        self.book = LiveBook()
+        self.accts = [X1Acct(n, s, o) for n, s, o in X1_ACCTS]
         self.rank: list[str] = list(x1_rank or [])
-        self.eligible: set[str] = set()
-        self.reopen_at = 0            # ×1: заявки снова встают после освобождения слота
         self.backfill_need: set[str] = set()
         self._recalc_eligible(0)
+
+    # главный счёт `x1` — прежние имена (тесты и отчёт суток)
+    @property
+    def main(self) -> X1Acct:
+        return self.accts[0]
+
+    @property
+    def x1(self) -> dict[str, Pos]:
+        return self.main.pos
+
+    @property
+    def book(self) -> LiveBook:
+        return self.main.book
+
+    @property
+    def eligible(self) -> set[str]:
+        return self.main.eligible
 
     # --- выбор монет ×1 -------------------------------------------------------------------
     def set_rank(self, rank: list[str], now: int) -> None:
@@ -255,18 +301,15 @@ class Engine:
         self._recalc_eligible(now)
 
     def _recalc_eligible(self, now: int) -> None:
-        room = ORDERS - len(self.book.open)
-        new = set([s for s in self.rank if s not in self.book.open][:max(room, 0)])
-        for s in new - self.eligible:
-            self.st[s].ready_at = max(self.st[s].ready_at, now + SWITCH_MS)
-        self.eligible = new
+        for acc in self.accts:
+            acc.recalc(self.rank, now)
 
     # --- минутный такт ×1 -----------------------------------------------------------------
     def tick(self, now: int) -> None:
         """Зовётся часто; в WAIT_MS после начала минуты m снимает закрытие m−1 по тому, что
         бот успел получить, — так поступил бы настоящий бот, переставляя заявки."""
         m = (now - WAIT_MS) // 60_000 * 60_000
-        for s in self.eligible:
+        for s in set().union(*(acc.eligible for acc in self.accts)):
             st = self.st[s]
             if m in st.snap or st.last_px is None or (st.minute or 0) > m:
                 continue
@@ -307,17 +350,19 @@ class Engine:
             if res:
                 self.mirror[tr.sym].remove(pos)
                 self.emit({"k": "exit", **res})
-        pos = self.x1.get(tr.sym)
-        if pos is not None:
+        for acc in self.accts:
+            pos = acc.pos.get(tr.sym)
+            if pos is None:
+                continue
             res = pos.on_trade(tr)
             if res:
-                del self.x1[tr.sym]
-                self.book.close(res)
+                del acc.pos[tr.sym]
+                acc.book.close(res)
                 self.emit({"k": "exit", **res})
-                st.ready_at = tr.recv + SWITCH_MS
-                if len(self.book.open) == SLOTS - 1:
-                    self.reopen_at = tr.recv + SWITCH_MS  # был полон: заявки сняты, ставим снова
-                self._recalc_eligible(tr.recv)
+                acc.ready_at[tr.sym] = tr.recv + SWITCH_MS
+                if len(acc.book.open) == SLOTS - 1:
+                    acc.reopen_at = tr.recv + SWITCH_MS  # был полон: заявки сняты, ставим снова
+                acc.recalc(self.rank, tr.recv)
         # зеркало: уровень с начала минуты, одно событие на минуту
         if st.close is not None and st.valid_from <= m and st.fired_m != m:
             lvl = level_of(st.close)
@@ -327,25 +372,32 @@ class Engine:
                 self.mirror[tr.sym].append(p)
                 self.emit({"k": "fill", "acct": "m", "sym": tr.sym, "t": m, "entry": lvl,
                            "t_in": tr.T, "recv": tr.recv, "a": tr.a})
-        # ×1
-        if (tr.sym in self.eligible and tr.sym not in self.x1 and st.x1_filled_m != m
-                and tr.T >= st.ready_at):
-            lvl = self.x1_level(st, tr.T)
-            if lvl is not None and tr.px < lvl:
-                ok, over = self.book.can_fill(tr.T)
-                if ok and (over or tr.T >= self.reopen_at):
-                    st.x1_filled_m = m
-                    p = Pos("x1", tr.sym, m, lvl, tr.T, tr.recv, min(lvl, tr.px))
-                    self.book.take(p, over)
-                    self.x1[tr.sym] = p
-                    self.emit({"k": "fill", "acct": "x1", "sym": tr.sym, "t": m, "entry": lvl,
-                               "t_in": tr.T, "recv": tr.recv, "a": tr.a, "amt": p.amt,
-                               "over": over})
-                    self._recalc_eligible(tr.recv)
+        # счета ×1: уровень один (снимок общий), заявки, слоты и перестановки — свои у каждого
+        lvl = None
+        for acc in self.accts:
+            if (tr.sym not in acc.eligible or tr.sym in acc.pos
+                    or acc.filled_m.get(tr.sym) == m or tr.T < acc.ready_at.get(tr.sym, 0)):
+                continue
+            if lvl is None:
+                lvl = self.x1_level(st, tr.T)
+                if lvl is None:
+                    break
+            if not tr.px < lvl:
+                break
+            ok, over = acc.book.can_fill(tr.T)
+            if ok and (over or tr.T >= acc.reopen_at):
+                acc.filled_m[tr.sym] = m
+                p = Pos(acc.name, tr.sym, m, lvl, tr.T, tr.recv, min(lvl, tr.px))
+                acc.book.take(p, over)
+                acc.pos[tr.sym] = p
+                self.emit({"k": "fill", "acct": acc.name, "sym": tr.sym, "t": m, "entry": lvl,
+                           "t_in": tr.T, "recv": tr.recv, "a": tr.a, "amt": p.amt,
+                           "over": over})
+                acc.recalc(self.rank, tr.recv)
         st.last_px, st.last_t = tr.px, tr.T
 
     def has_open(self, sym: str) -> bool:
-        return bool(self.mirror.get(sym)) or sym in self.x1
+        return bool(self.mirror.get(sym)) or any(sym in acc.pos for acc in self.accts)
 
 
 # --- ввод-вывод ------------------------------------------------------------------------------
@@ -445,8 +497,9 @@ class Runner:
         self.engine.set_rank(rank, now)
         self.rank_day = _day(now)
         self.journal.write({"k": "top", "day": self.rank_day, "asof": asof, "syms": rank})
-        self.log(f"×1: монет {len(rank)} (счёт обвалов по {asof})" if rank
-                 else "×1 ВЫКЛЮЧЕН: нет crash_counts.json слоя А")
+        sizes = " / ".join(str(len(acc.eligible)) for acc in self.engine.accts)
+        self.log(f"×1: монет {len(rank)}, заявок по счетам {sizes} (счёт обвалов по {asof})"
+                 if rank else "×1 ВЫКЛЮЧЕН: нет crash_counts.json слоя А")
 
     async def conn(self, idx: int, syms: list[str], session) -> None:
         """Одно соединение; рвётся — переподключение. Через ROTATE_S — новое внахлёст, дубли
@@ -550,19 +603,22 @@ class Runner:
             await asyncio.sleep(0.05)
 
     async def day_report(self, d: str) -> None:
-        b = self.engine.book
-        rec = {"k": "day", "day": d, "x1_pnl": b.day_pnl.get(d, 0.0),
-               "x1_taken": b.day_taken.get(d, 0), "x1_over": b.day_over.get(d, 0),
-               "equity": b.equity, "withdrawn": b.withdrawn, "min_bal": b.min_bal,
-               "down_s": round(self.down_s, 1)}
-        self.journal.write(rec)
-        await asyncio.to_thread(telegram, "\n".join([
-            f"Бумажный бот CryptosMX (слой Б), сутки {d} UTC",
-            f"счёт ×1: сделок {rec['x1_taken']} (сверх предела {rec['x1_over']}), итог "
-            f"{rec['x1_pnl'] * 100:+.2f}% D0; всего {(b.withdrawn + b.equity - 1) * 100:+.2f}% D0, "
-            f"мин. баланс {b.min_bal * 100:.2f}%",
-            f"без связи с запуска: {self.down_s:.0f} с",
-        ]))
+        lines = [f"Бумажный бот CryptosMX (слой Б), сутки {d} UTC"]
+        for acc in self.engine.accts:
+            b = acc.book
+            # главный счёт — прежние имена полей (журнал с 09.10 читается тем же кодом)
+            rec = {"k": "day", "acct": acc.name, "day": d, "x1_pnl": b.day_pnl.get(d, 0.0),
+                   "x1_taken": b.day_taken.get(d, 0), "x1_over": b.day_over.get(d, 0),
+                   "equity": b.equity, "withdrawn": b.withdrawn, "min_bal": b.min_bal,
+                   "down_s": round(self.down_s, 1)}
+            self.journal.write(rec)
+            lines.append(
+                f"×1 {acc.size * 100:g}%×{SLOTS} ({acc.orders} монет): сделок {rec['x1_taken']} "
+                f"(сверх предела {rec['x1_over']}), итог {rec['x1_pnl'] * 100:+.2f}% D0; всего "
+                f"{(b.withdrawn + b.equity - 1) * 100:+.2f}% D0, "
+                f"мин. баланс {b.min_bal * 100:.2f}%")
+        lines.append(f"без связи с запуска: {self.down_s:.0f} с")
+        await asyncio.to_thread(telegram, "\n".join(lines))
 
     async def main(self) -> None:
         import aiohttp
@@ -570,7 +626,8 @@ class Runner:
         off, half = await asyncio.to_thread(sync_clock)
         self.journal.write({"k": "start", "syms": len(self.syms), "clock_offset_ms": off,
                             "clock_half_rtt_ms": half,
-                            "rule": "limit5|side", "orders": ORDERS, "wait_ms": WAIT_MS,
+                            "rule": "limit5|side", "orders": ORDERS,
+                            "accts": [list(x) for x in X1_ACCTS], "wait_ms": WAIT_MS,
                             "switch_ms": SWITCH_MS, "cancel_ms": CANCEL_MS})
         self.log(f"старт: монет {len(self.syms)}, поправка часов к бирже {off} мс "
                  f"(точность ±{half} мс)")
@@ -626,13 +683,15 @@ def report(out: Path, archive: Path, d1: str, d2: str) -> int:
     fills = [r for r in rows if r.get("k") == "fill"]
     in_win = lambda r: d1 <= _day(r["t"]) <= d2  # noqa: E731
     mirror = [exits[k] for k in exits if k[0] == "m" and in_win(exits[k])]
-    x1 = [exits[k] for k in exits if k[0] == "x1" and in_win(exits[k])]
+    by_acct = {n: [exits[k] for k in exits if k[0] == n and in_win(exits[k])]
+               for n, _, _ in X1_ACCTS}
     open_m = [f for f in fills if f["acct"] == "m" and in_win(f)
               and ("m", f["sym"], f["t"], f["t_in"]) not in exits]
     gaps = [r for r in rows if r.get("k") == "gap" and d1 <= _day(r["T1"]) <= d2]
     lat = [r for r in rows if r.get("k") == "lat" and d1 <= _day(r["t"]) <= d2]
     print(f"Бумажный бот, {d1}…{d2} UTC: зеркало — сделок {len(mirror)} (не закрыто "
-          f"{len(open_m)}), ×1 — {len(x1)}; дыр в номерах {len(gaps)}")
+          f"{len(open_m)}), ×1 — " + ", ".join(f"{n} {len(v)}" for n, v in by_acct.items())
+          + f"; дыр в номерах {len(gaps)}")
     if lat:
         p50 = sorted(x["p50"] for x in lat)[len(lat) // 2]
         print(f"задержка биржа→бот, мс: медиана минутных p50 {p50}, худший p99 "
@@ -673,19 +732,22 @@ def report(out: Path, archive: Path, d1: str, d2: str) -> int:
     # счета
     period = (date.fromisoformat(d1), date.fromisoformat(d2))
     days = pf._period_days(period)
-    for name, trades in (("зеркало", mirror), ("архив", [arch[k] for k in arch])):
-        rows_b = sorted(({**r, "day": _day(r["t"])} for r in trades),
-                        key=lambda r: (r["t_in"], r["sym"]))
-        b = pf.run_book(rows_b, *pf.FIXED_CELL, True, fixed=True)
-        pnl = [b.day_pnl.get(d, 0.0) for d in days]
-        print(f"счёт {name} (run_book, D0, 1% × 3): сделок {b.taken}, итог "
-              f"{(b.withdrawn + b.equity - 1) * 100:+.2f}% D0, t {pf._t(pnl):+.2f}, "
-              f"падение ниже D0 {(1 - b.min_bal) * 100:.2f}%")
-    tot = sum(r["pnl"] for r in x1)
-    bal = min((r["bal"] for r in x1), default=1.0)
-    print(f"счёт ×1 (на ходу): сделок {len(x1)} (сверх предела {sum(r['over'] for r in x1)}), "
-          f"итог {tot * 100:+.2f}% D0, наименьший баланс {bal * 100:.2f}% "
-          f"(К5 итог > 0 — {'да' if tot > 0 else 'нет'})")
+    for size, cap, max_drop in pf.FWD_CELLS:
+        for name, trades in (("зеркало", mirror), ("архив", [arch[k] for k in arch])):
+            rows_b = sorted(({**r, "day": _day(r["t"])} for r in trades),
+                            key=lambda r: (r["t_in"], r["sym"]))
+            b = pf.run_book(rows_b, size, cap, None, True, fixed=True)
+            pnl = [b.day_pnl.get(d, 0.0) for d in days]
+            print(f"счёт {name} (run_book, D0, {size * 100:g}% × {cap}): сделок {b.taken}, итог "
+                  f"{(b.withdrawn + b.equity - 1) * 100:+.2f}% D0, t {pf._t(pnl):+.2f}, "
+                  f"падение ниже D0 {(1 - b.min_bal) * 100:.2f}% (К2 ≤ {max_drop * 100:g}%)")
+    for (name, size, orders), x1 in zip(X1_ACCTS, by_acct.values(), strict=True):
+        tot = sum(r["pnl"] for r in x1)
+        bal = min((r["bal"] for r in x1), default=1.0)
+        print(f"счёт ×1 {name} ({size * 100:g}% × {SLOTS}, {orders} монет, на ходу): сделок "
+              f"{len(x1)} (сверх предела {sum(r['over'] for r in x1)}), итог {tot * 100:+.2f}% "
+              f"D0, наименьший баланс {bal * 100:.2f}% (К5 итог > 0 — "
+              f"{'да' if tot > 0 else 'нет'})")
     return 0
 
 

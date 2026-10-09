@@ -136,17 +136,17 @@ def report(s: dict | None, last: date, trader: str) -> str:
     head = f"Автомат CryptosMX, замер вперёд по архиву (слой А), сутки {last:%d.%m.%Y} UTC"
     if s is None:
         return f"{head}\nпроверка конвейера (до окна {START:%d.%m}) — в счёт не идёт\n{trader}"
-    ld = s["last_day"] or {"pnl": 0.0, "trades": 0}
-    return "\n".join([
-        head,
-        f"сутки: сделок {ld['trades']}, итог {ld['pnl'] * 100:+.2f}% D0",
-        f"окно с {START:%d.%m}: {s['days']} сут. из 84, сделок {s['trades']} из 300, "
-        f"итог {s['total'] * 100:+.2f}% D0, t {s['t']:+.2f}",
-        f"падение ниже D0 {s['drop'] * 100:.2f}% (порог 5%) — {'ок' if s['k2'] else 'ПРЕВЫШЕН'}; "
-        f"худший день {s['worst_day'] * 100:+.2f}%",
-        "вердикт: " + ("можно выносить" if s["ready"] else "рано"),
-        trader,
-    ])
+    lines = [head, f"окно с {START:%d.%m}: {s['days']} сут. из 84, сделок {s['trades']} из 300"]
+    # до 09.10 в JSON была одна клетка без `cells` — читается как главная
+    for c in s.get("cells") or [{**s, "size": 0.01, "cap": 3, "max_drop": 0.05}]:
+        ld = c["last_day"] or {"pnl": 0.0, "trades": 0}
+        lines.append(
+            f"{c['size'] * 100:g}% × {c['cap']}: сутки {ld['trades']} сд. "
+            f"{ld['pnl'] * 100:+.2f}%; окно {c['total'] * 100:+.2f}% D0, t {c['t']:+.2f}; "
+            f"ниже D0 {c['drop'] * 100:.2f}% (порог {c['max_drop'] * 100:g}%) — "
+            f"{'ок' if c['k2'] else 'ПРЕВЫШЕН'}; худший день {c['worst_day'] * 100:+.2f}%")
+    lines += ["вердикт: " + ("можно выносить" if s["ready"] else "рано"), trader]
+    return "\n".join(lines)
 
 
 def once(out: Path, today: date, send: bool = True) -> bool:

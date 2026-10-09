@@ -11,6 +11,7 @@ import importlib.util
 import random
 import sys
 from array import array
+from collections import defaultdict
 from pathlib import Path
 
 import pytest
@@ -122,9 +123,9 @@ def test_fill_journaled_before_exit():
         assert key not in exits or exits[key] > i
 
 
-def _book_online(rows: list[dict]) -> paper.LiveBook:
+def _book_online(rows: list[dict], size: float = paper.SIZE) -> paper.LiveBook:
     """LiveBook в порядке времени, как его увидит бот: выходы до входа того же момента."""
-    b = paper.LiveBook()
+    b = paper.LiveBook(size=size)
     open_ = []
     for tr in sorted(rows, key=lambda r: (r["t_in"], r["sym"])):
         for o in sorted([o for o in open_ if o["t_out"] <= tr["t_in"]], key=lambda o: o["t_out"]):
@@ -255,3 +256,109 @@ def test_duplicate_ids_ignored():
         eng.on_trade(tr)
     assert len([r for r in got if r["k"] == "fill"]) == 1
     assert not [r for r in got if r["k"] == "gap"]
+
+
+# --- клетки C2/C3 (объявлены 09.10.2026 до окна): счета x25 и x5 на том же потоке -------------
+
+def test_accounts_match_forward_cells():
+    """Счета бота и клетки слоя А — одни и те же размеры и предел: иначе К1 и К5 одной клетки
+    судили бы разные правила."""
+    assert [(s, paper.SLOTS) for _, s, _ in paper.X1_ACCTS] == \
+           [(s, c) for s, c, _ in portfolio.FWD_CELLS]
+    assert [(n, o) for n, _, o in paper.X1_ACCTS] == [("x1", 100), ("x25", 40), ("x5", 20)]
+    assert [d for _, _, d in portfolio.FWD_CELLS] == [0.05, 0.10, 0.15]
+
+
+def test_accounts_take_first_n_ranked_and_open_does_not_pull_next():
+    ranked = [f"S{i}" for i in range(paper.ORDERS + 5)]
+    eng = paper.Engine(lambda r: None, ranked)
+    by = {a.name: a for a in eng.accts}
+    assert by["x1"].eligible == set(ranked[:100])
+    assert by["x25"].eligible == set(ranked[:40])
+    assert by["x5"].eligible == set(ranked[:20])
+    # монета первой двадцатки в позиции счёта x5: заявок 19, и 21-я на её место не встаёт
+    by["x5"].book.open["S0"] = paper.Pos("x5", "S0", 0, 1.0, 0, 0, 1.0)
+    eng._recalc_eligible(0)
+    assert by["x5"].eligible == set(ranked[1:20])
+    assert by["x25"].eligible == set(ranked[:40])  # у других счетов позиции своей нет
+
+
+def test_accounts_fill_independently_with_own_size():
+    """Обвал на монете из первой двадцатки — исполнение у всех трёх счетов по одному уровню,
+    сумма у каждого своя; монета 30-я — только у x1 и x25."""
+    syms = [f"S{i}" for i in range(40)]
+    eng, got = _ready_engine(syms)
+    t = T0 + 60_000 + paper.WAIT_MS + paper.SWITCH_MS + 100
+    eng.on_trade(_tr(2, 94.0, t, sym="S0"))
+    eng.on_trade(_tr(2, 94.0, t + 5, sym="S30"))
+    fills = [(r["acct"], r["sym"], r["entry"], r["amt"]) for r in got
+             if r["k"] == "fill" and r["acct"] != "m"]
+    assert fills == [("x1", "S0", pytest.approx(95.0), 0.01),
+                     ("x25", "S0", pytest.approx(95.0), 0.025),
+                     ("x5", "S0", pytest.approx(95.0), 0.05),
+                     ("x1", "S30", pytest.approx(95.0), 0.01),
+                     ("x25", "S30", pytest.approx(95.0), 0.025)]
+    assert eng.has_open("S30") and not eng.has_open("S31")
+
+
+def test_accounts_slots_are_separate():
+    """Слоты у счёта свои: три обвала вне первой двадцатки заполняют x1 и x25, а x5 пуст и
+    берёт следующий обвал внутри двадцатки — остальные уже полны и его не берут."""
+    syms = [f"S{i}" for i in range(40)]
+    eng, got = _ready_engine(syms)
+    t = T0 + 60_000 + paper.WAIT_MS + paper.SWITCH_MS + 100
+    for i, s in enumerate(("S25", "S26", "S27")):
+        eng.on_trade(_tr(2, 94.0, t + i, sym=s))
+    eng.on_trade(_tr(2, 94.0, t + 5_000, sym="S0"))       # окно снятия у x1/x25 прошло
+    by = defaultdict(list)
+    for r in got:
+        if r["k"] == "fill" and r["acct"] != "m":
+            by[r["acct"]].append(r["sym"])
+    assert by["x1"] == by["x25"] == ["S25", "S26", "S27"]
+    assert by["x5"] == ["S0"]
+
+
+@pytest.mark.parametrize("size", [0.025, 0.05])
+def test_livebook_size_matches_run_book(size):
+    rnd = random.Random(7)
+    rows = []
+    for _ in range(2000):
+        t_in = T0 + rnd.randint(0, 15 * 86_400_000)
+        rows.append({"sym": f"S{rnd.randint(0, 25)}", "t": t_in // 60_000 * 60_000,
+                     "t_in": t_in, "t_out": t_in + rnd.randint(1_000, 420_000),
+                     "entry": 1.0, "low": 0.9, "net": rnd.gauss(0.004, 0.03)})
+    ref = portfolio.run_book(sorted(rows, key=lambda r: (r["t_in"], r["sym"])),
+                             size, 3, None, True, fixed=True)
+    got = _book_online(rows, size)
+    assert sum(got.day_taken.values()) == ref.taken
+    assert got.withdrawn + got.equity == pytest.approx(ref.withdrawn + ref.equity, abs=1e-12)
+    assert got.min_bal == pytest.approx(ref.min_bal, abs=1e-12)
+
+
+def test_forward_table_three_cells(tmp_path):
+    from datetime import date
+    rnd = random.Random(3)
+    rows = []
+    for d in range(10):
+        for _ in range(5):
+            t_in = T0 + d * 86_400_000 + rnd.randint(0, 80_000_000)
+            rows.append({"sym": f"S{rnd.randint(0, 9)}", "t": t_in // 60_000 * 60_000,
+                         "t_in": t_in, "t_out": t_in + 60_000, "entry": 1.0, "low": 0.97,
+                         "net": rnd.gauss(0.003, 0.02), "day": paper._day(t_in)})
+    rows.sort(key=lambda r: (r["t_in"], r["sym"]))
+    d0 = date.fromisoformat(paper._day(T0))
+    period = (d0, date.fromordinal(d0.toordinal() + 9))
+    js = tmp_path / "s.json"
+    portfolio.forward_table(rows, period, d0, js)
+    s = __import__("json").loads(js.read_text(encoding="utf-8"))
+    assert [(c["size"], c["max_drop"]) for c in s["cells"]] == [(0.01, 0.05), (0.025, 0.10),
+                                                                (0.05, 0.15)]
+    # верх — главная клетка, как до 09.10
+    assert s["total"] == s["cells"][0]["total"] and s["k2"] == s["cells"][0]["k2"]
+    # на одних сделках итог растёт с размером (пока баланс не ниже D0 — ровно пропорционально)
+    assert abs(s["cells"][1]["total"]) > abs(s["cells"][0]["total"])
+    fwd = _load("crash_bounce_forward")
+    text = fwd.report(s, period[1], "трейдер: —")
+    assert "2.5% × 3" in text and "порог 15%" in text
+    old = {k: v for k, v in s.items() if k != "cells"}            # JSON до 09.10 — без `cells`
+    assert "1% × 3" in fwd.report(old, period[1], "")

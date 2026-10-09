@@ -72,6 +72,9 @@ FIXED_MAX_DROP = 0.05
 # и t по дням ≥ 1, К2 — падение баланса ниже D0 ≤ 5%.
 FWD_VAR = "limit5|side"
 FWD_WEEKS, FWD_TRADES, FWD_MIN_T = 12, 300, 1.0
+# Клетки замера вперёд: (размер, предел, порог К2). Главная — первая; две покрупнее объявлены
+# владельцем 09.10.2026 до окна, каждая судится отдельно своим К2.
+FWD_CELLS = ((0.01, 3, FIXED_MAX_DROP), (0.025, 3, 0.10), (0.05, 3, 0.15))
 
 
 def _day(ms: int) -> str:
@@ -539,10 +542,18 @@ def top_k_days(events: Path, k: int, window: int = 30, lag: int = 3) -> dict[str
 
 def forward_table(rows: list[dict], period: tuple[date, date], start: date,
                   json_path: Path | None) -> None:
-    """Замер вперёд: клетка `FIXED_CELL`, вывод сверх D0, критерии К1/К2 (объявлено 09.10.2026)."""
-    size, cap, stop = FIXED_CELL
+    """Замер вперёд: клетки `FWD_CELLS`, вывод сверх D0, критерии К1/К2 (объявлено 09.10.2026).
+    Верх JSON — главная клетка (как до 09.10, его читает отчёт слоя А), все — в `cells`."""
+    cells = [_forward_cell(rows, period, start, *c) for c in FWD_CELLS]
+    if json_path:
+        json_path.write_text(json.dumps({**cells[0], "cells": cells}, ensure_ascii=False,
+                                        indent=1), encoding="utf-8")
+
+
+def _forward_cell(rows: list[dict], period: tuple[date, date], start: date,
+                  size: float, cap: int, max_drop: float) -> dict:
     days = _period_days(period)
-    b = run_book(rows, size, cap, stop, True, fixed=True)
+    b = run_book(rows, size, cap, None, True, fixed=True)
     pnl = [b.day_pnl.get(d, 0.0) for d in days]
     total = b.withdrawn + b.equity - 1.0
     t = _t(pnl)
@@ -571,22 +582,22 @@ def forward_table(rows: list[dict], period: tuple[date, date], start: date,
         print(f"{wd[0]:>10} {sum(wp) * 100:>+7.2f}% {n:>6} {over:>5} {min(wp) * 100:>+8.2f}% "
               f"{low_s}")
     k1 = total > 0 and t >= FWD_MIN_T
-    k2 = drop <= FIXED_MAX_DROP
+    k2 = drop <= max_drop
     ready = n_days >= FWD_WEEKS * 7 and b.taken >= FWD_TRADES
     print(f"К1 итог > 0 и t ≥ {FWD_MIN_T:g} — {'да' if k1 else 'нет'}; К2 падение ниже D0 "
-          f"{drop * 100:.2f}% ≤ {FIXED_MAX_DROP * 100:g}% — {'да' if k2 else 'НЕТ'}")
+          f"{drop * 100:.2f}% ≤ {max_drop * 100:g}% — {'да' if k2 else 'НЕТ'}")
     print("ВЕРДИКТ: " + ("можно выносить (К3–К5 — по боту)" if ready else
           f"рано — до вердикта {max(0, FWD_WEEKS * 7 - n_days)} сут. и "
           f"{max(0, FWD_TRADES - b.taken)} сделок (К2 следится и сейчас)"))
-    if json_path:
-        json_path.write_text(json.dumps({
-            "var": FWD_VAR, "start": start.isoformat(), "through": period[1].isoformat(),
-            "days": n_days, "total": total, "t": t, "trades": b.taken, "overfill": b.overfill,
-            "drop": drop, "drop_pess": 1 - b.min_bal_pess, "worst_day": min(pnl, default=0.0),
-            "last_day": {"day": days[-1], "pnl": pnl[-1],
-                         "trades": b.day_taken.get(days[-1], 0)} if days else None,
-            "weekly": weekly, "k1": k1, "k2": k2, "ready": ready,
-        }, ensure_ascii=False, indent=1), encoding="utf-8")
+    return {
+        "var": FWD_VAR, "size": size, "cap": cap, "max_drop": max_drop,
+        "start": start.isoformat(), "through": period[1].isoformat(),
+        "days": n_days, "total": total, "t": t, "trades": b.taken, "overfill": b.overfill,
+        "drop": drop, "drop_pess": 1 - b.min_bal_pess, "worst_day": min(pnl, default=0.0),
+        "last_day": {"day": days[-1], "pnl": pnl[-1],
+                     "trades": b.day_taken.get(days[-1], 0)} if days else None,
+        "weekly": weekly, "k1": k1, "k2": k2, "ready": ready,
+    }
 
 
 def main() -> int:
