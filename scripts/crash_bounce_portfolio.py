@@ -23,6 +23,20 @@
 после убытков счёт не пополняется; клетка 1% × 3 без стопа. Сетка со сложным процентом
 печатается для справки, вердикт — по фиксированному депозиту. Таблица А и стресс «API лёг»
 есть только у 10.10.2025 и печатаются, только если эти сутки в периоде.
+
+Замер вперёд (объявлен 09.10.2026, `docs/research/crash-bounce-paper-2026-10-09.md`):
+
+    python scripts/crash_bounce_portfolio.py --out D --forward 2026-10-10 \\
+        --period 2026-10-10:ВЧЕРА [--json итог.json]
+
+Только `limit5|side`, та же клетка, что `--fixed`; критерии К1 (итог > 0 и t по дням ≥ 1) и К2
+(падение ниже D0 ≤ 5%), итоги по неделям окна, сколько осталось до 12 недель и 300 сделок.
+
+`--top-k 100` — проверка на истории правила выбора монет для счёта «×1» (на субсчёте ×1 при 1%
+на заявку помещается ≈100 заявок): в сутки D берутся только 100 монет с наибольшим числом минут
+обвала ≥5% за 30 суток D−32…D−3 (столько архива есть у бота в 00:00 UTC), при равенстве — по
+обороту за сутки из последнего события монеты. Приближения: всегда 100 монет (на деле
+100 − открытые позиции) и без задержки перестановки заявок.
 """
 
 from __future__ import annotations
@@ -54,6 +68,10 @@ PERIOD = (date(2025, 1, 1), date(2026, 9, 30))
 # Проверка вне выборки 2021–2024: клетка объявлена 08.10.2026 до прогона, вывод сверх D0.
 FIXED_CELL = (0.01, 3, None)
 FIXED_MAX_DROP = 0.05
+# Замер вперёд (объявлен 09.10.2026): вердикт не раньше 12 недель и 300 сделок; К1 — итог > 0
+# и t по дням ≥ 1, К2 — падение баланса ниже D0 ≤ 5%.
+FWD_VAR = "limit5|side"
+FWD_WEEKS, FWD_TRADES, FWD_MIN_T = 12, 300, 1.0
 
 
 def _day(ms: int) -> str:
@@ -481,6 +499,96 @@ def fixed_table(by: dict[str, list[dict]], period: tuple[date, date],
               f"{'ПРОШЁЛ' if c1 and c2 else 'НЕ прошёл'}")
 
 
+def top_k_days(events: Path, k: int, window: int = 30, lag: int = 3) -> dict[str, set[str]]:
+    """Сутки → k монет с наибольшим числом минут обвала ≥5% за `window` суток
+    D−lag−window+1…D−lag; при равенстве — по обороту за сутки из последнего события монеты
+    до конца окна."""
+    per_day: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    turnover: dict[str, list[tuple[int, float]]] = defaultdict(list)
+    with events.open() as fh:
+        for line in fh:
+            e = json.loads(line)
+            if e["drop"] <= -0.05:
+                per_day[_day(e["t"])][e["sym"]] += 1
+            if e.get("qvol_24h") is not None:
+                turnover[e["sym"]].append((e["t"], e["qvol_24h"]))
+    if not per_day:
+        return {}
+    for v in turnover.values():
+        v.sort()
+    first, last = date.fromisoformat(min(per_day)), date.fromisoformat(max(per_day))
+    out = {}
+    d = first + timedelta(days=window + lag - 1)
+    while d <= last + timedelta(days=lag):
+        lo, hi = d - timedelta(days=lag + window - 1), d - timedelta(days=lag)
+        cnt: dict[str, int] = defaultdict(int)
+        for dd in _period_days((lo, hi)):
+            for s, n in per_day.get(dd, {}).items():
+                cnt[s] += n
+        hi_ms = int(datetime(hi.year, hi.month, hi.day, tzinfo=UTC).timestamp() * 1000) + 86_400_000
+
+        def last_turnover(s: str, hi_ms: int = hi_ms) -> float:
+            vals = [v for t, v in turnover.get(s, []) if t < hi_ms]
+            return vals[-1] if vals else 0.0
+
+        ranked = sorted(cnt, key=lambda s: (-cnt[s], -last_turnover(s), s))
+        out[d.isoformat()] = set(ranked[:k])
+        d += timedelta(days=1)
+    return out
+
+
+def forward_table(rows: list[dict], period: tuple[date, date], start: date,
+                  json_path: Path | None) -> None:
+    """Замер вперёд: клетка `FIXED_CELL`, вывод сверх D0, критерии К1/К2 (объявлено 09.10.2026)."""
+    size, cap, stop = FIXED_CELL
+    days = _period_days(period)
+    b = run_book(rows, size, cap, stop, True, fixed=True)
+    pnl = [b.day_pnl.get(d, 0.0) for d in days]
+    total = b.withdrawn + b.equity - 1.0
+    t = _t(pnl)
+    drop = 1.0 - b.min_bal
+    n_days = (period[1] - start).days + 1
+    print(f"\n## Замер вперёд {FWD_VAR}: окно с {start:%d.%m.%Y}, посчитано по "
+          f"{period[1]:%d.%m.%Y} ({n_days} сут. = {n_days / 7:.1f} нед.); D0, вывод сверх D0, "
+          f"{size * 100:g}% × min(баланс, D0), предел {_cap(cap)}, без стопа. Деньги — % D0")
+    print(f"итог {total * 100:+.2f}% D0 (выведено {b.withdrawn * 100:.2f}%, баланс "
+          f"{b.equity * 100:.2f}%); t по дням {t:+.2f}; сделок {b.taken} (сверх предела "
+          f"{b.overfill}, отрезано пределом {b.cut_cap}, монета в позиции {b.cut_busy}); "
+          f"позиций сразу до {b.max_open}; худший день {min(pnl, default=0.0) * 100:+.2f}%")
+    print(f"падение ниже D0 по закрытым {drop * 100:.2f}%, с худшей ценой открытых "
+          f"{(1 - b.min_bal_pess) * 100:.2f}%")
+    print(f"{'неделя с':>10} {'итог':>8} {'сделок':>6} {'сверх':>5} {'худш.день':>9} "
+          f"{'мин.баланс':>10}")
+    weekly = []
+    for i in range(0, len(days), 7):
+        wd = days[i:i + 7]
+        wp = [b.day_pnl.get(d, 0.0) for d in wd]
+        low = min((b.day_low[d] for d in wd if d in b.day_low), default=None)
+        n = sum(b.day_taken.get(d, 0) for d in wd)
+        over = sum(b.day_over.get(d, 0) for d in wd)
+        weekly.append({"from": wd[0], "pnl": sum(wp), "trades": n, "over": over})
+        low_s = f"{low * 100:9.2f}%" if low is not None else f"{'—':>10}"
+        print(f"{wd[0]:>10} {sum(wp) * 100:>+7.2f}% {n:>6} {over:>5} {min(wp) * 100:>+8.2f}% "
+              f"{low_s}")
+    k1 = total > 0 and t >= FWD_MIN_T
+    k2 = drop <= FIXED_MAX_DROP
+    ready = n_days >= FWD_WEEKS * 7 and b.taken >= FWD_TRADES
+    print(f"К1 итог > 0 и t ≥ {FWD_MIN_T:g} — {'да' if k1 else 'нет'}; К2 падение ниже D0 "
+          f"{drop * 100:.2f}% ≤ {FIXED_MAX_DROP * 100:g}% — {'да' if k2 else 'НЕТ'}")
+    print("ВЕРДИКТ: " + ("можно выносить (К3–К5 — по боту)" if ready else
+          f"рано — до вердикта {max(0, FWD_WEEKS * 7 - n_days)} сут. и "
+          f"{max(0, FWD_TRADES - b.taken)} сделок (К2 следится и сейчас)"))
+    if json_path:
+        json_path.write_text(json.dumps({
+            "var": FWD_VAR, "start": start.isoformat(), "through": period[1].isoformat(),
+            "days": n_days, "total": total, "t": t, "trades": b.taken, "overfill": b.overfill,
+            "drop": drop, "drop_pess": 1 - b.min_bal_pess, "worst_day": min(pnl, default=0.0),
+            "last_day": {"day": days[-1], "pnl": pnl[-1],
+                         "trades": b.day_taken.get(days[-1], 0)} if days else None,
+            "weekly": weekly, "k1": k1, "k2": k2, "ready": ready,
+        }, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(
@@ -495,6 +603,9 @@ def main() -> int:
                     help="сутки каскадов через запятую: отдельные строки и счёт «без каскадов»")
     ap.add_argument("--fixed", action="store_true",
                     help="фиксированный депозит с выводом сверх D0 (проверка 2021–2024)")
+    ap.add_argument("--forward", help="замер вперёд: начало окна ГГГГ-ММ-ДД (только limit5|side)")
+    ap.add_argument("--json", type=Path, help="с --forward: итог в JSON (сообщение в бот)")
+    ap.add_argument("--top-k", type=int, help="только k монет по частоте обвалов за 30 суток")
     a = ap.parse_args()
     if a.day and a.day != CASCADE_DAY:
         ap.error(f"разбор одних суток сделан только для {CASCADE_DAY}")
@@ -503,6 +614,20 @@ def main() -> int:
     by, forced, missing = load(a.out)
     lo, hi = period[0].isoformat(), period[1].isoformat()
     by = {v: [r for r in rows if lo <= r["day"] <= hi] for v, rows in by.items()}
+    if a.top_k:
+        top = top_k_days(a.out / "events.jsonl", a.top_k)
+        n0 = {v: len(r) for v, r in by.items()}
+        by = {v: [r for r in rows if r["sym"] in top.get(r["day"], set())]
+              for v, rows in by.items()}
+        no_top = [d for d in _period_days(period) if d not in top]
+        print(f"--top-k {a.top_k}: сделок-кандидатов осталось "
+              + ", ".join(f"{v} {len(by[v])} из {n0[v]}" for v in by)
+              + (f"; суток без выбора (нет 30 суток истории) {len(no_top)}" if no_top else ""))
+    if a.forward:
+        coverage(a.out, set(_period_days(period)))
+        print(f"дней-символов без ленты aggTrades: {missing}")
+        forward_table(by.get(FWD_VAR, []), period, date.fromisoformat(a.forward), a.json)
+        return 0
     coverage(a.out, {a.day} if a.day else None)
     print(f"дней-символов без ленты aggTrades: {missing}")
     if a.sample:

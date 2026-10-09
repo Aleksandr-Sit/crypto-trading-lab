@@ -28,6 +28,9 @@ COPY examples ./examples
 # собирающая стратегии (measure, worker, discovery), падает в контейнере с
 # FileNotFoundError, хотя тесты из репозитория проходят. 280 КБ, кладём целиком.
 COPY docs ./docs
+# scripts — для сервисов замера вперёд автомата CryptosMX (crash-forward, crash-paper):
+# docs/research/crash-bounce-paper-2026-10-09.md. Без них сервисам нечего запускать. ~1 МБ.
+COPY scripts ./scripts
 RUN uv sync --frozen --no-dev
 
 RUN mkdir -p /tmp/lab /app/data /app/backups

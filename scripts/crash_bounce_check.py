@@ -31,6 +31,10 @@
 --vars limit5,mkt5_0.25s --all-events --broad-first --stress 2025-10-10T20:56`
 (каждое событие независимо, широкие даты первыми, стресс «API лёг» на 60 мин).
 
+Замер вперёд (`crash_bounce_forward.py`, `docs/research/crash-bounce-paper-2026-10-09.md`):
+`events --daily --from ГГГГ-ММ-ДД --to ГГГГ-ММ-ДД` — дневные архивы минуток; `simulate
+--days A:B --strict-since D` — только дни окна, невыложенная лента — повтор, а не пропуск.
+
 Комиссии — VIP0 USDⓈ-M: мейкер 0.02%, тейкер 0.05%.
 """
 
@@ -54,7 +58,7 @@ import zipfile
 from array import array
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from statistics import fmean, median
 
@@ -122,13 +126,14 @@ def _rows(blob: bytes) -> list[list[str]]:
     return rows
 
 
-def universe() -> list[str]:
-    """Все USDT-перпы из каталога архива, включая делистнутые; без срочных (`_`)."""
+def universe(kind: str = "monthly") -> list[str]:
+    """Все USDT-перпы из каталога архива, включая делистнутые; без срочных (`_`).
+    `kind="daily"` — каталог дневных архивов: в месячном нет монет, листингованных в этом месяце."""
     out, marker = [], ""
     while True:
-        url = f"{LISTING}?delimiter=/&prefix=data/futures/um/monthly/klines/&marker={marker}"
+        url = f"{LISTING}?delimiter=/&prefix=data/futures/um/{kind}/klines/&marker={marker}"
         xml = _get(url).decode()
-        names = re.findall(r"<Prefix>data/futures/um/monthly/klines/([^/<]+)/</Prefix>", xml)
+        names = re.findall(rf"<Prefix>data/futures/um/{kind}/klines/([^/<]+)/</Prefix>", xml)
         out += names
         if "<IsTruncated>true</IsTruncated>" not in xml:
             break
@@ -145,6 +150,14 @@ def _months(a: str, b: str) -> list[str]:
     return out
 
 
+def _days(a: str, b: str) -> list[str]:
+    d, end, out = date.fromisoformat(a), date.fromisoformat(b), []
+    while d <= end:
+        out.append(d.isoformat())
+        d += timedelta(days=1)
+    return out
+
+
 def _scan_month(sym: str, month: str, drop: float) -> tuple[str, str, list[dict] | None]:
     try:
         blob = _get(f"{ARCHIVE}/monthly/klines/{sym}/1m/{sym}-1m-{month}.zip")
@@ -153,7 +166,29 @@ def _scan_month(sym: str, month: str, drop: float) -> tuple[str, str, list[dict]
         return sym, month, "fail"  # type: ignore[return-value]
     if blob is None:
         return sym, month, None
+    return sym, month, _events(sym, _rows(blob), drop)
+
+
+def _scan_day(sym: str, day: str, drop: float) -> tuple[str, str, list[dict] | None]:
+    """Дневной архив минуток (замер вперёд: месячного за текущий месяц ещё нет). Первая минута
+    суток сравнивается с закрытием последней минуты ПРОШЛЫХ суток — без этого минута 00:00 UTC
+    выпадала бы каждый день, а не раз в месяц, как у месячного архива."""
+    prev_day = (date.fromisoformat(day) - timedelta(days=1)).isoformat()
+    try:
+        blob = _get(f"{ARCHIVE}/daily/klines/{sym}/1m/{sym}-1m-{day}.zip")
+        prev = _get(f"{ARCHIVE}/daily/klines/{sym}/1m/{sym}-1m-{prev_day}.zip") if blob else None
+    except RuntimeError as e:
+        print(f"  ПРОПУСК {e}", flush=True)
+        return sym, day, "fail"  # type: ignore[return-value]
+    if blob is None:
+        return sym, day, None
     rows = _rows(blob)
+    if prev is not None:
+        rows = _rows(prev)[-1:] + rows  # день листинга: прошлых суток нет, как у месячного
+    return sym, day, _events(sym, rows, drop)
+
+
+def _events(sym: str, rows: list[list[str]], drop: float) -> list[dict]:
     ev = []
     qv = [float(r[7]) for r in rows]
     day_q = 0.0
@@ -166,19 +201,22 @@ def _scan_month(sym: str, month: str, drop: float) -> tuple[str, str, list[dict]
                 "low": lo, "close": float(rows[i][4]), "drop": lo / pc - 1,
                 "qvol_min": qv[i], "qvol_24h": day_q if i >= 1440 else None,
             })
-    return sym, month, ev
+    return ev
 
 
-def stage_events(out: Path, a: str, b: str, drop: float, workers: int) -> int:
+def stage_events(out: Path, a: str, b: str, drop: float, workers: int,
+                 daily: bool = False) -> int:
+    """`a`, `b` — месяцы ГГГГ-ММ, с `daily` — дни ГГГГ-ММ-ДД (дневные архивы минуток)."""
     out.mkdir(parents=True, exist_ok=True)
     done_p, ev_p = out / "events_done.txt", out / "events.jsonl"
     done = set(done_p.read_text().split()) if done_p.exists() else set()
-    syms = universe()
-    jobs = [(s, m) for m in _months(a, b) for s in syms if f"{s}:{m}" not in done]
+    syms = universe("daily" if daily else "monthly")
+    periods, scan = (_days(a, b), _scan_day) if daily else (_months(a, b), _scan_month)
+    jobs = [(s, m) for m in periods for s in syms if f"{s}:{m}" not in done]
     print(f"символов {len(syms)}, заданий {len(jobs)} (готово ранее {len(done)})", flush=True)
     n_ev = 0
     with ThreadPoolExecutor(workers) as pool, ev_p.open("a") as fe, done_p.open("a") as fd:
-        futs = [pool.submit(_scan_month, s, m, drop) for s, m in jobs]
+        futs = [pool.submit(scan, s, m, drop) for s, m in jobs]
         for k, f in enumerate(as_completed(futs), 1):
             sym, month, ev = f.result()
             if ev == "fail":
@@ -346,12 +384,20 @@ SIDE = "|side"  # суффикс варианта, разыгранного со
 
 def _sim_day(sym: str, day: str, evs: list[dict], side: bool = False,
              names: tuple[str, ...] | None = None, all_events: bool = False,
-             stress: tuple[int, int] | None = None) -> list[dict]:
+             stress: tuple[int, int] | None = None, strict_since: str | None = None) -> list[dict]:
     """`names` — только эти варианты; `all_events` — каждое событие разыгрывается независимо
     (иначе событие во время позиции на ту же монету пропускается; для портфеля это плохо:
-    он, пропустив сделку за неимением слота, должен видеть следующий обвал монеты)."""
+    он, пропустив сделку за неимением слота, должен видеть следующий обвал монеты).
+
+    `strict_since` — замер вперёд: для дней не раньше этой даты НЕВЫЛОЖЕННАЯ лента (своего дня
+    или следующего, нужного сделке на стыке суток) — ошибка, а не «ленты нет»: день не
+    помечается готовым и берётся следующим запуском. Иначе свежий день, разобранный до того,
+    как архив выложен целиком, навсегда терял бы сделки — молча."""
+    strict = strict_since is not None and day >= strict_since
     ts, px, qty, sell = _trades(sym, day)
     if not ts:
+        if strict:
+            raise RuntimeError(f"лента {sym} {day} ещё не выложена")
         return [{"sym": sym, "day": day, "missing": True}]
     need = max(e["t"] for e in evs) + 60_000 + HOLD_S * 1000 + 60_000
     if stress and _day(stress[0]) == day:
@@ -359,6 +405,8 @@ def _sim_day(sym: str, day: str, evs: list[dict], side: bool = False,
     if need > ts[-1]:
         nxt = (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         t2, p2, q2, s2 = _trades(sym, nxt)
+        if not t2 and strict:
+            raise RuntimeError(f"лента {sym} {nxt} (стык суток) ещё не выложена")
         ts, px, qty, sell = ts + t2, px + p2, qty + q2, sell + s2
     out = []
     variants = [v for v in VARIANTS if names is None or v[0] in names]
@@ -397,10 +445,15 @@ def _broad_minutes(evs: list[dict], k: int = 30) -> dict[str, int]:
 def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, seed: int,
                    side: bool = False, names: tuple[str, ...] | None = None,
                    all_events: bool = False, broad_first: bool = False,
-                   stress: tuple[int, int] | None = None, passes: int = 1) -> int:
+                   stress: tuple[int, int] | None = None, passes: int = 1,
+                   days: tuple[str, str] | None = None, strict_since: str | None = None) -> int:
     evs = [json.loads(x) for x in (out / "events.jsonl").read_text().splitlines()]
     broad = _broad_minutes(evs) if broad_first else {}
     evs = [e for e in evs if e["drop"] <= -min_drop]
+    if days:
+        # замер вперёд: события раньше окна лежат в файле ради счёта обвалов за 30 суток
+        # (выбор 100 монет), разыгрывать их не нужно
+        evs = [e for e in evs if days[0] <= _day(e["t"]) <= days[1]]
     by = defaultdict(list)
     for e in evs:
         by[(e["sym"], _day(e["t"]))].append(e)
@@ -429,7 +482,8 @@ def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, see
               f"осталось {len(jobs)}", flush=True)
         if not jobs:
             break
-        failed = _run_jobs(jobs, by, workers, sim_p, done_p, side, names, all_events, stress)
+        failed = _run_jobs(jobs, by, workers, sim_p, done_p, side, names, all_events, stress,
+                           strict_since)
         if not failed or failed == len(jobs) or p == passes:
             if failed:
                 print(f"не скачалось {failed} дней-символов — повторить тем же запуском",
@@ -441,12 +495,14 @@ def stage_simulate(out: Path, workers: int, min_drop: float, per_month: int, see
     return 0
 
 
-def _run_jobs(jobs, by, workers, sim_p, done_p, side, names, all_events, stress) -> int:
+def _run_jobs(jobs, by, workers, sim_p, done_p, side, names, all_events, stress,
+              strict_since=None) -> int:
     """Один проход по дням-символам; → сколько не удалось (не помечены готовыми)."""
     failed = 0
     # процессы, а не потоки: разбор ленты сделок держит GIL, и десять потоков шли на одном ядре
     with ProcessPoolExecutor(workers) as pool, sim_p.open("a") as fs, done_p.open("a") as fd:
-        futs = {pool.submit(_sim_day, s, d, by[(s, d)], side, names, all_events, stress): (s, d)
+        futs = {pool.submit(_sim_day, s, d, by[(s, d)], side, names, all_events, stress,
+                            strict_since): (s, d)
                 for s, d in jobs}
         for k, f in enumerate(as_completed(futs), 1):
             s, d = futs[f]
@@ -781,6 +837,8 @@ def main() -> int:
     e.add_argument("--to", dest="b", required=True)
     e.add_argument("--drop", type=float, default=0.03)
     e.add_argument("--workers", type=int, default=8)
+    e.add_argument("--daily", action="store_true",
+                   help="дневные архивы минуток: --from/--to — дни ГГГГ-ММ-ДД (замер вперёд)")
     s = sub.add_parser("simulate")
     s.add_argument("--out", type=Path, required=True)
     s.add_argument("--workers", type=int, default=6)
@@ -799,6 +857,8 @@ def main() -> int:
     s.add_argument("--stress-min", type=int, default=60, help="длительность простоя, мин")
     s.add_argument("--passes", type=int, default=1,
                    help="проходов по нескачанным дням (пауза 5 мин; стоп, если проход пустой)")
+    s.add_argument("--days", help="разыгрывать только эти дни: ГГГГ-ММ-ДД:ГГГГ-ММ-ДД")
+    s.add_argument("--strict-since", help="с этого дня невыложенная лента — повтор, а не пропуск")
     r = sub.add_parser("report")
     r.add_argument("--out", type=Path, required=True)
     r.add_argument("--trader", type=Path)
@@ -810,7 +870,7 @@ def main() -> int:
     if a.cmd == "fidelity":
         return stage_fidelity(a.out, a.trader, a.workers)
     if a.cmd == "events":
-        return stage_events(a.out, a.a, a.b, a.drop, a.workers)
+        return stage_events(a.out, a.a, a.b, a.drop, a.workers, a.daily)
     if a.cmd == "simulate":
         names = tuple(a.vars.split(",")) if a.vars else None
         if names and (bad := set(names) - {v[0] for v in VARIANTS}):
@@ -820,8 +880,10 @@ def main() -> int:
             t0 = int(datetime.strptime(a.stress, "%Y-%m-%dT%H:%M").replace(tzinfo=UTC)
                      .timestamp() * 1000)
             stress = (t0, t0 + a.stress_min * 60_000)
+        days = tuple(a.days.split(":")) if a.days else None
         return stage_simulate(a.out, a.workers, a.min_drop, a.per_month, a.seed, a.side,
-                              names, a.all_events, a.broad_first, stress, a.passes)
+                              names, a.all_events, a.broad_first, stress, a.passes, days,
+                              a.strict_since)
     return stage_report(a.out, a.trader)
 
 

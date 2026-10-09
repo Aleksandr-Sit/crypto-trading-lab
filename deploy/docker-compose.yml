@@ -119,6 +119,31 @@ services:
       retries: 3
       start_period: 20s
 
+  # Замер вперёд автомата CryptosMX (объявлен 09.10.2026, docs/research/crash-bounce-paper-2026-10-09.md).
+  # Оба без базы и без портов; Telegram — тот же бот лаборатории, только sendMessage.
+  crash-forward:
+    <<: *lab-service
+    # слой А: раз в сутки после 12:30 UTC разбирает сутки D−2 из архива data.binance.vision
+    command: ["uv", "run", "python", "scripts/crash_bounce_forward.py", "loop",
+              "--out", "/app/data/crash-bounce-forward"]
+    depends_on: !reset []
+    cpus: "1.0"
+
+  crash-paper:
+    <<: *lab-service
+    # слой Б: живой поток сделок Binance Futures (публичный), виртуальные заявки, журнал
+    command: ["uv", "run", "python", "scripts/crash_bounce_paper.py", "run",
+              "--out", "/app/data/crash-bounce-paper"]
+    depends_on: !reset []
+    mem_limit: 400m
+    cpus: "1.0"
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(cat /tmp/lab/crash-paper.heartbeat) )) -lt 120"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+
 volumes:
   lab_pgdata:
   lab_data:
