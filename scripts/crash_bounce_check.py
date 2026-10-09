@@ -408,7 +408,13 @@ def _sim_day(sym: str, day: str, evs: list[dict], side: bool = False,
     if need > ts[-1]:
         nxt = (datetime.strptime(day, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
         t2, p2, q2, s2 = _trades(sym, nxt)
-        if not t2 and strict:
+        # Ждать ленту следующих суток — только если сделка ЗАХОДИТ за полночь. Последняя сделка
+        # дня раньше нужного времени бывает и без полуночи — монету сняли с торгов (PUMPBTCUSDT
+        # 05.10.2026: обвал 09:15, поставка 09:20, лент дальше не будет никогда); строгий режим
+        # ждал бы её вечно, и замер вперёд не выдал бы ни одних суток.
+        day_end = int(datetime.strptime(day, "%Y-%m-%d").replace(tzinfo=UTC).timestamp()
+                      * 1000) + 86_400_000
+        if not t2 and strict and need > day_end:
             raise RuntimeError(f"лента {sym} {nxt} (стык суток) ещё не выложена")
         ts, px, qty, sell = ts + t2, px + p2, qty + q2, sell + s2
     out = []
