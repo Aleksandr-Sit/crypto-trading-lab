@@ -214,12 +214,13 @@ def stage_events(out: Path, a: str, b: str, drop: float, workers: int,
     periods, scan = (_days(a, b), _scan_day) if daily else (_months(a, b), _scan_month)
     jobs = [(s, m) for m in periods for s in syms if f"{s}:{m}" not in done]
     print(f"символов {len(syms)}, заданий {len(jobs)} (готово ранее {len(done)})", flush=True)
-    n_ev = 0
+    n_ev = n_fail = 0
     with ThreadPoolExecutor(workers) as pool, ev_p.open("a") as fe, done_p.open("a") as fd:
         futs = [pool.submit(scan, s, m, drop) for s, m in jobs]
         for k, f in enumerate(as_completed(futs), 1):
             sym, month, ev = f.result()
             if ev == "fail":
+                n_fail += 1
                 continue  # не помечать готовым: повтор возьмёт снова
             for e in ev or []:
                 fe.write(json.dumps(e) + "\n")
@@ -229,8 +230,10 @@ def stage_events(out: Path, a: str, b: str, drop: float, workers: int,
             fd.flush()
             if k % 200 == 0:
                 print(f"  {k}/{len(jobs)}  событий {n_ev}", flush=True)
-    print(f"готово: событий {n_ev}", flush=True)
-    return 0
+    print(f"готово: событий {n_ev}" + (f", не скачалось {n_fail} — повторить тем же запуском"
+                                        if n_fail else ""), flush=True)
+    # код 1 при недокачанном: замер вперёд не должен разбирать сутки с дырой в событиях
+    return 1 if n_fail else 0
 
 
 def _day(ms: int) -> str:
