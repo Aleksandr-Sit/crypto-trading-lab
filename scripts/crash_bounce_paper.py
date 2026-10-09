@@ -367,9 +367,14 @@ class Journal:
                 self.fh.close()
             self.day, self.fh = d, (self.dir / f"{d}.jsonl").open("a", encoding="utf-8")
         self.fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-        self.fh.flush()
-        if rec.get("k") in ("fill", "exit", "gap", "conn"):
+        # Сброс на диск — только решения. После обрыва связи пишутся сотни записей о пропусках, и
+        # fsync каждой (десятки мс на Windows) останавливал чтение потока: биржа рвала медленного
+        # читателя, обрыв давал новые пропуски — за час 63 обрыва и задержка 20 с (09.10.2026).
+        if rec.get("k") in ("fill", "exit"):
+            self.fh.flush()
             os.fsync(self.fh.fileno())
+        elif rec.get("k") != "gap":  # редкие записи (связь, задержки раз в минуту) — сразу видны
+            self.fh.flush()
 
 
 def _get_json(path: str, params: dict | None = None) -> object:
