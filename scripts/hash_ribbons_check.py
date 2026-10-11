@@ -113,13 +113,17 @@ def main() -> int:
     print(f"ряд {days[0]} … {days[-1]}, капитуляций {caps}, сигналов {len(sig)}")
     for i in sig:
         r = {h: fwd(px, i, h) for h in HORIZONS}
-        cells = "  ".join(f"{h}д {r[h]:+7.1f}" if r[h] is not None else f"{h}д    —   " for h in HORIZONS)
+        cells = "  ".join(
+            f"{h}д {r[h]:+7.1f}" if r[h] is not None else f"{h}д    —   " for h in HORIZONS
+        )
         print(f"  {days[i]}  цена {px[i]:>9.2f}  {cells}")
 
     rng = random.Random(args.seed)
     cross_set = set(crosses)
     print("\nизбыток = сигнал − среднее локального контроля (±365 д), лог-%, шум — по событиям")
-    print(f"{'гор.':>5} {'n':>3} {'сигнал':>8} | {'к1 любой день':>14} {'±шум':>6} {'хуже/1000':>9} | {'к2 крест цены':>14} {'±шум':>6} {'хуже/1000':>9}")
+    head = f"{'±шум':>6} {'хуже/1000':>9}"
+    k1, k2 = f"{'к1 любой день':>14}", f"{'к2 крест цены':>14}"
+    print(f"{'гор.':>5} {'n':>3} {'сигнал':>8} | {k1} {head} | {k2} {head}")
     for h in HORIZONS:
         ev = [i for i in sig if fwd(px, i, h) is not None]
         if len(ev) < 3:
@@ -128,8 +132,9 @@ def main() -> int:
         sig_r = []
         for i in ev:
             lo, hi = max(0, i - WINDOW), min(len(px) - 1, i + WINDOW)
-            any_r = [v for j in range(lo, hi + 1) if j != i and (v := fwd(px, j, h)) is not None]
-            cr_r = [v for j in range(lo, hi + 1) if j in cross_set and j != i and (v := fwd(px, j, h)) is not None]
+            near = [j for j in range(lo, hi + 1) if j != i]
+            any_r = [v for j in near if (v := fwd(px, j, h)) is not None]
+            cr_r = [v for j in near if j in cross_set and (v := fwd(px, j, h)) is not None]
             pools["any"].append(any_r)
             pools["cross"].append(cr_r or any_r)
             sig_r.append(fwd(px, i, h))
@@ -143,17 +148,37 @@ def main() -> int:
         overlap = sum(1 for a, b in zip(ev, ev[1:], strict=False) if b - a < h)
         tag = f"  (перекрытий {overlap})" if overlap else ""
         print(f"{h:>4}д {len(ev):>3} {mean(sig_r):>+8.1f} | {out[0]} | {out[1]}{tag}")  # type: ignore[arg-type]
+        # Вердикт — по НЕперекрывающимся событиям (добавлено после первого прогона 11.10.2026:
+        # сигналы идут пачками, и на 180/365 д перекрыто 16–19 событий из ~26; проверка от этого
+        # только строже). Берётся первое событие пачки, следующее — не раньше чем через h дней.
+        kept: list[int] = []
+        for k, i in enumerate(ev):
+            if not kept or i - ev[kept[-1]] >= h:
+                kept.append(k)
+        if len(kept) >= 3:
+            row = []
+            for key in ("any", "cross"):
+                ex = [sig_r[k] - mean(pools[key][k]) for k in kept]  # type: ignore[operator]
+                row.append(f"{mean(ex):>+14.1f} {stdev(ex) / sqrt(len(ex)):>6.1f} {'':>9}")
+            avg = mean(sig_r[k] for k in kept)  # type: ignore[misc]
+            print(f"{'б/п':>5} {len(kept):>3} {avg:>+8.1f} | {row[0]} | {row[1]}")
 
-    print("\nпо эпохам (избыток к1, горизонт 180 д):")
+    print("\nпо эпохам (избыток к1, горизонт 180 д, без перекрытия):")
     for a, b in ((2011, 2016), (2017, 2021), (2022, 2026)):
         ex = []
+        last = -10**9
         for i in sig:
+            if i - last < 180:
+                continue
             if a <= days[i].year <= b and (s := fwd(px, i, 180)) is not None:
+                last = i
                 lo, hi = max(0, i - WINDOW), min(len(px) - 1, i + WINDOW)
-                pool = [v for j in range(lo, hi + 1) if j != i and (v := fwd(px, j, 180)) is not None]
+                near = [j for j in range(lo, hi + 1) if j != i]
+                pool = [v for j in near if (v := fwd(px, j, 180)) is not None]
                 ex.append(s - mean(pool))
         if ex:
-            print(f"  {a}–{b}: n {len(ex)}, избыток {mean(ex):+.1f}, плюсовых {sum(e > 0 for e in ex)} из {len(ex)}")
+            plus = sum(e > 0 for e in ex)
+            print(f"  {a}–{b}: n {len(ex)}, избыток {mean(ex):+.1f}, плюсовых {plus} из {len(ex)}")
     return 0
 
 
