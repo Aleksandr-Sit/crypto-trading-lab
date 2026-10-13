@@ -41,6 +41,18 @@
 
     python scripts/youtube_check.py --root /app/data --tf 4h --horizon 6 \
         --exit rr --stop swing,atr --rr 1.5,2,3 --lookahead 60
+
+**Младшие таймфреймы 1–30 минут (п.7-доп, подпункт 2).** Ряды Bybit: перпы 15m (30m
+собирается из них), спот BTC/ETH 1m (5m собирается из него). Сборка — в SQL с проверкой,
+что в корзине ровно нужное число баров: миллион минутных строк словарями не влезает
+в память разового контейнера. По той же причине `--chunk-days` режет ряд на куски
+с разогревом `WARMUP` баров: сигналы и сделки считаются только вне разогрева. Правило
+`silver_bullet` (ICT) — первый за сутки FVG, образованный и тронутый целиком внутри
+10:00–11:00 America/New_York; у него второй контроль — обычный бар В ТОМ ЖЕ окне
+(час открытия Нью-Йорка сам по себе волатильнее суток).
+
+    python scripts/youtube_check.py --root /app/data --venue bybit --tf 1m --days 365 \
+        --chunk-days 90 --instruments BTC/USDT,ETH/USDT --horizon 8 --exit rr ...
 """
 
 from __future__ import annotations
@@ -49,10 +61,11 @@ import argparse
 import random
 import sys
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import ceil, sqrt
 from pathlib import Path
 from statistics import fmean
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -77,6 +90,7 @@ RULES = (
     "macd_trend",
     "ema_cross_trend",
     "multi_oversold",
+    "silver_bullet",
 )
 LABELS = {
     "rsi_div": "дивергенция RSI(14) на фракталах",
@@ -94,26 +108,116 @@ LABELS = {
     "macd_trend": "MACD пересекает сигнальную ниже нуля, по EMA200 (Trading Rush)",
     "ema_cross_trend": "EMA9 пересекает EMA21, по EMA200 (Trading Rush)",
     "multi_oversold": "RSI<30, MFI<20, StochRSI<20 разом (Crypto Crew University)",
+    "silver_bullet": "ICT Silver Bullet: FVG образован и тронут в 10–11 Нью-Йорка",
 }
+
+TF_HOURS = {"1m": 1 / 60, "5m": 5 / 60, "15m": 0.25, "30m": 0.5, "1h": 1, "4h": 4, "1d": 24}
+# Внутридневные ряды, которых в хранилище нет: (исходный ТФ, минут в корзине).
+SQL_RESAMPLE = {"5m": ("1m", 5), "30m": ("15m", 30)}
+WARMUP = 600  # баров разогрева на кусок: EMA200 и SMA200 успевают сойтись
+NY = ZoneInfo("America/New_York")
+SB_FROM, SB_TO = 10, 11  # окно Silver Bullet, часы Нью-Йорка
+# ТФ, где Silver Bullet вообще имеет смысл: на 30m в часе два бара — FVG из трёх свечей
+# в окне не образуется физически.
+SB_TFS = ("1m", "5m", "15m")
 
 
 # -- данные -----------------------------------------------------------------------------
 
 
-def load(cs: CandleStore, venue: str, inst: str, tf: str) -> list[dict]:
-    """Свечи инструмента. 4h собирается из часовых: 4h в хранилище не лежит."""
-    src = "1h" if tf == "4h" else tf
-    rows = cs.query(
-        "select ts, open::DOUBLE o, high::DOUBLE h, low::DOUBLE l, close::DOUBLE c, "
-        "volume::DOUBLE v from {candles} order by ts",
-        venue, inst, src,
-    )
+def load(cs: CandleStore, venue: str, inst: str, tf: str,
+         since: datetime | None = None, until: datetime | None = None) -> list[dict]:
+    """Свечи инструмента. 4h собирается из часовых, 5m и 30m — в SQL из 1m и 15m.
+
+    Неполная корзина выбрасывается целиком: свеча из четырёх минут вместо пяти — другая
+    свеча, и FVG на ней появился бы из дыры в данных, а не из рынка.
+    """
+    where, params = [], []
+    if since is not None:
+        where.append("ts >= ?")
+        params.append(since)
+    if until is not None:
+        where.append("ts < ?")
+        params.append(until)
+    cond = (" where " + " and ".join(where)) if where else ""
+    if tf in SQL_RESAMPLE:
+        src, mins = SQL_RESAMPLE[tf]
+        step = int(src[:-1])
+        rows = cs.query(
+            f"select time_bucket(interval '{mins} minutes', ts) ts, "
+            "arg_min(open, ts)::DOUBLE o, max(high)::DOUBLE h, min(low)::DOUBLE l, "
+            "arg_max(close, ts)::DOUBLE c, sum(volume)::DOUBLE v "
+            f"from {{candles}}{cond} group by 1 having count(*) = {mins // step} order by 1",
+            venue, inst, src, params=params,
+        )
+    else:
+        src = "1h" if tf == "4h" else tf
+        rows = cs.query(
+            "select ts, open::DOUBLE o, high::DOUBLE h, low::DOUBLE l, close::DOUBLE c, "
+            f"volume::DOUBLE v from {{candles}}{cond} order by ts",
+            venue, inst, src, params=params,
+        )
     bars = [
         {"ts": r["ts"], "o": r["o"], "h": r["h"], "l": r["l"], "c": r["c"], "v": r["v"] or 0.0}
         for r in rows
         if r["c"] and r["c"] > 0 and r["o"] and r["o"] > 0 and r["h"] and r["l"]
     ]
     return resample(bars, 4) if tf == "4h" else bars
+
+
+def span(cs: CandleStore, venue: str, inst: str, tf: str) -> tuple[datetime, datetime] | None:
+    src = SQL_RESAMPLE.get(tf, ("1h" if tf == "4h" else tf,))[0]
+    r = cs.query("select min(ts) a, max(ts) b from {candles}", venue, inst, src)
+    return (r[0]["a"], r[0]["b"]) if r and r[0]["a"] else None
+
+
+def chunks(cs: CandleStore, args: argparse.Namespace, inst: str):
+    """Ряд кусками: (бары с разогревом, первый и за-последний индексы, идущие в счёт).
+
+    Без `--chunk-days` — один кусок, в счёт всё (как раньше). С ним каждый следующий кусок
+    начинается на `WARMUP` баров раньше своей границы: индикаторы и фракталы досчитываются
+    на перекрытии, а сигналы и сделки берутся только с границы — без двойного счёта.
+    """
+    sp = span(cs, args.venue, inst, args.tf)
+    if sp is None:
+        return
+    first, last = sp
+    start = last - timedelta(days=args.days) if args.days else first
+    if not args.chunk_days:
+        bars = load(cs, args.venue, inst, args.tf, since=start if args.days else None)
+        yield bars, 0, len(bars)
+        return
+    pad = timedelta(hours=WARMUP * TF_HOURS[args.tf])
+    lo_ = start
+    while lo_ <= last:
+        hi_ = lo_ + timedelta(days=args.chunk_days)
+        # Хвост тоже с запасом: сделке у границы нужны бары вперёд для выхода.
+        bars = load(cs, args.venue, inst, args.tf, since=lo_ - pad, until=hi_ + pad)
+        k0 = next((i for i, b in enumerate(bars) if b["ts"] >= lo_), len(bars))
+        k1 = next((i for i, b in enumerate(bars) if b["ts"] >= hi_), len(bars))
+        yield bars, (0 if lo_ == start else k0), k1
+        lo_ = hi_
+
+
+def ny_window(bars: list[dict], tf: str) -> list[bool]:
+    """Бар целиком внутри окна Silver Bullet по часам Нью-Йорка (летнее время учтено).
+
+    Смещение берётся на 15:00 UTC даты бара — внутри окна, а не в полночь UTC: часы
+    в Нью-Йорке переводятся в 02:00 местного, и полночь UTC ещё живёт по старому времени.
+    """
+    step = timedelta(hours=TF_HOURS[tf])
+    offs: dict = {}
+    out = []
+    for b in bars:
+        ts = b["ts"]
+        d = ts.date()
+        if d not in offs:
+            offs[d] = ts.replace(hour=15, minute=0, second=0, microsecond=0).astimezone(
+                NY).utcoffset()
+        loc = ts + offs[d]
+        edge = loc.replace(hour=SB_TO, minute=0, second=0, microsecond=0)
+        out.append(SB_FROM <= loc.hour < SB_TO and loc + step <= edge)
+    return out
 
 
 def resample(bars: list[dict], hours: int) -> list[dict]:
@@ -222,10 +326,11 @@ def fractals(high: list[float], low: list[float], k: int) -> tuple[list[bool], l
 # -- правила ----------------------------------------------------------------------------
 
 
-def rules(bars: list[dict]) -> dict[str, list[int]]:
+def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int]]:
     """Направление сигнала по каждому правилу на каждом баре: +1 лонг, −1 шорт, 0 нет.
 
-    Сигнал на баре i использует данные только до закрытия i включительно.
+    Сигнал на баре i использует данные только до закрытия i включительно. `win` — бары
+    внутри окна Silver Bullet (`ny_window`); без него `silver_bullet` молчит.
     """
     n = len(bars)
     o = [b["o"] for b in bars]
@@ -277,8 +382,46 @@ def rules(bars: list[dict]) -> dict[str, list[int]]:
     bull_gaps: list[list[float]] = []  # [низ, верх, истекает]
     bear_gaps: list[list[float]] = []
     bo_long = bo_short = None  # [уровень, истекает]
+    sb_bull: list[tuple[float, float]] = []  # FVG окна Silver Bullet: (низ, верх)
+    sb_bear: list[tuple[float, float]] = []
+    sb_days: set = set()  # сутки, в которые сигнал уже был: один сетап за окно
 
     for i in range(n):
+        # --- Silver Bullet: первое касание FVG, образованного внутри окна 10–11 Нью-Йорка ---
+        if win is None or not win[i]:
+            sb_bull, sb_bear = [], []
+        else:
+            day = bars[i]["ts"].date()
+            if day not in sb_days:
+                side = 0
+                keep_b = []
+                for bot, top in sb_bull:
+                    if c[i] < bot:
+                        continue
+                    if lo[i] <= top:
+                        side += 1
+                        continue
+                    keep_b.append((bot, top))
+                keep_s = []
+                for bot, top in sb_bear:
+                    if c[i] > top:
+                        continue
+                    if h[i] >= bot:
+                        side -= 1
+                        continue
+                    keep_s.append((bot, top))
+                sb_bull, sb_bear = keep_b, keep_s
+                if side:
+                    out["silver_bullet"][i] = (side > 0) - (side < 0)
+                    sb_days.add(day)
+                    sb_bull, sb_bear = [], []
+            # Имбаланс из трёх свечей окна; минимального размера у ICT нет — любой разрыв.
+            if i >= 2 and win[i - 1] and win[i - 2] and day not in sb_days:
+                if lo[i] > h[i - 2]:
+                    sb_bull.append((h[i - 2], lo[i]))
+                if h[i] < lo[i - 2]:
+                    sb_bear.append((h[i], lo[i - 2]))
+
         # --- фракталы, признанные на этом баре ---
         j = i - K
         new_high = j >= K and ph[j]
@@ -567,7 +710,7 @@ def rr_exits(o, h, lo, c, i: int, side: int, stop: float, rrs: list[float],
 
 
 def lookahead(bars: list[dict], sig: dict[str, list[int]], a14, stops: list[str],
-              n_points: int, seed: int = 7) -> str:
+              n_points: int, seed: int = 7, win: list[bool] | None = None) -> str:
     """Подглядывает ли правило в будущее: сигнал и стоп на баре i по полной истории против
     истории, обрезанной на i. Точки — бары, где правило сработало (у редкого правила
     случайная точка почти всегда «нет сигнала», и проверка вышла бы пустой), плюс случайные.
@@ -584,7 +727,7 @@ def lookahead(bars: list[dict], sig: dict[str, list[int]], a14, stops: list[str]
     bad: list[str] = []
     for i in sorted(pts):
         cut = bars[: i + 1]
-        st = rules(cut)
+        st = rules(cut, None if win is None else win[: i + 1])
         hc, lc, cc = h[: i + 1], lo[: i + 1], [b["c"] for b in cut]
         ac = atr(hc, lc, cc, 14)
         for name in RULES:
@@ -614,10 +757,12 @@ def verdict_of(nblk: int, exc: float, two_se: float, yrs_pos: int, n_yrs: int) -
 
 def main_rr(args: argparse.Namespace) -> int:
     """Режим `--exit rr`: вход по сигналу, выход по стопу, цели или через `max_hold` баров."""
-    tf_hours = {"1h": 1, "4h": 4, "1d": 24}[args.tf]
+    tf_hours = TF_HOURS[args.tf]
     hz, mh = args.horizon, args.max_hold
     move_days = hz * tf_hours / 24
-    width = 2.0 * sqrt(max(move_days, 1 / 24))
+    # Нижний предел — минута, а не час: на 1m ход за 8 минут в корзине «за час» шириной
+    # 0.4 п.п. почти весь попал бы в одну корзину, и контроля по ходу не было бы вовсе.
+    width = 2.0 * sqrt(max(move_days, 1 / 1440))
     block_days = max(1, ceil(mh * tf_hours / 24))
     stops = args.stop.split(",")
     if not set(stops) <= {"swing", "atr"}:
@@ -631,50 +776,71 @@ def main_rr(args: argparse.Namespace) -> int:
     events: dict[tuple, list[tuple]] = defaultdict(list)
     covered = []
     la = ""
+    # Тот же контроль, но только из баров окна Silver Bullet — главный для `silver_bullet`.
+    peer_w: dict[tuple, list[float]] = defaultdict(lambda: [0.0, 0, 0])
     for inst in args.instruments.split(","):
-        bars = load(cs, args.venue, inst, args.tf)
-        if len(bars) < 400:
-            print(f"{inst}: баров {len(bars)} — пропуск")
-            continue
-        covered.append(f"{inst}({len(bars)}, с {bars[0]['ts']:%Y-%m})")
-        sig = rules(bars)
-        o = [b["o"] for b in bars]
-        h = [b["h"] for b in bars]
-        lo = [b["l"] for b in bars]
-        c = [b["c"] for b in bars]
-        a14 = atr(h, lo, c, 14)
-        e200 = ema(c, 200)
-        if args.lookahead and not la:
-            la = f"{inst}: " + lookahead(bars, sig, a14, stops, args.lookahead)
-        for i in range(max(hz, 200), len(bars) - max(hz, mh) - 1):
-            moved = (c[i] / c[i - hz] - 1) * 100
-            trend = (1 if c[i] > e200[i] else -1) if args.trend_filter else 0
-            bucket = (max(-10, min(10, int(moved // width))), trend)
-            day = bars[i]["ts"].date()
-            blk = day.toordinal() // block_days
-            fired = [(name, sig[name][i]) for name in RULES if sig[name][i]]
-            for side in (1, -1):
-                mine = [name for name, s in fired if s == side and (not trend or s == trend)]
-                for kind in stops:
-                    st = stop_level(h, lo, a14, i, side, kind)
-                    res = None if st is None else rr_exits(o, h, lo, c, i, side, st, rrs, mh)
-                    if res is None:
-                        continue
-                    for r, (ret, held) in zip(rrs, res, strict=True):
-                        cell = peer[(kind, r, bucket, side)]
-                        cell[0] += ret
-                        cell[1] += 1
-                        cell[2] += ret > 0
-                        for name in mine:
-                            events[(kind, r, name)].append((blk, day.year, side, bucket, ret, held))
+        n_bars, since_ = 0, None
+        for bars, k0, k1 in chunks(cs, args, inst):
+            if len(bars) < 400:
+                continue
+            since_ = since_ or bars[k0]["ts"]
+            n_bars += k1 - k0
+            win = ny_window(bars, args.tf) if args.tf in SB_TFS else None
+            sig = rules(bars, win)
+            o = [b["o"] for b in bars]
+            h = [b["h"] for b in bars]
+            lo = [b["l"] for b in bars]
+            c = [b["c"] for b in bars]
+            a14 = atr(h, lo, c, 14)
+            e200 = ema(c, 200)
+            if args.lookahead and not la:
+                la = f"{inst}: " + lookahead(bars, sig, a14, stops, args.lookahead, win=win)
+            for i in range(max(hz, 200, k0), min(k1, len(bars) - max(hz, mh) - 1)):
+                moved = (c[i] / c[i - hz] - 1) * 100
+                trend = (1 if c[i] > e200[i] else -1) if args.trend_filter else 0
+                bucket = (max(-10, min(10, int(moved // width))), trend)
+                day = bars[i]["ts"].date()
+                blk = day.toordinal() // block_days
+                fired = [(name, sig[name][i]) for name in RULES if sig[name][i]]
+                in_win = win is not None and win[i]
+                for side in (1, -1):
+                    mine = [name for name, s in fired if s == side and (not trend or s == trend)]
+                    for kind in stops:
+                        st = stop_level(h, lo, a14, i, side, kind)
+                        res = None if st is None else rr_exits(o, h, lo, c, i, side, st, rrs, mh)
+                        if res is None:
+                            continue
+                        for r, (ret, held) in zip(rrs, res, strict=True):
+                            for book, use in ((peer, True), (peer_w, in_win)):
+                                if use:
+                                    cell = book[(kind, r, bucket, side)]
+                                    cell[0] += ret
+                                    cell[1] += 1
+                                    cell[2] += ret > 0
+                            for name in mine:
+                                events[(kind, r, name)].append(
+                                    (blk, day.year, side, bucket, ret, held))
+        if n_bars:
+            covered.append(f"{inst}({n_bars}, с {since_:%Y-%m-%d})")
+        else:
+            print(f"{inst}: данных нет — пропуск")
 
     print(f"Ряды: {', '.join(covered)}")
     print(f"ТФ {args.tf}, выход по стопу/цели, удержание не больше {mh} баров, вход по следующему "
           "открытию" + ("; ФИЛЬТР EMA200" if args.trend_filter else ""))
-    print(f"Корзина хода за {hz} баров шириной {width:.1f} п.п.; блок независимости "
+    print(f"Корзина хода за {hz} баров шириной {width:.2f} п.п.; блок независимости "
           f"{block_days} сут; круг издержек {COST_PCT:.2f}%")
     if la:
         print(f"Подглядывание в будущее — {la}")
+    for kind in stops:
+        for side, label in ((1, "лонг"), (-1, "шорт")):
+            cells = [v for key, v in peer_w.items()
+                     if key[0] == kind and key[1] == rrs[0] and key[3] == side]
+            n = sum(v[1] for v in cells)
+            if n:
+                print(f"  окно 10–11 NY, стоп {kind}, цель {rrs[0]:g}R, {label}: {n} сделок, "
+                      f"в среднем {sum(v[0] for v in cells) / n:+.3f}%, прибыльных "
+                      f"{100 * sum(v[2] for v in cells) / n:.1f}%")
 
     for kind in stops:
         for r in rrs:
@@ -689,12 +855,15 @@ def main_rr(args: argparse.Namespace) -> int:
             print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'корзина':>9}"
                   f"{'избыток':>9}{'2σ':>7}{'приб%':>7}{'контр%':>7}{'баров':>6}{'годы+':>7}"
                   "  вердикт")
-            for name in RULES:
+            # silver_bullet — против баров своего окна; строка `sb_vs_day` — против суток.
+            rows = [(nm, nm, peer_w if nm == "silver_bullet" else peer) for nm in RULES]
+            rows.append(("sb_vs_day", "silver_bullet", peer))
+            for label_, name, book in rows:
                 ev = events[(kind, r, name)]
                 if not ev:
-                    print(f"{name:16}{0:>7}   сигналов нет")
+                    print(f"{label_:16}{0:>7}   сигналов нет")
                     continue
-                cells = [peer[(kind, r, e[3], e[2])] for e in ev]
+                cells = [book[(kind, r, e[3], e[2])] for e in ev]
                 n_long = sum(1 for e in ev if e[2] > 0)
                 raw = fmean(e[4] for e in ev)
                 pmean = fmean(v[0] / v[1] for v in cells)
@@ -710,8 +879,8 @@ def main_rr(args: argparse.Namespace) -> int:
                 yrs_pos = sum(1 for y in yrs if y > 0)
                 verdict = verdict_of(nblk, exc, two_se, yrs_pos, len(yrs))
                 print(
-                    f"{name:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}"
-                    f"{raw:>+8.2f}{pmean:>+9.2f}{exc:>+9.3f}{two_se:>7.3f}{win:>7.1f}{cwin:>7.1f}"
+                    f"{label_:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}"
+                    f"{raw:>+8.3f}{pmean:>+9.3f}{exc:>+9.3f}{two_se:>7.3f}{win:>7.1f}{cwin:>7.1f}"
                     f"{held:>6.1f}{f'{yrs_pos}/{len(yrs)}':>7}  {verdict}"
                 )
     print("\nсырой — средний исход сделки сигнала, % со знаком позиции; корзина — обычный бар")
@@ -725,8 +894,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default="data")
     ap.add_argument("--venue", default="binance")
-    ap.add_argument("--tf", default="4h", choices=("1h", "4h", "1d"))
+    ap.add_argument("--tf", default="4h", choices=tuple(TF_HOURS))
     ap.add_argument("--horizon", type=int, default=6, help="баров вперёд")
+    ap.add_argument("--days", type=int, default=0,
+                    help="только последние N суток ряда (1m — год: миллион строк)")
+    ap.add_argument("--chunk-days", type=int, default=0,
+                    help="считать кусками по N суток с разогревом — ради памяти контейнера")
     ap.add_argument("--instruments", default=",".join(INSTRUMENTS))
     ap.add_argument(
         "--trend-filter", action="store_true",
@@ -744,57 +917,72 @@ def main() -> int:
     if args.exit == "rr":
         return main_rr(args)
 
-    tf_hours = {"1h": 1, "4h": 4, "1d": 24}[args.tf]
+    tf_hours = TF_HOURS[args.tf]
     hz = args.horizon
     hold_days = hz * tf_hours / 24
     block_days = max(1, ceil(hold_days))
-    # Ширина корзины хода растёт как корень из горизонта: 2 п.п. на сутки.
-    width = 2.0 * sqrt(max(hold_days, 1 / 24))
+    # Ширина корзины хода растёт как корень из горизонта: 2 п.п. на сутки (предел — минута).
+    width = 2.0 * sqrt(max(hold_days, 1 / 1440))
 
     cs = CandleStore(args.root)
-    by_bucket: dict[tuple[int, int], list[float]] = defaultdict(list)
+    # Суммы, а не списки исходов: на 1m за год списки — миллион чисел на корзину.
+    by_bucket: dict[tuple[int, int], list[float]] = defaultdict(lambda: [0.0, 0])
+    by_bucket_w: dict[tuple[int, int], list[float]] = defaultdict(lambda: [0.0, 0])
     events: dict[str, list[tuple]] = defaultdict(list)  # (блок, год, знак, корзина, исход)
     covered = []
     for inst in args.instruments.split(","):
-        bars = load(cs, args.venue, inst, args.tf)
-        if len(bars) < 400:
-            print(f"{inst}: баров {len(bars)} — пропуск")
-            continue
-        covered.append(f"{inst}({len(bars)}, с {bars[0]['ts']:%Y-%m})")
-        sig = rules(bars)
-        e200 = ema([b["c"] for b in bars], 200)
-        for i in range(max(hz, 200), len(bars) - hz - 1):
-            entry, exit_ = bars[i + 1]["o"], bars[i + 1 + hz]["o"]
-            ret = (exit_ / entry - 1) * 100
-            moved = (bars[i]["c"] / bars[i - hz]["c"] - 1) * 100
-            trend = (1 if bars[i]["c"] > e200[i] else -1) if args.trend_filter else 0
-            bucket = (max(-10, min(10, int(moved // width))), trend)
-            by_bucket[bucket].append(ret)
-            day = bars[i]["ts"].date()
-            blk = day.toordinal() // block_days
-            for name in RULES:
-                s = sig[name][i]
-                if s and (not trend or s == trend):
-                    events[name].append((blk, day.year, s, bucket, ret))
+        n_bars, since_ = 0, None
+        for bars, k0, k1 in chunks(cs, args, inst):
+            if len(bars) < 400:
+                continue
+            since_ = since_ or bars[k0]["ts"]
+            n_bars += k1 - k0
+            win = ny_window(bars, args.tf) if args.tf in SB_TFS else None
+            sig = rules(bars, win)
+            e200 = ema([b["c"] for b in bars], 200)
+            for i in range(max(hz, 200, k0), min(k1, len(bars) - hz - 1)):
+                entry, exit_ = bars[i + 1]["o"], bars[i + 1 + hz]["o"]
+                ret = (exit_ / entry - 1) * 100
+                moved = (bars[i]["c"] / bars[i - hz]["c"] - 1) * 100
+                trend = (1 if bars[i]["c"] > e200[i] else -1) if args.trend_filter else 0
+                bucket = (max(-10, min(10, int(moved // width))), trend)
+                for book, use in ((by_bucket, True), (by_bucket_w, win is not None and win[i])):
+                    if use:
+                        book[bucket][0] += ret
+                        book[bucket][1] += 1
+                day = bars[i]["ts"].date()
+                blk = day.toordinal() // block_days
+                for name in RULES:
+                    s = sig[name][i]
+                    if s and (not trend or s == trend):
+                        events[name].append((blk, day.year, s, bucket, ret))
+        if n_bars:
+            covered.append(f"{inst}({n_bars}, с {since_:%Y-%m-%d})")
+        else:
+            print(f"{inst}: данных нет — пропуск")
 
-    peer = {b: fmean(v) for b, v in by_bucket.items() if v}
+    peer = {b: s / n for b, (s, n) in by_bucket.items() if n}
+    peer_w = {b: s / n for b, (s, n) in by_bucket_w.items() if n}
     print(f"Ряды: {', '.join(covered)}")
     print(f"ТФ {args.tf}, удержание {hz} баров (~{hold_days:g} сут), вход по следующему открытию"
           + ("; ФИЛЬТР EMA200" if args.trend_filter else ""))
-    print(f"Блок независимости {block_days} сут; корзина хода {width:.1f} п.п.; "
+    print(f"Блок независимости {block_days} сут; корзина хода {width:.2f} п.п.; "
           f"круг издержек {COST_PCT:.2f}%\n")
     print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'корзина':>9}"
           f"{'избыток':>9}{'2σ':>7}{'лонг':>8}{'шорт':>8}{'годы+':>7}  вердикт")
 
-    for name in RULES:
+    # silver_bullet — против баров своего окна; строка `sb_vs_day` — против суток.
+    rows = [(nm, nm, peer_w if nm == "silver_bullet" else peer) for nm in RULES]
+    rows.append(("sb_vs_day", "silver_bullet", peer))
+    for label_, name, book in rows:
         ev = events[name]
         if not ev:
-            print(f"{name:16}{0:>7}   сигналов нет")
+            print(f"{label_:16}{0:>7}   сигналов нет")
             continue
         n_long = sum(1 for e in ev if e[2] > 0)
         raw = fmean(e[2] * e[4] for e in ev)
-        pmean = fmean(e[2] * peer[e[3]] for e in ev)
-        exc_pairs = [(e[0], e[2] * (e[4] - peer[e[3]])) for e in ev]
+        pmean = fmean(e[2] * book[e[3]] for e in ev)
+        exc_pairs = [(e[0], e[2] * (e[4] - book[e[3]])) for e in ev]
         exc, two_se, nblk = block_stats(exc_pairs)
         longs = [x for (blk, x), e in zip(exc_pairs, ev, strict=True) if e[2] > 0]
         shorts = [x for (blk, x), e in zip(exc_pairs, ev, strict=True) if e[2] < 0]
@@ -807,8 +995,8 @@ def main() -> int:
         fl = f"{fmean(longs):+.2f}" if longs else "—"
         fs = f"{fmean(shorts):+.2f}" if shorts else "—"
         print(
-            f"{name:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}{raw:>+8.2f}"
-            f"{pmean:>+9.2f}{exc:>+9.3f}{two_se:>7.3f}{fl:>8}{fs:>8}"
+            f"{label_:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}{raw:>+8.3f}"
+            f"{pmean:>+9.3f}{exc:>+9.3f}{two_se:>7.3f}{fl:>8}{fs:>8}"
             f"{f'{yrs_pos}/{len(yrs)}':>7}  {verdict}"
         )
     print("\nсырой — средний исход сигнала со знаком; корзина — обычный бар того же хода в ту же")
