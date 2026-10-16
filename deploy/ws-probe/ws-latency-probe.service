@@ -1,0 +1,25 @@
+# Второй наблюдатель потока Binance Futures — VPS Senko (16.10.2026).
+# Только задержки по минутам, без торговли и ключей; см. scripts/ws_latency_probe.py.
+# Установка на Senko (кода из git там нет — файл кладётся scp):
+#   scp scripts/ws_latency_probe.py vps-senko:/opt/ws-probe/
+#   scp deploy/ws-probe/ws-latency-probe.service vps-senko:/etc/systemd/system/
+#   ssh vps-senko 'systemctl daemon-reload && systemctl enable --now ws-latency-probe'
+# Данные: /opt/ws-probe/data/<день UTC>.jsonl, хранится 60 суток.
+[Unit]
+Description=Binance Futures stream latency probe (lab, second observer)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ws-probe
+ExecStart=/usr/bin/python3 /opt/ws-probe/ws_latency_probe.py run --out /opt/ws-probe/data
+Restart=always
+RestartSec=10
+# Рядом job-hunter: уступать ему процессор и не трогать его память.
+Nice=5
+MemoryMax=150M
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
