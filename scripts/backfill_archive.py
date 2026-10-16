@@ -94,8 +94,6 @@ def main() -> int:
         return 2
 
     store = CandleStore(args.root)
-    archive = BinanceArchive()
-    source = archive_only(archive, args.tf)
     written = failed = empty = 0
     with httpx.Client(timeout=60) as client:
         for name in names:
@@ -111,6 +109,10 @@ def main() -> int:
                 continue
             a = months[0]
             b = min((months[-1] + timedelta(days=32)).replace(day=1), datetime.now(UTC))
+            # Свой архив на каждый символ: BinanceArchive держит в памяти каждый скачанный
+            # месяц. На 1d это мелочь, а 15m — ≈200 тыс. свечей на символ, и 16.10.2026
+            # общий архив убил контейнер по памяти на четвёртом символе из 107.
+            source = archive_only(BinanceArchive(), args.tf)
             try:
                 res = backfill(
                     store, source, "binance", name, args.tf, a, b, chunk=timedelta(days=31)
