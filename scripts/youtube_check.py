@@ -53,6 +53,16 @@
 
     python scripts/youtube_check.py --root /app/data --venue bybit --tf 1m --days 365 \
         --chunk-days 90 --instruments BTC/USDT,ETH/USDT --horizon 8 --exit rr ...
+
+**Проверка кандидата `multi_oversold` (п.7-доп, раздел 9).** `--mo-grid` вместо 16 правил
+считает одно `multi_oversold` на сетке порогов перепроданности RSI × MFI × StochRSI
+(перекупленность зеркально: 100 − порог), строки `mo_<RSI>_<MFI>_<StochRSI>`. Канон
+30/20/20 — одна из клеток сетки, без ключа правило прежнее. В таблице `--exit rr` у сырого
+исхода свой шум (`2σс`) и итог после круга мейкером (`−мейк`) и тейкером (`−тейк`): деньги —
+это сырой исход сделки минус издержки, а не избыток над контролем.
+
+    python scripts/youtube_check.py --root /app/data --tf 15m --horizon 8 --exit rr \
+        --stop atr --rr 1.5,2 --trend-filter --mo-grid 25,30,35:15,20,25:15,20,25
 """
 
 from __future__ import annotations
@@ -117,6 +127,28 @@ SQL_RESAMPLE = {"5m": ("1m", 5), "30m": ("15m", 30)}
 WARMUP = 600  # баров разогрева на кусок: EMA200 и SMA200 успевают сойтись
 NY = ZoneInfo("America/New_York")
 SB_FROM, SB_TO = 10, 11  # окно Silver Bullet, часы Нью-Йорка
+MAKER_PCT = 0.04  # круг мейкером на перпах (Binance и Bybit 0.02% за сторону)
+# Сетка порогов `multi_oversold` (RSI, MFI, StochRSI); пусто — 16 обычных правил.
+MO_GRID: list[tuple[int, int, int]] = []
+
+
+def mo_name(r: int, m: int, s: int) -> str:
+    return f"mo_{r}_{m}_{s}"
+
+
+def set_mo_grid(spec: str) -> None:
+    """`--mo-grid 25,30,35:15,20,25:15,20,25` → только `multi_oversold` на этих порогах.
+
+    Список правил подменяется целиком, а не дописывается: 16 правил на сотне монет 15m
+    считались бы впустую, а проверка подглядывания и таблицы берут имена из `RULES`.
+    """
+    global RULES
+    parts = spec.split(":")
+    if len(parts) != 3:
+        raise SystemExit(f"--mo-grid: RSI:MFI:StochRSI через двоеточие, а не {spec}")
+    rs, ms, ss = ([int(x) for x in p.split(",")] for p in parts)
+    MO_GRID[:] = [(r, m, s) for r in rs for m in ms for s in ss]
+    RULES = tuple(mo_name(*t) for t in MO_GRID)
 # ТФ, где Silver Bullet вообще имеет смысл: на 30m в часе два бара — FVG из трёх свечей
 # в окне не образуется физически.
 SB_TFS = ("1m", "5m", "15m")
@@ -350,6 +382,22 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
     macd_sig: list[float | None] = [None] * first + ema([x or 0.0 for x in macd[first:]], 9)
     mfi14 = mfi(h, lo, c, v, 14)
     srsi = stoch_rsi(r14, 14, 3)
+    if MO_GRID:
+        # Тот же сигнал, что у канона ниже, — первый бар зоны, — только на своих порогах.
+        for r_, m_, s_ in MO_GRID:
+            sig = out[mo_name(r_, m_, s_)]
+            prev = 0
+            for k in range(n):
+                z = 0
+                if None not in (r14[k], mfi14[k], srsi[k]):
+                    if r14[k] < r_ and mfi14[k] < m_ and srsi[k] < s_:
+                        z = 1
+                    elif r14[k] > 100 - r_ and mfi14[k] > 100 - m_ and srsi[k] > 100 - s_:
+                        z = -1
+                if z and prev != z:
+                    sig[k] = z
+                prev = z
+        return out
     st = supertrend(h, lo, c)
     tenkan, kijun, span_b_raw = midpoint(h, lo, 9), midpoint(h, lo, 26), midpoint(h, lo, 52)
     ph, pl = fractals(h, lo, K)
@@ -852,12 +900,13 @@ def main_rr(args: argparse.Namespace) -> int:
                     print(f"  обычный бар, {label}: {n} сделок, в среднем "
                           f"{sum(v[0] for v in cells) / n:+.3f}%, прибыльных "
                           f"{100 * sum(v[2] for v in cells) / n:.1f}%")
-            print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'корзина':>9}"
-                  f"{'избыток':>9}{'2σ':>7}{'приб%':>7}{'контр%':>7}{'баров':>6}{'годы+':>7}"
-                  "  вердикт")
+            print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'2σс':>7}"
+                  f"{'−мейк':>8}{'−тейк':>8}{'корзина':>9}{'избыток':>9}{'2σ':>7}{'приб%':>7}"
+                  f"{'контр%':>7}{'баров':>6}{'годы+':>7}  вердикт")
             # silver_bullet — против баров своего окна; строка `sb_vs_day` — против суток.
             rows = [(nm, nm, peer_w if nm == "silver_bullet" else peer) for nm in RULES]
-            rows.append(("sb_vs_day", "silver_bullet", peer))
+            if not MO_GRID:
+                rows.append(("sb_vs_day", "silver_bullet", peer))
             for label_, name, book in rows:
                 ev = events[(kind, r, name)]
                 if not ev:
@@ -865,7 +914,7 @@ def main_rr(args: argparse.Namespace) -> int:
                     continue
                 cells = [book[(kind, r, e[3], e[2])] for e in ev]
                 n_long = sum(1 for e in ev if e[2] > 0)
-                raw = fmean(e[4] for e in ev)
+                raw, raw_2se, _ = block_stats([(e[0], e[4]) for e in ev])
                 pmean = fmean(v[0] / v[1] for v in cells)
                 exc_pairs = [(e[0], e[4] - v[0] / v[1]) for e, v in zip(ev, cells, strict=True)]
                 exc, two_se, nblk = block_stats(exc_pairs)
@@ -880,13 +929,16 @@ def main_rr(args: argparse.Namespace) -> int:
                 verdict = verdict_of(nblk, exc, two_se, yrs_pos, len(yrs))
                 print(
                     f"{label_:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}"
-                    f"{raw:>+8.3f}{pmean:>+9.3f}{exc:>+9.3f}{two_se:>7.3f}{win:>7.1f}{cwin:>7.1f}"
+                    f"{raw:>+8.3f}{raw_2se:>7.3f}{raw - MAKER_PCT:>+8.3f}{raw - COST_PCT:>+8.3f}"
+                    f"{pmean:>+9.3f}{exc:>+9.3f}{two_se:>7.3f}{win:>7.1f}{cwin:>7.1f}"
                     f"{held:>6.1f}{f'{yrs_pos}/{len(yrs)}':>7}  {verdict}"
                 )
     print("\nсырой — средний исход сделки сигнала, % со знаком позиции; корзина — обычный бар")
     print("того же хода, та же сторона, тот же выход; избыток = сырой − корзина, шум и вердикт —")
     print("по независимым блокам. приб% / контр% — доля прибыльных у сигнала и у контроля;")
     print("баров — среднее удержание сигнала. Безубыточная доля без издержек: 1/(1+R).")
+    print(f"2σс — шум сырого исхода по тем же блокам; −мейк / −тейк — сырой минус круг "
+          f"{MAKER_PCT:.2f}% / {COST_PCT:.2f}%.")
     return 0
 
 
@@ -913,7 +965,12 @@ def main() -> int:
     ap.add_argument("--max-hold", type=int, default=50, help="rr: предел удержания, баров")
     ap.add_argument("--lookahead", type=int, default=0,
                     help="rr: проверить подглядывание в N точках первого инструмента")
+    ap.add_argument("--mo-grid", default="",
+                    help="только multi_oversold на сетке порогов RSI:MFI:StochRSI, "
+                    "например 25,30,35:15,20,25:15,20,25 (канон 30:20:20)")
     args = ap.parse_args()
+    if args.mo_grid:
+        set_mo_grid(args.mo_grid)
     if args.exit == "rr":
         return main_rr(args)
 
