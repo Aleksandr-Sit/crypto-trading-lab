@@ -63,6 +63,18 @@
 
     python scripts/youtube_check.py --root /app/data --tf 15m --horizon 8 --exit rr \
         --stop atr --rr 1.5,2 --trend-filter --mo-grid 25,30,35:15,20,25:15,20,25
+
+**Ордерблоки, поток ордеров, Эллиотт (п.7-доп, подпункт 3, раздел 10).** Четыре правила
+вне набора по умолчанию, берутся ключом `--rules`: `order_block` (SMC), `elliott_w3`
+(заменитель «входа в третью волну» — настоящей разметки волн здесь нет), `cvd_div` и
+`absorption` по потоку тейкеров Binance (`PositioningStore`, пятиминутный `taker_ratio`
+с 08.2022 у восьми перпов). Дельта бара = (r−1)/(r+1) × объём — приближение: объёма
+пятиминуток нет, снимки внутри бара равновесны. Правила потока считаются на свечах
+Binance перпов (та же биржа) и в окне, где поток есть: `--since` / `--until`.
+
+    python scripts/youtube_check.py --root /app/data --venue binance --tf 1h --horizon 6 \
+        --instruments BTC/USDT:USDT,... --rules cvd_div,absorption \
+        --since 2022-08-03 --until 2026-09-10 --exit rr --stop swing,atr --rr 1.5,2,3
 """
 
 from __future__ import annotations
@@ -71,7 +83,7 @@ import argparse
 import random
 import sys
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from math import ceil, sqrt
 from pathlib import Path
 from statistics import fmean
@@ -81,6 +93,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from freqtrade_check import COST_PCT, INSTRUMENTS, ema, rsi, sma, wilder  # noqa: E402
 
+from lab.data.positioning import PositioningStore  # noqa: E402
 from lab.data.store import CandleStore  # noqa: E402
 
 K = 3  # фрактал: разворотная точка — экстремум среди K баров слева и K справа
@@ -101,7 +114,13 @@ RULES = (
     "ema_cross_trend",
     "multi_oversold",
     "silver_bullet",
+    "order_block",
+    "elliott_w3",
+    "cvd_div",
+    "absorption",
 )
+ALL_RULES = RULES  # `--rules` и `--mo-grid` сужают RULES, сигналы считаются по всем
+FLOW_RULES = ("cvd_div", "absorption")  # нужен поток тейкеров (`--flow`)
 LABELS = {
     "rsi_div": "дивергенция RSI(14) на фракталах",
     "choch": "смена характера: пробой последней вершины после нисходящих",
@@ -119,6 +138,10 @@ LABELS = {
     "ema_cross_trend": "EMA9 пересекает EMA21, по EMA200 (Trading Rush)",
     "multi_oversold": "RSI<30, MFI<20, StochRSI<20 разом (Crypto Crew University)",
     "silver_bullet": "ICT Silver Bullet: FVG образован и тронут в 10–11 Нью-Йорка",
+    "order_block": "SMC: возврат в последнюю противоположную свечу перед сломом вершины",
+    "elliott_w3": "заменитель Эллиотта: L0, H1, L2>L0 с откатом 0.382–0.786, пробой H1",
+    "cvd_div": "дивергенция CVD (накопленной дельты тейкеров) на фракталах",
+    "absorption": "поглощение: сильная агрессивная продажа, закрытие в верхней половине",
 }
 
 TF_HOURS = {"1m": 1 / 60, "5m": 5 / 60, "15m": 0.25, "30m": 0.5, "1h": 1, "4h": 4, "1d": 24}
@@ -149,6 +172,23 @@ def set_mo_grid(spec: str) -> None:
     rs, ms, ss = ([int(x) for x in p.split(",")] for p in parts)
     MO_GRID[:] = [(r, m, s) for r in rs for m in ms for s in ss]
     RULES = tuple(mo_name(*t) for t in MO_GRID)
+
+
+def set_rules(spec: str) -> None:
+    """`--rules order_block,elliott_w3` → в таблицах и проверке подглядывания только они."""
+    global RULES
+    names = tuple(spec.split(","))
+    unknown = [x for x in names if x not in ALL_RULES]
+    if unknown:
+        raise SystemExit(f"--rules: неизвестные правила {unknown}")
+    RULES = names
+
+
+# Подпункт 3 п.7-доп: окна правил в барах и порог «сильной» дельты — канон, без подбора.
+SETUP_BARS = 50  # ордерблок и третья волна ждут входа не дольше 50 баров
+OB_BACK = 50  # противоположная свеча ищется не дальше 50 баров до слома
+ABS_BARS, ABS_MULT = 50, 2.0  # поглощение: |дельта| ≥ 2 × средней |дельты| 50 баров до
+FLOW_VENUE = "binance"  # поток тейкеров есть только у Binance (архив metrics)
 # ТФ, где Silver Bullet вообще имеет смысл: на 30m в часе два бара — FVG из трёх свечей
 # в окне не образуется физически.
 SB_TFS = ("1m", "5m", "15m")
@@ -158,7 +198,8 @@ SB_TFS = ("1m", "5m", "15m")
 
 
 def load(cs: CandleStore, venue: str, inst: str, tf: str,
-         since: datetime | None = None, until: datetime | None = None) -> list[dict]:
+         since: datetime | None = None, until: datetime | None = None,
+         flow: bool = False) -> list[dict]:
     """Свечи инструмента. 4h собирается из часовых, 5m и 30m — в SQL из 1m и 15m.
 
     Неполная корзина выбрасывается целиком: свеча из четырёх минут вместо пяти — другая
@@ -194,7 +235,42 @@ def load(cs: CandleStore, venue: str, inst: str, tf: str,
         for r in rows
         if r["c"] and r["c"] > 0 and r["o"] and r["o"] > 0 and r["h"] and r["l"]
     ]
-    return resample(bars, 4) if tf == "4h" else bars
+    bars = resample(bars, 4) if tf == "4h" else bars
+    if flow:
+        attach_flow(bars, cs.root, inst, tf, since, until)
+    return bars
+
+
+def attach_flow(bars: list[dict], root: Path, inst: str, tf: str,
+                since: datetime | None, until: datetime | None) -> None:
+    """Дельта тейкеров бара `d` = средняя доля (r−1)/(r+1) снимков × объём бара.
+
+    `taker_ratio` — агрессивные покупки к продажам за пять минут; метка снимка — НАЧАЛО его
+    пятиминутки (сверено 16.10.2026: корреляция часовой доходности с потоком пиковая, 0.40,
+    у снимков с меткой внутри часа и падает при сдвиге на ±5 мин), поэтому бар [t, t+ТФ)
+    собирается из снимков с меткой внутри него — будущего в нём нет. Объёма пятиминуток
+    нет, снимки внутри бара равновесны. Меньше половины снимков — дельты нет (`None`),
+    и правила потока на этом баре молчат.
+    """
+    mins = round(TF_HOURS[tf] * 60)
+    where, params = ["taker_ratio > 0"], []
+    if since is not None:
+        where.append("ts >= ?")
+        params.append(since)
+    if until is not None:
+        where.append("ts < ?")
+        params.append(until)
+    rows = PositioningStore(root).query(
+        f"select time_bucket(interval '{mins} minutes', ts) ts, "
+        "avg((taker_ratio::DOUBLE - 1) / (taker_ratio::DOUBLE + 1)) s, count(*) k "
+        f"from {{positioning}} where {' and '.join(where)} group by 1",
+        FLOW_VENUE, inst, params=params,
+    )
+    need = max(1, mins // 10)  # половина пятиминуток бара
+    share = {r["ts"]: r["s"] for r in rows if r["k"] >= need}
+    for b in bars:
+        s = share.get(b["ts"])
+        b["d"] = None if s is None else s * b["v"]
 
 
 def span(cs: CandleStore, venue: str, inst: str, tf: str) -> tuple[datetime, datetime] | None:
@@ -215,19 +291,27 @@ def chunks(cs: CandleStore, args: argparse.Namespace, inst: str):
         return
     first, last = sp
     start = last - timedelta(days=args.days) if args.days else first
+    if args.since:
+        start = max(start, args.since)
+    flow = any(name in FLOW_RULES for name in RULES)
     if not args.chunk_days:
-        bars = load(cs, args.venue, inst, args.tf, since=start if args.days else None)
+        cut = start if (args.days or args.since) else None
+        bars = load(cs, args.venue, inst, args.tf, since=cut, until=args.until, flow=flow)
         yield bars, 0, len(bars)
         return
     pad = timedelta(hours=WARMUP * TF_HOURS[args.tf])
     lo_ = start
-    while lo_ <= last:
+    while lo_ <= last and (args.until is None or lo_ < args.until):
         hi_ = lo_ + timedelta(days=args.chunk_days)
+        if args.until is not None:
+            hi_ = min(hi_, args.until)  # бары после границы — только для выхода сделок
         # Хвост тоже с запасом: сделке у границы нужны бары вперёд для выхода.
-        bars = load(cs, args.venue, inst, args.tf, since=lo_ - pad, until=hi_ + pad)
+        bars = load(cs, args.venue, inst, args.tf, since=lo_ - pad, until=hi_ + pad, flow=flow)
         k0 = next((i for i, b in enumerate(bars) if b["ts"] >= lo_), len(bars))
         k1 = next((i for i, b in enumerate(bars) if b["ts"] >= hi_), len(bars))
-        yield bars, (0 if lo_ == start else k0), k1
+        # С `--since` разогрев до границы в счёт не идёт: там нет потока, и контроль взял бы
+        # бары, которых у правил потока быть не может.
+        yield bars, (0 if lo_ == start and not args.since else k0), k1
         lo_ = hi_
 
 
@@ -370,7 +454,7 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
     lo = [b["l"] for b in bars]
     c = [b["c"] for b in bars]
     v = [b["v"] for b in bars]
-    out = {name: [0] * n for name in RULES}
+    out = {name: [0] * n for name in (RULES if MO_GRID else ALL_RULES)}
 
     r14 = rsi(c, 14)
     a14 = atr(h, lo, c, 14)
@@ -413,6 +497,20 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
         vv += v[i]
         vwap[i] = pv / vv if vv > 0 else None
 
+    # Поток: дельта бара, CVD — её накопление; `miss` — сколько баров без дельты до i
+    # включительно (правило потока молчит, если в его окне есть хоть один такой бар).
+    d: list[float | None] = [b.get("d") for b in bars]
+    cvd, miss, abs_cum = [0.0] * n, [0] * n, [0.0] * n
+    for i in range(n):
+        x = d[i]
+        cvd[i] = (cvd[i - 1] if i else 0.0) + (x or 0.0)
+        miss[i] = (miss[i - 1] if i else 0) + (x is None)
+        abs_cum[i] = (abs_cum[i - 1] if i else 0.0) + abs(x or 0.0)
+
+    def flow_ok(j0: int, j1: int) -> bool:
+        """Дельта есть у каждого бара j0..j1."""
+        return miss[j1] - (miss[j0 - 1] if j0 else 0) == 0
+
     def zone(k: int) -> int:
         """+1 — все три осциллятора в перепроданности, −1 — все в перекупленности."""
         if None in (r14[k], mfi14[k], srsi[k]):
@@ -433,6 +531,9 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
     sb_bull: list[tuple[float, float]] = []  # FVG окна Silver Bullet: (низ, верх)
     sb_bear: list[tuple[float, float]] = []
     sb_days: set = set()  # сутки, в которые сигнал уже был: один сетап за окно
+    broken: set[tuple[int, int]] = set()  # сломанные вершины/впадины (сторона, индекс)
+    ob_long = ob_short = None  # ордерблок: [низ, верх, истекает]
+    ew_long = ew_short = None  # третья волна: [уровень H1/L1, уровень L2/H2, истекает]
 
     for i in range(n):
         # --- Silver Bullet: первое касание FVG, образованного внутри окна 10–11 Нью-Йорка ---
@@ -480,6 +581,24 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
                 j0 = lows[-1]
                 if lo[j] < lo[j0] and None not in (r14[j], r14[j0]) and r14[j] > r14[j0]:
                     out["rsi_div"][i] = 1
+                # Цена ниже прежней впадины, а продавали на пути к ней меньше, чем купили.
+                if lo[j] < lo[j0] and flow_ok(j0, j) and cvd[j] > cvd[j0]:
+                    out["cvd_div"][i] = 1
+            # Третья волна вверх: L0 — прежняя впадина, H1 — высшая вершина после неё,
+            # L2 = j выше L0 и откат волны 2 от волны 1 в 0.382–0.786.
+            if lows:
+                l0 = lows[-1]
+                tops = []  # вершины между L0 и j: с конца, пока не дошли до L0
+                for x in reversed(highs):
+                    if x <= l0:
+                        break
+                    if x < j:
+                        tops.append(x)
+                if tops:
+                    h1 = max(tops, key=lambda x: h[x])
+                    w1 = h[h1] - lo[l0]
+                    if lo[j] > lo[l0] and w1 > 0 and 0.382 <= (h[h1] - lo[j]) / w1 <= 0.786:
+                        ew_long = [h[h1], lo[j], i + SETUP_BARS]
             lows.append(j)
             # Шорт-сетап фибо: вершина раньше впадины, импульс вниз.
             if highs and highs[-1] < j and a14[j]:
@@ -490,6 +609,21 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
                 j0 = highs[-1]
                 if h[j] > h[j0] and None not in (r14[j], r14[j0]) and r14[j] < r14[j0]:
                     out["rsi_div"][i] = -1 if out["rsi_div"][i] == 0 else 0
+                if h[j] > h[j0] and flow_ok(j0, j) and cvd[j] < cvd[j0]:
+                    out["cvd_div"][i] = -1 if out["cvd_div"][i] == 0 else 0
+            if highs:
+                h0 = highs[-1]
+                bots = []
+                for x in reversed(lows):
+                    if x <= h0:
+                        break
+                    if x < j:
+                        bots.append(x)
+                if bots:
+                    l1 = min(bots, key=lambda x: lo[x])
+                    w1 = h[h0] - lo[l1]
+                    if h[j] < h[h0] and w1 > 0 and 0.382 <= (h[j] - lo[l1]) / w1 <= 0.786:
+                        ew_short = [lo[l1], h[j], i + SETUP_BARS]
             highs.append(j)
             if lows and lows[-1] < j and a14[j]:
                 hh, ll = h[j], lo[lows[-1]]
@@ -588,6 +722,55 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
         if i == 0:
             continue
 
+        # --- ордерблок (SMC): первый возврат в зону за SETUP_BARS баров после слома ---
+        side = 0
+        if ob_long:
+            bot, top, exp = ob_long
+            if i > exp or c[i] < bot:
+                ob_long = None
+            elif lo[i] <= top:
+                side += 1
+                ob_long = None
+        if ob_short:
+            bot, top, exp = ob_short
+            if i > exp or c[i] > top:
+                ob_short = None
+            elif h[i] >= bot:
+                side -= 1
+                ob_short = None
+        out["order_block"][i] = (side > 0) - (side < 0)
+        # Слом — первое закрытие за последней признанной вершиной (впадиной); зона —
+        # последняя противоположная свеча до бара слома, вся от минимума до максимума.
+        # Новый слом той же стороны заменяет прежний ордерблок.
+        if highs and (1, highs[-1]) not in broken and c[i] > h[highs[-1]]:
+            broken.add((1, highs[-1]))
+            k = next((x for x in range(i - 1, max(i - 1 - OB_BACK, -1), -1) if c[x] < o[x]), None)
+            if k is not None:
+                ob_long = [lo[k], h[k], i + SETUP_BARS]
+        if lows and (-1, lows[-1]) not in broken and c[i] < lo[lows[-1]]:
+            broken.add((-1, lows[-1]))
+            k = next((x for x in range(i - 1, max(i - 1 - OB_BACK, -1), -1) if c[x] > o[x]), None)
+            if k is not None:
+                ob_short = [lo[k], h[k], i + SETUP_BARS]
+
+        # --- третья волна: первое закрытие за H1 (L1), пока L2 (H2) не пробит закрытием ---
+        side = 0
+        if ew_long:
+            lvl, inv, exp = ew_long
+            if i > exp or c[i] < inv:
+                ew_long = None
+            elif c[i] > lvl:
+                side += c[i - 1] <= lvl  # пробой случился, пока L2 признавалась, — поздно
+                ew_long = None
+        if ew_short:
+            lvl, inv, exp = ew_short
+            if i > exp or c[i] > inv:
+                ew_short = None
+            elif c[i] < lvl:
+                side -= c[i - 1] >= lvl
+                ew_short = None
+        out["elliott_w3"][i] = (side > 0) - (side < 0)
+
         # --- откат к EMA21 в выстроенном тренде (первое касание) ---
         if None not in (e21[i], e55[i], e200[i], e21[i - 1]):
             if e21[i] > e55[i] > e200[i] and lo[i] <= e21[i] < c[i] and lo[i - 1] > e21[i - 1]:
@@ -665,7 +848,18 @@ def rules(bars: list[dict], win: list[bool] | None = None) -> dict[str, list[int
                 out["vwap_week"][i] = 1
             elif c[i] < vwap[i] and c[i - 1] >= vwap[i - 1]:
                 out["vwap_week"][i] = -1
-    return out
+
+        # --- поглощение: сильная агрессивная продажа (покупка), свеча закрылась против неё ---
+        if i > ABS_BARS and d[i] is not None and miss[i] - miss[i - ABS_BARS - 1] == 0:
+            avg_abs = (abs_cum[i - 1] - abs_cum[i - ABS_BARS - 1]) / ABS_BARS
+            rng = h[i] - lo[i]
+            if avg_abs > 0 and rng > 0 and abs(d[i]) >= ABS_MULT * avg_abs:
+                pos = (c[i] - lo[i]) / rng
+                if d[i] < 0 and pos >= 0.5:
+                    out["absorption"][i] = 1
+                elif d[i] > 0 and pos <= 0.5:
+                    out["absorption"][i] = -1
+    return {name: out[name] for name in RULES}
 
 
 # -- замер ------------------------------------------------------------------------------
@@ -905,7 +1099,7 @@ def main_rr(args: argparse.Namespace) -> int:
                   f"{'контр%':>7}{'баров':>6}{'годы+':>7}  вердикт")
             # silver_bullet — против баров своего окна; строка `sb_vs_day` — против суток.
             rows = [(nm, nm, peer_w if nm == "silver_bullet" else peer) for nm in RULES]
-            if not MO_GRID:
+            if "silver_bullet" in RULES:
                 rows.append(("sb_vs_day", "silver_bullet", peer))
             for label_, name, book in rows:
                 ev = events[(kind, r, name)]
@@ -968,9 +1162,25 @@ def main() -> int:
     ap.add_argument("--mo-grid", default="",
                     help="только multi_oversold на сетке порогов RSI:MFI:StochRSI, "
                     "например 25,30,35:15,20,25:15,20,25 (канон 30:20:20)")
+    ap.add_argument("--rules", default="",
+                    help="только эти правила через запятую (по умолчанию первые 16, "
+                    "без правил подпункта 3)")
+    ap.add_argument("--since", default="",
+                    help="начало счёта YYYY-MM-DD (поток тейкеров есть с 08.2022)")
+    ap.add_argument("--until", default="",
+                    help="конец счёта YYYY-MM-DD, не включая (поток тейкеров — по 10.09.2026)")
     args = ap.parse_args()
+    args.since, args.until = (
+        datetime.strptime(x, "%Y-%m-%d").replace(tzinfo=UTC) if x else None
+        for x in (args.since, args.until)
+    )
     if args.mo_grid:
         set_mo_grid(args.mo_grid)
+    elif args.rules:
+        set_rules(args.rules)
+    else:
+        # Без ключа — прежний набор разделов 3–8: прогоны тех разделов воспроизводятся как были.
+        set_rules(",".join(ALL_RULES[: ALL_RULES.index("order_block")]))
     if args.exit == "rr":
         return main_rr(args)
 
@@ -1025,19 +1235,20 @@ def main() -> int:
           + ("; ФИЛЬТР EMA200" if args.trend_filter else ""))
     print(f"Блок независимости {block_days} сут; корзина хода {width:.2f} п.п.; "
           f"круг издержек {COST_PCT:.2f}%\n")
-    print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'корзина':>9}"
-          f"{'избыток':>9}{'2σ':>7}{'лонг':>8}{'шорт':>8}{'годы+':>7}  вердикт")
+    print(f"{'правило':16}{'сигн':>7}{'L/S':>13}{'блоков':>7}{'сырой':>8}{'2σс':>7}{'−тейк':>8}"
+          f"{'корзина':>9}{'избыток':>9}{'2σ':>7}{'лонг':>8}{'шорт':>8}{'годы+':>7}  вердикт")
 
     # silver_bullet — против баров своего окна; строка `sb_vs_day` — против суток.
     rows = [(nm, nm, peer_w if nm == "silver_bullet" else peer) for nm in RULES]
-    rows.append(("sb_vs_day", "silver_bullet", peer))
+    if "silver_bullet" in RULES:
+        rows.append(("sb_vs_day", "silver_bullet", peer))
     for label_, name, book in rows:
         ev = events[name]
         if not ev:
             print(f"{label_:16}{0:>7}   сигналов нет")
             continue
         n_long = sum(1 for e in ev if e[2] > 0)
-        raw = fmean(e[2] * e[4] for e in ev)
+        raw, raw_2se, _ = block_stats([(e[0], e[2] * e[4]) for e in ev])
         pmean = fmean(e[2] * book[e[3]] for e in ev)
         exc_pairs = [(e[0], e[2] * (e[4] - book[e[3]])) for e in ev]
         exc, two_se, nblk = block_stats(exc_pairs)
@@ -1053,11 +1264,13 @@ def main() -> int:
         fs = f"{fmean(shorts):+.2f}" if shorts else "—"
         print(
             f"{label_:16}{len(ev):>7}{f'{n_long}/{len(ev) - n_long}':>13}{nblk:>7}{raw:>+8.3f}"
+            f"{raw_2se:>7.3f}{raw - COST_PCT:>+8.3f}"
             f"{pmean:>+9.3f}{exc:>+9.3f}{two_se:>7.3f}{fl:>8}{fs:>8}"
             f"{f'{yrs_pos}/{len(yrs)}':>7}  {verdict}"
         )
     print("\nсырой — средний исход сигнала со знаком; корзина — обычный бар того же хода в ту же")
     print("сторону; избыток = сырой − корзина, шум и вердикт — по независимым блокам.")
+    print(f"2σс — шум сырого исхода по тем же блокам; −тейк — сырой минус круг {COST_PCT:.2f}%.")
     print("\n" + "\n".join(f"  {k:16}{v}" for k, v in LABELS.items()))
     return 0
 
