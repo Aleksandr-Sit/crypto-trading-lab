@@ -57,8 +57,14 @@ sources:
         weight: 10
         wallet_field: address
         chain: ethereum
+  # ВЫКЛЮЧЕН 19.10.2026: за 14.09–19.10 шесть кандидатов и ни одного правила —
+  # платформы и каркасы (QuantDinger, OctoBot, Hummingbot, pineforge, LLM-деск).
+  # Шестой, sonicmountain/Trade-Bot-Hyperliquid, — ВРЕДОНОС: run.bat поднимает свой
+  # python.exe из embed.pkg, runtime/loader.py грузит Windows-образ в память; звёзды и
+  # свежесть накручены «Auto commit» раз в 25 минут, поэтому min_stars не защищает.
+  # Включать только вместе с фильтром возраста репозитория и накрутки коммитов.
   github:
-    enabled: true
+    enabled: false
     limit: 10
     min_stars: 50
     branch: cex-spot
