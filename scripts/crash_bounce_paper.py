@@ -465,6 +465,82 @@ class Journal:
             self.fh.flush()
 
 
+_DAY_FIELDS = ("day_pnl", "day_taken", "day_over")
+_JOURNAL_KINDS = tuple(f'{{"k": "{k}"' for k in ("start", "fill", "exit", "lat"))
+
+
+def _book_state(b: LiveBook) -> dict:
+    """Снимок счёта для записи `start`: итоги и текущие сутки (два перезапуска за сутки)."""
+    st = {"equity": b.equity, "withdrawn": b.withdrawn, "day": b.day,
+          "day_start": b.day_start, "min_bal": b.min_bal}
+    if b.day is not None:
+        st.update({f: {b.day: getattr(b, f).get(b.day, 0)} for f in _DAY_FIELDS})
+    return st
+
+
+def _seeded(size: float, st: dict | None) -> LiveBook:
+    b = LiveBook(size=size)
+    for f, v in (st or {}).items():
+        if f in _DAY_FIELDS:
+            getattr(b, f).update(v)
+        else:
+            setattr(b, f, v)
+    return b
+
+
+def restore_state(journal_dir: Path, books: dict[str, LiveBook]) -> dict:
+    """Счета ×1 и `down_s` после перезапуска — из своего же журнала (добавлено 20.10.2026: до
+    этого перезапуск начинал счета с D0 и обнулял счёт «без связи», а итог ×1 в `day` и в
+    `weekly.py cells` берётся отсюда).
+
+    От последней записи `start`: её снимок `restored` (если есть) + записи `fill`/`exit` после
+    неё, той же арифметикой, что `LiveBook.take/close` (`exit` несёт свой `pnl`). Позиция,
+    открытая на момент остановки (`fill` без `exit`), не восстанавливается: её исход бот не
+    увидел — она считается в `open_lost`, перезапускать надо без открытых позиций. Файл читается
+    построчно, разбираются только нужные строки: журнал растёт, лимит памяти бота — 400 МБ."""
+    down_s, last_recv = 0.0, 0
+    pending: set[tuple] = set()
+    sizes = {name: b.size for name, b in books.items()}
+    for name in books:
+        books[name] = LiveBook(size=sizes[name])
+    for p in sorted(journal_dir.glob("*.jsonl")):
+        with p.open(encoding="utf-8") as fh:
+            for line in fh:
+                if not line.startswith(_JOURNAL_KINDS):  # «k» всегда первый ключ записи
+                    continue
+                try:
+                    r = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                last_recv = max(last_recv, r.get("recv", 0))
+                if r["k"] == "start":
+                    seed = r.get("restored") or {}
+                    down_s = float(seed.get("down_s", 0.0))
+                    pending.clear()
+                    for name in books:
+                        books[name] = _seeded(sizes[name], seed.get("books", {}).get(name))
+                    continue
+                if r["k"] == "lat":
+                    down_s = max(down_s, float(r.get("down_s", 0.0)))
+                    continue
+                b = books.get(r.get("acct"))
+                if b is None:
+                    continue
+                key = (r["acct"], r["sym"], r["t"], r["t_in"])
+                if r["k"] == "fill":
+                    b.roll(r["t_in"])
+                    b.day_taken[b.day] += 1
+                    b.day_over[b.day] += bool(r.get("over"))
+                    pending.add(key)
+                elif r["k"] == "exit" and "pnl" in r:
+                    b.roll(r["t_out"])
+                    b.equity += r["pnl"]
+                    b.day_pnl[b.day] += r["pnl"]
+                    b.min_bal = min(b.min_bal, b.equity)
+                    pending.discard(key)
+    return {"down_s": down_s, "last_recv": last_recv, "open_lost": len(pending)}
+
+
 def _get_json(path: str, params: dict | None = None) -> object:
     url = FAPI + path + ("?" + urllib.parse.urlencode(params) if params else "")
     with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "lab"}),
@@ -667,14 +743,29 @@ class Runner:
         import aiohttp
         self.syms = await asyncio.to_thread(perps)
         off, half = await asyncio.to_thread(sync_clock)
+        # счета ×1 и «без связи» — с того места, где остановился прошлый процесс; время
+        # перезапуска — тоже слепота, оно идёт в `down_s`
+        books = {acc.name: acc.book for acc in self.engine.accts}
+        rs = await asyncio.to_thread(restore_state, self.journal.dir, books)
+        for acc in self.engine.accts:
+            acc.book = books[acc.name]
+        gap_s = max(0.0, (now_ms() - rs["last_recv"]) / 1000) if rs["last_recv"] else 0.0
+        self.down_s = rs["down_s"] + gap_s
+        restored = {"books": {n: _book_state(b) for n, b in books.items()},
+                    "down_s": round(self.down_s, 1)}
         self.journal.write({"k": "start", "syms": len(self.syms), "clock_offset_ms": off,
-                            "clock_half_rtt_ms": half,
+                            "clock_half_rtt_ms": half, "restored": restored,
+                            "restart_gap_s": round(gap_s, 1), "open_lost": rs["open_lost"],
                             "rule": "limit5|side", "orders": ORDERS,
                             "accts": [list(x) for x in X1_ACCTS], "wait_ms": WAIT_MS,
                             "switch_ms": SWITCH_MS, "cancel_ms": CANCEL_MS,
                             "lag_ms": LAG_MS, "lag_hold_s": LAG_HOLD_S})
         self.log(f"старт: монет {len(self.syms)}, поправка часов к бирже {off} мс "
                  f"(точность ±{half} мс)")
+        self.log("счета восстановлены из журнала: " + ", ".join(
+            f"{n} {(b.withdrawn + b.equity - 1) * 100:+.2f}% D0" for n, b in books.items())
+            + f"; без связи {self.down_s:.0f} с (перезапуск {gap_s:.0f} с); "
+            f"потеряно открытых позиций {rs['open_lost']}")
         await self.refresh_rank()
         parts = [self.syms[i::CONNS] for i in range(CONNS)]
         async with aiohttp.ClientSession() as session:

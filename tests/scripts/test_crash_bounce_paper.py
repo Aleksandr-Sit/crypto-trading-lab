@@ -471,3 +471,121 @@ def test_conn_spike_does_not_reconnect(monkeypatch, tmp_path):
     closes = [r for r in recs if r["k"] == "conn" and r["event"] == "close"]
     assert [c["err"] for c in closes] == ["ConnectionError: ws CLOSED"]  # закрыл только конец
     assert runner.queue.qsize() == 21
+
+
+# --- восстановление счетов после перезапуска (20.10.2026) ---------------------------------------
+
+def _journal_online(n: int = 1500, days: int = 20, seed: int = 5):
+    """LiveBook на ходу + журнал, каким его пишет Engine: `fill` при входе, `exit` (с `pnl`)
+    при выходе; строки в порядке событий."""
+    rnd = random.Random(seed)
+    rows = []
+    for _ in range(n):
+        t_in = T0 + rnd.randint(0, days * 86_400_000)
+        rows.append({"sym": f"S{rnd.randint(0, 30)}", "t": t_in // 60_000 * 60_000,
+                     "t_in": t_in, "t_out": t_in + rnd.randint(1_000, 420_000),
+                     "entry": 1.0, "low": 0.9, "net": rnd.gauss(0.003, 0.02)})
+    b, open_, out = paper.LiveBook(size=0.025), [], []
+
+    def close(o):
+        open_.remove(o)
+        res = {"acct": "x25", **o}
+        b.close(res)
+        out.append({"k": "exit", **res, "recv": o["t_out"]})
+    for tr in sorted(rows, key=lambda r: (r["t_in"], r["sym"])):
+        for o in sorted([o for o in open_ if o["t_out"] <= tr["t_in"]], key=lambda o: o["t_out"]):
+            close(o)
+        if tr["sym"] in b.open:
+            continue
+        ok, over = b.can_fill(tr["t_in"])
+        if not ok:
+            continue
+        pos = paper.Pos("x25", tr["sym"], tr["t"], 1.0, tr["t_in"], 0, 0.9)
+        b.take(pos, over)
+        out.append({"k": "fill", "acct": "x25", "sym": tr["sym"], "t": tr["t"],
+                    "t_in": tr["t_in"], "over": over, "amt": pos.amt, "recv": tr["t_in"]})
+        open_.append({**tr, "amt": pos.amt, "over": over})
+    return b, out, open_, close
+
+
+def _write(path, rows):
+    import json
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
+                    encoding="utf-8")
+
+
+def _same(got: paper.LiveBook, ref: paper.LiveBook):
+    assert got.equity == pytest.approx(ref.equity, abs=1e-12)
+    assert got.withdrawn == pytest.approx(ref.withdrawn, abs=1e-12)
+    assert got.min_bal == pytest.approx(ref.min_bal, abs=1e-12)
+    assert (got.day, got.day_start) == (ref.day, pytest.approx(ref.day_start, abs=1e-12))
+    assert got.day_pnl.get(ref.day, 0) == pytest.approx(ref.day_pnl.get(ref.day, 0), abs=1e-12)
+    assert got.day_taken.get(ref.day, 0) == ref.day_taken.get(ref.day, 0)
+
+
+def test_restore_matches_live_book(tmp_path):
+    ref, rows, open_, close = _journal_online()
+    for o in sorted(open_, key=lambda o: o["t_out"]):
+        close(o)
+    assert ref.withdrawn > 0, "вывод сверх D0 ни разу не сработал — тест ничего не проверяет"
+    _write(tmp_path / "2026-10-01.jsonl",
+           [{"k": "start", "recv": T0 - 1}] + rows
+           + [{"k": "lat", "t": T0, "n": 1, "p50": 1, "p99": 1, "max": 1, "down_s": 42.5,
+               "recv": T0 + 30 * 86_400_000}])
+    books = {"x25": paper.LiveBook(size=0.025), "x1": paper.LiveBook()}
+    rs = paper.restore_state(tmp_path, books)
+    _same(books["x25"], ref)
+    assert books["x1"].equity == 1.0 and books["x1"].withdrawn == 0.0   # чужой счёт не тронут
+    assert rs == {"down_s": 42.5, "last_recv": T0 + 30 * 86_400_000, "open_lost": 0}
+
+
+def test_restore_chains_through_previous_restart(tmp_path):
+    """Второй перезапуск: снимок `restored` прошлой записи `start` + строки после неё."""
+    import json
+    ref, rows, open_, close = _journal_online(seed=8)
+    for o in sorted(open_, key=lambda o: o["t_out"]):
+        close(o)
+    # «остановка» посреди суток в момент без открытых позиций
+    cut = None
+    pend = set()
+    for i, r in enumerate(rows):
+        key = (r["sym"], r["t"], r["t_in"])
+        (pend.add if r["k"] == "fill" else pend.discard)(key)
+        if i > len(rows) // 2 and not pend and (r["recv"] - T0) % 86_400_000 > 3_600_000:
+            cut = i + 1
+            break
+    assert cut
+    _write(tmp_path / "a.jsonl", [{"k": "start", "recv": T0 - 1}] + rows[:cut])
+    first = {"x25": paper.LiveBook(size=0.025)}
+    paper.restore_state(tmp_path, first)
+    snap = {"books": {"x25": json.loads(json.dumps(paper._book_state(first["x25"])))},
+            "down_s": 7.0}
+    # прошлый журнал удалён: всё, что до снимка, обязано прийти из снимка, а не из строк
+    (tmp_path / "a.jsonl").unlink()
+    _write(tmp_path / "b.jsonl", [{"k": "start", "restored": snap, "recv": rows[cut]["recv"]}]
+           + rows[cut:])
+    books = {"x25": paper.LiveBook(size=0.025)}
+    rs = paper.restore_state(tmp_path, books)
+    _same(books["x25"], ref)
+    assert rs["down_s"] == 7.0
+
+
+def test_restore_counts_position_lost_at_stop(tmp_path):
+    ref, rows, open_, close = _journal_online(n=200, days=2, seed=2)
+    assert open_, "на остановке нет открытых позиций — тест ничего не проверяет"
+    _write(tmp_path / "x.jsonl", [{"k": "start", "recv": T0 - 1}] + rows)
+    books = {"x25": paper.LiveBook(size=0.025)}
+    rs = paper.restore_state(tmp_path, books)
+    assert rs["open_lost"] == len(open_)
+    # закрытые сделки — как у живого счёта до остановки
+    assert books["x25"].equity == pytest.approx(ref.equity, abs=1e-12)
+
+
+def test_book_state_round_trips_through_json():
+    import json
+    b = paper.LiveBook(size=0.05)
+    b.take(paper.Pos("x5", "A", T0, 1.0, T0 + 5, 0, 0.9), False)
+    b.close({"sym": "A", "t_out": T0 + 9, "amt": b.open["A"].amt, "net": 0.01})
+    st = json.loads(json.dumps(paper._book_state(b)))
+    got = paper._seeded(0.05, st)
+    _same(got, b)
