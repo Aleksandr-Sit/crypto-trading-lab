@@ -362,3 +362,112 @@ def test_forward_table_three_cells(tmp_path):
     assert "2.5% × 3" in text and "порог 15%" in text
     old = {k: v for k, v in s.items() if k != "cells"}            # JSON до 09.10 — без `cells`
     assert "1% × 3" in fwd.report(old, period[1], "")
+
+
+# --- опоздание ленты при живой связи (20.10.2026) -----------------------------------------------
+
+def test_lagwatch_triggers_only_after_hold():
+    w = paper.LagWatch(limit_ms=5_000, hold_s=15)
+    assert not w.update(10_000, 100.0)          # начало опоздания
+    assert not w.update(10_000, 114.9)
+    assert w.update(12_000, 115.0)              # 15 с подряд выше порога
+    assert w.worst == 12_000
+
+
+def test_lagwatch_fresh_trade_resets():
+    w = paper.LagWatch(limit_ms=5_000, hold_s=15)
+    w.update(10_000, 100.0)
+    assert not w.update(130, 110.0)             # одна свежая сделка — всплеск кончился
+    assert not w.update(10_000, 120.0)          # счёт заново с 120
+    assert not w.update(10_000, 134.0)
+    assert w.update(10_000, 135.0)
+
+
+def test_lagwatch_threshold_is_strict():
+    w = paper.LagWatch(limit_ms=5_000, hold_s=15)
+    assert not w.update(5_000, 0.0)             # ровно порог — не опоздание
+    assert not w.update(5_000, 100.0)
+    assert w.since is None
+
+
+class _FakeWS:
+    def __init__(self, msgs):
+        self.msgs = iter(msgs)
+
+    async def send_json(self, x):
+        pass
+
+    async def receive(self, timeout=None):
+        return next(self.msgs)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *a):
+        return False
+
+
+class _FakeSession:
+    """Сокеты по очереди; кончились — CancelledError (не ловится `except Exception`: стоп цикла)."""
+
+    def __init__(self, sockets):
+        self.sockets, self.calls = list(sockets), 0
+
+    def ws_connect(self, url, **kw):
+        self.calls += 1
+        if not self.sockets:
+            raise __import__("asyncio").CancelledError
+        return self.sockets.pop(0)
+
+
+def _run_conn(monkeypatch, tmp_path, lags_ms):
+    """Одно соединение получает сделки с задержками `lags_ms`, по сделке в секунду."""
+    import asyncio
+    import json
+    from types import SimpleNamespace
+
+    import aiohttp
+    clock = [1_800_000_000.0]
+    monkeypatch.setattr(paper.time, "time", lambda: clock[0])
+    monkeypatch.setattr(paper, "_CLOCK_OFF", [0])
+
+    async def no_sleep(s):
+        return None
+    monkeypatch.setattr(paper.asyncio, "sleep", no_sleep)
+
+    class _Clocked(_FakeWS):
+        async def receive(self, timeout=None):
+            clock[0] += 1.0
+            return next(self.msgs)
+
+    msgs = []
+    for i, lag in enumerate(lags_ms):
+        t = int((clock[0] + i + 1) * 1000)       # время, когда сообщение будет прочитано
+        msgs.append(SimpleNamespace(type=aiohttp.WSMsgType.TEXT, data=json.dumps(
+            {"e": "aggTrade", "s": "X", "a": i + 1, "p": "1.0", "T": t - lag, "m": False,
+             "E": t - lag})))
+    msgs.append(SimpleNamespace(type=aiohttp.WSMsgType.CLOSED, data=None))
+    runner = paper.Runner(tmp_path, tmp_path / "counts.json")
+    recs: list[dict] = []
+    runner.journal = SimpleNamespace(write=recs.append)
+    session = _FakeSession([_Clocked(msgs)])
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(runner.conn(0, ["X"], session))
+    return runner, recs, session
+
+
+def test_conn_reconnects_on_held_lag(monkeypatch, tmp_path):
+    runner, recs, session = _run_conn(monkeypatch, tmp_path, [10_000] * 30)
+    closes = [r for r in recs if r["k"] == "conn" and r["event"] == "close"]
+    assert len(closes) == 1 and closes[0]["err"].startswith("LagError")
+    assert session.calls == 2                   # переподключился
+    assert runner.queue.qsize() == 16           # сделки до срабатывания не потеряны
+    assert 0 in runner.down                     # слепота идёт в `down_s`, как при обрыве
+
+
+def test_conn_spike_does_not_reconnect(monkeypatch, tmp_path):
+    lags = [10_000] * 10 + [130] + [10_000] * 10
+    runner, recs, session = _run_conn(monkeypatch, tmp_path, lags)
+    closes = [r for r in recs if r["k"] == "conn" and r["event"] == "close"]
+    assert [c["err"] for c in closes] == ["ConnectionError: ws CLOSED"]  # закрыл только конец
+    assert runner.queue.qsize() == 21

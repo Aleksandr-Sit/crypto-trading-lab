@@ -75,6 +75,42 @@ CONNS = 3                 # соединений; монеты делятся м
 ROTATE_S = 23 * 3600      # Binance рвёт соединение раз в 24 ч — переподключаемся сами, внахлёст
 SILENCE_S = 60            # нет ни одной сделки дольше — тревога
 SUB_CHUNK = 200
+# Опоздание ленты при живой связи (добавлено 20.10.2026, починка исполнения, правило не тронуто).
+# 18.10.2026 14:15–15:20 UTC соединения бота получали сделки с опозданием до 272 с, а наблюдатель
+# на Senko в те же минуты — за 0.12 с: виноват путь Hostkey → Binance, а не биржа. Бот читал
+# опоздавшую ленту до упора, потому что связь не рвалась. Теперь: каждая сделка соединения
+# опаздывает больше LAG_MS дольше LAG_HOLD_S (ни одной свежей в промежутке) — соединение
+# закрывается и открывается заново, как при обрыве (новое часто идёт другим путём).
+# По журналу 09–20.10: минуты с медианой задержки > 5 с — только в сбоях 14–16.10 и 18.10;
+# в обычные дни бывают короткие всплески (max > 5 с при медиане ≈ 130 мс, 1–2 минуты в сутки,
+# 20.10 — 11) — их сбрасывает первая же свежая сделка. Поштучных задержек журнал не хранит,
+# поэтому лишнее срабатывание не исключено; цена его — ≈ 4 с переподключения.
+LAG_MS = 5_000
+LAG_HOLD_S = 15.0
+
+
+class LagError(ConnectionError):
+    """Соединение живо, но лента опаздывает — переподключиться."""
+
+
+class LagWatch:
+    """Опоздание ленты одного соединения: «пора переподключаться», когда задержка
+    биржа→бот (`recv − E`) держится выше `limit_ms` дольше `hold_s`. Одна свежая сделка
+    сбрасывает счёт: разовый всплеск (пачка сделок на обвале) переподключения не вызывает."""
+
+    def __init__(self, limit_ms: int = LAG_MS, hold_s: float = LAG_HOLD_S):
+        self.limit_ms, self.hold_s = limit_ms, hold_s
+        self.since: float | None = None
+        self.worst = 0
+
+    def update(self, lag_ms: int, now_s: float) -> bool:
+        if lag_ms <= self.limit_ms:
+            self.since, self.worst = None, 0
+            return False
+        if self.since is None:
+            self.since = now_s
+        self.worst = max(self.worst, lag_ms)
+        return now_s - self.since >= self.hold_s
 
 
 def _load(name: str):
@@ -518,6 +554,7 @@ class Runner:
                         self.down_s += time.time() - self.down.pop(idx)
                     self.journal.write({"k": "conn", "event": "open", "conn": idx,
                                         "syms": len(syms)})
+                    watch = LagWatch()
                     while True:
                         if time.time() - started > ROTATE_S:
                             asyncio.get_running_loop().create_task(self.conn(idx, syms, session))
@@ -533,7 +570,13 @@ class Runner:
                             continue
                         await self.queue.put(Trade(d["s"], d["a"], float(d["p"]), d["T"],
                                                    d["m"], recv))
-                        self.lat.append(recv - d["E"])
+                        lag = recv - d["E"]
+                        self.lat.append(lag)
+                        if watch.update(lag, time.time()):
+                            # закрытие тем же путём, что обрыв: журнал `close`, `down_s`,
+                            # переподключение; дыра в номерах ловится и докачивается как всегда
+                            raise LagError(f"лента опаздывает > {LAG_MS // 1000} с дольше "
+                                           f"{LAG_HOLD_S:g} с (худшая {watch.worst / 1000:.1f} с)")
             except Exception as e:  # noqa: BLE001 — связь: переподключиться
                 self.down.setdefault(idx, time.time())
                 self.journal.write({"k": "conn", "event": "close", "conn": idx,
@@ -628,7 +671,8 @@ class Runner:
                             "clock_half_rtt_ms": half,
                             "rule": "limit5|side", "orders": ORDERS,
                             "accts": [list(x) for x in X1_ACCTS], "wait_ms": WAIT_MS,
-                            "switch_ms": SWITCH_MS, "cancel_ms": CANCEL_MS})
+                            "switch_ms": SWITCH_MS, "cancel_ms": CANCEL_MS,
+                            "lag_ms": LAG_MS, "lag_hold_s": LAG_HOLD_S})
         self.log(f"старт: монет {len(self.syms)}, поправка часов к бирже {off} мс "
                  f"(точность ±{half} мс)")
         await self.refresh_rank()
