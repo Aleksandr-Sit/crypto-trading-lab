@@ -8,6 +8,9 @@
 
     python scripts/crash_bounce_paper.py run --out D [--counts F]   # сервис
     python scripts/crash_bounce_paper.py report --out D --archive A --from Д1 --to Д2
+    python scripts/crash_bounce_paper.py open --out D     # открытых позиций (перед выкладкой)
+
+Выкладка новой версии бота — `scripts/crash-paper-deploy.sh` (ждёт ноль открытых позиций).
 
 Ключей нет: только публичный поток `aggTrade` (`wss://fstream.binance.com/market/ws` —
 старый адрес `/ws` принимает подписку и молча НЕ присылает сделок, проверено 09.10.2026).
@@ -495,8 +498,9 @@ def restore_state(journal_dir: Path, books: dict[str, LiveBook]) -> dict:
 
     От последней записи `start`: её снимок `restored` (если есть) + записи `fill`/`exit` после
     неё, той же арифметикой, что `LiveBook.take/close` (`exit` несёт свой `pnl`). Позиция,
-    открытая на момент остановки (`fill` без `exit`), не восстанавливается: её исход бот не
-    увидел — она считается в `open_lost`, перезапускать надо без открытых позиций. Файл читается
+    открытая на момент остановки (`fill` без `exit`, любой счёт, включая зеркало), не
+    восстанавливается: её исход бот не увидел — она считается в `open_lost`, перезапускать надо
+    без открытых позиций (`books={}` — только этот подсчёт: команда `open`). Файл читается
     построчно, разбираются только нужные строки: журнал растёт, лимит памяти бота — 400 МБ."""
     down_s, last_recv = 0.0, 0
     pending: set[tuple] = set()
@@ -523,21 +527,21 @@ def restore_state(journal_dir: Path, books: dict[str, LiveBook]) -> dict:
                 if r["k"] == "lat":
                     down_s = max(down_s, float(r.get("down_s", 0.0)))
                     continue
-                b = books.get(r.get("acct"))
+                # открытые позиции — по ВСЕМ счетам, включая зеркало (`m`, сверка К3)
+                key = (r["acct"], r["sym"], r["t"], r["t_in"])
+                (pending.add if r["k"] == "fill" else pending.discard)(key)
+                b = books.get(r["acct"])
                 if b is None:
                     continue
-                key = (r["acct"], r["sym"], r["t"], r["t_in"])
                 if r["k"] == "fill":
                     b.roll(r["t_in"])
                     b.day_taken[b.day] += 1
                     b.day_over[b.day] += bool(r.get("over"))
-                    pending.add(key)
-                elif r["k"] == "exit" and "pnl" in r:
+                elif "pnl" in r:
                     b.roll(r["t_out"])
                     b.equity += r["pnl"]
                     b.day_pnl[b.day] += r["pnl"]
                     b.min_bal = min(b.min_bal, b.equity)
-                    pending.discard(key)
     return {"down_s": down_s, "last_recv": last_recv, "open_lost": len(pending)}
 
 
@@ -899,9 +903,14 @@ def main() -> int:
     p.add_argument("--archive", type=Path, required=True, help="каталог слоя А (sim.jsonl)")
     p.add_argument("--from", dest="d1", required=True)
     p.add_argument("--to", dest="d2", required=True)
+    o = sub.add_parser("open", help="число открытых позиций по журналу (перед перезапуском)")
+    o.add_argument("--out", type=Path, required=True)
     a = ap.parse_args()
     if a.cmd == "report":
         return report(a.out, a.archive, a.d1, a.d2)
+    if a.cmd == "open":
+        print(restore_state(a.out / "journal", {})["open_lost"])
+        return 0
     counts = a.counts or a.out.parent / "crash-bounce-forward" / "crash_counts.json"
     asyncio.run(Runner(a.out, counts).main())
     return 0

@@ -15,6 +15,7 @@
 | Тесты | `uv run pytest -q` | **836 passed, 29 skipped** с подключённой `lab_test` (без неё 138 skipped — см. ниже) |
 | Один файл | `uv run pytest -q tests/<путь>` | |
 | Тесты локальной правки на сервере | `bash scripts/lab-test.sh [аргументы pytest]` | с рабочей машины, где нет `uv`: копия дерева → одноразовый контейнер → pytest + ruff → уборка; ~40 с на файл |
+| Выкладка бумажного бота CryptosMX (`crash-paper`) | `ssh vps-trader 'bash /opt/crypto-trading-lab/scripts/run-detached.sh crash-deploy "bash /opt/crypto-trading-lab/scripts/crash-paper-deploy.sh"'`, затем `run-detached.sh --wait crash-deploy` | вместо голого `update.sh`, пока идёт окно: образ собирается заранее, перезапуск — только в момент без открытых позиций (иначе исход теряется), не дождался за 15 мин — выход без перезапуска; `--dry-run` — только проверки. Позиции: `crash_bounce_paper.py open --out …` |
 | Линт | `uv run ruff check .` | All checks passed |
 | Миграции | `uv run alembic upgrade head` | голова `0011`, одна |
 | Какая голова | `uv run alembic heads` / `alembic current` | `0011 (head)` |

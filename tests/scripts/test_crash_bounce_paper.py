@@ -589,3 +589,28 @@ def test_book_state_round_trips_through_json():
     st = json.loads(json.dumps(paper._book_state(b)))
     got = paper._seeded(0.05, st)
     _same(got, b)
+
+
+def test_open_counts_mirror_and_x1_since_last_start(tmp_path, capsys, monkeypatch):
+    """`open` перед выкладкой: открытые позиции ВСЕХ счетов (зеркало — сверка К3) после
+    последней записи `start`; потерянные прошлым перезапуском не считаются."""
+    def fill(acct, sym, t):
+        return {"k": "fill", "acct": acct, "sym": sym, "t": t, "t_in": t + 5, "recv": t + 5}
+
+    def exit_(acct, sym, t, **kw):
+        return {"k": "exit", "acct": acct, "sym": sym, "t": t, "t_in": t + 5,
+                "t_out": t + 900, "net": 0.01, "recv": t + 900, **kw}
+    (tmp_path / "journal").mkdir()
+    _write(tmp_path / "journal" / "2026-10-20.jsonl", [
+        {"k": "start", "recv": T0},
+        fill("m", "LOST", T0 + 1),                       # потеряна прошлым перезапуском
+        {"k": "start", "recv": T0 + 10},
+        fill("m", "A", T0 + 60_000), exit_("m", "A", T0 + 60_000),
+        fill("x1", "B", T0 + 120_000), exit_("x1", "B", T0 + 120_000, pnl=0.0001, amt=0.01),
+        fill("m", "C", T0 + 180_000),                    # открыта у зеркала
+        fill("x5", "C", T0 + 180_000),                   # и у счёта ×1
+    ])
+    assert paper.restore_state(tmp_path / "journal", {})["open_lost"] == 2
+    monkeypatch.setattr(sys, "argv", ["crash_bounce_paper.py", "open", "--out", str(tmp_path)])
+    assert paper.main() == 0
+    assert capsys.readouterr().out.strip() == "2"
