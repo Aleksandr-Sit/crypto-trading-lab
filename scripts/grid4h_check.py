@@ -236,23 +236,23 @@ def stage_select(out: Path, cache: Path, a: str, b: str, workers: int, seed: int
     tf = _tradfi(tradfi)
     mp = cache / "months_1h.json"
     if mp.exists():
-        avail = json.loads(mp.read_text())
+        avail = json.loads(mp.read_text(encoding="utf-8"))
     else:
         syms = universe()
         print(f"вселенная: {len(syms)} USDT-перпов; листинг месяцев…", flush=True)
         with ThreadPoolExecutor(workers) as pool:
             avail = dict(zip(syms, pool.map(_sym_months, syms), strict=True))
-        mp.write_text(json.dumps(avail))
+        mp.write_text(json.dumps(avail), encoding="utf-8")
     syms = sorted(s for s in avail if s not in tf)
     print(f"монет {len(syms)} (без TradFi: исключено {len(avail) - len(syms)})", flush=True)
     done_p = cache / "h4" / "done.txt"
-    done = set(done_p.read_text().split()) if done_p.exists() else set()
+    done = set(done_p.read_text(encoding="utf-8").split()) if done_p.exists() else set()
     jobs = [(s, m) for m in months for s in syms if m in avail[s] and f"{s}:{m}" not in done]
     print(f"месяцев {len(months)}, часовых архивов к загрузке {len(jobs)} "
           f"(готово ранее {len(done)})", flush=True)
     fail, t0 = 0, time.time()
     files: dict[str, io.TextIOWrapper] = {}
-    with ThreadPoolExecutor(workers) as pool, done_p.open("a") as fd:
+    with ThreadPoolExecutor(workers) as pool, done_p.open("a", encoding="utf-8") as fd:
         futs = [pool.submit(_h4_job, s, m) for s, m in jobs]
         for k, f in enumerate(as_completed(futs), 1):
             try:
@@ -263,7 +263,7 @@ def stage_select(out: Path, cache: Path, a: str, b: str, workers: int, seed: int
                 continue
             if bl:
                 if month not in files:
-                    files[month] = (cache / "h4" / f"{month}.jsonl").open("a")
+                    files[month] = (cache / "h4" / f"{month}.jsonl").open("a", encoding="utf-8")
                 files[month].write(json.dumps({"s": sym, "b": bl}) + "\n")
                 files[month].flush()
             fd.write(f"{sym}:{month}\n")
@@ -276,12 +276,12 @@ def stage_select(out: Path, cache: Path, a: str, b: str, workers: int, seed: int
         print(f"не скачалось {fail} — повторить тем же запуском; списки не пишутся", flush=True)
         return 1
     n = 0
-    with (out / "lists.jsonl").open("w") as fo:
+    with (out / "lists.jsonl").open("w", encoding="utf-8") as fo:
         for m in _months(a, b):
             bs: dict[str, dict[int, tuple]] = defaultdict(dict)
             for mm in (_prev_month(m), m):
                 p = cache / "h4" / f"{mm}.jsonl"
-                for line in (p.read_text().splitlines() if p.exists() else ()):
+                for line in (p.read_text(encoding="utf-8").splitlines() if p.exists() else ()):
                     r = json.loads(line)
                     if r["s"] in tf:
                         continue
@@ -487,17 +487,18 @@ def launches_from(lists: list[dict], scope: str) -> dict[tuple[str, str], dict[i
 
 
 def stage_simulate(out: Path, workers: int, scope: str) -> int:
-    lists = [json.loads(x) for x in (out / "lists.jsonl").read_text().splitlines()]
+    lists = [json.loads(x) for x in (out / "lists.jsonl").read_text(encoding="utf-8").splitlines()]
     jobs = launches_from(lists, scope)
     done_p, sim_p = out / "sim_done.txt", out / "sim.jsonl"
-    done = set(done_p.read_text().split()) if done_p.exists() else set()
+    done = set(done_p.read_text(encoding="utf-8").split()) if done_p.exists() else set()
     todo = sorted((k for k in jobs if f"{k[0]}:{k[1]}" not in done), key=lambda k: (k[1], k[0]))
     n_l = sum(len(v) for v in jobs.values())
     print(f"границ {len(lists)}, монето-запусков {n_l}, монето-месяцев {len(jobs)}, "
           f"осталось {len(todo)} (scope={scope})", flush=True)
     fail, t0 = 0, time.time()
     # процессы, а не потоки: разбор минуток держит GIL
-    with ProcessPoolExecutor(workers) as pool, sim_p.open("a") as fs, done_p.open("a") as fd:
+    with (ProcessPoolExecutor(workers) as pool, sim_p.open("a", encoding="utf-8") as fs,
+          done_p.open("a", encoding="utf-8") as fd):
         futs = {pool.submit(_sim_job, s, m, jobs[(s, m)]): (s, m) for s, m in todo}
         for k, f in enumerate(as_completed(futs), 1):
             s, m = futs[f]
@@ -584,9 +585,9 @@ def _row(lists, sims, sel, cell) -> tuple[str, float, float]:
 
 
 def stage_report(out: Path, oos: bool) -> int:
-    lists = [json.loads(x) for x in (out / "lists.jsonl").read_text().splitlines()]
+    lists = [json.loads(x) for x in (out / "lists.jsonl").read_text(encoding="utf-8").splitlines()]
     sims: dict[tuple[str, int], dict] = {}
-    for line in (out / "sim.jsonl").read_text().splitlines():
+    for line in (out / "sim.jsonl").read_text(encoding="utf-8").splitlines():
         r = json.loads(line)
         sims[(r["s"], r["t"])] = r
     recs = list(sims.values())
