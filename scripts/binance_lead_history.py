@@ -7,11 +7,18 @@ Binance, в отличие от Bybit, отдаёт закрытые позиц�
 длится сделка, какой у неё размер, какая худшая, на чём сделана прибыль.
 
     python scripts/binance_lead_history.py fetch   --portfolio 5064581361618552064 --out F.json
+    python scripts/binance_lead_history.py orders  --portfolio 5064581361618552064 --out O.json
     python scripts/binance_lead_history.py summary F.json
 
 Поля позиции: `opened`/`closed` — мс UTC; `avgCost`/`avgClosePrice` — цены;
 `maxOpenInterest` — наибольший размер в монетах; `closingPnl` — прибыль в USDT
 (после комиссий по расчёту Binance); `roi` — доля от маржи.
+
+`orders` — лента ИСПОЛНЕННЫХ ордеров (`order-history`, найдена 25.10.2026): тип `LIMIT`/
+`MARKET`, сторона, объём, средняя цена, `orderTime` (выставлен) и `orderUpdateTime`
+(исполнен). По ней видно то, чего нет в позициях: способ входа, докупки, когда ставится
+цель. Отменённые ордера лента не отдаёт. Листается курсором: всегда первая страница плюс
+`indexValue` прошлого ответа (номер страницы вместе с курсором пропускает ордера).
 """
 
 from __future__ import annotations
@@ -62,6 +69,47 @@ def fetch(portfolio: str, out: Path, pause: float) -> int:
     return 0
 
 
+def orders(portfolio: str, out: Path, pause: float) -> int:
+    import httpx
+
+    rows: list[dict] = []
+    index = None
+    with httpx.Client(headers=HEADERS, timeout=30) as c:
+        while True:
+            body = {"pageNumber": 1, "pageSize": PAGE, "portfolioId": portfolio}
+            if index is not None:
+                body["indexValue"] = index
+            for k in range(5):
+                r = c.post(f"{BASE}/order-history", json=body).json()
+                if r.get("success"):
+                    break
+                time.sleep(2 + 2 * k)  # «system is busy» — повтор
+            else:
+                raise SystemExit(f"order-history: {r}")
+            data = r["data"]
+            rows += data["list"]
+            if not data["list"] or data.get("indexValue") in (None, index):
+                break
+            index = data["indexValue"]
+            time.sleep(pause)
+
+    def key(o: dict) -> tuple:
+        return (o["symbol"], o["side"], o["type"], o["orderTime"], o["orderUpdateTime"],
+                o["executedQty"], o["avgPrice"])
+
+    uniq = sorted({key(o): o for o in rows}.values(),
+                  key=lambda o: (o["orderUpdateTime"], o["orderTime"]))
+    snap = {
+        "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "portfolio_id": portfolio,
+        "total": data["total"],
+        "orders": uniq,
+    }
+    out.write_text(json.dumps(snap, ensure_ascii=False, indent=0), encoding="utf-8")
+    print(f"saved {len(uniq)} of {data['total']} orders -> {out}")
+    return 0
+
+
 def _dur(sec: float) -> str:
     for lim, label in ((1, "<1 s"), (60, "1 s-1 min"), (3600, "1 min-1 h"),
                        (86400, "1 h-1 d"), (7 * 86400, "1-7 d")):
@@ -75,7 +123,9 @@ DUR_ORDER = ["<1 s", "1 s-1 min", "1 min-1 h", "1 h-1 d", "1-7 d", ">7 d"]
 
 def summary(path: Path) -> int:
     snap = json.loads(path.read_text(encoding="utf-8"))
-    d, pos = snap["detail"], snap["positions"]
+    d = snap["detail"]
+    # частично закрытая позиция ещё открыта: времени закрытия у неё нет
+    pos = [p for p in snap["positions"] if p["closed"] is not None]
     for p in pos:
         p["pnl"] = float(p["closingPnl"])
         p["sec"] = (p["closed"] - p["opened"]) / 1000
@@ -160,11 +210,17 @@ def main() -> int:
     f.add_argument("--portfolio", required=True)
     f.add_argument("--out", type=Path, required=True)
     f.add_argument("--pause", type=float, default=0.5)
+    o = sub.add_parser("orders")
+    o.add_argument("--portfolio", required=True)
+    o.add_argument("--out", type=Path, required=True)
+    o.add_argument("--pause", type=float, default=0.6)
     s = sub.add_parser("summary")
     s.add_argument("path", type=Path)
     a = ap.parse_args()
     if a.cmd == "fetch":
         return fetch(a.portfolio, a.out, a.pause)
+    if a.cmd == "orders":
+        return orders(a.portfolio, a.out, a.pause)
     return summary(a.path)
 
 
