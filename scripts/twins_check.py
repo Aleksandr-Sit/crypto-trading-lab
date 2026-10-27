@@ -657,8 +657,9 @@ def stage_report(out: Path, oos: bool) -> int:
         res[n] = (mw, tw, k)
         win = sum(r["net"] > 0 for r in rows) / k if k else math.nan
         tp = sum(r["how"] == "tp" for r in rows) / k if k else math.nan
+        share = (f"{win:>5.0%} {tp:>5.0%}" if k else f"{'—':>5} {'—':>5}")
         print(f"{n:<9} {LABEL[n]:<44} {k:>6} {g:>5} {_pct(m):>7} {_t(t):>5} | {_pct(mw):>7} "
-              f"{_pct(sew):>6} {_t(tw):>5} {win:>5.0%} {tp:>5.0%}")
+              f"{_pct(sew):>6} {_t(tw):>5} {share}")
 
     main = by[MAIN]
     months = defaultdict(list)
@@ -737,7 +738,7 @@ def stage_report(out: Path, oos: bool) -> int:
         per_day = defaultdict(list)
         for r in tail:
             per_day[r["day"]].append(r)
-        worst_day = 0.0
+        worst_day = math.inf
         for d in sorted(per_day):
             v = per_day[d]
             taken, by_slot, by_coin = portfolio(v)
@@ -764,7 +765,7 @@ def stage_report(out: Path, oos: bool) -> int:
     ok_months = n_m > 0 and pos >= 2 * n_m / 3
     nb = [n for n in names if n != MAIN]
     ok_plateau = all(res[n][0] > 0 for n in nb) if mw > 0 else False
-    same_sign = all(math.copysign(1, res[n][0]) == math.copysign(1, mw) for n in nb)
+    same_sign = all(not math.isnan(res[n][0]) and (res[n][0] > 0) == (mw > 0) for n in nb)
     ok_ctrl = md > 0 and td > 2
     print(f"1. итог > 0 и t ≥ 2 (взвешенно): {_pct(mw)}%, t {_t(tw)} — "
           f"{'да' if ok_mean else 'нет'}")
