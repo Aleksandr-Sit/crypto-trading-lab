@@ -201,20 +201,22 @@ def stage_events(out: Path, a: str, b: str, drop: float, workers: int,
                  tradfi: Path = TRADFI) -> int:
     out.mkdir(parents=True, exist_ok=True)
     meta_p, done_p, ev_p = out / "events_meta.json", out / "events_done.txt", out / "events.jsonl"
-    if meta_p.exists() and json.loads(meta_p.read_text())["drop"] != drop:
+    if meta_p.exists() and json.loads(meta_p.read_text(encoding="utf-8"))["drop"] != drop:
         raise SystemExit(f"{meta_p}: порог другой — новый каталог или тот же --drop")
-    done = set(done_p.read_text().split()) if done_p.exists() else set()
+    done = set(done_p.read_text(encoding="utf-8").split()) if done_p.exists() else set()
     tf = _tradfi(tradfi)
     allsyms = universe("monthly")
     syms = [s for s in allsyms if s not in tf]
     meta_p.write_text(json.dumps({"drop": drop, "from": a, "to": b, "symbols": len(syms),
-                                  "tradfi_excluded": len(allsyms) - len(syms)}))
+                                  "tradfi_excluded": len(allsyms) - len(syms)}), encoding="utf-8")
     months = _months(a, b)
     jobs = {s: ms for s in syms if (ms := [m for m in months if f"{s}:{m}" not in done])}
     print(f"символов {len(syms)} (TradFi исключено {len(allsyms) - len(syms)}), "
           f"монет с работой {len(jobs)}, готово ранее {len(done)}", flush=True)
     n_ev = n_fail = 0
-    with ProcessPoolExecutor(workers) as pool, ev_p.open("a") as fe, done_p.open("a") as fd:
+    # отметки — в UTF-8: у части монет имена иероглифами (cp1251 Windows их не пишет)
+    with (ProcessPoolExecutor(workers) as pool, ev_p.open("a", encoding="utf-8") as fe,
+          done_p.open("a", encoding="utf-8") as fd):
         futs = {pool.submit(_scan_symbol, s, ms, drop): s for s, ms in jobs.items()}
         for k, f in enumerate(as_completed(futs), 1):
             try:
@@ -445,7 +447,8 @@ def _excl(index: dict[str, list[int]], sym: str, day: str) -> list[int]:
 def _run(jobs, worker_args, workers: int, res_p: Path, done_p: Path) -> int:
     """Один проход по дням-символам → сколько не удалось (не помечены готовыми)."""
     failed = 0
-    with ProcessPoolExecutor(workers) as pool, res_p.open("a") as fs, done_p.open("a") as fd:
+    with (ProcessPoolExecutor(workers) as pool, res_p.open("a", encoding="utf-8") as fs,
+          done_p.open("a", encoding="utf-8") as fd):
         futs = {pool.submit(sim_day, s, d, *worker_args(s, d)): (s, d) for s, d in jobs}
         for k, f in enumerate(as_completed(futs), 1):
             s, d = futs[f]
@@ -483,16 +486,16 @@ def _passes(jobs_left, run_once, passes: int) -> None:
 
 def stage_simulate(out: Path, workers: int, per_month: int, seed: int, main_only: bool,
                    passes: int) -> int:
-    meta = json.loads((out / "events_meta.json").read_text())
+    meta = json.loads((out / "events_meta.json").read_text(encoding="utf-8"))
     if not main_only and meta["drop"] > FRAME_DROP:
         raise SystemExit(f"события с порога {meta['drop']}: соседу 1.5% нужен --drop 0.015")
     evs = load_events(out)
     st = strata(evs, main_only)
     plan = make_plan(st, per_month, seed, main_only)
     plan_p = out / "plan.json"
-    if plan_p.exists() and json.loads(plan_p.read_text()) != plan:
+    if plan_p.exists() and json.loads(plan_p.read_text(encoding="utf-8")) != plan:
         raise SystemExit("выборка не совпадает с plan.json: события изменились — новый каталог")
-    plan_p.write_text(json.dumps(plan))
+    plan_p.write_text(json.dumps(plan), encoding="utf-8")
     keep = set(plan_weights(plan))
     by = defaultdict(list)
     for e in evs:
@@ -506,7 +509,7 @@ def stage_simulate(out: Path, workers: int, per_month: int, seed: int, main_only
     done_p, sim_p = out / "sim_done.txt", out / "sim.jsonl"
 
     def left():
-        done = set(done_p.read_text().split()) if done_p.exists() else set()
+        done = set(done_p.read_text(encoding="utf-8").split()) if done_p.exists() else set()
         return [k for k in sorted(keep, key=lambda k: (k[1], k[0])) if f"{k[0]}:{k[1]}" not in done]
 
     _passes(left, lambda jobs: _run(jobs, lambda s, d: (by[(s, d)], _excl(ex, s, d), names,
@@ -540,7 +543,7 @@ def stage_tail(out: Path, days: list[str], workers: int, seed: int, passes: int)
     done_p, res_p = out / "tail_done.txt", out / "tail.jsonl"
 
     def left():
-        done = set(done_p.read_text().split()) if done_p.exists() else set()
+        done = set(done_p.read_text(encoding="utf-8").split()) if done_p.exists() else set()
         return [k for k in sorted(by, key=lambda k: (k[1], k[0])) if f"{k[0]}:{k[1]}" not in done]
 
     _passes(left, lambda jobs: _run(jobs, lambda s, d: (by[(s, d)], [], (MAIN,), seed, False,
@@ -610,10 +613,10 @@ def _load(path: Path) -> list[dict]:
 
 
 def stage_report(out: Path, oos: bool) -> int:
-    plan = json.loads((out / "plan.json").read_text())
+    plan = json.loads((out / "plan.json").read_text(encoding="utf-8"))
     w = plan_weights(plan)
     sims = _load(out / "sim.jsonl")
-    done = set((out / "sim_done.txt").read_text().split())
+    done = set((out / "sim_done.txt").read_text(encoding="utf-8").split())
     miss = [s for s in sims if s.get("missing")]
     sims = [s for s in sims if not s.get("missing")]
     cut = defaultdict(int)
@@ -628,7 +631,7 @@ def stage_report(out: Path, oos: bool) -> int:
     def wf(r):
         return w[(r["sym"], r["day"])]
 
-    meta = json.loads((out / "events_meta.json").read_text())
+    meta = json.loads((out / "events_meta.json").read_text(encoding="utf-8"))
     n_a = sum(p["N"]["A"] for p in plan.values())
     n_b = sum(p["N"]["B"] for p in plan.values())
     s_a = sum(len(p["keys"]["A"]) for p in plan.values())
