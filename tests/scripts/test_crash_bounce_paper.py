@@ -187,6 +187,123 @@ def test_x1_level_switch_delay_uses_old_order():
     x1 = [r for r in got if r["k"] == "fill" and r["acct"] == "x1"]
     assert len(x1) == 1 and x1[0]["entry"] == pytest.approx(95.0)
     assert not [r for r in got if r["k"] == "fill" and r["acct"] == "m"]  # у архива 91.2
+    # счета без стыка минуты (28.10): заявки прошлой минуты уже нет, новой ещё нет
+    assert not [r for r in got if r["k"] == "fill" and r["acct"].endswith("p")]
+
+
+# --- заявка ×1 без стыка минуты: x1p/x25p/x5p (28.10.2026) ---------------------------------------
+
+def _fills(got, acct):
+    return [(r["sym"], r["entry"]) for r in got if r["k"] == "fill" and r["acct"] == acct]
+
+
+def test_x1p_old_order_never_fills_after_minute_start():
+    """Обвал сразу после стыка ниже ОБОИХ уровней: объявленный x1 берёт по старой заявке 95,
+    у x1p заявки нет до WAIT+SWITCH, потом — только новый уровень 91.2."""
+    eng, got = _ready_engine()
+    m1 = T0 + 60_000
+    eng.on_trade(_tr(2, 96.0, m1 + 59_000))        # закрытие m1 = 96 → уровень m2 = 91.2
+    m2 = m1 + 60_000
+    eng.tick(m2 + paper.WAIT_MS)
+    eng.on_trade(_tr(3, 80.0, m2 + 1))             # первая мс минуты, глубоко ниже обоих
+    eng.on_trade(_tr(4, 80.0, m2 + paper.WAIT_MS + paper.SWITCH_MS - 1))
+    assert _fills(got, "x1") == [("X", pytest.approx(95.0))]
+    assert _fills(got, "x1p") == []
+    eng.on_trade(_tr(5, 91.0, m2 + paper.WAIT_MS + paper.SWITCH_MS))   # новая заявка встала
+    for acct in ("x1p", "x25p", "x5p"):
+        assert _fills(got, acct) == [("X", pytest.approx(91.2))]
+
+
+def test_x1p_order_pulled_before_minute_end():
+    """Последние PULL_MS минуты у x1p заявки нет (снята до стыка); объявленный x1 стоит до конца."""
+    eng, got = _ready_engine(["A", "B"])
+    end = T0 + 120_000
+    eng.on_trade(_tr(2, 94.0, end - paper.PULL_MS - 1, sym="A"))   # ещё стоит
+    eng.on_trade(_tr(2, 94.0, end - paper.PULL_MS, sym="B"))       # уже снята
+    assert _fills(got, "x1p") == [("A", pytest.approx(95.0))]
+    assert _fills(got, "x1") == [("A", pytest.approx(95.0)), ("B", pytest.approx(95.0))]
+
+
+def test_x1p_new_level_works_from_switch():
+    eng, got = _ready_engine(["A", "B"])
+    sw = T0 + 60_000 + paper.WAIT_MS + paper.SWITCH_MS
+    eng.on_trade(_tr(2, 94.0, sw - 1, sym="A"))    # до перестановки — заявки нет
+    eng.on_trade(_tr(2, 94.0, sw, sym="B"))        # с перестановки — заявка 95
+    assert _fills(got, "x1p") == [("B", pytest.approx(95.0))]
+
+
+def test_cascade_both_policies_on_one_tape():
+    """Каскад (разбор 19–25.10, AGT 21.10): монета падает вторую минуту подряд. Старая заявка
+    x1 берёт 95 в первые 0.55 с, обвал продолжается — выход по таймеру в минус; x1p ждёт новую
+    заявку 91.2 и выходит по цели на отскоке. Один рынок, одно время."""
+    eng, got = _ready_engine()
+    m1 = T0 + 60_000
+    eng.on_trade(_tr(2, 96.0, m1 + 59_000))
+    m2 = m1 + 60_000
+    eng.tick(m2 + paper.WAIT_MS)
+    eng.on_trade(_tr(3, 93.0, m2 + 100))           # старая заявка 95 у x1/x25/x5
+    eng.on_trade(_tr(4, 90.0, m2 + 2_000))         # новая заявка 91.2 у x1p/x25p/x5p и зеркала
+    eng.on_trade(_tr(5, 93.0, m2 + 5_000))         # отскок: выше цели 92.57, ниже цели x1 96.43
+    eng.on_trade(_tr(6, 88.0, m2 + 100 + paper.HOLD_MS + 1, sell=True))   # таймер x1
+    ex = {r["acct"]: r for r in got if r["k"] == "exit"}
+    for a in ("x1", "x25", "x5"):
+        assert ex[a]["how"] == "time" and ex[a]["entry"] == pytest.approx(95.0)
+        assert ex[a]["net"] == pytest.approx(88 / 95 - 1 - paper.MAKER - paper.TAKER)
+    for a in ("x1p", "x25p", "x5p", "m"):
+        assert ex[a]["how"] == "tp" and ex[a]["entry"] == pytest.approx(91.2)
+    by = {acc.name: acc.book for acc in eng.accts}
+    assert by["x1"].equity < 1.0 < by["x1p"].equity
+    assert by["x5p"].equity - 1 == pytest.approx(5 * (by["x1p"].equity - 1))
+
+
+def _cascade(seed: int, minutes: int = 80) -> list:
+    """Лента одной монеты с каскадами: в «падающей» минуте первая сделка — в первые 0.5 с и сразу
+    на 4–9% ниже прошлой цены; остальное — шум, сторона агрессора случайна."""
+    rnd = random.Random(seed)
+    px, a, out = 100.0, 1, []
+    for m in range(minutes):
+        start = T0 + m * 60_000
+        times = sorted(start + rnd.randint(501, 59_999) for _ in range(rnd.randint(3, 25)))
+        drop = rnd.random() < 0.4
+        if drop:
+            times.insert(0, start + rnd.randint(0, 500))
+        for i, t in enumerate(times):
+            px *= 1 - rnd.uniform(0.04, 0.09) if drop and i == 0 else 1 + rnd.uniform(-0.004, 0.006)
+            out.append(paper.Trade("X", a, round(px, 6), t, rnd.random() < 0.5, t + 100))
+            a += 1
+    return out
+
+
+@pytest.mark.parametrize("seed", range(6))
+def test_both_policies_levels_on_cascade_tapes(seed):
+    """Каждое исполнение ×1 — по уровню, который был у заявки в этот момент: x1p — только уровень
+    СВОЕЙ минуты и только внутри [WAIT+SWITCH, 60 с − PULL_MS); x1 в первые WAIT+SWITCH —
+    уровень прошлой минуты (как объявлено), дальше — своей. Такт бота — перед каждой сделкой."""
+    from bisect import bisect_left
+    tape = _cascade(seed)
+    got = []
+    eng = paper.Engine(got.append, ["X"])
+    for tr in tape:
+        eng.tick(tr.T)
+        eng.on_trade(tr)
+    ts = [tr.T for tr in tape]
+
+    def lv(k):  # уровень минуты k: −5% от последней сделки до её начала
+        return paper.level_of(tape[bisect_left(ts, k) - 1].px)
+    sw = paper.WAIT_MS + paper.SWITCH_MS
+    n_p = n_late = 0
+    for r in (r for r in got if r["k"] == "fill" and r["acct"] != "m"):
+        d = r["t_in"] - r["t"]
+        if r["acct"].endswith("p"):
+            n_p += 1
+            assert sw <= d < 60_000 - paper.PULL_MS
+            assert r["entry"] == lv(r["t"])
+        elif d < sw:
+            n_late += 1
+            assert r["entry"] == lv(r["t"] - 60_000)
+        else:
+            assert r["entry"] == lv(r["t"])
+    assert n_p and n_late, "лента без исполнений обоих видов — тест ничего не проверяет"
 
 
 def test_x1_no_fill_after_switch_above_new_level():
@@ -267,6 +384,9 @@ def test_accounts_match_forward_cells():
            [(s, c) for s, c, _ in portfolio.FWD_CELLS]
     assert [(n, o) for n, _, o in paper.X1_ACCTS] == [("x1", 100), ("x25", 40), ("x5", 20)]
     assert [d for _, _, d in portfolio.FWD_CELLS] == [0.05, 0.10, 0.15]
+    # счета без стыка минуты (28.10) — те же клетки и монеты, другое устройство заявки
+    assert paper.X1P_ACCTS == tuple((n + "p", s, o) for n, s, o in paper.X1_ACCTS)
+    assert [p for *_, p in paper.ALL_X1] == [None] * 3 + [paper.PULL_MS] * 3
 
 
 def test_accounts_take_first_n_ranked_and_open_does_not_pull_next():
@@ -293,11 +413,17 @@ def test_accounts_fill_independently_with_own_size():
     eng.on_trade(_tr(2, 94.0, t + 5, sym="S30"))
     fills = [(r["acct"], r["sym"], r["entry"], r["amt"]) for r in got
              if r["k"] == "fill" and r["acct"] != "m"]
+    # внутри минуты счета без стыка (x1p…) исполняются так же, как объявленные
     assert fills == [("x1", "S0", pytest.approx(95.0), 0.01),
                      ("x25", "S0", pytest.approx(95.0), 0.025),
                      ("x5", "S0", pytest.approx(95.0), 0.05),
+                     ("x1p", "S0", pytest.approx(95.0), 0.01),
+                     ("x25p", "S0", pytest.approx(95.0), 0.025),
+                     ("x5p", "S0", pytest.approx(95.0), 0.05),
                      ("x1", "S30", pytest.approx(95.0), 0.01),
-                     ("x25", "S30", pytest.approx(95.0), 0.025)]
+                     ("x25", "S30", pytest.approx(95.0), 0.025),
+                     ("x1p", "S30", pytest.approx(95.0), 0.01),
+                     ("x25p", "S30", pytest.approx(95.0), 0.025)]
     assert eng.has_open("S30") and not eng.has_open("S31")
 
 
@@ -316,6 +442,7 @@ def test_accounts_slots_are_separate():
             by[r["acct"]].append(r["sym"])
     assert by["x1"] == by["x25"] == ["S25", "S26", "S27"]
     assert by["x5"] == ["S0"]
+    assert (by["x1p"], by["x25p"], by["x5p"]) == (by["x1"], by["x25"], by["x5"])
 
 
 @pytest.mark.parametrize("size", [0.025, 0.05])
@@ -579,6 +706,40 @@ def test_restore_counts_position_lost_at_stop(tmp_path):
     assert rs["open_lost"] == len(open_)
     # закрытые сделки — как у живого счёта до остановки
     assert books["x25"].equity == pytest.approx(ref.equity, abs=1e-12)
+
+
+def test_restore_opens_new_accounts_at_d0(tmp_path):
+    """Первая выкладка x1p/x25p/x5p (28.10): ни в снимке прошлого `start`, ни в строках их нет —
+    они начинаются с D0, объявленные счета восстанавливаются как были. На следующем перезапуске
+    снимок уже несёт новые счета, и их сделки после него тоже восстанавливаются."""
+    import json
+    ref, rows, open_, close = _journal_online(seed=4)
+    for o in sorted(open_, key=lambda o: o["t_out"]):
+        close(o)
+    old = {"x25": json.loads(json.dumps(paper._book_state(ref)))}   # снимок без новых счетов
+    _write(tmp_path / "a.jsonl", [{"k": "start", "restored": {"books": old}, "recv": T0 - 1}])
+    books = {n: paper.LiveBook(size=s) for n, s, _, _ in paper.ALL_X1}
+    paper.restore_state(tmp_path, books)
+    _same(books["x25"], ref)
+    for n, s, _, p in paper.ALL_X1:
+        if p is not None:
+            b = books[n]
+            assert (b.size, b.equity, b.withdrawn, b.min_bal, b.day) == (s, 1.0, 0.0, 1.0, None)
+    # перезапуск после выкладки: снимок со всеми счетами (как пишет `main`) + сделка x1p после него
+    snap = {"books": {n: json.loads(json.dumps(paper._book_state(b))) for n, b in books.items()}}
+    t = T0 + 40 * 86_400_000
+    _write(tmp_path / "b.jsonl", [
+        {"k": "start", "restored": snap, "recv": t},
+        {"k": "fill", "acct": "x1p", "sym": "A", "t": t, "t_in": t + 600, "over": False,
+         "amt": 0.01, "recv": t + 600},
+        {"k": "exit", "acct": "x1p", "sym": "A", "t": t, "t_in": t + 600, "t_out": t + 5_000,
+         "net": 0.0146, "amt": 0.01, "pnl": 0.000146, "recv": t + 5_000}])
+    books = {n: paper.LiveBook(size=s) for n, s, _, _ in paper.ALL_X1}
+    rs = paper.restore_state(tmp_path, books)
+    _same(books["x25"], ref)
+    assert books["x1p"].equity == pytest.approx(1.000146, abs=1e-12)
+    assert books["x1p"].day_taken[paper._day(t)] == 1 and books["x5p"].equity == 1.0
+    assert rs["open_lost"] == 0
 
 
 def test_book_state_round_trips_through_json():

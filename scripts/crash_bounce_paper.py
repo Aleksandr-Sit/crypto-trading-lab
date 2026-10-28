@@ -32,6 +32,13 @@
   сверх предела, как в замере); слот освободился — заявки встают через `SWITCH_MS`; не
   больше одного исполнения на монету за минуту. Счёт ведётся на ходу (`LiveBook`): D0,
   1% × min(баланс, D0), в 00:00 UTC всё выше D0 выводится.
+* **×1 без стыка минуты (`x1p`, `x25p`, `x5p` — `X1P_ACCTS`, с 28.10.2026)** — те же клетки и
+  монеты, но заявка минуты живёт только внутри своей минуты: встаёт так же, через
+  `WAIT_MS + SWITCH_MS`, и снимается за `PULL_MS` до конца минуты. На стыке
+  [конец − `PULL_MS`, начало + `WAIT_MS + SWITCH_MS`) заявки нет, по уровню прошлой минуты не
+  исполняется ничего. Счета открыты рядом с `x1/x25/x5` (те не тронуты) с D0 от выкладки:
+  разбор 19–25.10 показал, что весь минус ×1 дают исполнения старой заявки в первые 0.55 с
+  каскада (решение владельца 28.10 — чинить параллельными счетами).
 
 Журнал (`D/journal/ГГГГ-ММ-ДД.jsonl`, сутки по времени получения): исполнение пишется с
 `fsync` В МОМЕНТ получения сделки — до исхода; исход — отдельной строкой потом. Плюс обрывы
@@ -73,6 +80,15 @@ ORDERS = 100        # заявок на субсчёте ×1 при 1% D0 на �
 X1_ACCTS = (("x1", SIZE, ORDERS), ("x25", 0.025, 40), ("x5", 0.05, 20))
 WAIT_MS = 250       # ждать после конца минуты, пока долетят её сделки (задержка p99 ≈ 164 мс)
 SWITCH_MS = 300     # перестановка заявки
+# Счета ×1 без стыка минуты (28.10.2026, починка исполнения, правило не тронуто): те же клетки,
+# заявка минуты снимается за PULL_MS до её конца — столько же, сколько модель кладёт на любую
+# операцию с заявкой (SWITCH_MS). Открыты рядом с объявленными, с D0 от выкладки.
+PULL_MS = 300
+X1P_ACCTS = tuple((n + "p", s, o) for n, s, o in X1_ACCTS)
+# все счета ×1 бота: (имя, размер, заявок, PULL_MS или None — заявка прошлой минуты стоит до
+# перестановки, как объявлено 09.10)
+ALL_X1 = (tuple((n, s, o, None) for n, s, o in X1_ACCTS)
+          + tuple((n, s, o, PULL_MS) for n, s, o in X1P_ACCTS))
 # Связь
 CONNS = 3                 # соединений; монеты делятся между ними
 ROTATE_S = 23 * 3600      # Binance рвёт соединение раз в 24 ч — переподключаемся сами, внахлёст
@@ -280,10 +296,12 @@ class SymState:
 @dataclass
 class X1Acct:
     """Один субсчёт ×1: свой размер, свои заявки (`orders` первых монет ранжирования минус
-    монеты в позиции), свои позиции и перестановки. Снимок закрытия минуты — общий у бота."""
+    монеты в позиции), свои позиции и перестановки. Снимок закрытия минуты — общий у бота.
+    `pull_ms` — устройство заявки на стыке минут (см. `Engine.x1_level`)."""
     name: str
     size: float
     orders: int
+    pull_ms: int | None = None
     book: LiveBook = None  # type: ignore[assignment]
     pos: dict[str, Pos] = field(default_factory=dict)
     eligible: set[str] = field(default_factory=set)
@@ -312,7 +330,7 @@ class Engine:
         self.emit = emit
         self.st: dict[str, SymState] = defaultdict(SymState)
         self.mirror: dict[str, list[Pos]] = defaultdict(list)
-        self.accts = [X1Acct(n, s, o) for n, s, o in X1_ACCTS]
+        self.accts = [X1Acct(n, s, o, p) for n, s, o, p in ALL_X1]
         self.rank: list[str] = list(x1_rank or [])
         self.backfill_need: set[str] = set()
         self._recalc_eligible(0)
@@ -360,10 +378,22 @@ class Engine:
             for k in [k for k in st.snap if k < m - 120_000]:
                 del st.snap[k]
 
-    def x1_level(self, st: SymState, t: int) -> float | None:
+    def x1_level(self, st: SymState, t: int, pull_ms: int | None = None) -> float | None:
+        """Уровень заявки ×1, стоящей в момент `t` по часам биржи; None — заявки нет.
+        Заявка минуты m встаёт в m + WAIT_MS + SWITCH_MS. До этого:
+        * `pull_ms is None` (`x1/x25/x5`, как объявлено 09.10) — стоит заявка прошлой минуты и
+          исполняется по СВОЕМУ уровню;
+        * иначе (`x1p/x25p/x5p`, с 28.10) — заявки нет: заявка минуты снимается за `pull_ms`
+          до её конца, по уровню прошлой минуты не исполняется ничего."""
         m = t // 60_000 * 60_000
-        switch = m + WAIT_MS + SWITCH_MS
-        lv = st.snap.get(m) if t >= switch else st.snap.get(m - 60_000)
+        if t >= m + WAIT_MS + SWITCH_MS:
+            if pull_ms is not None and t >= m + 60_000 - pull_ms:
+                return None
+            lv = st.snap.get(m)
+        elif pull_ms is None:
+            lv = st.snap.get(m - 60_000)
+        else:
+            return None
         if lv is None or lv != lv:  # нет снимка или он NaN (бот не знал закрытия)
             return None
         return lv
@@ -411,18 +441,18 @@ class Engine:
                 self.mirror[tr.sym].append(p)
                 self.emit({"k": "fill", "acct": "m", "sym": tr.sym, "t": m, "entry": lvl,
                            "t_in": tr.T, "recv": tr.recv, "a": tr.a})
-        # счета ×1: уровень один (снимок общий), заявки, слоты и перестановки — свои у каждого
-        lvl = None
+        # счета ×1: снимок общий, уровень — по устройству заявки счёта (`pull_ms`); заявки,
+        # слоты и перестановки — свои у каждого
+        lvls: dict[int | None, float | None] = {}
         for acc in self.accts:
             if (tr.sym not in acc.eligible or tr.sym in acc.pos
                     or acc.filled_m.get(tr.sym) == m or tr.T < acc.ready_at.get(tr.sym, 0)):
                 continue
-            if lvl is None:
-                lvl = self.x1_level(st, tr.T)
-                if lvl is None:
-                    break
-            if not tr.px < lvl:
-                break
+            if acc.pull_ms not in lvls:
+                lvls[acc.pull_ms] = self.x1_level(st, tr.T, acc.pull_ms)
+            lvl = lvls[acc.pull_ms]
+            if lvl is None or not tr.px < lvl:
+                continue
             ok, over = acc.book.can_fill(tr.T)
             if ok and (over or tr.T >= acc.reopen_at):
                 acc.filled_m[tr.sym] = m
@@ -500,8 +530,10 @@ def restore_state(journal_dir: Path, books: dict[str, LiveBook]) -> dict:
     неё, той же арифметикой, что `LiveBook.take/close` (`exit` несёт свой `pnl`). Позиция,
     открытая на момент остановки (`fill` без `exit`, любой счёт, включая зеркало), не
     восстанавливается: её исход бот не увидел — она считается в `open_lost`, перезапускать надо
-    без открытых позиций (`books={}` — только этот подсчёт: команда `open`). Файл читается
-    построчно, разбираются только нужные строки: журнал растёт, лимит памяти бота — 400 МБ."""
+    без открытых позиций (`books={}` — только этот подсчёт: команда `open`). Счёт, которого
+    нет ни в снимке, ни в строках (новый — `x1p/x25p/x5p` на первой выкладке 28.10), начинается
+    с D0. Файл читается построчно, разбираются только нужные строки: журнал растёт, лимит
+    памяти бота — 400 МБ."""
     down_s, last_recv = 0.0, 0
     pending: set[tuple] = set()
     sizes = {name: b.size for name, b in books.items()}
@@ -613,7 +645,7 @@ class Runner:
         self.engine.set_rank(rank, now)
         self.rank_day = _day(now)
         self.journal.write({"k": "top", "day": self.rank_day, "asof": asof, "syms": rank})
-        sizes = " / ".join(str(len(acc.eligible)) for acc in self.engine.accts)
+        sizes = ", ".join(f"{acc.name} {len(acc.eligible)}" for acc in self.engine.accts)
         self.log(f"×1: монет {len(rank)}, заявок по счетам {sizes} (счёт обвалов по {asof})"
                  if rank else "×1 ВЫКЛЮЧЕН: нет crash_counts.json слоя А")
 
@@ -735,8 +767,10 @@ class Runner:
                    "equity": b.equity, "withdrawn": b.withdrawn, "min_bal": b.min_bal,
                    "down_s": round(self.down_s, 1)}
             self.journal.write(rec)
+            seam = "" if acc.pull_ms is None else ", без стыка минуты"
             lines.append(
-                f"×1 {acc.size * 100:g}%×{SLOTS} ({acc.orders} монет): сделок {rec['x1_taken']} "
+                f"×1 {acc.name} {acc.size * 100:g}%×{SLOTS} ({acc.orders} монет{seam}): "
+                f"сделок {rec['x1_taken']} "
                 f"(сверх предела {rec['x1_over']}), итог {rec['x1_pnl'] * 100:+.2f}% D0; всего "
                 f"{(b.withdrawn + b.equity - 1) * 100:+.2f}% D0, "
                 f"мин. баланс {b.min_bal * 100:.2f}%")
@@ -763,6 +797,7 @@ class Runner:
                             "rule": "limit5|side", "orders": ORDERS,
                             "accts": [list(x) for x in X1_ACCTS], "wait_ms": WAIT_MS,
                             "switch_ms": SWITCH_MS, "cancel_ms": CANCEL_MS,
+                            "accts_p": [list(x) for x in X1P_ACCTS], "pull_ms": PULL_MS,
                             "lag_ms": LAG_MS, "lag_hold_s": LAG_HOLD_S})
         self.log(f"старт: монет {len(self.syms)}, поправка часов к бирже {off} мс "
                  f"(точность ±{half} мс)")
@@ -823,7 +858,7 @@ def report(out: Path, archive: Path, d1: str, d2: str) -> int:
     in_win = lambda r: d1 <= _day(r["t"]) <= d2  # noqa: E731
     mirror = [exits[k] for k in exits if k[0] == "m" and in_win(exits[k])]
     by_acct = {n: [exits[k] for k in exits if k[0] == n and in_win(exits[k])]
-               for n, _, _ in X1_ACCTS}
+               for n, _, _, _ in ALL_X1}
     open_m = [f for f in fills if f["acct"] == "m" and in_win(f)
               and ("m", f["sym"], f["t"], f["t_in"]) not in exits]
     gaps = [r for r in rows if r.get("k") == "gap" and d1 <= _day(r["T1"]) <= d2]
@@ -880,12 +915,14 @@ def report(out: Path, archive: Path, d1: str, d2: str) -> int:
             print(f"счёт {name} (run_book, D0, {size * 100:g}% × {cap}): сделок {b.taken}, итог "
                   f"{(b.withdrawn + b.equity - 1) * 100:+.2f}% D0, t {pf._t(pnl):+.2f}, "
                   f"падение ниже D0 {(1 - b.min_bal) * 100:.2f}% (К2 ≤ {max_drop * 100:g}%)")
-    for (name, size, orders), x1 in zip(X1_ACCTS, by_acct.values(), strict=True):
+    for (name, size, orders, pull), x1 in zip(ALL_X1, by_acct.values(), strict=True):
         tot = sum(r["pnl"] for r in x1)
         bal = min((r["bal"] for r in x1), default=1.0)
-        print(f"счёт ×1 {name} ({size * 100:g}% × {SLOTS}, {orders} монет, на ходу): сделок "
-              f"{len(x1)} (сверх предела {sum(r['over'] for r in x1)}), итог {tot * 100:+.2f}% "
-              f"D0, наименьший баланс {bal * 100:.2f}% (К5 итог > 0 — "
+        seam = ("" if pull is None
+                else ", без стыка минуты — свой счёт с выкладки починки; наблюдение, не К5")
+        print(f"счёт ×1 {name} ({size * 100:g}% × {SLOTS}, {orders} монет, на ходу{seam}): "
+              f"сделок {len(x1)} (сверх предела {sum(r['over'] for r in x1)}), итог "
+              f"{tot * 100:+.2f}% D0, наименьший баланс {bal * 100:.2f}% (итог > 0 — "
               f"{'да' if tot > 0 else 'нет'})")
     return 0
 
