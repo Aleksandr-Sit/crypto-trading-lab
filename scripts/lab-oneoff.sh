@@ -164,10 +164,11 @@ remote() {
 if [ "$LINT" = 1 ]; then
     TARGETS=""
     for n in "${NAMES[@]}"; do TARGETS+=" /lint/$n"; done
-    # Окружение с ruff живёт на хосте (/tmp/lint-venv), а не внутри контейнера: с нуля
+    # Окружение с ruff живёт на хосте (/root/lint-venv), а не внутри контейнера: с нуля
     # uv sync занимает ~50 с, а повторный — секунды. Не в /tmp/lint, чтобы не путать с
-    # подложенными файлами.
-    remote "-v /tmp/lint-venv:/venv -e UV_NO_SYNC=0 -e UV_PROJECT_ENVIRONMENT=/venv" \
+    # подложенными файлами, и вообще не в /tmp: systemd-tmpfiles вырезает из него файлы
+    # старше 30 суток поштучно, и окружение портится тихо (28.10.2026, см. lab-test.sh).
+    remote "-v /root/lint-venv:/venv -e UV_NO_SYNC=0 -e UV_PROJECT_ENVIRONMENT=/venv" \
         "uv sync --group dev -q && /venv/bin/ruff check --no-cache \
 --config /src/pyproject.toml$TARGETS" || { echo "линт не прошёл — запуска нет" >&2; exit 1; }
     [ "$LINT_ONLY" = 1 ] && exit 0

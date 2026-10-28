@@ -12,7 +12,7 @@
 #
 # Код выхода: как у pytest (0 — зелёный, 1 — падения, 4 — ошибка вызова, 5 — ничего не
 # собрано); свои коды — выше pytest: 10 — не поставились зависимости, 11 — тесты прошли,
-# ruff нет, 12 — база lab_test недоступна.
+# ruff нет, 12 — база lab_test недоступна, 13 — испорчено окружение тестов на сервере.
 #
 # Что делает:
 # * отправляет в vps-trader:/root/lab-test-src файлы под git ПЛЮС неотслеживаемые, но не
@@ -20,7 +20,7 @@
 #   --exclude-standard`. Файлы .env* (кроме .env.example) не уезжают никогда: если такой
 #   вдруг оказался в списке, скрипт отказывается работать;
 # * гоняет pytest и ruff в одноразовом контейнере worker с этой копией в /src. Окружение
-#   живёт на хосте (/tmp/lab-test-venv, ~680 МБ): повторный uv sync — 2 с, контейнер
+#   живёт на хосте (/root/lab-test-venv, ~680 МБ): повторный uv sync — 2 с, контейнер
 #   целиком — 8 с. Прогон одного файла занимает ~40 с, и больше половины — сеть: каждое
 #   ssh-подключение с рабочей машины стоит ~2 с, а их здесь с десяток плюс опрос итога;
 # * ждёт итога короткими ssh-проверками и печатает лог, маскируя пароль в адресах баз;
@@ -32,14 +32,19 @@
 #   Адрес собирается подстановкой из DATABASE_URL самого контейнера, и до pytest
 #   проверяется, что база отвечает;
 # * задача идёт через run-detached.sh: ssh рвётся на многоминутных операциях;
-# * -T и </dev/null у docker compose: иначе он читает stdin и обрывает всё, что идёт следом.
+# * -T и </dev/null у docker compose: иначе он читает stdin и обрывает всё, что идёт следом;
+# * окружение — НЕ в /tmp: на сервере systemd-tmpfiles чистит /tmp от файлов старше 30 суток
+#   (`D /tmp 1777 root root 30d`) и вырезает их из окружения поштучно. 28.10.2026 так пропал
+#   sqlalchemy/__init__.py, uv sync этого не заметил (он не сверяет файлы пакетов), и скрипт
+#   отвечал «база lab_test недоступна» при живой базе. Теперь до проверки базы проверяется
+#   само окружение (код 13).
 
 set -u
 
 HOST=vps-trader
 REPO=/opt/crypto-trading-lab
 SRC=/root/lab-test-src
-VENV=/tmp/lab-test-venv
+VENV=/root/lab-test-venv   # не /tmp: его чистит systemd-tmpfiles (см. уроки выше)
 JOB=labtest
 LOG=/root/$JOB.log
 WAIT_S=5
@@ -82,6 +87,11 @@ git ls-files -co --exclude-standard -z | tar --null -T - -czf - \
 #!/bin/sh
 export TEST_DATABASE_URL="${DATABASE_URL%/lab}/lab_test"
 uv sync --group dev -q || exit 10
+/venv/bin/python -c 'import sqlalchemy as s; s.create_engine' >/dev/null 2>&1 || {
+    echo "окружение тестов испорчено (sqlalchemy не импортируется) — удали на сервере каталог"
+    echo "VENV из scripts/lab-test.sh, следующий запуск поставит его заново"
+    exit 13
+}
 /venv/bin/python -c 'import os, sqlalchemy as s
 s.create_engine(os.environ["TEST_DATABASE_URL"]).connect().close()' >/dev/null 2>&1 || {
     echo "база lab_test недоступна — тесты с базой молча пропустились бы, прогон остановлен"
