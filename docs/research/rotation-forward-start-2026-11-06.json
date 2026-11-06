@@ -1,0 +1,125 @@
+{
+  "captured_at": "2026-11-06T19:27:52.940626+00:00",
+  "schema_version": "0014",
+  "code_version": "b6066dc9cd6c5625762c3111b5151a0f08a6de89",
+  "strategy_id": "cex-spot-external-rotation-gold-btc",
+  "rung": "paper",
+  "status": "measuring",
+  "current_rules_revision": "0b7957023967424543356ac3562566158609fe63bbf80da511c7c4bde7272958",
+  "observations": [
+    {
+      "id": "863b354817e6466596e3aa84b961a8d1",
+      "revision": "0b7957023967424543356ac3562566158609fe63bbf80da511c7c4bde7272958",
+      "started_at": "2026-11-06T19:24:54.349852+00:00",
+      "spec": {
+        "stop": {
+          "daily_pct": null,
+          "max_dd_pct": "35",
+          "max_position_pct": null
+        },
+        "venue": "binance",
+        "branch": "cex-spot",
+        "params": {
+          "card": "cex-spot-rotation-gold-btc",
+          "allocation": true,
+          "capital_usd": 10000,
+          "stop_loss_pct": 35,
+          "windows_weeks": [
+            4,
+            8,
+            12
+          ],
+          "rebalance_days": 7,
+          "risk_instrument": "BTC/USDT",
+          "safe_instrument": "PAXG/USDT"
+        },
+        "timeframe": "1d",
+        "source_ref": "https://quantpedia.com/dual-momentum-allocation-between-physical-gold-and-bitcoin-digital-gold/",
+        "instruments": [
+          "BTC/USDT",
+          "PAXG/USDT"
+        ],
+        "source_hash": "05bbdf290e5270cf4e2ad6cbc5fc954c48d15a0cd57c9ced8f8de86a8a1797c6",
+        "source_kind": "external",
+        "max_fill_lag_s": 300,
+        "max_signal_lag_s": 60,
+        "measurement_capital": "10000",
+        "virtual_costs_version": "costs-v2@e4286b796cfe"
+      }
+    }
+  ],
+  "collector": {
+    "error": null,
+    "horizon": {
+      "BTC/USDT": "2026-11-06T00:00:00+00:00",
+      "PAXG/USDT": "2026-11-06T00:00:00+00:00"
+    },
+    "marks_at": "2026-11-06T19:27:00.334917+00:00",
+    "checked_at": "2026-11-06T19:27:07.228440+00:00",
+    "started_at": "2026-11-06T19:26:00.468006+00:00",
+    "observation_id": "863b354817e6466596e3aa84b961a8d1",
+    "open_positions": [],
+    "unrealized_pnl": "0",
+    "archive_missing": 0,
+    "archive_pending": 0,
+    "archive_mismatches": 0,
+    "unpriced_positions": []
+  },
+  "health_problems": {},
+  "bars_by_archive_status": {
+    "matched": 1598
+  },
+  "signals": 0,
+  "trades": 0,
+  "transitions": [
+    {
+      "from": "backtest",
+      "to": "paper",
+      "ts": "2026-09-14T12:02:05.188404+00:00",
+      "reason": "порог пройден на backtest",
+      "by": "system"
+    },
+    {
+      "from": "paper",
+      "to": "micro",
+      "ts": "2026-10-18T18:00:22.183450+00:00",
+      "reason": "порог пройден на paper",
+      "by": "system"
+    },
+    {
+      "from": "micro",
+      "to": "signal",
+      "ts": "2026-10-25T18:00:22.642602+00:00",
+      "reason": "порог пройден на micro",
+      "by": "system"
+    },
+    {
+      "from": "signal",
+      "to": "semi",
+      "ts": "2026-11-01T18:00:25.761424+00:00",
+      "reason": "порог пройден на signal",
+      "by": "system"
+    },
+    {
+      "from": "semi",
+      "to": "signal",
+      "ts": "2026-11-06T19:24:54.063176+00:00",
+      "reason": "Аудит 06.11.2026: повышения по истории без исполнений; возврат к бумажному наблюдению",
+      "by": "operator"
+    },
+    {
+      "from": "signal",
+      "to": "micro",
+      "ts": "2026-11-06T19:24:54.355180+00:00",
+      "reason": "Аудит 06.11.2026: повышения по истории без исполнений; возврат к бумажному наблюдению",
+      "by": "operator"
+    },
+    {
+      "from": "micro",
+      "to": "paper",
+      "ts": "2026-11-06T19:24:54.482455+00:00",
+      "reason": "Аудит 06.11.2026: повышения по истории без исполнений; возврат к бумажному наблюдению",
+      "by": "operator"
+    }
+  ]
+}
