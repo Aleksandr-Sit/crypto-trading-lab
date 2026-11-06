@@ -34,6 +34,9 @@ jobs:
   forward_journal:
     cron: "30 4 * * *"
     description: Решения живых стратегий в журнал с датой — основа проверки вперёд
+  virtual_forward:
+    cron: "* * * * *"
+    description: Свежие свечи и стакан → виртуальные сделки paper, сверка с архивом
   reconcile:
     cron: "0 4 * * *"
     description: Сверка ордеров и балансов с площадками

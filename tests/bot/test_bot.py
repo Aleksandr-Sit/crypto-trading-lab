@@ -163,6 +163,33 @@ async def test_promote_refuses_everything_but_semi_to_auto(bot, session, strateg
     assert Registry(session).get(strategy.id).rung == Rung.BACKTEST
 
     session.get_one(StrategyRow, strategy.id).rung = "semi"
+    session.commit()
+    reply = await bot.handle_command(ADMIN, f"/promote {strategy.id}")
+    assert "нет метрик" in reply.text
+    assert Registry(session).get(strategy.id).rung == Rung.SEMI
+
+    from lab.core.forward import current_observation
+    from lab.core.measure.research import begin, finish
+    from lab.db.models import MeasurementRow
+    from tests.core.test_ladder import make_metrics
+
+    observation = current_observation(session, strategy.id, start=True)
+    research = begin(session, strategy.id, {"rules": "test"})
+    finish(session, research["trial_id"], "ok")
+    metrics = make_metrics().model_copy(update={
+        "research": research,
+        "trade_source": "journal_live", "forward_verified": True,
+        "observation_id": observation.id, "rules_revision": observation.revision,
+        "observation_started_at": observation.started_at,
+        "window_to": observation.started_at + timedelta(days=1),
+    })
+    session.add(MeasurementRow(
+        strategy_id=strategy.id, mode="forward",
+        window_from=metrics.window_from, window_to=metrics.window_to,
+        data_hash="a" * 64, code_version="test",
+        metrics_json={"metrics": metrics.model_dump(mode="json")},
+        threshold_json={}, status="ok",
+    ))
     session.flush()
     reply = await bot.handle_command(ADMIN, f"/promote {strategy.id}")
     s = Registry(session).get(strategy.id)

@@ -64,9 +64,12 @@
   {% if c.metrics %}
   <table class="kv">
     {% for name, value in c.common_rows %}
-      <tr><th>{{ name }}</th><td class="num">{{ value }}{% if name == "EV/сделку, USD" %} <span class="ci">CI95 {{ c.ev_ci95 }}</span>{% endif %}</td></tr>
+      <tr><th>{{ name }}</th><td class="num">{{ value }}{% if name == "EV/сделку, USD" %} <span class="ci">{{ c.ev_ci_label }} {{ c.ev_ci95 }}</span>{% endif %}</td></tr>
     {% endfor %}
-  </table>
+    </table>
+    <p>{{ c.research_summary }}</p>
+    <p>{{ c.cost_stress_summary }}</p>
+    {% if c.execution_summary %}<p>{{ c.execution_summary }}</p>{% endif %}
   {% else %}
     <p class="muted">Метрик нет: {% if c.latest %}замер не завершён — {{ c.latest.reason or "причина не записана" }}{% else %}замеров ещё не было{% endif %}.</p>
   {% endif %}

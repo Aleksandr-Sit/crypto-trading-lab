@@ -80,7 +80,7 @@ def test_attach_stability_failed_windows_turn_passed_into_failed():
     from tests.core.test_ladder import make_metrics
 
     metrics = make_metrics()
-    assert threshold(metrics, "cex-perp", rung="backtest").status == "passed"
+    assert threshold(metrics, "cex-perp", rung="backtest").status == "insufficient"
 
     out, problem = attach_stability(
         None,
@@ -98,9 +98,7 @@ def test_attach_stability_failed_windows_turn_passed_into_failed():
 
 
 def test_attach_stability_reports_why_windows_did_not_count():
-    """Упал прогон или окон меньше минимума — порог молча судит по одному окну.
-
-    Циклу это допустимо, ручному подъёму нет: причина возвращается, чтобы на ней встать."""
+    """Упал прогон или окон мало — оба пути получают блокировку с причиной."""
     from datetime import UTC, datetime
 
     from lab.ops.jobs.remeasure import attach_stability
@@ -114,9 +112,65 @@ def test_attach_stability_reports_why_windows_did_not_count():
     out, problem = attach_stability(None, _row(), make_metrics(), at, stability_fn=broken)
     assert out.stability is None
     assert problem and "нет свечей" in problem
+    from lab.core.measure import threshold
+
+    assert out.stability_error == problem
+    assert threshold(out, "cex-perp", rung="backtest").status == "insufficient"
 
     out, problem = attach_stability(
         None, _row(), make_metrics(), at, stability_fn=lambda sid, **_: (_stability(3, 3, 3), [])
     )
     assert out.stability.windows == 3
     assert problem and "окон 3" in problem
+    assert threshold(out, "cex-perp", rung="backtest").status == "insufficient"
+
+
+def test_failed_recalculation_discards_old_success():
+    from datetime import UTC, datetime
+
+    from lab.core.measure import threshold
+    from lab.ops.jobs.remeasure import attach_stability
+    from tests.core.test_ladder import make_metrics
+
+    metrics = make_metrics().model_copy(update={"stability": _stability(10, 10, 10)})
+
+    def broken(*args, **kwargs):
+        raise TimeoutError("архив недоступен")
+
+    out, problem = attach_stability(
+        None, _row(), metrics, datetime(2026, 9, 16, tzinfo=UTC), stability_fn=broken
+    )
+    assert problem
+    assert out.stability is None
+    assert threshold(out, "cex-perp", rung="backtest").status == "insufficient"
+
+
+def test_stability_snapshot_is_saved_without_rewriting_original(session):
+    from lab.core.measure import history
+    from lab.core.measure.runner import _persist
+    from lab.core.measure.types import Measurement
+    from lab.core.registry import Registry
+    from lab.ops.jobs.remeasure import save_stability
+    from tests.core.test_ladder import make_metrics, manifest
+
+    row = Registry(session).add(manifest())
+    metrics = make_metrics()
+    measured = _persist(session, Measurement(
+        id=None, strategy_id=row.id, mode="backtest", window_from=metrics.window_from,
+        window_to=metrics.window_to, data_hash="a" * 64, code_version="test",
+        costs_version="test", status="ok", metrics=metrics,
+    ))
+    enriched = metrics.model_copy(update={"stability": _stability(10, 8, 8)})
+    save_stability(session, measured, enriched, row)
+    snapshots = history(session, row.id)
+    assert len(snapshots) == 2
+    assert snapshots[0].metrics.stability.windows == 10
+    assert snapshots[0].threshold.status == "passed"
+    assert snapshots[1].metrics.stability is None
+
+    from lab.core.ladder import Ladder, default_threshold_fn
+
+    ladder = Ladder(session, threshold=default_threshold_fn())
+    assert ladder.latest_metrics(row.id).stability.windows == 10
+    _persist(session, measured.model_copy(update={"status": "incomplete", "metrics": None}))
+    assert ladder.latest_metrics(row.id) is None  # новый сбой не воскрешает старый успех

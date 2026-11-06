@@ -21,6 +21,7 @@ import argparse
 import secrets
 import sys
 import time
+from decimal import Decimal
 from pathlib import Path
 
 import yaml
@@ -244,9 +245,20 @@ def cmd_measure_run(args: argparse.Namespace) -> int:
 
     to = datetime.now(UTC)
     window = (to - timedelta(days=args.days), to)
+    options = {}
+    if getattr(args, "tape", None):
+        from lab.core.measure.tape import read_header
+
+        try:
+            header = read_header(args.tape)
+        except (OSError, ValueError) as err:
+            print(f"Лента не прочитана: {err}", file=sys.stderr)
+            return 2
+        window = (header.covered_from, header.covered_to)
+        options["tape_path"] = args.tape
     measure = make_measure(_scope(), root=args.root)
     try:
-        m = measure(strategy_id=args.strategy_id, mode=args.mode, window=window)
+        m = measure(strategy_id=args.strategy_id, mode=args.mode, window=window, **options)
     except (StrategyNotFound, MeasureUnavailable) as err:
         print(f"Замер не выполнен: {err}", file=sys.stderr)
         return 2
@@ -392,6 +404,27 @@ def cmd_measure_show(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_measure_trials(args: argparse.Namespace) -> int:
+    from sqlalchemy import select
+
+    from lab.core.measure.research import variant_count
+    from lab.db.models import ResearchTrialRow
+
+    with _scope()() as session:
+        print(f"Вариантов в общем журнале: {variant_count(session)}")
+        print("Охват: общая обёртка и сохранённая история; внешние попытки неизвестны.")
+        query = select(ResearchTrialRow).order_by(ResearchTrialRow.id.desc()).limit(args.limit)
+        if args.strategy_id:
+            query = query.where(ResearchTrialRow.strategy_id == args.strategy_id)
+        for trial in session.scalars(query):
+            print(
+                f"{trial.id} · {trial.strategy_id} · {trial.status} · "
+                f"вариант {trial.variant_hash[:12]} · EV {trial.result.get('ev_per_trade', '—')}"
+                f" · {trial.reason}"
+            )
+    return 0
+
+
 def format_measurement(m, *, window=None) -> str:
     """Одна строка «что замерено» + порог; incomplete печатает причину, а не пустоту."""
     at = f"{m.created_at:%d.%m %H:%M}" if m.created_at else "—"
@@ -404,6 +437,33 @@ def format_measurement(m, *, window=None) -> str:
         return f"{head}\n  причина: {m.reason or 'нет данных'}"
     lines = [head]
     mt = m.metrics
+    if mt.execution:
+        lines.append(
+            f"  лента: {mt.execution.get('method')}; сделок ленты {mt.execution.get('prints')}; "
+            f"исполнений {mt.execution.get('fills')}; "
+            f"задержка {mt.execution.get('latency_ms')} мс; "
+            f"участие {mt.execution.get('max_participation')}; "
+            f"открытая позиция {mt.execution.get('open_position')}"
+        )
+        lines.append(
+            "  полнота ленты — по заявленным границам и номерам, без независимой сверки; "
+            "открытая позиция оценена по последней сделке")
+    if mt.cost_stress:
+        stress = mt.cost_stress
+        lines.append(
+            f"  стресс издержек: закрытый EV/сделку {stress.ev_per_trade}; "
+            f"расходы ×{stress.multiplier}, поступления /{stress.multiplier}, "
+            f"+{stress.extra_turnover_bps} б.п. оборота (те же сделки)"
+        )
+    if mt.bootstrap:
+        confidence = format((Decimal(mt.bootstrap["confidence"]) * 100).normalize(), "f")
+        lines.append(
+            f"  закрытый EV/сделку: {mt.ev_per_trade}; блоковый CI{confidence}: {mt.ev_ci95}"
+        )
+        lines.append(
+            f"  вариантов поиска: {mt.research.get('variants', 'не зарегистрировано')}; "
+            f"интервал с поправкой: {mt.ev_search_ci}"
+        )
     for name in ("n_trades", "net_pnl_pct", "max_dd_pct", "sharpe", "win_rate", "vs_benchmark"):
         value = getattr(mt, name, None)
         if value is not None:
@@ -969,12 +1029,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode", default="backtest", choices=["backtest", "paper", "forward", "micro"]
     )
     mrun.add_argument("--days", type=int, default=365, help="длина окна замера в сутках")
+    mrun.add_argument("--tape",
+                      help="JSONL-лента для backtest; окно берётся из заголовка вместо --days")
     mrun.add_argument("--root", default=None, help="корень хранилища свечей (по умолчанию data)")
     mrun.set_defaults(func=cmd_measure_run)
     mshow = msub.add_parser("show", help="последние снимки замеров стратегии")
     mshow.add_argument("strategy_id")
     mshow.add_argument("--limit", type=int, default=5)
     mshow.set_defaults(func=cmd_measure_show)
+    mtrials = msub.add_parser("trials", help="все попытки поиска, включая ошибки")
+    mtrials.add_argument("--strategy-id", default=None)
+    mtrials.add_argument("--limit", type=int, default=20)
+    mtrials.set_defaults(func=cmd_measure_trials)
     mroll = msub.add_parser(
         "rolling", help="устойчивость: замер по скользящим окнам, в скольких стратегия впереди"
     )

@@ -92,6 +92,10 @@ def _row(session, strategy_id: str) -> StrategyRow:
 
 
 def test_weekly_remeasure_measures_live_strategies(session, strategy):
+    from types import SimpleNamespace
+
+    from tests.core.test_ladder import make_metrics
+
     _row(session, strategy.id).status = Status.PASSED.value
     session.flush()
     ladder = FakeLadder(session)
@@ -100,7 +104,9 @@ def test_weekly_remeasure_measures_live_strategies(session, strategy):
 
     report = weekly_remeasure(
         Scope(session),
-        measure=lambda **kw: calls.append(kw) or "ok",
+        measure=lambda **kw: calls.append(kw) or SimpleNamespace(
+            status="ok", metrics=make_metrics(max_dd="9")
+        ),
         ladder_factory=lambda s: ladder,
         bot=bot,
         now=NOW,
@@ -114,6 +120,24 @@ def test_weekly_remeasure_measures_live_strategies(session, strategy):
     # успешное переизмерение продлевает срок годности (R14.1)
     assert _row(session, strategy.id).valid_until == NOW + timedelta(weeks=4)
     assert bot.cards and bot.cards[0][0] == "alert"
+
+
+@pytest.mark.parametrize(
+    "rung,mode",
+    [("backtest", "backtest"), ("paper", "paper"), ("micro", "micro"),
+     ("signal", "forward"), ("semi", "forward"), ("auto", "forward")],
+)
+def test_weekly_remeasure_uses_the_current_rung_mode(session, strategy, rung, mode):
+    row = _row(session, strategy.id)
+    row.status = Status.MEASURING.value
+    row.rung = rung
+    session.flush()
+    calls = []
+    weekly_remeasure(
+        Scope(session), measure=lambda **kw: calls.append(kw) or "ok",
+        ladder_factory=FakeLadder, now=NOW,
+    )
+    assert calls[0]["mode"] == mode
 
 
 def test_weekly_remeasure_survives_broken_measure(session, strategy):
@@ -131,6 +155,53 @@ def test_weekly_remeasure_survives_broken_measure(session, strategy):
     assert report.measured == []
     assert "нет свечей" in report.failed[strategy.id]
     assert _row(session, strategy.id).valid_until is None
+
+
+def test_incomplete_weekly_measure_never_falls_back_to_old_metrics(session, strategy):
+    from types import SimpleNamespace
+
+    _row(session, strategy.id).status = Status.MEASURING.value
+    ladder = FakeLadder(session)
+    report = weekly_remeasure(
+        Scope(session),
+        measure=lambda **_: SimpleNamespace(status="incomplete", metrics=None, reason="нет свечей"),
+        ladder_factory=lambda _: ladder, now=NOW,
+    )
+    assert ladder.evaluated == []
+    assert report.failed[strategy.id] == "нет свечей"
+    assert _row(session, strategy.id).valid_until is None
+
+
+def test_weekly_stability_failure_is_reported_and_blocks_admission(session, strategy, monkeypatch):
+    from types import SimpleNamespace
+
+    import lab.ops.measure as ops_measure
+    from lab.core.measure import threshold
+    from tests.core.test_ladder import make_metrics
+
+    row = _row(session, strategy.id)
+    row.status = Status.MEASURING.value
+    row.rung = "backtest"
+    session.flush()
+
+    def broken(*args, **kwargs):
+        raise TimeoutError("архив недоступен")
+
+    monkeypatch.setattr(ops_measure, "run_stability", broken)
+    seen = []
+
+    class InspectLadder(FakeLadder):
+        def evaluate(self, strategy_id, metrics=None):
+            seen.append(threshold(metrics, row.branch, rung=row.rung))
+
+    report = weekly_remeasure(
+        Scope(session),
+        measure=lambda **_: SimpleNamespace(status="ok", metrics=make_metrics()),
+        ladder_factory=InspectLadder, now=NOW,
+    )
+    assert seen[0].status == "insufficient"
+    assert "архив недоступен" in report.failed[strategy.id]
+    assert report.transitions == []
 
 
 def test_expiry_degrades_strategy_past_valid_until(session, strategy):

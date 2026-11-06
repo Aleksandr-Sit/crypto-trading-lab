@@ -39,9 +39,23 @@ CancelOrders = Callable[[str], int]
 
 _FROZEN = frozenset({Status.RETIRED, Status.DEGRADED})
 _SNAPSHOT_FIELDS = (
+    "execution",
+    "trade_source",
+    "forward_verified",
+    "observation_id",
+    "rules_revision",
+    "observation_started_at",
+    "forward_excluded",
+    "virtual_state",
+    "stability",
+    "stability_error",
     "n_trades",
     "ev_per_trade",
+    "cost_stress",
     "ev_ci95",
+    "ev_search_ci",
+    "bootstrap",
+    "research",
     "net_pnl_pct",
     "max_dd_pct",
     "vs_benchmark",
@@ -149,6 +163,10 @@ class Ladder:
         if row.status == Status.CANDIDATE:
             row.status = Status.MEASURING.value
             self.s.flush()
+        if Rung(row.rung) != Rung.BACKTEST:
+            from lab.core.forward import current_observation
+
+            current_observation(self.s, strategy_id, start=True)
         return transition
 
     def latest_metrics(self, strategy_id: str) -> Metrics | None:
@@ -165,7 +183,7 @@ class Ladder:
         m = metrics if metrics is not None else self._metrics(strategy_id, rung)
         if m is None:
             return started
-        result = self._threshold(m, Branch(row.branch), rung)
+        result = self._admission(row, m, rung)
         snap = metrics_snapshot(m, result)
 
         if result.status == "passed":
@@ -205,8 +223,22 @@ class Ladder:
                     f"{rung} → {next_rung(rung, by='operator')}: только оператор"
                 )
             raise LadderError(f"{strategy_id} уже на верхней ступени {rung}")
+        if row.status == Status.DEGRADED:
+            raise LadderError(f"{strategy_id}: сначала устраните пробой стопа")
+        m = self._metrics(strategy_id, rung)
+        if m is None:
+            raise LadderError(f"{strategy_id}: нет метрик для допуска на {rung}")
+        result = self._admission(row, m, rung)
+        if result.status != "passed":
+            detail = "; ".join(
+                f"{c.name}: {c.detail}" for c in result.criteria if c.passed is not True
+            ) or result.status
+            raise LadderError(f"{strategy_id}: порог на {rung} не пройден: {detail}")
+        # Операторский снимок не может подменить фактический результат допуска.
+        snap = dict(snapshot or {})
+        snap.update(metrics_snapshot(m, result))
         return self._move(
-            row, target, Status.MEASURING, reason or f"поднята вручную с {rung}", by, snapshot or {}
+            row, target, Status.MEASURING, reason or f"поднята вручную с {rung}", by, snap
         )
 
     def demote(
@@ -285,6 +317,55 @@ class Ladder:
 
     # -- внутреннее --------------------------------------------------------------------
 
+    def _admission(self, row: StrategyRow, m: Metrics, rung: Rung) -> ThresholdResult:
+        from lab.core.forward import current_observation, rules_spec, virtual_health
+        from lab.core.measure.types import Criterion
+        from lab.core.registry import Strategy, _fingerprint
+
+        result = self._threshold(m, Branch(row.branch), rung)
+        # More search since this estimate changes its multiplicity correction.
+        # Never silently use the interval selected under a smaller trial count.
+        if rung in (Rung.SEMI, Rung.AUTO):
+            from lab.core.measure.research import variant_count
+            from lab.db.models import ResearchTrialRow
+
+            trial = self.s.get(ResearchTrialRow, m.research.get("trial_id")) if m.research else None
+            if (
+                not m.research.get("tracked") or m.research.get("variants") != variant_count(self.s)
+                or trial is None or trial.status != "ok" or trial.strategy_id != row.id
+                or trial.variant_hash != m.research.get("variant_hash")
+            ):
+                result = result.model_copy(update={
+                    "status": "insufficient",
+                    "criteria": [*result.criteria, Criterion(
+                        name="research_current", value=None, limit=1, op=">=", passed=None,
+                        detail="нужен новый расчёт после изменения числа вариантов поиска",
+                    )],
+                })
+        if rung == Rung.BACKTEST:
+            valid = m.rules_revision == _fingerprint(rules_spec(Strategy.from_row(row)))
+        else:
+            observation = current_observation(self.s, row.id)
+            valid = (
+                observation is not None and m.forward_verified
+                and m.observation_id == observation.id
+                and m.rules_revision == observation.revision
+                and m.observation_started_at == observation.started_at
+                and m.trade_source == ("journal_paper" if rung == Rung.PAPER else "journal_live")
+                and m.window_to >= observation.started_at
+                and (rung != Rung.PAPER or not virtual_health(self.s, row.id))
+            )
+        criterion = Criterion(
+            name="rules_revision" if rung == Rung.BACKTEST else "forward_evidence",
+            value=1 if valid else None, limit=1, op=">=",
+            passed=bool(valid),
+            detail="нужны метрики текущей версии; для форварда — журнал после начала наблюдения",
+        )
+        return result.model_copy(update={
+            "status": result.status if valid else "insufficient",
+            "criteria": [*result.criteria, criterion],
+        })
+
     def _row(self, strategy_id: str) -> StrategyRow:
         row = self.s.get(StrategyRow, strategy_id)
         if row is None:
@@ -319,6 +400,10 @@ class Ladder:
         row.status = status.value
         self.s.add(rec)
         self.s.flush()
+        if to != Rung.BACKTEST:
+            from lab.core.forward import current_observation
+
+            current_observation(self.s, row.id, start=True)
         t = Transition.from_row(rec, status)
         if self._notify is not None:
             self._notify(t)
@@ -331,12 +416,11 @@ class Ladder:
             .where(
                 MeasurementRow.strategy_id == strategy_id,
                 MeasurementRow.mode == MEASURE_MODE_FOR_RUNG[rung].value,
-                MeasurementRow.status == "ok",
             )
             .order_by(MeasurementRow.created_at.desc(), MeasurementRow.id.desc())
             .limit(1)
         )
         row = self.s.scalar(stmt)
-        if row is None or not row.metrics_json.get("metrics"):
+        if row is None or row.status != "ok" or not row.metrics_json.get("metrics"):
             return None
         return Metrics.model_validate(row.metrics_json["metrics"])

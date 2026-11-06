@@ -19,6 +19,8 @@ import numpy as np
 
 from lab.config import ThresholdConfig, load_limits, load_threshold
 from lab.contracts import Branch, Candle, Rung
+from lab.core.measure.stress import METHOD as STRESS_METHOD
+from lab.core.measure.stress import cost_stress
 from lab.core.measure.types import (
     ClosedTrade,
     CostsBreakdown,
@@ -42,6 +44,14 @@ _NA = {
 
 # Факты о ходе прогона: не метрики ветки, но часть снимка — иначе их некуда положить.
 _OUTCOME_KEYS = (
+    "execution",
+    "trade_source",
+    "forward_verified",
+    "observation_id",
+    "rules_revision",
+    "observation_started_at",
+    "forward_excluded",
+    "virtual_state",
     "stopped_at",
     "stop_rule",
     "blocked_signals",
@@ -49,6 +59,8 @@ _OUTCOME_KEYS = (
     "benchmark_max_dd_pct",
     "allocation",
     "stability",
+    "stability_error",
+    "research",
     "reasons",
     "data_gaps",
     "liquidations",
@@ -167,16 +179,68 @@ def sample_status(n: int, required: int) -> SampleStatus:
     )
 
 
-def _bootstrap_ci(
-    pnls: Sequence[Decimal], samples: int, confidence: Decimal, seed: int
-) -> tuple[Decimal, Decimal]:
-    arr = np.array([float(p) for p in pnls])
+def _bootstrap_means(
+    trades: Sequence[ClosedTrade], samples: int, seed: int, block_groups: int | None,
+) -> tuple[np.ndarray, int, int]:
+    """Circular blocks of consecutive closing timestamps; simultaneous legs stay together.
+
+    Resample sums AND counts: the statistic remains closed net P&L per trade,
+    not the equally weighted mean of timestamp means. Memory is O(samples + groups).
+    """
+    sums, counts = [], []
+    for _, rows in groupby(sorted(trades, key=_closed_at), key=_closed_at):
+        rows = list(rows)
+        sums.append(float(sum((t.pnl_net for t in rows), Decimal(0))))
+        counts.append(len(rows))
+    groups = len(sums)
+    if groups < 2:
+        return np.array([]), groups, 0
+    block = min(block_groups or max(2, math.ceil(groups ** (1 / 3))), groups - 1)
+    # A single timestamp cannot establish temporal uncertainty.
+    if block < 2:
+        return np.array([]), groups, block
+    sums_arr, counts_arr = np.asarray(sums), np.asarray(counts)
+    # Prefix sums over a doubled circular series avoid samples × trades allocations.
+    ps = np.concatenate(([0.0], np.cumsum(np.tile(sums_arr, 2))))
+    pc = np.concatenate(([0], np.cumsum(np.tile(counts_arr, 2))))
     rng = np.random.default_rng(seed)
-    idx = rng.integers(0, len(arr), size=(samples, len(arr)))
-    means = arr[idx].mean(axis=1)
+    total, number = np.zeros(samples), np.zeros(samples)
+    for offset in range(0, groups, block):
+        width = min(block, groups - offset)
+        starts = rng.integers(0, groups, size=samples)
+        total += ps[starts + width] - ps[starts]
+        number += pc[starts + width] - pc[starts]
+    return total / number, groups, block
+
+
+def _interval(means: np.ndarray, confidence: Decimal) -> tuple[Decimal, Decimal] | None:
+    if not len(means):
+        return None
     alpha = (1 - float(confidence)) / 2
     lo, hi = np.quantile(means, [alpha, 1 - alpha])
     return _d(lo), _d(hi)
+
+
+def refresh_search_interval(m: Metrics, trades: Sequence[ClosedTrade], variants: int) -> Metrics:
+    """Recompute after stability added trials, without altering the nominal interval."""
+    if not m.research.get("tracked") or not m.bootstrap:
+        return m
+    info = dict(m.bootstrap)
+    confidence = 1 - (1 - Decimal(info["confidence"])) / max(1, variants)
+    means, _, _ = _bootstrap_means(
+        trades, info["samples"], info["seed"], info["block_groups"] or None,
+    )
+    enough_blocks = info["block_groups"] > 0 and (
+        info["groups"] // info["block_groups"] >= info["minimum_blocks"]
+    )
+    ci = (
+        _interval(means, confidence)
+        if enough_blocks and info["samples"] * (1 - confidence) / 2 >= 5 else None
+    )
+    info.update(search_confidence=str(confidence), variants=variants)
+    return m.model_copy(update={
+        "research": {**m.research, "variants": variants}, "bootstrap": info, "ev_search_ci": ci,
+    })
 
 
 def _closed_at(trade: ClosedTrade) -> datetime:
@@ -263,6 +327,19 @@ def metrics(
     cfg = config or load_threshold()
     n = len(trades)
     pnls = [t.pnl_net for t in trades]
+    means, groups, block = _bootstrap_means(
+        trades, cfg.bootstrap_samples, seed, cfg.bootstrap_block_groups,
+    )
+    research = dict((extra or {}).get("research") or {})
+    trials = max(1, int(research.get("variants", 1)))
+    adjusted_confidence = 1 - (1 - cfg.confidence) / trials
+    # Extreme quantiles cannot be resolved by a handful of bootstrap draws.
+    search_ci = (
+        _interval(means, adjusted_confidence)
+        if research.get("tracked") and block > 0 and groups // block >= cfg.bootstrap_min_blocks
+        and cfg.bootstrap_samples * (1 - adjusted_confidence) / 2 >= 5
+        else None
+    )
     # Переоценка по рынку (ревизия 12.09.2026): незакрытая на конец окна позиция входит
     # в итог, а просадка берётся худшая из двух — по закрытым сделкам и по цене бара.
     # До этого позиция, просевшая на 40% и закрытая в +1%, просадки не давала вовсе.
@@ -332,11 +409,21 @@ def metrics(
 
     return Metrics(
         n_trades=n,
+        cost_stress=cost_stress(trades, cfg.cost_stress),
         sample=sample_status(n, cfg.min_trades),
         net_pnl=net,
         net_pnl_pct=net_pct,
-        ev_per_trade=net / n if n else None,
-        ev_ci95=_bootstrap_ci(pnls, cfg.bootstrap_samples, cfg.confidence, seed) if n else None,
+        ev_per_trade=sum(pnls, Decimal(0)) / n if n else None,
+        ev_ci95=_interval(means, cfg.confidence),
+        ev_search_ci=search_ci,
+        bootstrap={
+            "method": "circular_closing_blocks/v1", "statistic": "closed_net_pnl_per_trade",
+            "groups": groups, "block_groups": block, "samples": cfg.bootstrap_samples,
+            "minimum_blocks": cfg.bootstrap_min_blocks,
+            "confidence": str(cfg.confidence), "seed": seed,
+            "search_confidence": str(adjusted_confidence),
+            "search_correction": "bonferroni", "variants": trials,
+        },
         win_rate=Decimal(len(wins)) / n if n else None,
         profit_factor=(gross_profit / gross_loss) if gross_loss > 0 else None,
         payoff=(
@@ -405,9 +492,42 @@ def threshold(
         _crit("n_trades", m.n_trades, cfg.min_trades, ">=", sample.detail),
         _crit("ev_per_trade", m.ev_per_trade, cfg.min_ev_after_costs, ">", "после издержек"),
     ]
-    if rung is not None and Rung(rung) == Rung.AUTO:
-        lo = m.ev_ci95[0] if m.ev_ci95 else None
-        criteria.append(_crit("ev_ci95_low", lo, cfg.min_ev_after_costs, ">", "бутстрап CI95"))
+    if rung is not None and Rung(rung) == Rung.PAPER:
+        criteria.append(
+            _crit(
+                "paper_journal",
+                1 if m.trade_source == "journal_paper" else None,
+                1,
+                ">=",
+                "нужны бумажные сделки из журнала; история не подтверждает ступень paper",
+            )
+        )
+    if rung is not None and Rung(rung) in (Rung.SEMI, Rung.AUTO):
+        stress = m.cost_stress
+        current = (
+            stress is not None and stress.method == STRESS_METHOD
+            and stress.multiplier == cfg.cost_stress.multiplier
+            and stress.extra_turnover_bps == cfg.cost_stress.extra_turnover_bps
+            and stress.n_trades == m.n_trades
+        )
+        criteria.append(_crit(
+            "cost_stress_ev", stress.ev_per_trade if current else None,
+            cfg.min_ev_after_costs, ">",
+            "закрытый EV при увеличенных расходах, уменьшенных поступлениях и "
+            "добавке к обороту; нужны результаты актуального стресс-сценария",
+        ))
+        lo = m.ev_search_ci[0] if m.ev_search_ci else None
+        criteria.append(_crit(
+            "ev_ci95_low", lo, cfg.min_ev_after_costs, ">",
+            "блоковый интервал закрытого EV с поправкой за все зарегистрированные варианты; "
+            "нужны журнал поиска и достаточное число бутстрап-выборок",
+        ))
+    if m.trade_source in ("journal_paper", "journal_live") and rung != Rung.BACKTEST:
+        criteria.append(_crit(
+            "forward_verified", 1 if m.forward_verified else None, 1, ">=",
+            "нужны сделки после начала наблюдения с проверенным временем регистрации; "
+            f"исключено: {m.forward_excluded}",
+        ))
     # Правила РАЗМЕЩЕНИЯ судятся по относительной планке: они держат 100% в активе и
     # наследуют его просадку, а фиксированные 5% группы `cex` отбраковывали такой класс
     # целиком — и ротацию золото/BTC (просадка 25.2% против 76.6% у самого биткойна),
@@ -441,10 +561,23 @@ def threshold(
             _vs_benchmark_detail(m),
         )
     )
-    # Устойчивость: считается не всегда (дорого), поэтому критерии добавляются только когда
-    # оценка есть и окон набралось достаточно. Нет оценки — порог работает как раньше,
-    # по одному окну; это видно по отсутствию критериев в списке, а не по молчаливому «ок».
+    # Отсутствие расчёта не является доказательством устойчивости.
     st = m.stability
+    criteria.append(_crit(
+        "stability_windows", st.windows if st is not None else None,
+        cfg.stability.min_windows, ">=",
+        m.stability_error or "нужен расчёт устойчивости с достаточным числом зачтённых окон",
+    ).model_copy(update={
+        "passed": True if st is not None and st.windows >= cfg.stability.min_windows
+        and not m.stability_error else None,
+    }))
+    criteria.append(_crit(
+        "stability_compared", st.compared if st is not None else None,
+        cfg.stability.min_windows, ">=",
+        "нужно достаточно окон с измеренным бенчмарком",
+    ).model_copy(update={
+        "passed": True if st is not None and st.compared >= cfg.stability.min_windows else None,
+    }))
     if st is not None and st.windows >= cfg.stability.min_windows:
         criteria.append(
             _crit(

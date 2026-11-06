@@ -9,6 +9,19 @@ from sqlalchemy.orm import Mapped, mapped_column
 from lab.db.base import Base, Code, Json, JsonList, Money, MoneyOpt, Ts, TsOpt, utcnow
 
 
+class VirtualBarRow(Base):
+    __tablename__ = "virtual_bars"
+
+    observation_id: Mapped[str] = mapped_column(
+        ForeignKey("forward_observations.id", ondelete="CASCADE"), primary_key=True,
+    )
+    instrument: Mapped[str] = mapped_column(String(64), primary_key=True)
+    ts: Mapped[Ts] = mapped_column(primary_key=True)
+    payload: Mapped[Json]
+    recorded_at: Mapped[Ts] = mapped_column(default=utcnow)
+    archive_status: Mapped[Code] = mapped_column(default="pending")
+
+
 class StrategyRow(Base):
     __tablename__ = "strategies"
 
@@ -49,6 +62,22 @@ class CandidateRow(Base):
     decided_at: Mapped[TsOpt]
 
 
+class ResearchTrialRow(Base):
+    """Attempts survive strategy deletion; failures are part of the search history."""
+
+    __tablename__ = "research_trials"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    strategy_id: Mapped[str] = mapped_column(String(128), index=True)
+    variant_hash: Mapped[str] = mapped_column(String(64), index=True)
+    spec: Mapped[Json]
+    result: Mapped[Json] = mapped_column(default=dict)
+    status: Mapped[Code] = mapped_column(default="running")
+    reason: Mapped[str] = mapped_column(Text, default="")
+    started_at: Mapped[Ts] = mapped_column(default=utcnow)
+    finished_at: Mapped[TsOpt]
+
+
 class MeasurementRow(Base):
     __tablename__ = "measurements"
 
@@ -65,12 +94,24 @@ class MeasurementRow(Base):
     created_at: Mapped[Ts] = mapped_column(default=utcnow)
 
 
+class ForwardObservationRow(Base):
+    __tablename__ = "forward_observations"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    strategy_id: Mapped[str] = mapped_column(ForeignKey("strategies.id", ondelete="CASCADE"))
+    revision: Mapped[str] = mapped_column(String(64))
+    spec: Mapped[Json]
+    started_at: Mapped[Ts] = mapped_column(default=utcnow)
+
+
 class SignalRow(Base):
     __tablename__ = "signals"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     strategy_id: Mapped[str] = mapped_column(ForeignKey("strategies.id", ondelete="CASCADE"))
     decided_at: Mapped[Ts]
+    recorded_at: Mapped[TsOpt]
+    observation_id: Mapped[str | None] = mapped_column(ForeignKey("forward_observations.id"))
     instrument: Mapped[str] = mapped_column(String(64))
     side: Mapped[Code]
     size: Mapped[Money]
@@ -118,6 +159,7 @@ class FillRow(Base):
     fee: Mapped[Money]
     fee_asset: Mapped[str] = mapped_column(String(16))
     ts: Mapped[Ts]
+    recorded_at: Mapped[TsOpt]
     # таск 02 (миграция 0002): референсная цена на момент решения и издержки по компонентам
     ref_price: Mapped[MoneyOpt]
     costs_json: Mapped[Json] = mapped_column(default=dict)

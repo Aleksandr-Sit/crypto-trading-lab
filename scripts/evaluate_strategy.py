@@ -12,8 +12,8 @@
 Устойчивость по скользящим окнам считается ТАК ЖЕ, как в воскресном цикле
 (`attach_stability`): только если остальные критерии пройдены. До 16.09.2026 скрипт
 её не считал вовсе и поднял бы на `paper` шорт листингов — порог на одном окне взят,
-на окнах провален (9 из 16). Поэтому здесь строже, чем в цикле: если устойчивость была
-нужна, но не легла в порог (прогон упал, окон мало), ступень НЕ двигается.
+на окнах провален (9 из 16). Теперь общий порог блокирует оба пути повышения,
+если расчёт упал или окон недостаточно.
 
 Ступень выше `micro` лестница не поднимает никогда (`OperatorRequired`) — реальными
 деньгами отсюда не рискуют.
@@ -35,7 +35,7 @@ from lab.core.registry import Registry  # noqa: E402
 from lab.core.risk import DbHaltSwitch  # noqa: E402
 from lab.db import make_engine, make_session_factory, session_scope  # noqa: E402
 from lab.db.base import utcnow  # noqa: E402
-from lab.ops.jobs.remeasure import attach_stability  # noqa: E402
+from lab.ops.jobs.remeasure import attach_stability, save_stability  # noqa: E402
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -63,11 +63,18 @@ def main() -> int:
         ladder = Ladder(
             session, threshold=default_threshold_fn(), halt=DbHaltSwitch(session)
         )
-        metrics = ladder.latest_metrics(args.id)
-        if metrics is None:
-            print("замера нет — сначала `lab measure run`")
+        from lab.contracts import Rung
+        from lab.core.ladder.rules import MEASURE_MODE_FOR_RUNG
+        from lab.core.measure import history
+
+        snapshots = history(session, args.id, mode=MEASURE_MODE_FOR_RUNG[Rung(row.rung)], limit=1)
+        if not snapshots or snapshots[0].status != "ok" or snapshots[0].metrics is None:
+            print("последний замер отсутствует или не завершён — сначала `lab measure run`")
             return 1
+        measured = snapshots[0]
+        metrics = measured.metrics
         metrics, problem = attach_stability(scope, row, metrics, utcnow())
+        metrics = save_stability(session, measured, metrics, row)
         if problem:
             print(f"ступень не тронута: {problem}")
             return 2

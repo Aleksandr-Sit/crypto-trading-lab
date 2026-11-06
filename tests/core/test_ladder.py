@@ -118,13 +118,18 @@ def cancelled() -> list[str]:
 
 
 @pytest.fixture
-def ladder(session, threshold, cancelled) -> Ladder:
-    return Ladder(
+def ladder(session, threshold, cancelled, monkeypatch) -> Ladder:
+    ladder = Ladder(
         session,
         threshold=threshold,
         halt=MemoryHaltSwitch(),
         cancel_orders=lambda sid: cancelled.append(sid) or 2,
     )
+    # These state-machine tests isolate the gate; real evidence is tested separately.
+    monkeypatch.setattr(
+        ladder, "_admission", lambda row, m, rung: threshold(m, Branch(row.branch), rung)
+    )
+    return ladder
 
 
 def test_evaluate_promotes_one_rung_on_passed_threshold_and_records_numbers(
@@ -155,7 +160,7 @@ def test_forward_only_strategy_starts_at_paper(registry, ladder):
     assert ladder.evaluate(s.id) is None  # повторно ступень не трогается
 
 
-def test_semi_to_auto_only_by_operator(registry, ladder, threshold):
+def test_semi_to_auto_only_by_operator(registry, ladder, threshold, monkeypatch):
     s = registry.add(manifest())
     for _ in range(4):  # backtest → paper → micro → signal → semi
         assert ladder.evaluate(s.id, make_metrics()) is not None
@@ -167,9 +172,51 @@ def test_semi_to_auto_only_by_operator(registry, ladder, threshold):
 
     with pytest.raises(OperatorRequired):
         ladder.promote(s.id, by="system")
+    monkeypatch.setattr(ladder, "_metrics", lambda sid, rung: make_metrics())
     t = ladder.promote(s.id, by="operator")
     assert (t.from_rung, t.to_rung, t.by) == (Rung.SEMI, Rung.AUTO, "operator")
     assert registry.get(s.id).rung == Rung.AUTO
+
+
+@pytest.mark.parametrize("verdict", [None, "failed", "insufficient"])
+def test_manual_promotion_requires_passing_metrics(
+    registry, ladder, threshold, monkeypatch, verdict
+):
+    from lab.core.ladder import LadderError
+
+    s = registry.add(manifest())
+    ladder.evaluate(s.id, make_metrics())
+    monkeypatch.setattr(
+        ladder, "_metrics", lambda sid, rung: None if verdict is None else make_metrics()
+    )
+    threshold.status = verdict or "passed"
+    with pytest.raises(LadderError, match="нет метрик|порог"):
+        ladder.promote(s.id, by="operator", snapshot={"threshold": {"status": "passed"}})
+    assert registry.get(s.id).rung == Rung.PAPER
+    assert len(ladder.history(s.id)) == 1
+
+
+def test_manual_promotion_records_actual_gate_result(registry, ladder, threshold, monkeypatch):
+    s = registry.add(manifest())
+    monkeypatch.setattr(ladder, "_metrics", lambda sid, rung: make_metrics())
+    t = ladder.promote(
+        s.id, by="operator", snapshot={"metrics": {"n_trades": 999}, "note": "review"}
+    )
+    assert threshold.calls == [("cex-perp", "backtest")]
+    assert t.metrics_snapshot["metrics"]["n_trades"] == 40
+    assert t.metrics_snapshot["threshold"]["status"] == "passed"
+    assert t.metrics_snapshot["note"] == "review"
+
+
+def test_manual_promotion_cannot_resume_degraded_strategy(registry, ladder, monkeypatch):
+    from lab.core.ladder import LadderError
+
+    s = registry.add(manifest())
+    ladder.breach(s.id, "стоп")
+    monkeypatch.setattr(ladder, "_metrics", lambda sid, rung: make_metrics())
+    with pytest.raises(LadderError, match="пробой стопа"):
+        ladder.promote(s.id, by="operator")
+    assert registry.get(s.id).status == Status.DEGRADED
 
 
 def test_failed_threshold_demotes_one_rung_with_reason(registry, ladder, threshold):
@@ -244,16 +291,47 @@ def test_retired_strategy_cannot_be_moved(registry, ladder):
     assert len(ladder.history(s.id)) == 1
 
 
+def test_real_ladder_blocks_both_paths_without_stability(session, registry):
+    from lab.core.forward import rules_spec
+    from lab.core.ladder import LadderError, default_threshold_fn
+    from lab.core.registry import _fingerprint
+
+    s = registry.add(manifest())
+    m = make_metrics().model_copy(update={"rules_revision": _fingerprint(rules_spec(s))})
+    ladder = Ladder(session, threshold=default_threshold_fn(), metrics=lambda *_: m)
+    assert ladder.evaluate(s.id) is None
+    assert registry.get(s.id).rung == Rung.BACKTEST
+    with pytest.raises(LadderError, match="stability_windows"):
+        ladder.promote(s.id, by="operator")
+
+
 def test_default_threshold_adapter_uses_real_measure_threshold(session, registry):
     from lab.core.ladder import default_threshold_fn
+    from lab.core.measure.types import Stability
 
     ladder = Ladder(session, threshold=default_threshold_fn(), halt=MemoryHaltSwitch())
     s = registry.add(manifest())
+    from lab.core.forward import rules_spec
+    from lab.core.registry import _fingerprint
+
+    initial = make_metrics().model_copy(update={
+        "rules_revision": _fingerprint(rules_spec(s)),
+        "stability": Stability(windows=10, profitable=8, compared=10, ahead=8),
+    })
     # 40 сделок, EV 1.5 > 0, MaxDD 3 % ≤ 5 % (cex), vs_benchmark +2 % → порог В12 пройден
-    t = ladder.evaluate(s.id, make_metrics())
+    t = ladder.evaluate(s.id, initial)
     assert t is not None and t.to_rung == Rung.PAPER
     names = {c["name"] for c in t.metrics_snapshot["threshold"]["criteria"]}
     assert {"n_trades", "ev_per_trade", "max_dd_pct", "vs_benchmark"} <= names
     # MaxDD 8 % > лимита 5 % группы cex → провал → назад на backtest
-    t = ladder.evaluate(s.id, make_metrics(max_dd="8"))
+    from lab.core.forward import current_observation
+
+    observation = current_observation(session, s.id)
+    m = make_metrics(max_dd="8").model_copy(update={
+        "trade_source": "journal_paper", "forward_verified": True,
+        "observation_id": observation.id, "rules_revision": observation.revision,
+        "observation_started_at": observation.started_at,
+        "window_to": observation.started_at + timedelta(days=1),
+    })
+    t = ladder.evaluate(s.id, m)
     assert t is not None and t.to_rung == Rung.BACKTEST and "max_dd_pct" in t.reason

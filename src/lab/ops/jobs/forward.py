@@ -116,7 +116,7 @@ def _mark(at: datetime, bars: dict[str, datetime]) -> dict[str, Any]:
     return {"at": at.isoformat(), "bars": {k: v.isoformat() for k, v in sorted(bars.items())}}
 
 
-def replay(strategy: Any, bars: Sequence[Candle]) -> list[Signal]:
+def replay(strategy: Any, bars: Sequence[Candle], *, strict: bool = False) -> list[Signal]:
     """Проиграть стратегию по барам в порядке времени и собрать её решения.
 
     Бары сортируются по времени ПО ВСЕМ инструментам сразу: связка из двух ног обязана
@@ -129,6 +129,8 @@ def replay(strategy: Any, bars: Sequence[Candle]) -> list[Signal]:
         try:
             out.extend(strategy.on_bar(bar) or [])
         except Exception as err:  # noqa: BLE001 — дефект одного правила не валит остальные
+            if strict:
+                raise
             log.warning("Стратегия %s упала на баре %s: %s", strategy.strategy_id, bar.ts, err)
             break
     return out
@@ -172,6 +174,12 @@ def run_forward(
         ]
         journal = Journal(session)
         for record in records:
+            if record.rung == "paper":
+                from lab.db.models import SystemFlagRow
+                from lab.ops.jobs.virtual import PREFIX
+
+                if session.get(SystemFlagRow, f"{PREFIX}{record.id}") is not None:
+                    continue
             try:
                 strategy = _build_strategy(record)
             except Exception as err:  # noqa: BLE001 — нет кода правил: не наша авария
@@ -182,6 +190,11 @@ def run_forward(
                 continue
 
             flag = _flag(session, record.id)
+            from lab.core.forward import current_observation
+
+            observation = current_observation(session, record.id, start=True)
+            if (flag.value or {}).get("observation_id") != observation.id:
+                flag.value = {}
             seen = _watermark(flag)
             tf = record.timeframe or "1h"
             bars = _bars(store, record, tf, at)
@@ -195,6 +208,7 @@ def run_forward(
                 # Первый запуск: только ставим отметку. Записать сейчас решения из разогрева
                 # значило бы задним числом создать «прогнозы», которых никто не делал.
                 flag.value = _mark(at, horizon)
+                flag.value["observation_id"] = observation.id
                 flag.updated_by = "worker"
                 report.started.append(record.id)
                 continue
@@ -216,6 +230,7 @@ def run_forward(
                 if instrument not in known or close > known[instrument]:
                     known[instrument] = close
             flag.value = _mark(at, known)
+            flag.value["observation_id"] = observation.id
             flag.updated_by = "worker"
     return report
 

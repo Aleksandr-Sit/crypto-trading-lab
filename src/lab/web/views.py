@@ -82,10 +82,15 @@ STATUS_LABELS = {
     "retired": "снята",
 }
 CRITERION_LABELS = {
+    "stability_windows": "устойчивость: зачтённые окна",
+    "cost_stress_ev": "EV при стрессе издержек",
+    "stability_compared": "устойчивость: окна с бенчмарком",
+    "stability_profitable": "устойчивость: прибыльные окна, %",
+    "stability_vs_benchmark": "устойчивость: впереди бенчмарка, %",
     "n_trades": "сделок",
     "ev_per_trade": "EV на сделку",
     "ev_ci95": "нижняя граница CI95 EV",
-    "ev_ci95_low": "нижняя граница CI95 EV",
+    "ev_ci95_low": "нижняя граница EV с поправкой поиска",
     "max_dd_pct": "макс. просадка, %",
     "vs_benchmark": "vs BTC, п.п.",
 }
@@ -325,6 +330,48 @@ class Card:
     @property
     def ev_ci95(self) -> str:
         return fmt_ci(self.metrics.ev_ci95) if self.metrics else NA
+
+    @property
+    def ev_ci_label(self) -> str:
+        if not self.metrics or not self.metrics.bootstrap:
+            return "CI (старый метод)"
+        confidence = format((Decimal(self.metrics.bootstrap["confidence"]) * 100).normalize(), "f")
+        return f"CI{confidence} (блоковый, без поправки поиска)"
+
+    @property
+    def execution_summary(self) -> str:
+        data = self.metrics.execution if self.metrics else {}
+        if not data:
+            return ""
+        return (
+            f"Исполнение по ленте: {data.get('prints')} сделок ленты, "
+            f"{data.get('fills')} исполнений; задержка {data.get('latency_ms')} мс, "
+            f"участие {data.get('max_participation')}. "
+            "Полнота проверена по заявленным границам и последовательности номеров; "
+            "независимой сверки нет. Открытая позиция оценена по последней сделке."
+        )
+
+    @property
+    def cost_stress_summary(self) -> str:
+        stress = self.metrics.cost_stress if self.metrics else None
+        if stress is None:
+            return "Стресс издержек не рассчитан."
+        return (
+            f"Стресс издержек: закрытый EV/сделку {stress.ev_per_trade}; "
+            f"расходы ×{stress.multiplier}, поступления /{stress.multiplier}, "
+            f"+{stress.extra_turnover_bps} б.п. оборота. "
+            "Чувствительность на тех же сделках, без повторного розыгрыша заявок."
+        )
+
+    @property
+    def research_summary(self) -> str:
+        if not self.metrics or not self.metrics.research.get("tracked"):
+            return "Поиск не зарегистрирован; поправка за выбор лучшего варианта недоступна."
+        return (
+            f"Вариантов в общем журнале поиска: {self.metrics.research['variants']}. "
+            f"EV с поправкой поиска: {fmt_ci(self.metrics.ev_search_ci)}. "
+            "Исторические и внешние незаписанные попытки неизвестны."
+        )
 
     @property
     def forward_only(self) -> bool:

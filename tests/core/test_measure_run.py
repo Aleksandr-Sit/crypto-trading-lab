@@ -161,6 +161,45 @@ def test_gap_in_data_marks_incomplete(candles):
     assert m.metrics is None
 
 
+def test_statistics_configuration_is_part_of_snapshot_cache_key(candles, session):
+    from lab.config import load_threshold
+
+    strategy = Registry(session).add(_manifest())
+    cfg = load_threshold()
+    common = dict(strategy_id=strategy.id, mode="backtest",
+                  window=(candles[0].ts, candles[-1].ts + TF), candles=candles, session=session)
+    a = run(**common, strategy=FirstLast(len(candles), _manifest()), threshold_config=cfg)
+    b = run(**common, strategy=FirstLast(len(candles), _manifest()),
+            threshold_config=cfg.model_copy(update={"confidence": Decimal("0.8")}))
+    assert a.id != b.id
+    assert b.metrics.bootstrap["confidence"] == "0.8"
+
+
+def test_execution_model_invalidates_snapshot_cache(candles, session, monkeypatch):
+    strategy = Registry(session).add(_manifest())
+    common = dict(strategy_id=strategy.id, mode="backtest",
+                  window=(candles[0].ts, candles[-1].ts + TF), candles=candles, session=session)
+    a = run(**common, strategy=FirstLast(len(candles), _manifest()))
+    monkeypatch.setattr("lab.core.measure.runner.EXECUTION_MODEL", "test-next-model")
+    b = run(**common, strategy=FirstLast(len(candles), _manifest()))
+    assert a.id != b.id
+    assert b.params["_execution_model"] == "test-next-model"
+
+
+def test_cost_stress_configuration_invalidates_snapshot_cache(candles, session):
+    from lab.config import load_threshold
+    from lab.config.models import CostStressConfig
+
+    strategy = Registry(session).add(_manifest())
+    common = dict(strategy_id=strategy.id, mode="backtest",
+                  window=(candles[0].ts, candles[-1].ts + TF), candles=candles, session=session)
+    a = run(**common, strategy=FirstLast(len(candles), _manifest()))
+    cfg = load_threshold().model_copy(update={"cost_stress": CostStressConfig(multiplier=3)})
+    b = run(**common, strategy=FirstLast(len(candles), _manifest()), threshold_config=cfg)
+    assert a.id != b.id
+    assert b.metrics.cost_stress.multiplier == 3
+
+
 def test_source_failure_marks_incomplete(candles):
     def source(instrument, tf, from_ts, to_ts):
         raise ConnectionError("feed down")

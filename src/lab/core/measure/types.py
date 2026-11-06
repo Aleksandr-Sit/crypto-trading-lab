@@ -124,10 +124,36 @@ class Stability(_Model):
         return Decimal(self.ahead) * 100 / self.compared if self.compared else None
 
 
+class CostStress(_Model):
+    method: str = "fixed-trades-component-stress/v1"
+    multiplier: Decimal
+    extra_turnover_bps: Decimal
+    n_trades: int
+    closed_net_pnl: Decimal
+    ev_per_trade: Decimal | None
+    additional_cost: Decimal
+
+
 class Metrics(_Model):
     """Единый словарь метрик (R34i). Ветко-специфичные — значение или NotApplicable."""
 
     n_trades: int
+    cost_stress: CostStress | None = None
+    execution: dict[str, Any] = Field(default_factory=dict)
+    bootstrap: dict[str, Any] = Field(default_factory=dict)
+    research: dict[str, Any] = Field(default_factory=dict)
+    ev_search_ci: tuple[Decimal, Decimal] | None = None
+    stability_error: str | None = None
+    forward_verified: bool = False
+    observation_id: str | None = None
+    rules_revision: str | None = None
+    observation_started_at: datetime | None = None
+    forward_excluded: dict[str, int] = Field(default_factory=dict)
+    virtual_state: dict[str, Any] = Field(default_factory=dict)
+    # Старые снимки не подтверждают происхождение сделок и остаются unknown.
+    trade_source: Literal["unknown", "simulation", "provided", "journal_paper", "journal_live"] = (
+        "unknown"
+    )
     sample: SampleStatus
     net_pnl: Decimal
     net_pnl_pct: Decimal

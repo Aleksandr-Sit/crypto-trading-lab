@@ -1,0 +1,1588 @@
+{
+    "signals": {
+        "last": null,
+        "count": 0,
+        "first": null
+    },
+    "strategy": {
+        "id": "cex-spot-external-rotation-gold-btc",
+        "rung": "semi",
+        "slug": "rotation-gold-btc",
+        "venue": "binance",
+        "branch": "cex-spot",
+        "status": "measuring",
+        "stop_json": {
+            "daily_pct": null,
+            "max_dd_pct": "35",
+            "max_position_pct": null
+        },
+        "timeframe": "1d",
+        "created_at": "2026-09-14T10:11:39.513307+00:00",
+        "source_ref": "https://quantpedia.com/dual-momentum-allocation-between-physical-gold-and-bitcoin-digital-gold/",
+        "updated_at": "2026-11-01T18:00:25.781044+00:00",
+        "description": "any",
+        "fingerprint": "c0343fa9ca0be66315fa570fbbcdb5549c955f7d339e0e77f1f8a72f1c033b80",
+        "instruments": [
+            "BTC/USDT",
+            "PAXG/USDT"
+        ],
+        "params_json": {
+            "card": "cex-spot-rotation-gold-btc",
+            "allocation": true,
+            "capital_usd": 10000,
+            "stop_loss_pct": 35,
+            "windows_weeks": [
+                4,
+                8,
+                12
+            ],
+            "rebalance_days": 7,
+            "risk_instrument": "BTC/USDT",
+            "safe_instrument": "PAXG/USDT"
+        },
+        "source_kind": "external",
+        "valid_until": "2026-11-29T18:00:00.13718+00:00",
+        "can_backtest": true,
+        "retired_reason": null
+    },
+    "collector": null,
+    "captured_at": "2026-11-06T18:56:39.738124+00:00",
+    "transitions": [
+        {
+            "by": "system",
+            "id": 1,
+            "to": "paper",
+            "ts": "2026-09-14T12:02:05.188404+00:00",
+            "from": "backtest",
+            "reason": "порог пройден на backtest",
+            "strategy_id": "cex-spot-external-rotation-gold-btc"
+        },
+        {
+            "by": "system",
+            "id": 2,
+            "to": "micro",
+            "ts": "2026-10-18T18:00:22.18345+00:00",
+            "from": "paper",
+            "reason": "порог пройден на paper",
+            "strategy_id": "cex-spot-external-rotation-gold-btc"
+        },
+        {
+            "by": "system",
+            "id": 3,
+            "to": "signal",
+            "ts": "2026-10-25T18:00:22.642602+00:00",
+            "from": "micro",
+            "reason": "порог пройден на micro",
+            "strategy_id": "cex-spot-external-rotation-gold-btc"
+        },
+        {
+            "by": "system",
+            "id": 4,
+            "to": "semi",
+            "ts": "2026-11-01T18:00:25.761424+00:00",
+            "from": "signal",
+            "reason": "порог пройден на signal",
+            "strategy_id": "cex-spot-external-rotation-gold-btc"
+        }
+    ],
+    "measurements": [
+        {
+            "id": 123,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "926.7413206560597689372722173",
+                    "gas": "0",
+                    "total": "2374.336883404799306521424262",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "1447.595562748739537584152047",
+                    "turnover": "927113.9692787621398424528534",
+                    "priority_fee": "0"
+                },
+                "payoff": "4.885896834921779188661499129",
+                "sample": {
+                    "n": 43,
+                    "detail": "43 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "sharpe": "0.564292660064",
+                "capital": "10000",
+                "ev_ci95": [
+                    "160.375142124090",
+                    "3879.098154598578"
+                ],
+                "net_pnl": "65027.55295312197807362666668",
+                "reasons": {
+                    "ведёт по импульсу": 44,
+                    "импульс сломан, уходим в CASH": 15,
+                    "импульс сломан, уходим в BTC/USDT": 13,
+                    "импульс сломан, уходим в PAXG/USDT": 15
+                },
+                "sortino": "7.716608830613",
+                "cagr_pct": "39.524040808461",
+                "n_trades": 43,
+                "win_rate": "0.5813953488372093023255813953",
+                "costs_pct": "0.2560997851485171684765644523",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "",
+                "window_to": "2026-09-14T10:12:05.535732Z",
+                "max_dd_pct": "25.17485240052436007372581490",
+                "stopped_at": null,
+                "net_pnl_pct": "650.2755295312197807362666668",
+                "window_from": "2020-08-26T10:12:05.535732Z",
+                "ev_per_trade": "1512.268673328418094735503876",
+                "exposure_pct": "80.407239819005",
+                "liquidations": {
+                },
+                "vs_benchmark": "534.6763063598245884243881778",
+                "benchmark_pct": "115.5992231713951923118784890",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "6.785967826280248873140971014",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "25.17485240052436007372581490",
+                "unrealized_pnl": "264.2973532379465021894927453",
+                "blocked_signals": 0,
+                "dd_duration_days": "399.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "3.964903450451991229429753003",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "25.985745436272",
+                "benchmark_cagr_pct": "13.538295372189",
+                "cagr_with_idle_pct": null
+            },
+            "data_hash": "a78fda49cb9b4c83b1063a45a80cb16874e163f01d01133a28df1fa7af6bb89d",
+            "threshold": {
+                "sample": {
+                    "n": 43,
+                    "detail": "43 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "status": "failed",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 43,
+                        "detail": "43 из 30",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "1512.268673328418094735503876",
+                        "detail": "после издержек",
+                        "passed": true
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "5",
+                        "value": "25.17485240052436007372581490",
+                        "detail": "лимит группы cex",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "25.985745436272",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": true
+                    }
+                ]
+            },
+            "window_to": "2026-09-14T10:12:05.535732+00:00",
+            "created_at": "2026-09-14T10:12:08.89755+00:00",
+            "window_from": "2020-08-26T10:12:05.535732+00:00",
+            "code_version": "9785dc805eb51ceba78e2434f78193f85bad273b"
+        },
+        {
+            "id": 124,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "926.7413206560597689372722173",
+                    "gas": "0",
+                    "total": "2374.336883404799306521424262",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "1447.595562748739537584152047",
+                    "turnover": "927113.9692787621398424528534",
+                    "priority_fee": "0"
+                },
+                "payoff": "4.885896834921779188661499129",
+                "sample": {
+                    "n": 43,
+                    "detail": "43 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "sharpe": "0.564292660064",
+                "capital": "10000",
+                "ev_ci95": [
+                    "160.375142124090",
+                    "3879.098154598578"
+                ],
+                "net_pnl": "65027.55295312197807362666668",
+                "reasons": {
+                    "ведёт по импульсу": 44,
+                    "импульс сломан, уходим в CASH": 15,
+                    "импульс сломан, уходим в BTC/USDT": 13,
+                    "импульс сломан, уходим в PAXG/USDT": 15
+                },
+                "sortino": "7.716608830613",
+                "cagr_pct": "39.524040808461",
+                "n_trades": 43,
+                "win_rate": "0.5813953488372093023255813953",
+                "costs_pct": "0.2560997851485171684765644523",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "",
+                "window_to": "2026-09-14T11:48:58.730567Z",
+                "allocation": true,
+                "max_dd_pct": "25.17485240052436007372581490",
+                "stopped_at": null,
+                "net_pnl_pct": "650.2755295312197807362666668",
+                "window_from": "2020-08-26T11:48:58.730567Z",
+                "ev_per_trade": "1512.268673328418094735503876",
+                "exposure_pct": "80.407239819005",
+                "liquidations": {
+                },
+                "vs_benchmark": "534.6763063598245884243881778",
+                "benchmark_pct": "115.5992231713951923118784890",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "6.785967826280248873140971014",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "25.17485240052436007372581490",
+                "unrealized_pnl": "264.2973532379465021894927453",
+                "blocked_signals": 0,
+                "dd_duration_days": "399.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "3.964903450451991229429753003",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "25.985745436272",
+                "benchmark_cagr_pct": "13.538295372189",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": null
+            },
+            "data_hash": "a78fda49cb9b4c83b1063a45a80cb16874e163f01d01133a28df1fa7af6bb89d",
+            "threshold": {
+                "sample": {
+                    "n": 43,
+                    "detail": "43 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "status": "failed",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 43,
+                        "detail": "43 из 30",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "1512.268673328418094735503876",
+                        "detail": "после издержек",
+                        "passed": true
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "5",
+                        "value": "25.17485240052436007372581490",
+                        "detail": "лимит группы cex",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "25.985745436272",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": true
+                    }
+                ]
+            },
+            "window_to": "2026-09-14T11:48:58.730567+00:00",
+            "created_at": "2026-09-14T11:49:03.0356+00:00",
+            "window_from": "2020-08-26T11:48:58.730567+00:00",
+            "code_version": "ca8e9311d7b5a0ef4aa602073f64d505b7e73f5b"
+        },
+        {
+            "id": 125,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "926.7413206560597689372722173",
+                    "gas": "0",
+                    "total": "2374.336883404799306521424262",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "1447.595562748739537584152047",
+                    "turnover": "927113.9692787621398424528534",
+                    "priority_fee": "0"
+                },
+                "payoff": "4.885896834921779188661499129",
+                "sample": {
+                    "n": 43,
+                    "detail": "43 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "sharpe": "0.564292660064",
+                "capital": "10000",
+                "ev_ci95": [
+                    "160.375142124090",
+                    "3879.098154598578"
+                ],
+                "net_pnl": "65027.55295312197807362666668",
+                "reasons": {
+                    "ведёт по импульсу": 44,
+                    "импульс сломан, уходим в CASH": 15,
+                    "импульс сломан, уходим в BTC/USDT": 13,
+                    "импульс сломан, уходим в PAXG/USDT": 15
+                },
+                "sortino": "7.716608830613",
+                "cagr_pct": "39.524040808461",
+                "n_trades": 43,
+                "win_rate": "0.5813953488372093023255813953",
+                "costs_pct": "0.2560997851485171684765644523",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "",
+                "window_to": "2026-09-14T12:00:32.013603Z",
+                "allocation": true,
+                "max_dd_pct": "25.17485240052436007372581490",
+                "stopped_at": null,
+                "net_pnl_pct": "650.2755295312197807362666668",
+                "window_from": "2020-08-26T12:00:32.013603Z",
+                "ev_per_trade": "1512.268673328418094735503876",
+                "exposure_pct": "80.407239819005",
+                "liquidations": {
+                },
+                "vs_benchmark": "534.6763063598245884243881778",
+                "benchmark_pct": "115.5992231713951923118784890",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "6.785967826280248873140971014",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "25.17485240052436007372581490",
+                "unrealized_pnl": "264.2973532379465021894927453",
+                "blocked_signals": 0,
+                "dd_duration_days": "399.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "3.964903450451991229429753003",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "25.985745436272",
+                "benchmark_cagr_pct": "13.538295372189",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "a78fda49cb9b4c83b1063a45a80cb16874e163f01d01133a28df1fa7af6bb89d",
+            "threshold": {
+                "sample": {
+                    "n": 43,
+                    "detail": "43 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "status": "passed",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 43,
+                        "detail": "43 из 30",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "1512.268673328418094735503876",
+                        "detail": "после издержек",
+                        "passed": true
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "25.17485240052436007372581490",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "25.985745436272",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": true
+                    }
+                ]
+            },
+            "window_to": "2026-09-14T12:00:32.013603+00:00",
+            "created_at": "2026-09-14T12:00:36.154679+00:00",
+            "window_from": "2020-08-26T12:00:32.013603+00:00",
+            "code_version": "351b92773c9b2eb3e9b90ad36a20f40a25d13d6c"
+        },
+        {
+            "id": 128,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "155.7015703860116862198209306",
+                    "gas": "0",
+                    "total": "346.8888314734756750080951588",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "191.1872610874639887882742282",
+                    "turnover": "155692.7609953615732297283619",
+                    "priority_fee": "0"
+                },
+                "payoff": "0.2881580648664271411727289581",
+                "sample": {
+                    "n": 8,
+                    "detail": "недостаточно данных: 8 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "sharpe": "-0.688908207580",
+                "capital": "10000",
+                "ev_ci95": [
+                    "-1230.451088483399",
+                    "-25.251193471175"
+                ],
+                "net_pnl": "-4652.634445285913132095303018",
+                "reasons": {
+                    "ведёт по импульсу": 8,
+                    "импульс сломан, уходим в CASH": 4,
+                    "импульс сломан, уходим в BTC/USDT": 2,
+                    "импульс сломан, уходим в PAXG/USDT": 2
+                },
+                "sortino": "-0.693604462303",
+                "cagr_pct": "-11.775189596556",
+                "n_trades": 8,
+                "win_rate": "0.25",
+                "costs_pct": "0.2228034426621866186428698780",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "strategy_stop_dd",
+                "window_to": "2026-09-20T18:00:00.177938Z",
+                "allocation": true,
+                "max_dd_pct": "52.60052483728960673662311576",
+                "stopped_at": "2022-09-02T00:00:00Z",
+                "net_pnl_pct": "-46.52634445285913132095303018",
+                "window_from": "2021-09-21T18:00:00.177938Z",
+                "ev_per_trade": "-581.5793056607391415119128772",
+                "exposure_pct": "10.246575342466",
+                "liquidations": {
+                },
+                "vs_benchmark": "-132.0060730139116017915281190",
+                "benchmark_pct": "85.47972856105247047057508880",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "0.09605268828880904705757631935",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "52.60052483728960673662311576",
+                "unrealized_pnl": "0E-12",
+                "blocked_signals": 53,
+                "dd_duration_days": "315.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "46.52634445285913132095303018",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "-24.935998505822",
+                "benchmark_cagr_pct": "13.160808909266",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "d2f3d9809f4b1fe6c5c557c95444b852ca8e1a9f94e41e16b91fc3fd056a0ef9",
+            "threshold": {
+                "sample": {
+                    "n": 8,
+                    "detail": "недостаточно данных: 8 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "status": "insufficient",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 8,
+                        "detail": "недостаточно данных: 8 из 30",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "-581.5793056607391415119128772",
+                        "detail": "после издержек",
+                        "passed": false
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "52.60052483728960673662311576",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "-24.935998505822",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": false
+                    }
+                ]
+            },
+            "window_to": "2026-09-20T18:00:00.177938+00:00",
+            "created_at": "2026-09-20T18:00:06.412947+00:00",
+            "window_from": "2021-09-21T18:00:00.177938+00:00",
+            "code_version": "100eb6fbe9d91c19e0c59d9e200f4e9c92b72a52"
+        },
+        {
+            "id": 134,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "116.7859805308918250789295041",
+                    "gas": "0",
+                    "total": "260.0296418304097205979062353",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "143.2436612995178955189767312",
+                    "turnover": "116779.2250812700410445676442",
+                    "priority_fee": "0"
+                },
+                "payoff": "0.4292745997222893116313163332",
+                "sample": {
+                    "n": 6,
+                    "detail": "недостаточно данных: 6 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "sharpe": "-0.684707104392",
+                "capital": "10000",
+                "ev_ci95": [
+                    "-1184.912763070805",
+                    "-66.562488916955"
+                ],
+                "net_pnl": "-3480.404166501731616150636550",
+                "reasons": {
+                    "ведёт по импульсу": 6,
+                    "импульс сломан, уходим в CASH": 2,
+                    "импульс сломан, уходим в BTC/USDT": 2,
+                    "импульс сломан, уходим в PAXG/USDT": 2
+                },
+                "sortino": "-0.691447981083",
+                "cagr_pct": "-8.205072010024",
+                "n_trades": 6,
+                "win_rate": "0.1666666666666666666666666667",
+                "costs_pct": "0.2226677233467233323744183541",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "strategy_stop_dd",
+                "window_to": "2026-09-27T18:00:00.055424Z",
+                "allocation": true,
+                "max_dd_pct": "44.06235947534136009708609349",
+                "stopped_at": "2022-02-18T00:00:00Z",
+                "net_pnl_pct": "-34.80404166501731616150636550",
+                "window_from": "2021-09-28T18:00:00.055424Z",
+                "ev_per_trade": "-580.0673610836219360251060917",
+                "exposure_pct": "6.794520547945",
+                "liquidations": {
+                },
+                "vs_benchmark": "-120.2609702273009032231306997",
+                "benchmark_pct": "85.45692856228358706162433420",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "0.08585491994445786232626326664",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "44.06235947534136009708609349",
+                "unrealized_pnl": "1E-25",
+                "blocked_signals": 61,
+                "dd_duration_days": "146.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "38.07277687574785475698465483",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "-21.363096830238",
+                "benchmark_cagr_pct": "13.158024820214",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "5aa52d7218d7e4124f66fb0207ad386ab28a49b5618bf372af62b898ec51215f",
+            "threshold": {
+                "sample": {
+                    "n": 6,
+                    "detail": "недостаточно данных: 6 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "status": "insufficient",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 6,
+                        "detail": "недостаточно данных: 6 из 30",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "-580.0673610836219360251060917",
+                        "detail": "после издержек",
+                        "passed": false
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "44.06235947534136009708609349",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "-21.363096830238",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": false
+                    }
+                ]
+            },
+            "window_to": "2026-09-27T18:00:00.055424+00:00",
+            "created_at": "2026-09-27T18:00:07.028133+00:00",
+            "window_from": "2021-09-28T18:00:00.055424+00:00",
+            "code_version": "bffabeae857d4e8546af06d65fa2fe6cb33c290d"
+        },
+        {
+            "id": 135,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "57.05350739515082452233500291",
+                    "gas": "0",
+                    "total": "125.8389097823118479671960314",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "68.78540238716102344486102845",
+                    "turnover": "57047.29278247703982924300382",
+                    "priority_fee": "0"
+                },
+                "payoff": null,
+                "sample": {
+                    "n": 3,
+                    "detail": "недостаточно данных: 3 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "sharpe": "-0.646726477521",
+                "capital": "10000",
+                "ev_ci95": [
+                    "-1976.734760527286",
+                    "-450.547430326610"
+                ],
+                "net_pnl": "-3078.552821058425873824572185",
+                "reasons": {
+                    "ведёт по импульсу": 3,
+                    "импульс сломан, уходим в CASH": 1,
+                    "импульс сломан, уходим в BTC/USDT": 1,
+                    "импульс сломан, уходим в PAXG/USDT": 1
+                },
+                "sortino": "-0.646356049487",
+                "cagr_pct": "-7.099619890093",
+                "n_trades": 3,
+                "win_rate": "0",
+                "costs_pct": "0.2205869965856911259437990061",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "strategy_stop_dd",
+                "window_to": "2026-09-27T18:00:00.055424Z",
+                "allocation": true,
+                "max_dd_pct": "37.90925856918507458420366666",
+                "stopped_at": "2021-12-04T00:00:00Z",
+                "net_pnl_pct": "-30.78552821058425873824572185",
+                "window_from": "2021-09-28T18:00:00.055424Z",
+                "ev_per_trade": "-1026.184273686141957941524062",
+                "exposure_pct": "2.246575342466",
+                "liquidations": {
+                },
+                "vs_benchmark": "-116.2424567728678457998700560",
+                "benchmark_pct": "85.45692856228358706162433420",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "0E+24",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "37.90925856918507458420366666",
+                "unrealized_pnl": "0E-12",
+                "blocked_signals": 67,
+                "dd_duration_days": "42.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "30.78552821058425873824572185",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "-20.257644710307",
+                "benchmark_cagr_pct": "13.158024820214",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "16f9e761af55392bb5e7b54ddcb49381ebaac48d9d261f844e65817ee857f1c5",
+            "threshold": {
+                "sample": {
+                    "n": 3,
+                    "detail": "недостаточно данных: 3 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "status": "insufficient",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 3,
+                        "detail": "недостаточно данных: 3 из 30",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "-1026.184273686141957941524062",
+                        "detail": "после издержек",
+                        "passed": false
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "37.90925856918507458420366666",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "-20.257644710307",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": false
+                    }
+                ]
+            },
+            "window_to": "2026-09-27T18:00:00.055424+00:00",
+            "created_at": "2026-09-28T08:13:09.714201+00:00",
+            "window_from": "2021-09-28T18:00:00.055424+00:00",
+            "code_version": "b5f390fd5f19a5a081a51aafcc14266a3950ea62"
+        },
+        {
+            "id": 140,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "57.28250268598397630010830537",
+                    "gas": "0",
+                    "total": "126.4762101299835308793885563",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "69.19370744399955457928025091",
+                    "turnover": "57276.69327012097509977875664",
+                    "priority_fee": "0"
+                },
+                "payoff": null,
+                "sample": {
+                    "n": 3,
+                    "detail": "недостаточно данных: 3 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "sharpe": "-0.687309262652",
+                "capital": "10000",
+                "ev_ci95": [
+                    "-1624.441360111067",
+                    "-450.547430326610"
+                ],
+                "net_pnl": "-2851.171033635923566526516388",
+                "reasons": {
+                    "ведёт по импульсу": 3,
+                    "импульс сломан, уходим в CASH": 2,
+                    "импульс сломан, уходим в PAXG/USDT": 1
+                },
+                "sortino": "-0.686864682340",
+                "cagr_pct": "-6.496683873884",
+                "n_trades": 3,
+                "win_rate": "0",
+                "costs_pct": "0.2208161870195835037542033182",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "strategy_stop_dd",
+                "window_to": "2026-10-04T18:00:00.110810Z",
+                "allocation": true,
+                "max_dd_pct": "35.00229084511628568299436509",
+                "stopped_at": "2021-12-10T00:00:00Z",
+                "net_pnl_pct": "-28.51171033635923566526516388",
+                "window_from": "2021-10-05T18:00:00.110810Z",
+                "ev_per_trade": "-950.390344545307855508838796",
+                "exposure_pct": "1.479452054795",
+                "liquidations": {
+                },
+                "vs_benchmark": "-123.7722851282507442073641541",
+                "benchmark_pct": "95.26057479189150854209899020",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "0E+24",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "35.00229084511628568299436509",
+                "unrealized_pnl": "0E-12",
+                "blocked_signals": 67,
+                "dd_duration_days": "35.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "28.51171033635923566526516388",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "-20.827347120838",
+                "benchmark_cagr_pct": "14.330663246954",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "64feee85b1fbc62c733c4d281f5e643f047ba35e7b83384e3383ed1aea737e7d",
+            "threshold": {
+                "sample": {
+                    "n": 3,
+                    "detail": "недостаточно данных: 3 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "status": "insufficient",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 3,
+                        "detail": "недостаточно данных: 3 из 30",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "-950.390344545307855508838796",
+                        "detail": "после издержек",
+                        "passed": false
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "35.00229084511628568299436509",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "-20.827347120838",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": false
+                    }
+                ]
+            },
+            "window_to": "2026-10-04T18:00:00.11081+00:00",
+            "created_at": "2026-10-04T18:00:04.041796+00:00",
+            "window_from": "2021-10-05T18:00:00.11081+00:00",
+            "code_version": "dad2b2c16acfbd09293115d615b58f2a0a99c3d1"
+        },
+        {
+            "id": 141,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "196.4444341944514154273075084",
+                    "gas": "0",
+                    "total": "438.9152687775518642529503260",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "242.4708345831004488256428174",
+                    "turnover": "196436.9083842441424488411287",
+                    "priority_fee": "0"
+                },
+                "payoff": "0.4399524428437401842744495665",
+                "sample": {
+                    "n": 10,
+                    "detail": "недостаточно данных: 10 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "sharpe": "-0.786379509312",
+                "capital": "10000",
+                "ev_ci95": [
+                    "-808.478167136986",
+                    "-70.032263633143"
+                ],
+                "net_pnl": "-4000.510406061185316990169105",
+                "reasons": {
+                    "ведёт по импульсу": 10,
+                    "импульс сломан, уходим в CASH": 5,
+                    "импульс сломан, уходим в BTC/USDT": 2,
+                    "импульс сломан, уходим в PAXG/USDT": 3
+                },
+                "sortino": "-0.796145552491",
+                "cagr_pct": "-9.719809756363",
+                "n_trades": 10,
+                "win_rate": "0.2",
+                "costs_pct": "0.2234382898752424485420373074",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "strategy_stop_dd",
+                "window_to": "2026-10-11T18:00:00.038175Z",
+                "allocation": true,
+                "max_dd_pct": "42.67426917451235301454975018",
+                "stopped_at": "2022-08-19T00:00:00Z",
+                "net_pnl_pct": "-40.00510406061185316990169105",
+                "window_from": "2021-10-12T18:00:00.038175Z",
+                "ev_per_trade": "-400.0510406061185316990169105",
+                "exposure_pct": "8.657534246575",
+                "liquidations": {
+                },
+                "vs_benchmark": "-135.0468757673797317780228722",
+                "benchmark_pct": "95.04177170676787860812118120",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "0.1099881107109350460686123916",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "42.67426917451235301454975018",
+                "unrealized_pnl": "0E-12",
+                "blocked_signals": 53,
+                "dd_duration_days": "294.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "40.00510406061185316990169105",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "-24.024820859068",
+                "benchmark_cagr_pct": "14.305011102705",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "f0feb326f881881bdfefdfd350ebf2ae83863b04e19c829aa31e4135faef4aed",
+            "threshold": {
+                "sample": {
+                    "n": 10,
+                    "detail": "недостаточно данных: 10 из 30",
+                    "status": "insufficient",
+                    "required": 30
+                },
+                "status": "insufficient",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 10,
+                        "detail": "недостаточно данных: 10 из 30",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "-400.0510406061185316990169105",
+                        "detail": "после издержек",
+                        "passed": false
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "42.67426917451235301454975018",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": false
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "-24.024820859068",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": false
+                    }
+                ]
+            },
+            "window_to": "2026-10-11T18:00:00.038175+00:00",
+            "created_at": "2026-10-11T18:00:06.152348+00:00",
+            "window_from": "2021-10-12T18:00:00.038175+00:00",
+            "code_version": "b28b98b628e0a8cc3403f94b383914367f30c3c2"
+        },
+        {
+            "id": 142,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "718.4324605367054876967559382",
+                    "gas": "0",
+                    "total": "1643.687206433319917242049270",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "925.2547458966144295452933302",
+                    "turnover": "718482.6279599069828387026154",
+                    "priority_fee": "0"
+                },
+                "payoff": "3.241774347426911867818623760",
+                "sample": {
+                    "n": 35,
+                    "detail": "35 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "sharpe": "0.818141238378",
+                "capital": "10000",
+                "ev_ci95": [
+                    "42.559127226120",
+                    "1026.705306955837"
+                ],
+                "net_pnl": "16954.85003882294305283724618",
+                "reasons": {
+                    "ведёт по импульсу": 36,
+                    "импульс сломан, уходим в CASH": 14,
+                    "импульс сломан, уходим в BTC/USDT": 12,
+                    "импульс сломан, уходим в PAXG/USDT": 9
+                },
+                "sortino": "2.792238925245",
+                "cagr_pct": "21.951283463507",
+                "n_trades": 35,
+                "win_rate": "0.4857142857142857142857142857",
+                "costs_pct": "0.2287720179262346092033085094",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "",
+                "window_to": "2026-10-18T18:00:00.036073Z",
+                "allocation": true,
+                "max_dd_pct": "29.43372839436351964943185250",
+                "stopped_at": null,
+                "net_pnl_pct": "169.5485003882294305283724618",
+                "window_from": "2021-10-19T18:00:00.036073Z",
+                "ev_per_trade": "484.424286823512658652492748",
+                "exposure_pct": "75.452054794521",
+                "liquidations": {
+                },
+                "vs_benchmark": "74.82747150976910151397863450",
+                "benchmark_pct": "94.72102887846032901439382730",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "3.061675772569861208495366885",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "29.43372839436351964943185250",
+                "unrealized_pnl": "154.6986289523259810207106379",
+                "blocked_signals": 0,
+                "dd_duration_days": "554.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "28.30590792330099054109785556",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "7.683917400740",
+                "benchmark_cagr_pct": "14.267366062767",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "5592e6674ed6a77896259489225da288c897ce1a9cb57c43b186fad9fc393f9a",
+            "threshold": {
+                "sample": {
+                    "n": 35,
+                    "detail": "35 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "status": "passed",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 35,
+                        "detail": "35 из 30",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "484.424286823512658652492748",
+                        "detail": "после издержек",
+                        "passed": true
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "29.43372839436351964943185250",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "7.683917400740",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": true
+                    }
+                ]
+            },
+            "window_to": "2026-10-18T18:00:00.036073+00:00",
+            "created_at": "2026-10-18T18:00:04.831017+00:00",
+            "window_from": "2021-10-19T18:00:00.036073+00:00",
+            "code_version": "b28b98b628e0a8cc3403f94b383914367f30c3c2"
+        },
+        {
+            "id": 143,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "698.8384139204158077954312496",
+                    "gas": "0",
+                    "total": "1599.992024500714421320659378",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "901.1536105802986135252281276",
+                    "turnover": "698889.4802083009871213578618",
+                    "priority_fee": "0"
+                },
+                "payoff": "3.240863572852809052691227053",
+                "sample": {
+                    "n": 34,
+                    "detail": "34 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "sharpe": "0.841137680776",
+                "capital": "10000",
+                "ev_ci95": [
+                    "82.722175750970",
+                    "1026.462951455562"
+                ],
+                "net_pnl": "17330.27184232384234171412315",
+                "reasons": {
+                    "ведёт по импульсу": 35,
+                    "импульс сломан, уходим в CASH": 13,
+                    "импульс сломан, уходим в BTC/USDT": 12,
+                    "импульс сломан, уходим в PAXG/USDT": 9
+                },
+                "sortino": "2.908202324830",
+                "cagr_pct": "22.289340965812",
+                "n_trades": 34,
+                "win_rate": "0.5",
+                "costs_pct": "0.2289334823045045287888833754",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "",
+                "window_to": "2026-10-25T18:00:00.069586Z",
+                "allocation": true,
+                "max_dd_pct": "27.44624793089149701749939558",
+                "stopped_at": null,
+                "net_pnl_pct": "173.3027184232384234171412315",
+                "window_from": "2021-10-26T18:00:00.069586Z",
+                "ev_per_trade": "509.7138777154071276974742103",
+                "exposure_pct": "75.068493150685",
+                "liquidations": {
+                },
+                "vs_benchmark": "78.43966424863971947755489300",
+                "benchmark_pct": "94.86305417459870393958633850",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "3.240863572852809052691227053",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "27.44624793089149701749939558",
+                "unrealized_pnl": "79.57300212661549132095146165",
+                "blocked_signals": 0,
+                "dd_duration_days": "540.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "23.80043362003489275533149412",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "8.005299521754",
+                "benchmark_cagr_pct": "14.284041444058",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "6aab5387d8df1c04be39421090a3f4425bdb10d970db3c84138e6011c5fd34a0",
+            "threshold": {
+                "sample": {
+                    "n": 34,
+                    "detail": "34 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "status": "passed",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 34,
+                        "detail": "34 из 30",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "509.7138777154071276974742103",
+                        "detail": "после издержек",
+                        "passed": true
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "27.44624793089149701749939558",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "8.005299521754",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": true
+                    }
+                ]
+            },
+            "window_to": "2026-10-25T18:00:00.069586+00:00",
+            "created_at": "2026-10-25T18:00:04.680827+00:00",
+            "window_from": "2021-10-26T18:00:00.069586+00:00",
+            "code_version": "f4aa8f7a65a0652f311bdc49d088a6535b2d96c6"
+        },
+        {
+            "id": 144,
+            "mode": "backtest",
+            "status": "ok",
+            "metrics": {
+                "brier": {
+                    "reason": "только для ветки prediction"
+                },
+                "costs": {
+                    "fee": "698.8384139204158077954312496",
+                    "gas": "0",
+                    "total": "1599.992024500714421320659378",
+                    "funding": "0",
+                    "royalty": "0",
+                    "slippage": "901.1536105802986135252281276",
+                    "turnover": "698889.4802083009871213578618",
+                    "priority_fee": "0"
+                },
+                "payoff": "3.240863572852809052691227053",
+                "sample": {
+                    "n": 34,
+                    "detail": "34 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "sharpe": "0.841137680776",
+                "capital": "10000",
+                "ev_ci95": [
+                    "82.722175750970",
+                    "1026.462951455562"
+                ],
+                "net_pnl": "16918.28962384992634115686167",
+                "reasons": {
+                    "ведёт по импульсу": 35,
+                    "импульс сломан, уходим в CASH": 13,
+                    "импульс сломан, уходим в BTC/USDT": 12,
+                    "импульс сломан, уходим в PAXG/USDT": 9
+                },
+                "sortino": "2.908202324830",
+                "cagr_pct": "21.918160923094",
+                "n_trades": 34,
+                "win_rate": "0.5",
+                "costs_pct": "0.2289334823045045287888833754",
+                "data_gaps": {
+                },
+                "stability": null,
+                "stop_rule": "",
+                "window_to": "2026-11-01T18:00:00.137180Z",
+                "allocation": true,
+                "max_dd_pct": "27.44624793089149701749939558",
+                "stopped_at": null,
+                "net_pnl_pct": "169.1828962384992634115686167",
+                "window_from": "2021-11-02T18:00:00.137180Z",
+                "ev_per_trade": "497.5967536426448923869665197",
+                "exposure_pct": "75.068493150685",
+                "liquidations": {
+                },
+                "vs_benchmark": "73.43669952254195743620785890",
+                "benchmark_pct": "95.74619671595730597536075780",
+                "copy_lag_cost": {
+                    "reason": "только для ветки copy"
+                },
+                "profit_factor": "3.240863572852809052691227053",
+                "benchmark_kind": "btc_dca",
+                "mtm_max_dd_pct": "27.44624793089149701749939558",
+                "unrealized_pnl": "-332.4092163473005092363100217",
+                "blocked_signals": 0,
+                "dd_duration_days": "540.000000000000",
+                "idle_capital_pct": null,
+                "mint_cost_failed": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "closed_max_dd_pct": "23.80043362003489275533149412",
+                "mint_success_rate": {
+                    "reason": "только для стратегий nft-mint-*"
+                },
+                "paper_vs_live_gap": {
+                    "reason": "только для ступени micro и выше"
+                },
+                "resolution_return": {
+                    "reason": "только для ветки prediction"
+                },
+                "vs_benchmark_cagr": "7.530646132702",
+                "benchmark_cagr_pct": "14.387514790392",
+                "cagr_with_idle_pct": null,
+                "benchmark_max_dd_pct": "76.62925431645934600137458510"
+            },
+            "data_hash": "0f006385ef9702f1c03ab9e9b47de6d44e81018eb18a186d20076eca57ac332f",
+            "threshold": {
+                "sample": {
+                    "n": 34,
+                    "detail": "34 из 30",
+                    "status": "ok",
+                    "required": 30
+                },
+                "status": "passed",
+                "criteria": [
+                    {
+                        "op": ">=",
+                        "name": "n_trades",
+                        "limit": 30,
+                        "value": 34,
+                        "detail": "34 из 30",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "ev_per_trade",
+                        "limit": "0",
+                        "value": "497.5967536426448923869665197",
+                        "detail": "после издержек",
+                        "passed": true
+                    },
+                    {
+                        "op": "<=",
+                        "name": "max_dd_pct",
+                        "limit": "38.31462715822967300068729255",
+                        "value": "27.44624793089149701749939558",
+                        "detail": "размещение: не больше 50% просадки бенчмарка (76.6% за окно)",
+                        "passed": true
+                    },
+                    {
+                        "op": ">",
+                        "name": "vs_benchmark",
+                        "limit": "0",
+                        "value": "7.530646132702",
+                        "detail": "годовых против «BTC равными докупками»",
+                        "passed": true
+                    }
+                ]
+            },
+            "window_to": "2026-11-01T18:00:00.13718+00:00",
+            "created_at": "2026-11-01T18:00:06.160327+00:00",
+            "window_from": "2021-11-02T18:00:00.13718+00:00",
+            "code_version": "3d5f875ecde70b44ae767dacaeeaf28159d497a3"
+        }
+    ],
+    "orders_by_mode": [
+    ],
+    "schema_version": "0011",
+    "trades_by_mode": [
+    ]
+}

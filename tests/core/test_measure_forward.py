@@ -42,7 +42,7 @@ def test_forward_run_without_strategy_uses_branch_from_id():
             capital=Decimal(1000))
     assert m.status == "ok"
     assert m.metrics.n_trades == 30
-    assert m.threshold.status == "passed"
+    assert m.threshold.status == "insufficient"  # устойчивость ещё не рассчитана
     # Лимит просадки взят по группе ветки cex, а не по «ветке» cex.
     assert {c.name: c.limit for c in m.threshold.criteria}["max_dd_pct"] == Decimal(5)
 
@@ -51,10 +51,32 @@ def test_forward_run_accepts_explicit_branch():
     trades = [_trade(i, "5") for i in range(30)]
     m = run("странный_id", "micro", WINDOW, trades=trades, branch="meme", benchmark=Decimal(0),
             capital=Decimal(1000))
-    assert m.threshold.status == "passed"
+    assert m.threshold.status == "insufficient"  # устойчивость ещё не рассчитана
     assert {c.name: c.limit for c in m.threshold.criteria}["max_dd_pct"] == Decimal(20)
 
 
 def test_forward_run_without_branch_and_unknown_id_is_explicit_error():
     with pytest.raises(ValueError, match="ветк"):
         run("странный_id", "forward", WINDOW, trades=[_trade(0, "1")])
+
+
+def test_paper_accepts_trades_without_running_history():
+    m = run(
+        "cex-spot-bybit-x", "paper", WINDOW,
+        trades=[_trade(i, "5") for i in range(30)],
+        benchmark=Decimal(0), capital=Decimal(1000), rung="paper",
+    )
+    assert m.status == "ok"
+    assert m.metrics.trade_source == "provided"
+    assert m.threshold.status == "insufficient"
+
+
+def test_journal_data_hash_changes_with_trades_even_with_benchmark_candles():
+    from tests.fixtures.synthetic import synthetic_candles
+
+    benchmark = synthetic_candles(3, "trend", start=T0)
+    a = run("cex-spot-bybit-x", "forward", WINDOW, trades=[_trade(0, "1")],
+            benchmark=benchmark)
+    b = run("cex-spot-bybit-x", "forward", WINDOW, trades=[_trade(0, "2")],
+            benchmark=benchmark)
+    assert a.data_hash != b.data_hash

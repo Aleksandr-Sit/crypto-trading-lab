@@ -14,7 +14,8 @@
   — фид площадки; отказ фида превращается в `incomplete` с причиной, а не в исключение;
 - бенчмарк — BTC той же площадки и того же таймфрейма из хранилища; нет BTC — метрики
   относительно бенчмарка честно помечаются `NotApplicable`;
-- форвард и микро меряются по закрытым сделкам журнала, а не по симуляции.
+- paper, форвард и микро меряются по закрытым сделкам журнала, а не по симуляции;
+  paper использует бумажные сделки, micro — реальные, forward — режим текущей ступени.
 """
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ BENCHMARK_INSTRUMENTS: tuple[str, ...] = ("BTC/USDT", "BTC/USD", "BTCUSDT", "BTC
 # Сколько баров пробовать с каждого края окна, чтобы найти первую и последнюю свечу
 # бенчмарка: ряд может начинаться позже левой границы или обрываться раньше правой.
 EDGE_BARS = 500
-FROM_JOURNAL = (MeasureMode.MICRO, MeasureMode.FORWARD)
+FROM_JOURNAL = (MeasureMode.PAPER, MeasureMode.MICRO, MeasureMode.FORWARD)
 
 
 class MeasureUnavailable(RuntimeError):
@@ -77,6 +78,48 @@ def make_measure(
 
 
 def run_measure(
+    strategy_id: str, mode: str | MeasureMode, window: tuple[datetime, datetime], *,
+    session_scope: Callable[[], Any], store: Any = None,
+    feed_factory: Callable[[str], Any] | None = None, root: str | None = None, **extra: Any,
+):
+    """Register before execution in a separate committed scope, including failed attempts."""
+    from lab.config import load_threshold
+    from lab.core.forward import rules_spec
+    from lab.core.measure.research import begin, finish
+    from lab.core.registry import Registry
+
+    if "research" in extra:
+        raise ValueError("журнал поиска задаётся системой")
+    reserved = {"strategy", "branch", "rung", "params", "trades", "extra_metrics", "capital"}
+    if reserved.intersection(extra):
+        raise ValueError("правила и доказательства замера задаются записью реестра")
+    with session_scope() as session:
+        record = Registry(session).get(strategy_id)
+        evidence = begin(session, strategy_id, {
+            "rules": rules_spec(record), "mode": MeasureMode(mode).value, "window": window,
+            "statistics": load_threshold().model_dump(mode="json"),
+            "options": {k: v for k, v in extra.items() if k != "session"},
+        })
+    try:
+        measured = _run_measure(
+            strategy_id, mode, window, session_scope=session_scope, store=store,
+            feed_factory=feed_factory, root=root, research=evidence, **extra,
+        )
+    except Exception as err:
+        with session_scope() as session:
+            finish(session, evidence["trial_id"], "failed", f"{type(err).__name__}: {err}")
+        raise
+    with session_scope() as session:
+        finish(session, evidence["trial_id"], measured.status, measured.reason, {
+            "measurement_id": measured.id, "data_hash": measured.data_hash,
+            "threshold": measured.threshold.model_dump(mode="json") if measured.threshold else None,
+            "ev_per_trade": measured.metrics.ev_per_trade if measured.metrics else None,
+            "n_trades": measured.metrics.n_trades if measured.metrics else None,
+        })
+    return measured
+
+
+def _run_measure(
     strategy_id: str,
     mode: str | MeasureMode,
     window: tuple[datetime, datetime],
@@ -85,12 +128,14 @@ def run_measure(
     store: Any = None,
     feed_factory: Callable[[str], Any] | None = None,
     root: str | None = None,
+    research: dict | None = None,
     **extra: Any,
 ):
     """Один замер стратегии из реестра. Возврат — `core.measure.Measurement`."""
     from lab.config import load_threshold
+    from lab.core.forward import rules_spec
     from lab.core.measure import run as core_run
-    from lab.core.registry import Registry
+    from lab.core.registry import Registry, _fingerprint
     from lab.data import CandleStore
 
     store = store if store is not None else CandleStore(root or data_root())
@@ -110,6 +155,7 @@ def run_measure(
             branch=record.branch,
             rung=record.rung,
             params=dict(record.params or {}),
+            capital=Decimal(str(record.params.get("capital", 10_000))),
             session=session,
             benchmark=_benchmark(
                 store,
@@ -125,14 +171,51 @@ def run_measure(
             funding_history=_funding_history(record, window, root),
             positioning_history=_positioning_history(record, window, root),
         )
+        kwargs["extra_metrics"]["rules_revision"] = _fingerprint(rules_spec(record))
+        kwargs["extra_metrics"]["research"] = research or {}
+        kwargs.update(extra)
         if mode in FROM_JOURNAL:
-            kwargs["trades"] = _journal_trades(session, strategy_id, window)
-        else:
+            from lab.core.forward import current_observation
+
+            observation = current_observation(session, strategy_id, start=True)
+            execution_mode = (
+                "live"
+                if mode == MeasureMode.MICRO
+                or (
+                    mode == MeasureMode.FORWARD
+                    and record.rung in ("micro", "signal", "semi", "auto")
+                )
+                else "paper"
+            )
+            excluded: dict[str, int] = {}
+            kwargs["trades"] = _journal_trades(
+                session, strategy_id, window, mode=execution_mode, observation=observation,
+                excluded=excluded,
+            )
+            kwargs["extra_metrics"]["trade_source"] = f"journal_{execution_mode}"
+            kwargs["extra_metrics"].update(
+                forward_verified=True,
+                observation_id=observation.id,
+                rules_revision=observation.revision,
+                observation_started_at=observation.started_at,
+                forward_excluded=excluded,
+            )
+            if execution_mode == "paper":
+                from lab.core.forward import virtual_health
+                from lab.db.models import SystemFlagRow
+
+                problems = virtual_health(session, strategy_id)
+                state = session.get(SystemFlagRow, f"virtual_forward:{strategy_id}")
+                if state is not None:
+                    kwargs["extra_metrics"]["virtual_state"] = dict(state.value or {})
+                if problems:
+                    kwargs["extra_metrics"]["forward_verified"] = False
+                    excluded.update({f"virtual_{key}": 1 for key in problems})
+        elif not kwargs.get("tape_path") and record.params.get("execution_data") != "trades":
             if _has_candles(store, record.venue, instrument, tf):
                 kwargs["source"] = _store_source(store, record.venue)
             else:
                 kwargs["source"] = _feed_source(record.venue, feed_factory)
-        kwargs.update(extra)
         return core_run(strategy_id, mode, window, **kwargs)
 
 
@@ -567,17 +650,42 @@ def _default_feed_factory(venue: str):
     return make_feed(venue)
 
 
-def _journal_trades(session: Any, strategy_id: str, window: tuple[datetime, datetime]) -> list:
-    """Закрытые сделки окна → `ClosedTrade` для форвард/микро-замера."""
+def _journal_trades(
+    session: Any,
+    strategy_id: str,
+    window: tuple[datetime, datetime],
+    *,
+    mode: str = "paper",
+    observation: Any = None,
+    excluded: dict[str, int] | None = None,
+) -> list:
+    """Закрытые сделки окна одного режима исполнения → `ClosedTrade`."""
+    from lab.core.forward import fill_proves_forward
     from lab.core.journal import Journal
     from lab.core.measure.types import ClosedTrade
 
     out: list[ClosedTrade] = []
     for rec in Journal(session).closed_trades(strategy_id):
+        if rec.mode != mode:
+            continue
         if rec.closed_at is None or rec.exit_price is None:
             continue
         if not (window[0] <= rec.closed_at <= window[1]):
             continue
+        if observation is not None:
+            if rec.opened_at < max(window[0], observation.started_at):
+                if excluded is not None:
+                    key = "entry_before_observation_or_window"
+                    excluded[key] = excluded.get(key, 0) + 1
+                continue
+            if not all(
+                fill_proves_forward(session, fill_id, observation, mode=mode, until=window[1])
+                for fill_id in (rec.open_fill, rec.close_fill)
+            ):
+                if excluded is not None:
+                    key = "unverified_signal_or_execution"
+                    excluded[key] = excluded.get(key, 0) + 1
+                continue
         out.append(
             ClosedTrade(
                 instrument=rec.instrument,

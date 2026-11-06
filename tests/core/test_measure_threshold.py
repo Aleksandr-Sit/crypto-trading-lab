@@ -2,12 +2,17 @@
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 
 from lab.contracts import Costs
-from lab.core.measure import ClosedTrade, NotApplicable, metrics, threshold
+from lab.core.measure import ClosedTrade, NotApplicable, threshold
+from lab.core.measure import metrics as compute_metrics
+from lab.core.measure.types import Stability
 
 T0 = datetime(2026, 1, 1, tzinfo=UTC)
 WINDOW = (T0, T0 + timedelta(days=30))
+STABLE = Stability(windows=10, profitable=8, ahead=8, compared=10)
+metrics = partial(compute_metrics, extra={"stability": STABLE})
 
 
 def _trade(i: int, pnl: str, fee: str = "1") -> ClosedTrade:
@@ -106,12 +111,13 @@ def test_auto_rung_requires_ci_low_above_zero():
     trades = [_trade(i, "5" if i % 2 else "-3") for i in range(30)]
     m = metrics(trades, Decimal(0), capital=Decimal(1000), window=WINDOW)
     assert m.ev_per_trade == Decimal(0)  # (4·15 − 4·15)/30
-    trades = [_trade(i, "6" if i % 2 else "-3") for i in range(30)]
-    m = metrics(trades, Decimal(0), capital=Decimal(1000), window=WINDOW)
+    trades = [_trade(i, "6" if i < 15 else "-3") for i in range(30)]
+    m = metrics(trades, Decimal(0), capital=Decimal(10000), window=WINDOW)
     assert m.ev_per_trade > 0 and m.ev_ci95[0] < 0
-    assert threshold(m, "cex-spot", rung="semi").status == "passed"
+    m = m.model_copy(update={"ev_search_ci": m.ev_ci95})
+    assert threshold(m, "cex-spot", rung="semi").status == "failed"
     auto = threshold(m, "cex-spot", rung="auto")
-    assert auto.status == "failed" and auto.failed_names() == ["ev_ci95_low"]
+    assert auto.status == "failed" and auto.failed_names() == ["cost_stress_ev", "ev_ci95_low"]
 
 
 def test_missing_benchmark_is_insufficient_not_failed():
@@ -125,3 +131,17 @@ def test_missing_benchmark_is_insufficient_not_failed():
     assert by_name["vs_benchmark"].passed is None
     assert "нет данных бенчмарка за окно" in by_name["vs_benchmark"].detail
     assert by_name["n_trades"].passed is True  # выборки хватает, не хватает именно бенчмарка
+
+
+def test_history_and_legacy_snapshots_cannot_confirm_paper():
+    m = metrics(_trades(30), Decimal(0), capital=Decimal(1000), window=WINDOW)
+    for source in ("unknown", "simulation", "provided", "journal_live"):
+        candidate = m.model_copy(update={"trade_source": source})
+        result = threshold(candidate, "cex-spot", rung="paper")
+        assert result.status == "insufficient"
+        assert next(c for c in result.criteria if c.name == "paper_journal").passed is None
+        assert threshold(candidate, "cex-spot", rung="backtest").status == "passed"
+    paper = m.model_copy(update={"trade_source": "journal_paper"})
+    assert threshold(paper, "cex-spot", rung="paper").status == "insufficient"
+    paper = paper.model_copy(update={"forward_verified": True})
+    assert threshold(paper, "cex-spot", rung="paper").status == "passed"

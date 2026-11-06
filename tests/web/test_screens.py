@@ -10,6 +10,7 @@ from lab.contracts import Costs, Fill, OrderIntent, Signal, StopSpec, StrategyMa
 from lab.core.journal import Journal
 from lab.core.ladder import Ladder, default_threshold_fn
 from lab.core.measure import ClosedTrade, run
+from lab.core.measure.types import Stability
 from lab.core.registry import Registry
 
 T0 = datetime(2026, 5, 1, tzinfo=UTC)
@@ -45,6 +46,10 @@ def _trade(i: int, pnl: str) -> ClosedTrade:
 
 
 def _forward(session, strategy_id: str, trades: list[ClosedTrade], **kw):
+    from lab.core.forward import rules_spec
+    from lab.core.registry import _fingerprint
+
+    revision = _fingerprint(rules_spec(Registry(session).get(strategy_id)))
     return run(
         strategy_id,
         "forward",
@@ -53,6 +58,10 @@ def _forward(session, strategy_id: str, trades: list[ClosedTrade], **kw):
         benchmark=Decimal(0),
         capital=Decimal(1000),
         session=session,
+        extra_metrics={
+            "rules_revision": revision,
+            "stability": Stability(windows=10, profitable=8, compared=10, ahead=8),
+        },
         **kw,
     )
 
@@ -171,7 +180,7 @@ def test_strategies_filters_and_sort_return_fragment_for_htmx(client, world):
 def test_card_shows_criteria_ci95_svg_and_trades(client, world):
     body = client.get(f"/strategies/{world['passed']}").text
     assert "<svg" in body and 'class="curve"' in body
-    assert "CI95 [" in body  # A04: интервал рядом с EV
+    assert "CI95 (блоковый, без поправки поиска) [" in body
     for name in ("сделок", "EV на сделку", "макс. просадка, %", "vs BTC"):
         assert name in body
     assert "✓" in body and "пройден" in body

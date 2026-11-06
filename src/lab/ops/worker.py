@@ -361,6 +361,7 @@ class Worker:
     # -- расписание ----------------------------------------------------------------------
 
     def jobs(self) -> list[Job]:
+        from lab.feeds.cex.feed import make_feed
         from lab.ops.jobs import SeedReminder
         from lab.ops.jobs import jobs as discovery_jobs
         from lab.ops.jobs.coinalyze import coinalyze_job
@@ -368,6 +369,7 @@ class Worker:
         from lab.ops.jobs.data_refresh import data_refresh_job
         from lab.ops.jobs.forward import forward_job
         from lab.ops.jobs.listings import listings_job
+        from lab.ops.jobs.virtual import virtual_job
 
         out: list[Job] = []
         reminder = SeedReminder(self.scope, bot=self.bot) if self.bot is not None else None
@@ -395,6 +397,8 @@ class Worker:
         out.append(listings_job(self.scope, alert=self.alert))
         out.append(data_refresh_job(self.scope, alert=self.alert))
         out.append(forward_job(self.scope, alert=self.alert))
+        out.append(virtual_job(self.scope, alert=self.alert,
+                               feed_factory=lambda venue: make_feed(venue, quota=self.feeds)))
         out.append(self.portfolio.allocation_job(risk=self.risk))
         out.append(
             Job(

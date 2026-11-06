@@ -45,7 +45,7 @@ def reconcile_all(
             continue
         with session_scope() as session:
             report = Journal(session).reconcile(
-                venue, fills, since=start, tolerance=tolerance, now=at
+                venue, fills, since=start, tolerance=tolerance, now=at, mode="live",
             )
         reports.append(report)
         if report.ok:

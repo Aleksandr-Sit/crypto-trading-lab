@@ -22,12 +22,12 @@ def _with(stability: Stability | None):
     return make_metrics().model_copy(update={"stability": stability})
 
 
-def test_without_stability_threshold_works_as_before():
-    """Оценки нет — порог судит по одному окну и молчит про устойчивость."""
+def test_without_stability_blocks_admission():
+    """Хорошее одиночное окно не заменяет устойчивость."""
     result = threshold(_with(None), Branch.CEX_SPOT)
 
-    assert result.status == "passed"
-    assert not [c for c in result.criteria if c.name.startswith("stability")]
+    assert result.status == "insufficient"
+    assert next(c for c in result.criteria if c.name == "stability_windows").passed is None
 
 
 def test_unstable_strategy_fails_even_with_good_single_window():
@@ -50,14 +50,14 @@ def test_stable_strategy_passes():
     assert {"stability_profitable", "stability_vs_benchmark"} <= names
 
 
-def test_too_few_windows_means_criteria_are_not_applied():
-    """Три окна — не статистика; критерии не добавляются, а не считаются пройденными."""
+def test_too_few_windows_blocks_admission():
+    """Три окна — недостаток данных, а не разрешение повышения."""
     result = threshold(
         _with(Stability(windows=3, profitable=1, ahead=0, compared=3)), Branch.CEX_SPOT
     )
 
-    assert result.status == "passed"
-    assert not [c for c in result.criteria if c.name.startswith("stability")]
+    assert result.status == "insufficient"
+    assert next(c for c in result.criteria if c.name == "stability_windows").passed is None
 
 
 def test_no_benchmark_in_any_window_is_not_a_failure():
@@ -69,6 +69,20 @@ def test_no_benchmark_in_any_window_is_not_a_failure():
     assert result.status == "insufficient"
     by_name = {c.name: c for c in result.criteria}
     assert by_name["stability_vs_benchmark"].passed is None
+
+
+def test_one_benchmark_window_cannot_confirm_stability():
+    result = threshold(
+        _with(Stability(windows=10, profitable=8, ahead=1, compared=1)), Branch.CEX_SPOT
+    )
+    assert result.status == "insufficient"
+    assert next(c for c in result.criteria if c.name == "stability_compared").passed is None
+
+
+@pytest.mark.parametrize("rung", ["backtest", "paper", "micro", "signal", "semi", "auto"])
+def test_missing_stability_blocks_every_rung(rung):
+    m = _with(None).model_copy(update={"trade_source": "journal_paper", "forward_verified": True})
+    assert threshold(m, Branch.CEX_SPOT, rung=rung).status == "insufficient"
 
 
 @pytest.mark.parametrize(

@@ -206,8 +206,8 @@ def test_bar_that_arrives_a_night_late_is_still_journaled(session, live):
     assert row.meta["seen_at"] == (night + timedelta(days=1)).isoformat()
 
 
-def test_legacy_mark_without_bars_still_works(session, live):
-    """Отметка прежнего вида (только `at`) не ломает прогон: она служит запасной границей."""
+def test_legacy_mark_starts_new_observation_without_backdating(session, live):
+    """Старая отметка без версии не подтверждает начало нового наблюдения."""
     from lab.db.models import SystemFlagRow
 
     session.add(SystemFlagRow(key=f"{FLAG_PREFIX}{live.id}", value={"at": T1.isoformat()}))
@@ -215,7 +215,7 @@ def test_legacy_mark_without_bars_still_works(session, live):
 
     report = run_forward(Scope(session), store=FakeStore(series(FULL_DAYS)), now=T2)
 
-    assert report.journaled and all(at > T1 for *_, at in report.journaled)
+    assert not report.journaled and live.id in report.started
 
 
 # -- шорт листингов: решения по инструментам, состав растёт между прогонами -----------------

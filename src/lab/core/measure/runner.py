@@ -25,14 +25,14 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from lab.config import ThresholdConfig
+from lab.config import ThresholdConfig, load_threshold
 from lab.contracts import Branch, Candle, MeasureMode, Rung, StrategyManifest
 from lab.contracts.allocation import is_allocation
 from lab.contracts.timeframes import parse_tf
 from lab.core.costs import CostModel, Depth, default_model
 from lab.core.measure.metrics import metrics as compute_metrics
 from lab.core.measure.metrics import threshold as compute_threshold
-from lab.core.measure.simulator import PaperEngine, simulate
+from lab.core.measure.simulator import EXECUTION_MODEL, PaperEngine, simulate
 from lab.core.measure.types import (
     ClosedTrade,
     FoldResult,
@@ -387,6 +387,7 @@ def run(
     strategy=None,
     candles: Sequence[Candle] | None = None,
     source: Source | None = None,
+    tape_path: str | Path | None = None,
     benchmark: Sequence[Candle] | Decimal | None = None,
     trades: Sequence[ClosedTrade] | None = None,
     branch: Branch | str | None = None,
@@ -413,6 +414,20 @@ def run(
     params = dict(params or {})
     params.setdefault("capital", str(capital))
     params.setdefault("seed", seed)
+    # Execution changes invalidate snapshots even before the working tree is committed.
+    params["_execution_model"] = EXECUTION_MODEL
+    # Old IID intervals and intervals computed under another search count cannot
+    # satisfy the cache key of this statistical procedure.
+    cfg = threshold_config or load_threshold()
+    params["_statistics"] = {
+        "method": "circular_closing_blocks/v1", "config": cfg.model_dump(mode="json"),
+        "seed": seed, "research_variants": (extra_metrics or {}).get("research", {}),
+        "rules_revision": (extra_metrics or {}).get("rules_revision"),
+    }
+    # Attempt IDs change on an identical repeat; the statistical universe does not.
+    params["_statistics"]["research_variants"] = {
+        k: v for k, v in params["_statistics"]["research_variants"].items() if k != "trial_id"
+    }
     if walk_forward:
         params.setdefault("walk_forward", [str(walk_forward[0]), str(walk_forward[1])])
     base = dict(
@@ -425,16 +440,29 @@ def run(
         params=params,
     )
 
-    # -- форвард/микро: сделки уже есть (из журнала), симулятор не нужен -----------
-    if mode in (MeasureMode.MICRO, MeasureMode.FORWARD) and trades is not None:
+    if tape_path is not None and mode != MeasureMode.BACKTEST:
+        return _incomplete(base, session,
+                           "лента — только backtest; paper/live берутся из журнала", "")
+
+    # Paper тоже считается по готовым сделкам, если их передала обёртка журнала.
+    if mode in (MeasureMode.PAPER, MeasureMode.MICRO, MeasureMode.FORWARD) and trades is not None:
+        extra_metrics = {"trade_source": "provided", **(extra_metrics or {})}
         bench_rows = benchmark if isinstance(benchmark, Sequence) else None
-        dh = (
-            hashlib.sha256(
-                json.dumps([t.model_dump(mode="json") for t in trades], sort_keys=True).encode()
-            ).hexdigest()
-            if bench_rows is None
-            else data_hash([], bench_rows)
-        )
+        # Сделки входят в отпечаток даже при наличии свечей бенчмарка.
+        dh = hashlib.sha256(
+            json.dumps(
+                {
+                    "trades": [t.model_dump(mode="json") for t in trades],
+                    "benchmark": (
+                        [b.model_dump(mode="json") for b in bench_rows]
+                        if bench_rows is not None else str(benchmark)
+                    ),
+                    "extra": extra_metrics,
+                },
+                sort_keys=True,
+                default=str,
+            ).encode()
+        ).hexdigest()
         return _finish(
             base,
             dh,
@@ -455,6 +483,34 @@ def run(
         raise ValueError("нужна стратегия (объект или фабрика)")
     inst, factory = _resolve(strategy)
     manifest: StrategyManifest = inst.manifest
+    if tape_path is not None or manifest.params.get("execution_data") == "trades":
+        from lab.core.measure.tape import METHOD as TAPE_METHOD
+        from lab.core.measure.tape import tape_measure_inputs
+
+        params["_tape"] = {
+            "method": TAPE_METHOD,
+            "latency_ms": manifest.params.get("execution_latency_ms", 250),
+            "max_participation": str(manifest.params.get("max_participation", "0.1")),
+        }
+        if tape_path is None or walk_forward or mode != MeasureMode.BACKTEST:
+            return _incomplete(base, session,
+                               "нужна лента; walk-forward и журнал не заменяются replay", "")
+        result, evidence, dh, error = tape_measure_inputs(
+            inst, tape_path, window, costs=model, capital=capital, benchmark=benchmark,
+        )
+        if error:
+            return _incomplete(base, session, error, dh)
+        cached = _lookup(session, base, dh)
+        if cached is not None:
+            return cached
+        extra_metrics = {
+            **(extra_metrics or {}), "trade_source": "simulation", "execution": evidence,
+            "unrealized_pnl": result.unrealized_end, "mtm_max_dd_pct": result.mtm_max_dd_pct,
+            "stopped_at": result.stopped_at, "stop_rule": result.stop_rule,
+            "blocked_signals": result.blocked_signals, "reasons": result.reasons,
+        }
+        return _finish(base, dh, result.trades, benchmark, capital, window, threshold_config,
+                       rung, seed, extra_metrics, session, inst, branch=branch)
     tf = manifest.timeframe or "1h"
     instruments = list(manifest.instruments)
     # Плечо ноги с залогом. Нет в параметрах — единица: позиция обеспечена целиком, и это
@@ -587,6 +643,7 @@ def run(
         # из итога, а просадка считалась только по закрытым сделкам (ревизия 12.09.2026).
         extra_metrics = {
             **(extra_metrics or {}),
+            "trade_source": "simulation",
             "unrealized_pnl": result.unrealized_end,
             "mtm_max_dd_pct": result.mtm_max_dd_pct,
             # Средний занятый залог: без него стратегия, работающая десятой частью счёта,

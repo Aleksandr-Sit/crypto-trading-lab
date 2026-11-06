@@ -6,7 +6,7 @@
 
 Правила исполнения:
   market — по открытию бара ± проскальзывание из модели издержек (цена хуже мида);
-  limit  — если бар коснулся цены; частично: не больше max_participation × объёма бара за бар;
+  limit  — только проход за цену и полный бар до TTL; общий бюджет участия на бар;
   фандинг — для перпов раз в funding_interval_h по открытой позиции (лонг платит при rate > 0).
 P&L сделки считается по референсным ценам (мид), проскальзывание — отдельная компонента издержек,
 чтобы не считать его дважды.
@@ -29,6 +29,7 @@ from lab.core.measure.types import ClosedTrade, IncompleteData, LookaheadError
 
 PERP_BRANCHES = {Branch.CEX_PERP, Branch.DEX_PERP}
 ZERO_D = Decimal(0)
+EXECUTION_MODEL = "ohlc-strict-penetration-shared-limit-volume/v2"
 
 
 def check_continuity(candles: Sequence[Candle], tf: timedelta) -> None:
@@ -99,6 +100,8 @@ class PaperEngine:
     keep_fills: bool = True
 
     def __post_init__(self) -> None:
+        if not 0 < self.max_participation <= 1:
+            raise ValueError("max_participation должен быть в (0, 1]")
         self.step = parse_tf(self.tf)
         self.clock: datetime | None = None
         self.pending: list[_Pending] = []
@@ -142,9 +145,13 @@ class PaperEngine:
         if signal.size <= 0:
             raise ValueError("size должен быть > 0")
         order_type = str(signal.meta.get("order_type", "market"))
+        if order_type not in ("market", "limit"):
+            raise ValueError(f"неподдерживаемый order_type: {order_type}")
         limit_price = signal.meta.get(
             "limit_price", signal.price_ref if order_type == "limit" else None
         )
+        if order_type == "limit" and (limit_price is None or Decimal(str(limit_price)) <= 0):
+            raise ValueError("лимитному сигналу нужна положительная limit_price или price_ref")
         self.pending.append(
             _Pending(
                 signal=signal,
@@ -161,11 +168,13 @@ class PaperEngine:
             raise LookaheadError(f"бар {bar.ts.isoformat()} раньше часов движка {self.clock}")
         fills: list[Fill] = []
         still: list[_Pending] = []
+        # Один объём нельзя повторно выдавать каждой из ожидающих лимиток.
+        self._limit_budget = max(ZERO_D, bar.volume * self.max_participation)
         for p in self.pending:
             if p.signal.decided_at > bar.ts:
                 still.append(p)
                 continue
-            if bar.ts >= p.expires_at and p.expires_at > p.signal.decided_at:
+            if bar.ts >= p.expires_at:
                 self.expired += 1
                 continue
             fill = self._execute(p, bar)
@@ -196,18 +205,22 @@ class PaperEngine:
         )
 
     def _execute(self, p: _Pending, bar: Candle) -> Fill | None:
+        if bar.volume <= 0:
+            return None
         side = p.signal.side
         if p.order_type == "limit":
             price = p.limit_price
             if price is None:
                 raise ValueError("лимитному сигналу нужна limit_price или price_ref")
-            touched = bar.low <= price if side == "buy" else bar.high >= price
-            if not touched:
+            # OHLC не раскрывает очередь и время экстремума. Касание не доказывает
+            # исполнение; весь бар должен помещаться в срок жизни заявки.
+            crossed = bar.low < price if side == "buy" else bar.high > price
+            if not crossed or bar.ts + self.step > p.expires_at:
                 return None
-            cap = bar.volume * self.max_participation
-            qty = min(p.remaining, cap) if cap > 0 else p.remaining
+            qty = min(p.remaining, self._limit_budget)
             if qty <= 0:
                 return None
+            self._limit_budget -= qty
             ref = price
             costs = self.costs.estimate(
                 self.venue, self._intent(p, qty, price), depth=self.depth, perp=self._is_perp

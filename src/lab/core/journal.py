@@ -30,6 +30,7 @@ from sqlalchemy.orm import Session
 
 from lab.contracts import Costs, Fill, OrderIntent, OrderState, Signal, SignalOutcome
 from lab.core.costs import UnknownFeeAsset, base_moved, fee_in_quote
+from lab.db.base import utcnow
 from lab.db.models import FillRow, OrderRow, SignalRow, TradeRow
 
 _COST_FIELDS = tuple(Costs.model_fields)
@@ -209,10 +210,16 @@ class Journal:
     # -- сигналы и ордера ------------------------------------------------------------
 
     def record_signal(self, signal: Signal, signal_id: str | None = None) -> SignalRecord:
+        from lab.core.forward import current_observation
+
+        recorded_at = utcnow()
+        observation = current_observation(self.s, signal.strategy_id, start=True, at=recorded_at)
         row = SignalRow(
             id=signal_id or f"sig-{uuid4().hex[:16]}",
             strategy_id=signal.strategy_id,
             decided_at=signal.decided_at,
+            recorded_at=recorded_at,
+            observation_id=observation.id,
             instrument=signal.instrument,
             side=signal.side,
             size=signal.size,
@@ -284,6 +291,7 @@ class Journal:
                 fee=fill.fee,
                 fee_asset=fill.fee_asset,
                 ts=fill.ts,
+                recorded_at=utcnow(),
                 ref_price=ref_price,
                 costs_json=costs.model_dump(mode="json"),
             )
@@ -406,6 +414,7 @@ class Journal:
                     fee=fill.fee,
                     fee_asset=fill.fee_asset,
                     ts=fill.ts,
+                    recorded_at=utcnow(),
                     costs_json=costs.model_dump(mode="json"),
                 )
             )
@@ -513,6 +522,7 @@ class Journal:
         since: datetime,
         tolerance: Decimal = Decimal("0.0001"),
         now: datetime | None = None,
+        mode: str | None = None,
     ) -> ReconcileReport:
         """Сравнить филлы площадки с журналом с `since`. Расхождение по цене/объёму/комиссии
         больше `tolerance` (доля) или отсутствующий филл → Mismatch; ничего не правится."""
@@ -521,7 +531,10 @@ class Journal:
             for f in self.s.scalars(
                 select(FillRow)
                 .join(OrderRow, FillRow.order_id == OrderRow.id)
-                .where(OrderRow.venue == venue, FillRow.ts >= since)
+                .where(
+                    OrderRow.venue == venue, FillRow.ts >= since,
+                    OrderRow.mode == mode if mode is not None else True,
+                )
             ).all()
         }
         theirs = {f.id: f for f in fills_from_venue if f.ts >= since}

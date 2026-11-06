@@ -58,6 +58,8 @@ def test_measure_wrapper_runs_core_measure_from_registry_and_store(session, scop
     assert m.status == "ok", m.reason
     assert m.metrics is not None
     assert m.data_hash and m.code_version
+    assert m.metrics.research["variants"] == 1
+    assert m.metrics.research["tracked"]
 
 
 def test_measure_wrapper_reports_missing_candles_as_incomplete(session, scope, tmp_path):
@@ -72,6 +74,27 @@ def test_measure_wrapper_reports_missing_candles_as_incomplete(session, scope, t
     assert m.status == "incomplete"
     assert m.metrics is None
     assert "свеч" in m.reason or "данн" in m.reason
+    from sqlalchemy import select
+
+    from lab.db.models import ResearchTrialRow
+
+    assert session.scalar(select(ResearchTrialRow)).status == "incomplete"
+
+
+def test_unsaved_measurements_are_still_research_attempts(session, scope, tmp_path):
+    from sqlalchemy import func, select
+
+    from lab.db.models import MeasurementRow, ResearchTrialRow
+
+    _register(session)
+    measure = make_measure(scope, store=_store(tmp_path))
+    a = measure(strategy_id=STRATEGY_ID, mode="backtest", window=WINDOW, session=None)
+    b = measure(strategy_id=STRATEGY_ID, mode="backtest", window=WINDOW, session=None)
+    assert a.id is None and b.id is None
+    assert a.metrics.research["variants"] == b.metrics.research["variants"] == 1
+    assert session.scalar(select(func.count()).select_from(MeasurementRow)) == 0
+    assert session.scalar(select(func.count()).select_from(ResearchTrialRow)) == 2
+    assert session.scalar(select(ResearchTrialRow).limit(1)).result["n_trades"] is not None
 
 
 def test_measure_wrapper_names_the_strategy_it_cannot_build(session, scope, tmp_path):
@@ -96,6 +119,12 @@ def test_measure_wrapper_names_the_strategy_it_cannot_build(session, scope, tmp_
 
     with pytest.raises(MeasureUnavailable, match=strategy.id):
         measure(strategy_id=strategy.id, mode="backtest", window=WINDOW)
+    from sqlalchemy import select
+
+    from lab.db.models import ResearchTrialRow
+
+    trial = session.scalar(select(ResearchTrialRow))
+    assert trial.status == "failed" and "MeasureUnavailable" in trial.reason
 
 
 def test_worker_registers_remeasure_job(session, scope, tmp_path):
@@ -182,3 +211,42 @@ def test_remeasure_job_measures_live_strategies_end_to_end(session, scope, tmp_p
 
     assert report.measured == [STRATEGY_ID], report.failed
     assert history(session, STRATEGY_ID), "снимок замера не сохранён"
+
+
+def test_paper_wrapper_does_not_turn_candles_into_paper_trades(session, scope, tmp_path):
+    from lab.db.models import StrategyRow
+
+    _register(session)
+    session.get(StrategyRow, STRATEGY_ID).rung = "paper"
+    session.flush()
+    measure = make_measure(scope, store=_store(tmp_path))
+    m = measure(strategy_id=STRATEGY_ID, mode="paper", window=WINDOW)
+    assert m.status == "ok"
+    assert m.metrics.trade_source == "journal_paper"
+    assert m.metrics.n_trades == 0
+    assert m.threshold.status == "insufficient"
+
+
+@pytest.mark.parametrize("mode", ["paper", "live"])
+def test_journal_trade_selection_separates_execution_modes(monkeypatch, mode):
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    from lab.contracts import Costs
+    from lab.core.journal import Journal
+    from lab.ops.measure import _journal_trades
+
+    def trade(execution_mode, pnl):
+        return SimpleNamespace(
+            mode=execution_mode, closed_at=NOW, opened_at=NOW - timedelta(hours=1),
+            instrument="BTC/USDT", side="long", qty=Decimal(1),
+            entry_price=Decimal(100), exit_price=Decimal(100 + pnl),
+            pnl_gross=Decimal(pnl), costs=Costs(),
+        )
+
+    monkeypatch.setattr(
+        Journal, "closed_trades", lambda *_: [trade("paper", 3), trade("live", 7)]
+    )
+    rows = _journal_trades(None, STRATEGY_ID, WINDOW, mode=mode)
+    assert len(rows) == 1
+    assert rows[0].pnl_gross == Decimal(3 if mode == "paper" else 7)

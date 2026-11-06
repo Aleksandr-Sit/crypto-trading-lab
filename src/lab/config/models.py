@@ -124,6 +124,11 @@ class AllocationConfig(_Cfg):
     max_dd_share_of_benchmark: Decimal = Field(gt=0, le=1, default=Decimal("0.5"))
 
 
+class CostStressConfig(_Cfg):
+    multiplier: Decimal = Field(gt=1, default=Decimal(2))
+    extra_turnover_bps: Decimal = Field(gt=0, default=Decimal(5))
+
+
 class ThresholdConfig(_Cfg):
     """Правило В12: ≥30 сделок, EV>0 после издержек, MaxDD в лимите, лучше BTC B&H."""
 
@@ -131,10 +136,13 @@ class ThresholdConfig(_Cfg):
     min_ev_after_costs: Decimal
     max_dd_pct: dict[str, Decimal]
     bootstrap_samples: int = Field(ge=100, default=1000)
+    bootstrap_block_groups: int | None = Field(ge=2, default=None)
+    bootstrap_min_blocks: int = Field(ge=2, default=5)
     confidence: Decimal = Field(gt=0, lt=1, default=Decimal("0.95"))
     stability: StabilityConfig = Field(default_factory=StabilityConfig)
     benchmark: BenchmarkConfig = Field(default_factory=BenchmarkConfig)
     allocation: AllocationConfig = Field(default_factory=AllocationConfig)
+    cost_stress: CostStressConfig = Field(default_factory=CostStressConfig)
 
 
 class JobSpec(_Cfg):
