@@ -1,0 +1,488 @@
+{
+  "audit": {
+    "4883987534523154688": {
+      "hashes": {
+        "hourly_4883987534523154688_2026-11-07.json": "c95f7643f9f7cee5d1b8a4b8670153cdb9ee3cf104993ce239b1bd6e638e6f53",
+        "hourly_4883987534523154688_orders_2026-11-07.json": "d387f2e306f7a9894a157c4d09035c75645fe4d051c6b9ba1ec7e2d6d0bec4a4"
+      },
+      "positions": 544,
+      "reported_total": 544,
+      "unique_ids": 544,
+      "sides": {
+        "Long": 544
+      },
+      "first_open": "2026-07-10T10:02:10.579000+00:00",
+      "last_open": "2026-10-21T18:01:40.922000+00:00",
+      "max_concurrent": 1,
+      "median_holding_hours": 1.001773888888889,
+      "max_holding_hours": 29.000416666666666,
+      "integer_hour_within30s": 544,
+      "order_count": 77,
+      "matched_position_legs": 77,
+      "matched_buys": 38,
+      "matched_sells": 39,
+      "max_match_time_error_ms": 1,
+      "max_match_price_relative_error": 1.8624461806115988e-07,
+      "max_match_quantity_relative_error": 0.0,
+      "median_order_execution_delay_ms": 0,
+      "switch_within30s": 491,
+      "gap_over30s": 52,
+      "overlap_over30s": 0,
+      "prior_scan_n": 200,
+      "prior_scan_ids_present": 200,
+      "grouped_complete_positions": 38,
+      "grouped_quantity_mismatches": 0,
+      "grouped_max_price_relative_error": 1.8624461806115988e-07,
+      "grouped_multiple_orders": [],
+      "opening_hours": {
+        "10": 17,
+        "13": 23,
+        "14": 23,
+        "18": 29,
+        "19": 20,
+        "20": 22,
+        "22": 26,
+        "2": 25,
+        "15": 24,
+        "16": 26,
+        "17": 23,
+        "4": 26,
+        "8": 17,
+        "0": 22,
+        "12": 21,
+        "21": 20,
+        "6": 24,
+        "7": 21,
+        "1": 22,
+        "11": 21,
+        "23": 18,
+        "5": 27,
+        "9": 24,
+        "3": 23
+      }
+    },
+    "4894215989067406336": {
+      "hashes": {
+        "hourly_4894215989067406336_2026-11-07.json": "c4de683770899d2bd53014088bb4d78488660c43a6e04b6c3309fa4748d33208",
+        "hourly_4894215989067406336_orders_2026-11-07.json": "f00c0df288d70eb0377636d212343191a5f66f9264f7a5618e610e7c38277012"
+      },
+      "positions": 69,
+      "reported_total": 69,
+      "unique_ids": 69,
+      "sides": {
+        "Long": 69
+      },
+      "first_open": "2026-08-01T16:02:55.936000+00:00",
+      "last_open": "2026-10-21T18:02:14.482000+00:00",
+      "max_concurrent": 1,
+      "median_holding_hours": 1.0023205555555557,
+      "max_holding_hours": 15.000529444444444,
+      "integer_hour_within30s": 69,
+      "order_count": 76,
+      "matched_position_legs": 76,
+      "matched_buys": 38,
+      "matched_sells": 38,
+      "max_match_time_error_ms": 1,
+      "max_match_price_relative_error": 0.0,
+      "max_match_quantity_relative_error": 0.0,
+      "median_order_execution_delay_ms": 0.0,
+      "switch_within30s": 6,
+      "gap_over30s": 62,
+      "overlap_over30s": 0,
+      "prior_scan_n": 69,
+      "prior_scan_ids_present": 69,
+      "grouped_complete_positions": 38,
+      "grouped_quantity_mismatches": 0,
+      "grouped_max_price_relative_error": 2.220446049250313e-16,
+      "grouped_multiple_orders": [],
+      "opening_hours": {
+        "16": 4,
+        "2": 3,
+        "11": 4,
+        "14": 3,
+        "17": 4,
+        "18": 6,
+        "22": 4,
+        "0": 2,
+        "7": 4,
+        "15": 2,
+        "6": 4,
+        "23": 5,
+        "1": 2,
+        "4": 2,
+        "13": 2,
+        "19": 4,
+        "5": 3,
+        "8": 1,
+        "10": 4,
+        "12": 2,
+        "3": 2,
+        "20": 1,
+        "9": 1
+      }
+    },
+    "4693119134299763969": {
+      "hashes": {
+        "hourly_4693119134299763969_2026-11-07.json": "4fe3e323dfeed2ebc98f7135ae9f3ebe9ca7a30ccf16e63a42363a66dd030551",
+        "hourly_4693119134299763969_orders_2026-11-07.json": "8a7752470b913f4fe7c6cd7899d5922a0963acfd3570909ad6cec1d2b2e2d039"
+      },
+      "positions": 1567,
+      "reported_total": 1567,
+      "unique_ids": 1567,
+      "sides": {
+        "Long": 1567
+      },
+      "first_open": "2026-07-10T10:04:08.568000+00:00",
+      "last_open": "2026-11-07T06:03:02.258000+00:00",
+      "max_concurrent": 2,
+      "median_holding_hours": 1.0010994444444445,
+      "max_holding_hours": 26.00244916666667,
+      "integer_hour_within30s": 1502,
+      "order_count": 1516,
+      "matched_position_legs": 1513,
+      "matched_buys": 756,
+      "matched_sells": 757,
+      "max_match_time_error_ms": 1,
+      "max_match_price_relative_error": 0.011654229785606152,
+      "max_match_quantity_relative_error": 0.40617577197149646,
+      "median_order_execution_delay_ms": 0.0,
+      "switch_within30s": 1530,
+      "gap_over30s": 36,
+      "overlap_over30s": 0,
+      "prior_scan_n": 200,
+      "prior_scan_ids_present": 200,
+      "grouped_complete_positions": 756,
+      "grouped_quantity_mismatches": 0,
+      "grouped_max_price_relative_error": 9.493493525558616e-05,
+      "grouped_multiple_orders": [
+        {
+          "position_id": "1166331045841633280",
+          "symbol": "BTCDOMUSDT",
+          "legs": {
+            "BUY": {
+              "n": 1,
+              "quantity": 0.008,
+              "average_price": 5587.9
+            },
+            "SELL": {
+              "n": 2,
+              "quantity": 0.008,
+              "average_price": 5615.2375
+            }
+          },
+          "buy_quantity_error": 0.0,
+          "sell_quantity_error": 0.0,
+          "buy_price_relative_error": 0.0,
+          "sell_price_relative_error": 0.0
+        },
+        {
+          "position_id": "1168399618500100096",
+          "symbol": "IDOLUSDT",
+          "legs": {
+            "BUY": {
+              "n": 2,
+              "quantity": 842.0,
+              "average_price": 0.014846969121140143
+            },
+            "SELL": {
+              "n": 1,
+              "quantity": 842.0,
+              "average_price": 0.016082
+            }
+          },
+          "buy_quantity_error": 0.0,
+          "sell_quantity_error": 0.0,
+          "buy_price_relative_error": 5.9194560031450294e-08,
+          "sell_price_relative_error": 0.0
+        }
+      ],
+      "opening_hours": {
+        "10": 70,
+        "12": 63,
+        "13": 58,
+        "15": 65,
+        "16": 74,
+        "21": 61,
+        "22": 64,
+        "23": 55,
+        "1": 53,
+        "2": 72,
+        "4": 70,
+        "5": 68,
+        "6": 82,
+        "7": 65,
+        "9": 71,
+        "14": 64,
+        "17": 75,
+        "19": 68,
+        "20": 62,
+        "18": 69,
+        "0": 49,
+        "11": 65,
+        "8": 60,
+        "3": 64
+      }
+    }
+  },
+  "selection_diagnostics": {
+    "universe_hash": "7583dad8eb9bed2cda733c6e51e3b1d4ac68abb66cdd5858fb4935fce203038f",
+    "step_ms": 3600000,
+    "universe_failures": [
+      [
+        "GAIBUSDT",
+        "Client error '400 Bad Request' for url 'https://fapi.binance.com/fapi/v1/klines?symbol=GAIBUSDT&interval=1h&startTime=1788739200000&endTime=1792627199999&limit=499'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400"
+      ]
+    ]
+  },
+  "diagnostics": {
+    "4883987534523154688": {
+      "n": 28,
+      "statistics": {
+        "r1h": {
+          "median_rank": 0.9534770061441072,
+          "bottom10": 1,
+          "top10": 23,
+          "top1": 1,
+          "top5": 4
+        },
+        "r4h": {
+          "median_rank": 0.9801526717557252,
+          "bottom10": 0,
+          "top10": 24,
+          "top1": 1,
+          "top5": 5
+        },
+        "r12h": {
+          "median_rank": 0.9770992366412213,
+          "bottom10": 0,
+          "top10": 22,
+          "top1": 1,
+          "top5": 5
+        },
+        "r24h": {
+          "median_rank": 0.9794044405138709,
+          "bottom10": 0,
+          "top10": 26,
+          "top1": 1,
+          "top5": 4
+        },
+        "r48h": {
+          "median_rank": 0.9717557251908397,
+          "bottom10": 0,
+          "top10": 26,
+          "top1": 1,
+          "top5": 3
+        },
+        "qv24h": {
+          "median_rank": 0.9870229007633589,
+          "bottom10": 0,
+          "top10": 27,
+          "top1": 0,
+          "top5": 6
+        },
+        "qv1h": {
+          "median_rank": 0.9908466765965369,
+          "bottom10": 0,
+          "top10": 27,
+          "top1": 0,
+          "top5": 7
+        },
+        "age_days": {
+          "median_rank": 0.9114503816793893,
+          "bottom10": 2,
+          "top10": 20,
+          "top1": 0,
+          "top5": 0
+        }
+      },
+      "monthly_exact_leader_matches": {
+        "2026-09": {
+          "n": 22,
+          "matches": {
+            "r1h": 1,
+            "r4h": 1,
+            "r12h": 1,
+            "r24h": 1,
+            "r48h": 1
+          }
+        },
+        "2026-10": {
+          "n": 6,
+          "matches": {
+            "r1h": 0,
+            "r4h": 0,
+            "r12h": 0,
+            "r24h": 0,
+            "r48h": 0
+          }
+        }
+      }
+    },
+    "4894215989067406336": {
+      "n": 38,
+      "statistics": {
+        "r1h": {
+          "median_rank": 0.941263265686092,
+          "bottom10": 2,
+          "top10": 28,
+          "top1": 1,
+          "top5": 5
+        },
+        "r4h": {
+          "median_rank": 0.9290076335877863,
+          "bottom10": 1,
+          "top10": 25,
+          "top1": 0,
+          "top5": 3
+        },
+        "r12h": {
+          "median_rank": 0.956522295661888,
+          "bottom10": 1,
+          "top10": 26,
+          "top1": 1,
+          "top5": 3
+        },
+        "r24h": {
+          "median_rank": 0.9725400297896108,
+          "bottom10": 0,
+          "top10": 30,
+          "top1": 1,
+          "top5": 5
+        },
+        "r48h": {
+          "median_rank": 0.9641221374045801,
+          "bottom10": 0,
+          "top10": 30,
+          "top1": 0,
+          "top5": 3
+        },
+        "qv24h": {
+          "median_rank": 0.9847328244274809,
+          "bottom10": 0,
+          "top10": 31,
+          "top1": 0,
+          "top5": 5
+        },
+        "qv1h": {
+          "median_rank": 0.9877862595419847,
+          "bottom10": 0,
+          "top10": 33,
+          "top1": 0,
+          "top5": 8
+        },
+        "age_days": {
+          "median_rank": 0.9114503816793893,
+          "bottom10": 7,
+          "top10": 23,
+          "top1": 0,
+          "top5": 0
+        }
+      },
+      "monthly_exact_leader_matches": {
+        "2026-09": {
+          "n": 24,
+          "matches": {
+            "r1h": 0,
+            "r4h": 0,
+            "r12h": 0,
+            "r24h": 0,
+            "r48h": 0
+          }
+        },
+        "2026-10": {
+          "n": 14,
+          "matches": {
+            "r1h": 1,
+            "r4h": 0,
+            "r12h": 1,
+            "r24h": 1,
+            "r48h": 0
+          }
+        }
+      }
+    },
+    "4693119134299763969": {
+      "n": 586,
+      "statistics": {
+        "r1h": {
+          "median_rank": 0.9832317073170732,
+          "bottom10": 14,
+          "top10": 444,
+          "top1": 67,
+          "top5": 200
+        },
+        "r4h": {
+          "median_rank": 0.9847328244274809,
+          "bottom10": 5,
+          "top10": 478,
+          "top1": 62,
+          "top5": 200
+        },
+        "r12h": {
+          "median_rank": 0.9862595419847329,
+          "bottom10": 4,
+          "top10": 484,
+          "top1": 63,
+          "top5": 211
+        },
+        "r24h": {
+          "median_rank": 0.9893129770992366,
+          "bottom10": 1,
+          "top10": 499,
+          "top1": 41,
+          "top5": 213
+        },
+        "r48h": {
+          "median_rank": 0.9847328244274809,
+          "bottom10": 0,
+          "top10": 518,
+          "top1": 36,
+          "top5": 184
+        },
+        "qv24h": {
+          "median_rank": 0.9359756097560976,
+          "bottom10": 0,
+          "top10": 409,
+          "top1": 0,
+          "top5": 20
+        },
+        "qv1h": {
+          "median_rank": 0.9618611524855707,
+          "bottom10": 0,
+          "top10": 500,
+          "top1": 2,
+          "top5": 48
+        },
+        "age_days": {
+          "median_rank": 0.59375,
+          "bottom10": 84,
+          "top10": 101,
+          "top1": 0,
+          "top5": 0
+        }
+      },
+      "monthly_exact_leader_matches": {
+        "2026-09": {
+          "n": 304,
+          "matches": {
+            "r1h": 27,
+            "r4h": 29,
+            "r12h": 29,
+            "r24h": 21,
+            "r48h": 18
+          }
+        },
+        "2026-10": {
+          "n": 282,
+          "matches": {
+            "r1h": 40,
+            "r4h": 33,
+            "r12h": 34,
+            "r24h": 20,
+            "r48h": 18
+          }
+        }
+      }
+    }
+  }
+}

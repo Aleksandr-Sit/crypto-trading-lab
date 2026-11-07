@@ -1,0 +1,495 @@
+{
+  "portfolio_id": "5238239613252372224",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "script_sha256": "81075048201592cc353d0bc9d1c91f1da07885a733c798b2c7d1ba3f9226809a",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "yang_5238239613252372224_scan_2026-10-25.json": "28ea70accd6c9f8494e14df9f46d729a40ebf7cd981aa9fdab2f3497d862073d",
+    "yang_5238239613252372224_2026-11-07.json": "5c73704b2163e815e6097e9ef1de77fba1e24bb26938a8e48814d9b5e347d5cd",
+    "yang_5238239613252372224_orders_2026-11-07.json": "bf16ab8c819ebb25286c76907c903abe0cae5c1308a13f4433a8c6af4fbface5",
+    "yang_5238239613252372224_orders_rawpass_2026-11-07.json": "44c7569406c371f34dd816d086b68cc5060a3d94c72826c0cb2bf52ed3303270"
+  },
+  "raw_order_pages": {
+    "error_10_1794057622749415700.json": "f648b971749daec1fada59c3f50c1431eb2c9711adec02e1492ccc1aeb7ea953",
+    "error_11_1794057627748551500.json": "5eeaa0da798d0018a53953751e0e477040aee06c88cc2d7f1cfab77b53f11b99",
+    "error_12_1794057633009419000.json": "32ea35d10be3c838beaa14035f7e6b1ed499d4c02cca060477170529b57597c4",
+    "error_13_1794057637831977900.json": "f76ee3da620f261b74e9bc3e497ec783db37fb792f65dcadc807481a18468e73",
+    "error_14_1794057642962762700.json": "dd0a2ebf141c1dcdcd926975e5f43dcd7397d3f95b257960cf607f9b2c838174",
+    "error_15_1794057648074305100.json": "1ad8ed59a96cac4feb108c6fbea08d6b714dd071e9c5f72387eeb7f93163245d",
+    "error_16_1794057652909798700.json": "50d2e5b5e74644cde8e82b16dcf7946d2b729fd7f933be57c28bb98002911ef1",
+    "error_17_1794057657710036100.json": "9bf26c2057ac8412a3adcf3952c36b65d297c98e3c029ba562a8633a6084a3d4",
+    "error_19_1794057664694223300.json": "25a0b1c102e1d70246a3433fe8756318e982b220b29934757fd889dc9ddf1156",
+    "error_20_1794057669647533600.json": "86bd29bac8f2149650dc88a0ff2f79d7a27aee4dd5c0be2c37210bd429441833",
+    "error_21_1794057674474024500.json": "eb16bf19c04a9d311bf4e3b0a81503e85639d0d58ec261c938aeb1982964d9fd",
+    "error_22_1794057679435846500.json": "ac5d35502b2b6a205f9326632f76c5ec8e709341fa56d857a5e02e261a5b3a67",
+    "error_23_1794057684563593800.json": "18b655c83830c07a8ee24cc7fd3afba825fe609f5e87adb87f8a2c2fd0dda398",
+    "error_24_1794057689489745800.json": "9d9d2b4baf723c6994a501a6bec2ced725c7dfaa3e9e335543eef1696f2b4959",
+    "error_25_1794057694562946000.json": "f7c95c783293e150b2a48a7b4124ec033cbb6eac4a3788e04b4ae14f2cfab59b",
+    "error_26_1794057699922426900.json": "d2b2003ee2d38dbad948bee7ced43bed6738c37c939624221b6b280f31bdef8e",
+    "error_2_1794057583751976600.json": "3e42f64ab42ed8a69d51966c2899feb43ebc014696509f25b2e7c1436cb7e75d",
+    "error_3_1794057588575797100.json": "ac1ac329a1766ed8097b6abd55577f48183c9d0096de6c47f7aa32e765364d1d",
+    "error_4_1794057593482450500.json": "3afa399147b91acce8cd23d50e4ae257e306c2c7fa46d1c479c37e79ed701c90",
+    "error_5_1794057598290147700.json": "e1f390da83307661106f9145cf83c78fd84a720e58a7210be4015b7e715cfb6a",
+    "error_6_1794057603293552500.json": "168bd899b507dbd4f56307b8b5965f9e2f6cf4a4e078b50dd6e6bead12305242",
+    "error_7_1794057608060627200.json": "1c6f84bf60e31c566360d8f663aee6eba068da19a82e8130b5f0ee226e5e0459",
+    "error_8_1794057613186328800.json": "511bf77e3448a1fbcc37552c2ea409a77f87666f011f2b291a086df1ea2745b8",
+    "error_9_1794057617986038100.json": "c10502dcc07fc40cfc48b0861219594f817755c254dad104ca4a5d62a49b1be1",
+    "page_001.json": "108a0bee0614c08a9ded7998de329f573453b449cb23fe701f8a10c5d3921ffc",
+    "page_002.json": "a5b34289d4112bc42b30084f7135ff40369194889e1c057a4b304be315861f70",
+    "page_003.json": "79203e874dee53589a291a8ae7d331bc01a5b4ce1619c46d5cd26e50bac1ee07",
+    "page_004.json": "506640574164699de08e4fde6e15e6b21258aeec7ea2a4cc0849a1a64618263e",
+    "page_005.json": "3f7e8299a2452ca6096efc092cbc48c32800f42acdefad49c95064e0520f4e7b",
+    "page_006.json": "8569e84e5d1d5a1b2cef92da5088e1836d6fb8287a8672ce59745686bc53f9a5",
+    "page_007.json": "4bcccb9df0b94a9da2c2f1a23a0f3f06521f80de9c19b0d9305c54825e424253",
+    "page_008.json": "9f210d3f813a81f3800ef4d424dbfc4da1fada6caf6d14f50d1412870c492f02",
+    "page_009.json": "ff65eb9fa0dade301dfe6e1576433df4c19e8038d97a9edba196978fa80a5a2f",
+    "page_010.json": "1c3b060a1faa61714a2702c51711361a264ee49a1f8d6331fbd7f4caa3657069",
+    "page_011.json": "74a3472dee1e456da76d2eb54144f5a4e04696e27cc94308ad8d4adddfabdd4c",
+    "page_012.json": "fcf0d8c300da61d5762f275571510c8be8fcf4067c7d40b16b03dc3537779aa2",
+    "page_013.json": "8894787ea43db4213174a1737c27b2191565700b5fadff85b54d5ffb972c8851",
+    "page_014.json": "c507e1540d3c910e4b5bdb10c32126b3d0f23dbee908bf63b55af8221ed51880",
+    "page_015.json": "95dfc148236cfeb1cc2febe27572f00e8502d6b8479de53dc10778682432f38b",
+    "page_016.json": "5ce549afaf233b62a66464957d358dc7860d81fdde0d20948e8077a46a5f20fe",
+    "page_017.json": "fa2bc2178addbf79beb9d069fccf4f9e2bbdbf889244c33e2e4f8b06474caab3",
+    "page_018.json": "3ea40458095cb8211474620071bdad8de16f104a59c6bcf57920c84e5ff470d8",
+    "page_019.json": "9ba7945a0700a3a35c724354dd76dbf6c64c7e260bfc0ee78201dec6180a0dec",
+    "page_020.json": "04179dabf0063efbd7c166ec8dbb85cf1ba33e932fa19e438889240ab6c7c588",
+    "page_021.json": "7ef607e53710a0fe06ff4c0fac278f16940eb50dc68c9a2467cf5c92274c307b",
+    "page_022.json": "96b3ef640557517f351a2f529c7efbec14738a3ead204bb70113d3d246e3650e",
+    "page_023.json": "c672266d98ef292954d4f9f0b1bbe1d4fc1aeb40de4d737eb0045a85c050c254",
+    "page_024.json": "bde7a1f08ca34caf8b46aa5970e1858b5efb6ae01e2b19add7a62755b284b3f7",
+    "page_025.json": "306eaa51a1a80191e15eff9d689b9d7dab027fa7bab6f097396d6ec95a0aedeb",
+    "page_026.json": "7bdf1d2096c366d26aafee7b654d05857c92bea78419b30a43fce4099cde0d36"
+  },
+  "profile_description": "无情的交易机器",
+  "old_count": 200,
+  "current_count": 1199,
+  "reported_current_total": 1199,
+  "current_complete": true,
+  "union_count": 1199,
+  "old_missing_current": [],
+  "changed_shared": [],
+  "status_counts": {
+    "All Closed": 1199
+  },
+  "by_side": {
+    "Long": {
+      "n": 372,
+      "first_open": "2026-09-23T17:47:19.347000+00:00",
+      "last_close": "2026-11-05T07:27:30.637000+00:00",
+      "symbols": 192,
+      "leverage": {
+        "10": 32,
+        "5": 93,
+        "20": 247
+      },
+      "duration_min": 49.847,
+      "duration_median": 3518.5865000000003,
+      "duration_max": 49770.015,
+      "within_300s_10s": 4,
+      "within_14400s_30s": 80,
+      "at_most_310s": 42,
+      "early_before_290s": 38,
+      "early_adverse": 10
+    },
+    "Short": {
+      "n": 827,
+      "first_open": "2026-09-28T10:50:04.884000+00:00",
+      "last_close": "2026-11-07T12:43:15.231000+00:00",
+      "symbols": 123,
+      "leverage": {
+        "10": 249,
+        "20": 411,
+        "5": 167
+      },
+      "duration_min": 0.379,
+      "duration_median": 300.536,
+      "duration_max": 1610.743,
+      "within_300s_10s": 424,
+      "within_14400s_30s": 0,
+      "at_most_310s": 823,
+      "early_before_290s": 399,
+      "early_adverse": 384
+    }
+  },
+  "peak_simultaneous": 17,
+  "scan_timer": {
+    "timer_loss_share": 0.22,
+    "timer_loss_mode_s": 304,
+    "timer_all_share": 0.42,
+    "timer_all_mode_s": 303
+  },
+  "current_timer": {
+    "timer_loss_share": 0.19,
+    "timer_loss_mode_s": 303,
+    "timer_all_share": 0.36,
+    "timer_all_mode_s": 303
+  },
+  "order_count": 2467,
+  "assignment_tolerance_ms": 10,
+  "reported_order_total": 2467,
+  "order_passes": {
+    "first_unique": 2466,
+    "second_unique": 2467,
+    "second_reported_total": 2467,
+    "second_observed_totals": [
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467,
+      2467
+    ],
+    "second_raw_count": 2467,
+    "second_duplicates": 0,
+    "only_first": 0,
+    "only_second": 1
+  },
+  "order_types": {
+    "MARKET:BUY": 1190,
+    "LIMIT:SELL": 41,
+    "MARKET:SELL": 1221,
+    "LIMIT:BUY": 15
+  },
+  "first_order": "2026-09-23T17:47:19.347000+00:00",
+  "last_order": "2026-11-07T13:13:32.855000+00:00",
+  "ambiguous_orders": [],
+  "unmatched_order_indices": [
+    2465,
+    2466
+  ],
+  "unmatched_sides": {
+    "SHORT:SELL": 1,
+    "SHORT:BUY": 1
+  },
+  "leg_count": 2398,
+  "missing_leg_count": 0,
+  "volume_or_price_exceptions": [
+    {
+      "position_id": "1155798120747388928",
+      "side": "SELL",
+      "entry": false,
+      "order_indices": [
+        131
+      ],
+      "qty": "2471.4",
+      "qty_error": "-93.3",
+      "price_error": "0.00004621",
+      "price_precision_compatible": false,
+      "types": {
+        "MARKET": 1
+      },
+      "placement_to_update_ms": [
+        0
+      ]
+    },
+    {
+      "position_id": "1156022973798699008",
+      "side": "SELL",
+      "entry": false,
+      "order_indices": [
+        174
+      ],
+      "qty": "1614.0",
+      "qty_error": "-42.0",
+      "price_error": "0.00001761",
+      "price_precision_compatible": false,
+      "types": {
+        "MARKET": 1
+      },
+      "placement_to_update_ms": [
+        0
+      ]
+    }
+  ],
+  "multiple_order_legs": [
+    {
+      "position_id": "1155257854814736384",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1155367786323005440",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1155508461928599552",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1155838650596347904",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1156110441193558016",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1156124128398692352",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1156179595686727680",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1156250697276477440",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1156259662538362880",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1156400839182929920",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1156458281585496064",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1156669656127655936",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1156702864152088576",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1156988466701422592",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1157082864713879552",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1157229588484870144",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1157314998468759552",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1157630967837773824",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1158216131760508928",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1158260759008268288",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1158286060429922304",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1159134399325163520",
+      "entry": true,
+      "order_count": 3
+    },
+    {
+      "position_id": "1159307249461907456",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1159816710299471872",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1159847806269542400",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1160939641054318592",
+      "entry": true,
+      "order_count": 2
+    },
+    {
+      "position_id": "1160944635069485056",
+      "entry": true,
+      "order_count": 3
+    },
+    {
+      "position_id": "1160953843751997440",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1160980855749234688",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1161166839665283072",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1161176836537208832",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1161372563594956800",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1161560407693217792",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1161688872065060864",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1162607473764749312",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1165017698681638912",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1165327432081100800",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1165379354033016832",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1165383555127595008",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1166565084033863680",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1166644145137537024",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1167517381895278592",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1167727257598709760",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1167745385909080064",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1169114667909795840",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1169171001023811584",
+      "entry": false,
+      "order_count": 3
+    },
+    {
+      "position_id": "1169196417356812288",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1169442807278358528",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1169516935586926592",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1169561720955752448",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1169978000263237632",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1170245180208861184",
+      "entry": false,
+      "order_count": 2
+    },
+    {
+      "position_id": "1170426973126021120",
+      "entry": false,
+      "order_count": 2
+    }
+  ],
+  "full_audit_path": "../lab-data/open-automata/yang_audit_2026-11-07.json",
+  "full_audit_sha256": "e2d89a4ae7bfcb754792671b59862656e88b3ec877d27ca7ad465c874ffe9123"
+}

@@ -1,0 +1,77 @@
+{
+  "method": "saved_24h_competitor_at_opening_buy_v1",
+  "verified_hourly_minute_boundaries": 934,
+  "plan_sha256": "41112acec0e5a432808a6b1f5f2737db919d9dcd552264ab7b6e717d4941de92",
+  "script_sha256": "5427562ce2f4845232b836c1e3eb7d4605159deb1b7dc7cdd83b9ec830c15639",
+  "summary": {
+    "2026-09": {
+      "original_entries": 304,
+      "preselected_counterexamples": 237,
+      "evaluated": 237,
+      "competitor_still_stronger": 228,
+      "competitor_no_longer_stronger": 9,
+      "missing": 0,
+      "stronger_at_all_closed_minutes": 227
+    },
+    "2026-10": {
+      "original_entries": 282,
+      "preselected_counterexamples": 230,
+      "evaluated": 230,
+      "competitor_still_stronger": 224,
+      "competitor_no_longer_stronger": 6,
+      "missing": 0,
+      "stronger_at_all_closed_minutes": 223
+    }
+  },
+  "failures": [],
+  "limitations": [
+    "Exploratory months, not a new holdout.",
+    "Last closed minute prices, not intra-minute quotes.",
+    "No contemporaneous turnover, depth, or order-size filters tested.",
+    "One preselected competitor; no full-universe ranking inferred."
+  ],
+  "full_audit_path": "../lab-data/open-automata/hourly_delay_2026-11-07/audit.json",
+  "full_audit_sha256": "574409fc0d929d51d01c3ef92554ff109d1c32553ae83818e582e9ec239fd1bc",
+  "query_count": 1838,
+  "examples": [
+    {
+      "symbol": "LITUSDT",
+      "competitor": "DOTUSDT",
+      "opened": "2026-09-09T01:03:07.682000+00:00",
+      "order_time": 1788915787682,
+      "boundary": 1788915600000,
+      "last_closed_minute": 1788915720000,
+      "selected_return": 0.03365913514428365,
+      "competitor_return": 0.13750819058316965,
+      "stronger_competitor_remains": true,
+      "stronger_at_all_closed_minutes": true,
+      "minimum_return_margin": 0.103849055438886
+    },
+    {
+      "symbol": "LITUSDT",
+      "competitor": "USELESSUSDT",
+      "opened": "2026-09-09T08:02:57.448000+00:00",
+      "order_time": 1788940977447,
+      "boundary": 1788940800000,
+      "last_closed_minute": 1788940860000,
+      "selected_return": 0.15034485759665794,
+      "competitor_return": 0.3834782981275977,
+      "stronger_competitor_remains": true,
+      "stronger_at_all_closed_minutes": true,
+      "minimum_return_margin": 0.22730484105962567
+    },
+    {
+      "symbol": "ATOMUSDT",
+      "competitor": "FFUSDT",
+      "opened": "2026-09-09T09:03:01.316000+00:00",
+      "order_time": 1788944581315,
+      "boundary": 1788944400000,
+      "last_closed_minute": 1788944520000,
+      "selected_return": 0.18674698795180733,
+      "competitor_return": 0.3004431808679655,
+      "stronger_competitor_remains": true,
+      "stronger_at_all_closed_minutes": true,
+      "minimum_return_margin": 0.10823014429161071
+    }
+  ]
+}

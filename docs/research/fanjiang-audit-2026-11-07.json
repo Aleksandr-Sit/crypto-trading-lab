@@ -1,0 +1,420 @@
+{
+  "portfolio_id": "5226612818704717824",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "profile_description": "",
+  "script_sha256": "9a56b86d7cff13032cd6e7d7cf04edf6b8fdd4a4fad4d69cd6395628e9985daa",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "fanjiang_5226612818704717824_scan_2026-10-25.json": "246cc86ef800661e73399f8b222a042745931268b7e93e3b1adf4cb01fae31bb",
+    "fanjiang_5226612818704717824_2026-11-07.json": "f77fa18063ac1892185882dd454f646b9b9d1832bf7f938828f16ce361efe9d5",
+    "fanjiang_5226612818704717824_orders_rawpass_2026-11-07.json": "ede6ccbf2372b09ac11e22705a15c3c3f8e56e75e41f379eef2a3e49f77fa4ce"
+  },
+  "raw_sources": {
+    "fanjiang_pages_2026-11-07\\detail.json": "21132933b29c86ecb28025d847ea22dc83368a284eb69fb0a1680e7598e863f8",
+    "fanjiang_pages_2026-11-07\\page_001.json": "0a222fe4b4eeeeb7c219f8b9bd55d3fcdb57788b59c2e0d11e9a46a5db7ccc15",
+    "fanjiang_pages_2026-11-07\\page_002.json": "02f3041a68adff47a414f1175c319c4faded352f09edb6e455c4193d10516e82",
+    "fanjiang_order_pages_2026-11-07\\error_2_1794058062136243000.json": "163473d443522d50eb1e914c08267af526cbbfb13b5e8757a2ff8f62b8375c38",
+    "fanjiang_order_pages_2026-11-07\\error_3_1794058067239008000.json": "ef2e258f5b97b9c3e7663a7c7503f65e03a4682e3f01b0ac6ee4313602ac9198",
+    "fanjiang_order_pages_2026-11-07\\page_001.json": "1c18332f1eb088ece0902c0327ea2787e2e46feef6aed57dba2c09107386e7cb",
+    "fanjiang_order_pages_2026-11-07\\page_002.json": "4bdb2c5236cd09dd57f5767511042ef1a9f701148e464c034dc86616630657ac",
+    "fanjiang_order_pages_2026-11-07\\page_003.json": "28ee64918c5d090a30c35675774275fceaba3852be46fed06f8515bbb3f281f2"
+  },
+  "old_count": 34,
+  "new_count": 66,
+  "current_total": 66,
+  "current_complete": true,
+  "union_count": 66,
+  "old_missing_current": [],
+  "changed_shared": [],
+  "scan_timing": {
+    "n": 34,
+    "first_open": "2026-09-19T04:50:25.821000+00:00",
+    "last_close": "2026-10-22T19:45:15.137000+00:00",
+    "sides": {
+      "Long": 34
+    },
+    "leverage": {
+      "1": 34
+    },
+    "margin": {
+      "Cross": 34
+    },
+    "symbols": 15,
+    "peak_overlap": 4,
+    "duration_min_s": 17961.451,
+    "duration_median_s": 17980.852,
+    "duration_max_s": 18000.376,
+    "opening_5min_offset_min_ms": 3616,
+    "opening_5min_offset_max_ms": 43105,
+    "closing_anchor_offset_min_ms": 881,
+    "closing_anchor_offset_max_ms": 15137,
+    "close_after_5h_anchor_within20s": 34,
+    "features": {
+      "timer_loss_share": 1.0,
+      "timer_loss_mode_s": 17989,
+      "timer_all_share": 1.0,
+      "timer_all_mode_s": 17981
+    }
+  },
+  "all_timing": {
+    "n": 66,
+    "first_open": "2026-09-19T04:50:25.821000+00:00",
+    "last_close": "2026-11-07T10:43:03.699000+00:00",
+    "sides": {
+      "Long": 51,
+      "Short": 15
+    },
+    "leverage": {
+      "1": 42,
+      "10": 22,
+      "5": 2
+    },
+    "margin": {
+      "Cross": 66
+    },
+    "symbols": 27,
+    "peak_overlap": 4,
+    "duration_min_s": 74.606,
+    "duration_median_s": 17974.269,
+    "duration_max_s": 18008.52,
+    "opening_5min_offset_min_ms": 911,
+    "opening_5min_offset_max_ms": 292595,
+    "closing_anchor_offset_min_ms": -17758575,
+    "closing_anchor_offset_max_ms": 18897,
+    "close_after_5h_anchor_within20s": 42,
+    "features": {
+      "timer_loss_share": 0.77,
+      "timer_loss_mode_s": 17983,
+      "timer_all_share": 0.64,
+      "timer_all_mode_s": 17981
+    }
+  },
+  "regimes": {
+    "early_long_1x": {
+      "n": 42,
+      "first_open": "2026-09-19T04:50:25.821000+00:00",
+      "last_close": "2026-10-30T17:50:00.606000+00:00",
+      "sides": {
+        "Long": 42
+      },
+      "leverage": {
+        "1": 42
+      },
+      "margin": {
+        "Cross": 42
+      },
+      "symbols": 16,
+      "peak_overlap": 4,
+      "duration_min_s": 17961.451,
+      "duration_median_s": 17980.852,
+      "duration_max_s": 18008.52,
+      "opening_5min_offset_min_ms": 3616,
+      "opening_5min_offset_max_ms": 44431,
+      "closing_anchor_offset_min_ms": 204,
+      "closing_anchor_offset_max_ms": 18897,
+      "close_after_5h_anchor_within20s": 42,
+      "features": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 17983,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 17981
+      }
+    },
+    "sol_10x": {
+      "n": 7,
+      "first_open": "2026-10-31T14:00:01.103000+00:00",
+      "last_close": "2026-11-03T09:30:01.269000+00:00",
+      "sides": {
+        "Short": 2,
+        "Long": 5
+      },
+      "leverage": {
+        "10": 7
+      },
+      "margin": {
+        "Cross": 7
+      },
+      "symbols": 1,
+      "peak_overlap": 1,
+      "duration_min_s": 846.252,
+      "duration_median_s": 4003.323,
+      "duration_max_s": 11999.989,
+      "opening_5min_offset_min_ms": 911,
+      "opening_5min_offset_max_ms": 3124,
+      "closing_anchor_offset_min_ms": -17152692,
+      "closing_anchor_offset_max_ms": -5999100,
+      "close_after_5h_anchor_within20s": 0,
+      "features": {
+        "timer_loss_share": 0.5,
+        "timer_loss_mode_s": 3306,
+        "timer_all_share": 0.29,
+        "timer_all_mode_s": 7949
+      }
+    },
+    "later_mixed": {
+      "n": 17,
+      "first_open": "2026-11-03T21:30:02.174000+00:00",
+      "last_close": "2026-11-07T10:43:03.699000+00:00",
+      "sides": {
+        "Long": 4,
+        "Short": 13
+      },
+      "leverage": {
+        "10": 15,
+        "5": 2
+      },
+      "margin": {
+        "Cross": 17
+      },
+      "symbols": 11,
+      "peak_overlap": 1,
+      "duration_min_s": 74.606,
+      "duration_median_s": 951.915,
+      "duration_max_s": 13044.076,
+      "opening_5min_offset_min_ms": 2174,
+      "opening_5min_offset_max_ms": 292595,
+      "closing_anchor_offset_min_ms": -17758575,
+      "closing_anchor_offset_max_ms": -4798470,
+      "close_after_5h_anchor_within20s": 0,
+      "features": {
+        "timer_loss_share": 0.2,
+        "timer_loss_mode_s": 5212,
+        "timer_all_share": 0.12,
+        "timer_all_mode_s": 11676
+      }
+    }
+  },
+  "order_count": 177,
+  "reported_order_total": 177,
+  "order_observed_totals": [
+    177,
+    177,
+    177
+  ],
+  "order_raw_count": 177,
+  "order_duplicates": 0,
+  "assignment_tolerance_ms": 10,
+  "first_order": "2026-09-19T04:50:25.821000+00:00",
+  "last_order": "2026-11-07T10:43:03.698000+00:00",
+  "order_types": {
+    "MARKET:LONG:BUY": 42,
+    "MARKET:LONG:SELL": 50,
+    "LIMIT:SHORT:SELL": 31,
+    "MARKET:SHORT:BUY": 16,
+    "LIMIT:LONG:BUY": 18,
+    "LIMIT:LONG:SELL": 8,
+    "LIMIT:SHORT:BUY": 12
+  },
+  "unmatched_order_indices": [],
+  "ambiguous_order_indices": [],
+  "missing_legs": [],
+  "leg_count": 132,
+  "volume_mismatch_count": 0,
+  "price_precision_flag_count": 0,
+  "inventory_positions_verified": 66,
+  "multiple_order_positions": [
+    {
+      "position_id": "1169129956964524032",
+      "symbol": "SOLUSDT",
+      "side": "Long",
+      "opened": "2026-11-01T04:25:03.124000+00:00",
+      "closed": "2026-11-01T06:35:01.321000+00:00",
+      "opening_offset_ms": 3124,
+      "closing_anchor_offset_ms": -10198679,
+      "max_open_interest": "0.24",
+      "closed_volume": "0.24",
+      "order_counts": {
+        "entry": 2,
+        "exit": 2
+      },
+      "inventory_final": "0.00",
+      "inventory_min": "0",
+      "inventory_peak": "0.24",
+      "peak_error": "0.00",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1169192862850703360",
+      "symbol": "SOLUSDT",
+      "side": "Long",
+      "opened": "2026-11-01T08:35:01.056000+00:00",
+      "closed": "2026-11-01T08:49:07.308000+00:00",
+      "opening_offset_ms": 1056,
+      "closing_anchor_offset_ms": -17152692,
+      "max_open_interest": "0.24",
+      "closed_volume": "0.24",
+      "order_counts": {
+        "entry": 2,
+        "exit": 2
+      },
+      "inventory_final": "0.00",
+      "inventory_min": "0",
+      "inventory_peak": "0.24",
+      "peak_error": "0.00",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1169770417903329280",
+      "symbol": "SOLUSDT",
+      "side": "Long",
+      "opened": "2026-11-02T22:50:00.911000+00:00",
+      "closed": "2026-11-03T02:10:00.900000+00:00",
+      "opening_offset_ms": 911,
+      "closing_anchor_offset_ms": -5999100,
+      "max_open_interest": "0.26",
+      "closed_volume": "0.26",
+      "order_counts": {
+        "entry": 2,
+        "exit": 2
+      },
+      "inventory_final": "0.00",
+      "inventory_min": "0",
+      "inventory_peak": "0.26",
+      "peak_error": "0.00",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1170177502549860352",
+      "symbol": "IDOLUSDT",
+      "side": "Short",
+      "opened": "2026-11-04T01:47:37.454000+00:00",
+      "closed": "2026-11-04T05:25:01.530000+00:00",
+      "opening_offset_ms": 157454,
+      "closing_anchor_offset_ms": -4798470,
+      "max_open_interest": "5941.0",
+      "closed_volume": "11743.0",
+      "order_counts": {
+        "entry": 4,
+        "exit": 4
+      },
+      "inventory_final": "0.0",
+      "inventory_min": "0",
+      "inventory_peak": "5941.0",
+      "peak_error": "0.0",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1170269924629897216",
+      "symbol": "AGTUSDT",
+      "side": "Long",
+      "opened": "2026-11-04T07:54:52.595000+00:00",
+      "closed": "2026-11-04T09:21:44.906000+00:00",
+      "opening_offset_ms": 292595,
+      "closing_anchor_offset_ms": -12495094,
+      "max_open_interest": "5402.0",
+      "closed_volume": "12468.0",
+      "order_counts": {
+        "entry": 7,
+        "exit": 5
+      },
+      "inventory_final": "0.0",
+      "inventory_min": "0",
+      "inventory_peak": "5402.0",
+      "peak_error": "0.0",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1170378476723855360",
+      "symbol": "IDOLUSDT",
+      "side": "Short",
+      "opened": "2026-11-04T15:06:13.431000+00:00",
+      "closed": "2026-11-04T18:22:01.216000+00:00",
+      "opening_offset_ms": 73431,
+      "closing_anchor_offset_ms": -6178784,
+      "max_open_interest": "5376.0",
+      "closed_volume": "10622.0",
+      "order_counts": {
+        "entry": 4,
+        "exit": 4
+      },
+      "inventory_final": "0.0",
+      "inventory_min": "0",
+      "inventory_peak": "5376.0",
+      "peak_error": "0.0",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1170459655334486016",
+      "symbol": "ELSAUSDT",
+      "side": "Short",
+      "opened": "2026-11-04T20:28:47.920000+00:00",
+      "closed": "2026-11-04T21:28:17.568000+00:00",
+      "opening_offset_ms": 227920,
+      "closing_anchor_offset_ms": -14202432,
+      "max_open_interest": "1906.0",
+      "closed_volume": "2550.0",
+      "order_counts": {
+        "entry": 4,
+        "exit": 2
+      },
+      "inventory_final": "0.0",
+      "inventory_min": "0",
+      "inventory_peak": "1906.0",
+      "peak_error": "0.0",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1170918142522908672",
+      "symbol": "TRIAUSDT",
+      "side": "Short",
+      "opened": "2026-11-06T02:50:39.784000+00:00",
+      "closed": "2026-11-06T06:04:03.197000+00:00",
+      "opening_offset_ms": 39784,
+      "closing_anchor_offset_ms": -6356803,
+      "max_open_interest": "49054.0",
+      "closed_volume": "96904.0",
+      "order_counts": {
+        "entry": 4,
+        "exit": 4
+      },
+      "inventory_final": "0.0",
+      "inventory_min": "0",
+      "inventory_peak": "49054.0",
+      "peak_error": "0.0",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1171061154049646592",
+      "symbol": "ONEUSDT",
+      "side": "Short",
+      "opened": "2026-11-06T12:18:56.389000+00:00",
+      "closed": "2026-11-06T14:00:12.054000+00:00",
+      "opening_offset_ms": 236389,
+      "closing_anchor_offset_ms": -11687946,
+      "max_open_interest": "83460.0",
+      "closed_volume": "124022.0",
+      "order_counts": {
+        "entry": 3,
+        "exit": 3
+      },
+      "inventory_final": "0.0",
+      "inventory_min": "0",
+      "inventory_peak": "83460.0",
+      "peak_error": "0.0",
+      "execution_timestamp_ties": 0
+    },
+    {
+      "position_id": "1171246498804097024",
+      "symbol": "AKEUSDT",
+      "side": "Short",
+      "opened": "2026-11-07T00:35:26.022000+00:00",
+      "closed": "2026-11-07T00:51:17.937000+00:00",
+      "opening_offset_ms": 26022,
+      "closing_anchor_offset_ms": -17022063,
+      "max_open_interest": "30973.0",
+      "closed_volume": "46213.0",
+      "order_counts": {
+        "entry": 3,
+        "exit": 2
+      },
+      "inventory_final": "0.0",
+      "inventory_min": "0",
+      "inventory_peak": "30973.0",
+      "peak_error": "0.0",
+      "execution_timestamp_ties": 0
+    }
+  ],
+  "full_audit_path": "../lab-data/open-automata/fanjiang_audit_2026-11-07.json",
+  "full_audit_sha256": "c1830698fd5173ab23815e995e1cacfa5c0049725dfd8c82db81f550415a2981"
+}

@@ -1,0 +1,915 @@
+{
+  "order_coverage": {
+    "full_positions": 236,
+    "exit_only": 4,
+    "without_orders": 68,
+    "full_inventory_errors": [],
+    "counts": {
+      "(0, 0)": 68,
+      "(0, 1)": 4,
+      "(1, 1)": 236
+    }
+  },
+  "opening_days": {
+    "2026-08-23": {
+      "n": 8,
+      "span_ms": 25112290
+    },
+    "2026-08-24": {
+      "n": 4,
+      "span_ms": 2554
+    },
+    "2026-08-25": {
+      "n": 4,
+      "span_ms": 2046
+    },
+    "2026-08-26": {
+      "n": 4,
+      "span_ms": 1914
+    },
+    "2026-08-27": {
+      "n": 4,
+      "span_ms": 1935
+    },
+    "2026-08-28": {
+      "n": 4,
+      "span_ms": 1960
+    },
+    "2026-08-29": {
+      "n": 4,
+      "span_ms": 2098
+    },
+    "2026-08-30": {
+      "n": 4,
+      "span_ms": 2245
+    },
+    "2026-08-31": {
+      "n": 4,
+      "span_ms": 2782
+    },
+    "2026-09-01": {
+      "n": 4,
+      "span_ms": 2034
+    },
+    "2026-09-02": {
+      "n": 4,
+      "span_ms": 2523
+    },
+    "2026-09-03": {
+      "n": 4,
+      "span_ms": 2641
+    },
+    "2026-09-04": {
+      "n": 4,
+      "span_ms": 2034
+    },
+    "2026-09-05": {
+      "n": 4,
+      "span_ms": 2111
+    },
+    "2026-09-06": {
+      "n": 4,
+      "span_ms": 18666
+    },
+    "2026-09-07": {
+      "n": 4,
+      "span_ms": 2081
+    },
+    "2026-09-08": {
+      "n": 4,
+      "span_ms": 1732
+    },
+    "2026-09-09": {
+      "n": 4,
+      "span_ms": 1831
+    },
+    "2026-09-10": {
+      "n": 4,
+      "span_ms": 2132
+    },
+    "2026-09-11": {
+      "n": 4,
+      "span_ms": 2520
+    },
+    "2026-09-12": {
+      "n": 4,
+      "span_ms": 2154
+    },
+    "2026-09-13": {
+      "n": 4,
+      "span_ms": 2358
+    },
+    "2026-09-14": {
+      "n": 4,
+      "span_ms": 1799
+    },
+    "2026-09-15": {
+      "n": 4,
+      "span_ms": 1804
+    },
+    "2026-09-16": {
+      "n": 4,
+      "span_ms": 2243
+    },
+    "2026-09-17": {
+      "n": 4,
+      "span_ms": 1918
+    },
+    "2026-09-18": {
+      "n": 4,
+      "span_ms": 2072
+    },
+    "2026-09-19": {
+      "n": 4,
+      "span_ms": 1873
+    },
+    "2026-09-20": {
+      "n": 4,
+      "span_ms": 17603
+    },
+    "2026-09-21": {
+      "n": 4,
+      "span_ms": 4847
+    },
+    "2026-09-22": {
+      "n": 4,
+      "span_ms": 2995
+    },
+    "2026-09-23": {
+      "n": 4,
+      "span_ms": 3049
+    },
+    "2026-09-24": {
+      "n": 4,
+      "span_ms": 1948
+    },
+    "2026-09-25": {
+      "n": 4,
+      "span_ms": 2583
+    },
+    "2026-09-26": {
+      "n": 4,
+      "span_ms": 2320
+    },
+    "2026-09-27": {
+      "n": 4,
+      "span_ms": 2515
+    },
+    "2026-09-28": {
+      "n": 4,
+      "span_ms": 2378
+    },
+    "2026-09-29": {
+      "n": 4,
+      "span_ms": 1793
+    },
+    "2026-09-30": {
+      "n": 4,
+      "span_ms": 1779
+    },
+    "2026-10-01": {
+      "n": 4,
+      "span_ms": 1757
+    },
+    "2026-10-02": {
+      "n": 4,
+      "span_ms": 2753
+    },
+    "2026-10-03": {
+      "n": 4,
+      "span_ms": 1812
+    },
+    "2026-10-04": {
+      "n": 4,
+      "span_ms": 1858
+    },
+    "2026-10-05": {
+      "n": 3,
+      "span_ms": 1239
+    },
+    "2026-10-06": {
+      "n": 4,
+      "span_ms": 1796
+    },
+    "2026-10-07": {
+      "n": 4,
+      "span_ms": 1765
+    },
+    "2026-10-08": {
+      "n": 4,
+      "span_ms": 1742
+    },
+    "2026-10-09": {
+      "n": 4,
+      "span_ms": 1945
+    },
+    "2026-10-10": {
+      "n": 4,
+      "span_ms": 2109
+    },
+    "2026-10-11": {
+      "n": 4,
+      "span_ms": 2192
+    },
+    "2026-10-12": {
+      "n": 4,
+      "span_ms": 1797
+    },
+    "2026-10-13": {
+      "n": 4,
+      "span_ms": 2032
+    },
+    "2026-10-14": {
+      "n": 4,
+      "span_ms": 1829
+    },
+    "2026-10-15": {
+      "n": 4,
+      "span_ms": 2115
+    },
+    "2026-10-16": {
+      "n": 4,
+      "span_ms": 1747
+    },
+    "2026-10-17": {
+      "n": 4,
+      "span_ms": 1901
+    },
+    "2026-10-18": {
+      "n": 4,
+      "span_ms": 2663
+    },
+    "2026-10-19": {
+      "n": 4,
+      "span_ms": 1919
+    },
+    "2026-10-20": {
+      "n": 4,
+      "span_ms": 1862
+    },
+    "2026-10-21": {
+      "n": 4,
+      "span_ms": 1857
+    },
+    "2026-10-22": {
+      "n": 4,
+      "span_ms": 1903
+    },
+    "2026-10-23": {
+      "n": 4,
+      "span_ms": 2922
+    },
+    "2026-10-24": {
+      "n": 4,
+      "span_ms": 1891
+    },
+    "2026-10-25": {
+      "n": 4,
+      "span_ms": 2239
+    },
+    "2026-10-26": {
+      "n": 4,
+      "span_ms": 2080
+    },
+    "2026-10-27": {
+      "n": 4,
+      "span_ms": 1868
+    },
+    "2026-10-28": {
+      "n": 4,
+      "span_ms": 1994
+    },
+    "2026-10-29": {
+      "n": 4,
+      "span_ms": 2492
+    },
+    "2026-10-30": {
+      "n": 4,
+      "span_ms": 1849
+    },
+    "2026-10-31": {
+      "n": 4,
+      "span_ms": 4562
+    },
+    "2026-11-01": {
+      "n": 4,
+      "span_ms": 2832
+    },
+    "2026-11-02": {
+      "n": 4,
+      "span_ms": 2245
+    },
+    "2026-11-03": {
+      "n": 4,
+      "span_ms": 1831
+    },
+    "2026-11-04": {
+      "n": 4,
+      "span_ms": 2461
+    },
+    "2026-11-05": {
+      "n": 4,
+      "span_ms": 2012
+    },
+    "2026-11-06": {
+      "n": 4,
+      "span_ms": 2197
+    },
+    "2026-11-07": {
+      "n": 1,
+      "span_ms": 0
+    }
+  },
+  "unmatched_orders": [
+    {
+      "symbol": "AKEUSDT",
+      "baseAsset": "AKE",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 324465.0,
+      "avgPrice": 0.0060063,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794067228680,
+      "orderTime": 1794067228680
+    },
+    {
+      "symbol": "ONEUSDT",
+      "baseAsset": "ONE",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 957864.0,
+      "avgPrice": 0.0020329,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794067229311,
+      "orderTime": 1794067229311
+    },
+    {
+      "symbol": "ICNTUSDT",
+      "baseAsset": "ICNT",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 4632.0,
+      "avgPrice": 0.3373818,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794067230592,
+      "orderTime": 1794067230592
+    }
+  ],
+  "early_exits": [
+    {
+      "position_id": "1143837680570318848",
+      "symbol": "TUTUSDT",
+      "opened": "2026-08-23T09:22:34.524000+00:00",
+      "duration_s": 2660.816,
+      "price_move": -0.005153859032312025
+    },
+    {
+      "position_id": "1143837683049152512",
+      "symbol": "TRUMPUSDT",
+      "opened": "2026-08-23T09:22:35.115000+00:00",
+      "duration_s": 2660.225,
+      "price_move": -0.010454362685967111
+    },
+    {
+      "position_id": "1143837685481848832",
+      "symbol": "STXUSDT",
+      "opened": "2026-08-23T09:22:35.695000+00:00",
+      "duration_s": 2659.645,
+      "price_move": -0.010694424703988625
+    },
+    {
+      "position_id": "1143837687901962240",
+      "symbol": "ZROUSDT",
+      "opened": "2026-08-23T09:22:36.272000+00:00",
+      "duration_s": 2659.068,
+      "price_move": -0.01992768179991955
+    },
+    {
+      "position_id": "1143943001200508928",
+      "symbol": "TUTUSDT",
+      "opened": "2026-08-23T16:21:04.919000+00:00",
+      "duration_s": 27248.264,
+      "price_move": 0.0989576466025397
+    },
+    {
+      "position_id": "1143943003796783104",
+      "symbol": "TRUMPUSDT",
+      "opened": "2026-08-23T16:21:05.538000+00:00",
+      "duration_s": 27247.047,
+      "price_move": -0.002628614344723834
+    },
+    {
+      "position_id": "1143943006468554752",
+      "symbol": "STXUSDT",
+      "opened": "2026-08-23T16:21:06.175000+00:00",
+      "duration_s": 27245.819,
+      "price_move": -0.011368421052631472
+    },
+    {
+      "position_id": "1143943009148715008",
+      "symbol": "ZECUSDT",
+      "opened": "2026-08-23T16:21:06.814000+00:00",
+      "duration_s": 27244.587,
+      "price_move": 0.015056043262301477
+    },
+    {
+      "position_id": "1145023696643670016",
+      "symbol": "ONGUSDT",
+      "opened": "2026-08-26T15:55:22.791000+00:00",
+      "duration_s": 22780.278,
+      "price_move": 0.2937195486847026
+    },
+    {
+      "position_id": "1145386145158905856",
+      "symbol": "BMTUSDT",
+      "opened": "2026-08-27T15:55:37.251000+00:00",
+      "duration_s": 21121.826,
+      "price_move": 0.31347852474323057
+    },
+    {
+      "position_id": "1146473304519458816",
+      "symbol": "SKRUSDT",
+      "opened": "2026-08-30T15:55:36.241000+00:00",
+      "duration_s": 15120.837,
+      "price_move": 0.3011553706809136
+    },
+    {
+      "position_id": "1147201435609972736",
+      "symbol": "UAIUSDT",
+      "opened": "2026-09-01T16:08:56.221000+00:00",
+      "duration_s": 17563.864,
+      "price_move": 0.2982267163446808
+    },
+    {
+      "position_id": "1147561766031048704",
+      "symbol": "BULLAUSDT",
+      "opened": "2026-09-02T16:00:45.688000+00:00",
+      "duration_s": 20608.376,
+      "price_move": 0.3153946874548208
+    },
+    {
+      "position_id": "1147924123538276352",
+      "symbol": "AKEUSDT",
+      "opened": "2026-09-03T16:00:38.450000+00:00",
+      "duration_s": 8487.618,
+      "price_move": 0.3029655806149347
+    },
+    {
+      "position_id": "1148648861873061888",
+      "symbol": "4USDT",
+      "opened": "2026-09-05T16:00:29.534000+00:00",
+      "duration_s": 8287.531,
+      "price_move": 0.3007663308022257
+    },
+    {
+      "position_id": "1150098638577975296",
+      "symbol": "IOSTUSDT",
+      "opened": "2026-09-09T16:01:23.236000+00:00",
+      "duration_s": 9381.818,
+      "price_move": 0.2992584590273659
+    },
+    {
+      "position_id": "1151185609920462848",
+      "symbol": "LSKUSDT",
+      "opened": "2026-09-12T16:00:37.399000+00:00",
+      "duration_s": 25691.651,
+      "price_move": 0.3055673356832238
+    },
+    {
+      "position_id": "1152997519829614592",
+      "symbol": "ONEUSDT",
+      "opened": "2026-09-17T16:00:30.385000+00:00",
+      "duration_s": 22344.702,
+      "price_move": 0.3011464235127479
+    },
+    {
+      "position_id": "1153722341589106688",
+      "symbol": "AKEUSDT",
+      "opened": "2026-09-19T16:00:41.359000+00:00",
+      "duration_s": 13201.717,
+      "price_move": 0.33200311327201537
+    },
+    {
+      "position_id": "1153722344223129600",
+      "symbol": "ONEUSDT",
+      "opened": "2026-09-19T16:00:41.987000+00:00",
+      "duration_s": 8423.071,
+      "price_move": 0.2860885486979359
+    },
+    {
+      "position_id": "1155171942246498304",
+      "symbol": "NILUSDT",
+      "opened": "2026-09-23T16:00:53.088000+00:00",
+      "duration_s": 26043.967,
+      "price_move": 0.30124945545184634
+    },
+    {
+      "position_id": "1155896625480712192",
+      "symbol": "PHAUSDT",
+      "opened": "2026-09-25T16:00:31.035000+00:00",
+      "duration_s": 21135.042,
+      "price_move": 0.29560640399292515
+    },
+    {
+      "position_id": "1156259022447951872",
+      "symbol": "QNTUSDT",
+      "opened": "2026-09-26T16:00:33.205000+00:00",
+      "duration_s": 26183.847,
+      "price_move": 0.3005852028979459
+    },
+    {
+      "position_id": "1156622476996362240",
+      "symbol": "QNTUSDT",
+      "opened": "2026-09-27T16:04:47.522000+00:00",
+      "duration_s": 19465.538,
+      "price_move": 0.2985721180059435
+    },
+    {
+      "position_id": "1157708609473855488",
+      "symbol": "MOVRUSDT",
+      "opened": "2026-09-30T16:00:41.684000+00:00",
+      "duration_s": 25585.398,
+      "price_move": 0.30496770410025587
+    },
+    {
+      "position_id": "1159520493776781312",
+      "symbol": "RLCUSDT",
+      "opened": "2026-10-05T16:00:28.565000+00:00",
+      "duration_s": 7256.507,
+      "price_move": 0.3114958579371374
+    },
+    {
+      "position_id": "1160607721567404032",
+      "symbol": "OGNUSDT",
+      "opened": "2026-10-08T16:00:43.870000+00:00",
+      "duration_s": 9213.182,
+      "price_move": 0.30608263853987516
+    },
+    {
+      "position_id": "1161332410887553024",
+      "symbol": "JCTUSDT",
+      "opened": "2026-10-10T16:00:23.268000+00:00",
+      "duration_s": 17072.788,
+      "price_move": -0.4152866242038217
+    },
+    {
+      "position_id": "1163144416124846080",
+      "symbol": "AGTUSDT",
+      "opened": "2026-10-15T16:00:38.982000+00:00",
+      "duration_s": 2011.083,
+      "price_move": 0.3062058874160787
+    },
+    {
+      "position_id": "1163506759899922432",
+      "symbol": "AGTUSDT",
+      "opened": "2026-10-16T16:00:28.470000+00:00",
+      "duration_s": 12867.602,
+      "price_move": 0.3035702899247481
+    },
+    {
+      "position_id": "1163869216036208640",
+      "symbol": "ICNTUSDT",
+      "opened": "2026-10-17T16:00:44.747000+00:00",
+      "duration_s": 982.317,
+      "price_move": 0.3055731466113625
+    },
+    {
+      "position_id": "1166043473650499584",
+      "symbol": "IRYSUSDT",
+      "opened": "2026-10-23T16:00:28.158000+00:00",
+      "duration_s": 1386.904,
+      "price_move": 0.3147064117205207
+    },
+    {
+      "position_id": "1166043477492482048",
+      "symbol": "AGTUSDT",
+      "opened": "2026-10-23T16:00:29.074000+00:00",
+      "duration_s": 12411.989,
+      "price_move": 0.30434128648714087
+    },
+    {
+      "position_id": "1168580218434732032",
+      "symbol": "IDOLUSDT",
+      "opened": "2026-10-30T16:00:35.245000+00:00",
+      "duration_s": 3314.831,
+      "price_move": 0.29042933832251117
+    },
+    {
+      "position_id": "1169305252262428672",
+      "symbol": "ESPORTSUSDT",
+      "opened": "2026-11-01T16:01:36.780000+00:00",
+      "duration_s": 5553.297,
+      "price_move": 0.2984358688778941
+    },
+    {
+      "position_id": "1170394135670669312",
+      "symbol": "CLANKERUSDT",
+      "opened": "2026-11-04T16:08:26.815000+00:00",
+      "duration_s": 15340.26,
+      "price_move": 0.30794077424394417
+    },
+    {
+      "position_id": "1171116911746465792",
+      "symbol": "UAIUSDT",
+      "opened": "2026-11-06T16:00:30.060000+00:00",
+      "duration_s": 10771.003,
+      "price_move": -0.40659214269849575
+    },
+    {
+      "position_id": "1171479299108749312",
+      "symbol": "IDOLUSDT",
+      "opened": "2026-11-07T16:00:29.940000+00:00",
+      "duration_s": 2762.316,
+      "price_move": 0.26814511790710394
+    }
+  ],
+  "portfolio_id": "5192646545574438913",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "profile_description": "Hux Ai Trading Strategy",
+  "script_sha256": "453730451dc1b519b808a293973178da5db62565abbbe10c6b96a865c3f5efac",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "huxtrade_5192646545574438913_scan_2026-10-25.json": "a0bd1f8de35fefd68607dfdd8b4665c2332c02075ed36d1df640e45269c0a809",
+    "huxtrade_5192646545574438913_2026-11-07.json": "827ce21091c0f0ac05f7d2445a263fdfbf7e3b9e59affab45ea8315e25f1de0a",
+    "huxtrade_5192646545574438913_orders_rawpass_2026-11-07.json": "81249a38dc9e3906e07371d25d7f87d5e66030d4199344033f7fc69e8a7f8045"
+  },
+  "raw_sources": {
+    "huxtrade_pages_2026-11-07\\detail.json": "f4e64f845266dacb616e2526051f9ade86343ca2a30f97cda7e755fbdfcd3ff0",
+    "huxtrade_pages_2026-11-07\\page_001.json": "143024a34f5b1b261d83349f5e2fa4f72c7edcf598af8678d5b79844822fad42",
+    "huxtrade_pages_2026-11-07\\page_002.json": "0631df5b7d81401672caabb10fdc030d3dddfd5510af6c423cb7a58895d1ac8d",
+    "huxtrade_pages_2026-11-07\\page_003.json": "816adbf9484a9b8569f4de1871e4fbf306e21b0e9ded7ed8e5d691cc89a8f0d5",
+    "huxtrade_pages_2026-11-07\\page_004.json": "0222421c40c27650ff28edf816060436f72a1ee57be685f8db490519e2108198",
+    "huxtrade_pages_2026-11-07\\page_005.json": "fb8005d945b4edc15c24f66c0c389b846ac09337c5aed4525efd0fb87b171219",
+    "huxtrade_pages_2026-11-07\\page_006.json": "f0dbdda9852bb1d1202e2c58841b7e4503c8c24a7c25549d220167f10af3f3ce",
+    "huxtrade_pages_2026-11-07\\page_007.json": "debeb6930111c388ef31068e3861b9bf9d12ed79929e7d2ae6ade8f8c1cbc7e0",
+    "huxtrade_order_pages_2026-11-07\\error_2_1794073929167632100.json": "7ae6a64859a49caa8e35be899c9c40811c0e34e3f601e7b59466385ff0b9cd0a",
+    "huxtrade_order_pages_2026-11-07\\error_3_1794073934341672500.json": "ccdc135ae4d84734259eea8e5f8afc0b143a9a6154f7c031a1de0441a89689a9",
+    "huxtrade_order_pages_2026-11-07\\error_4_1794073939405755300.json": "51cc8ae54994ec43e40d56293d2d8d8f1529639ff07a2308b07bade8a1af7b43",
+    "huxtrade_order_pages_2026-11-07\\error_5_1794073944171431100.json": "bb030bf00d35044b2294d802a9329375b5eb21b8e34f14a64fa14a6a1f016f51",
+    "huxtrade_order_pages_2026-11-07\\error_6_1794073949235080400.json": "ac06fb891f4bc912d57ef7b5e314989cf4f378f3db3510edcc702240e662803b",
+    "huxtrade_order_pages_2026-11-07\\page_001.json": "d9855c29e966ba9a9291e780f0483c31a222204b56ea97b291011fe83cf3a809",
+    "huxtrade_order_pages_2026-11-07\\page_002.json": "17e4fa03e45086921c62a7abd6bdfd65400222aad1a57a4b2661385408dcb64d",
+    "huxtrade_order_pages_2026-11-07\\page_003.json": "d6724cce99aa835dcdc219c34d8b0193289ff15a466851643e934022c9f90968",
+    "huxtrade_order_pages_2026-11-07\\page_004.json": "9508b7cdbe2902fc8967bf9a9408e75e6fa0f2acbe8efcf47fee9cc7aec864e0",
+    "huxtrade_order_pages_2026-11-07\\page_005.json": "c75568e758c0686a9d189cedf8dbf09607e31e4d95c0f63ddc7a78eb55a76ef5",
+    "huxtrade_order_pages_2026-11-07\\page_006.json": "34cedcac1a8bf7735be04a8bebe53f301fba172b424c2aedd9a3a67e8304219e"
+  },
+  "old_count": 200,
+  "new_count": 308,
+  "current_total": 308,
+  "current_complete": true,
+  "union_count": 308,
+  "old_missing_current": [],
+  "changed_shared": [],
+  "scan_timing": {
+    "n": 200,
+    "first_open": "2026-09-03T16:00:35.809000+00:00",
+    "last_close": "2026-10-24T00:00:16.312000+00:00",
+    "sides": {
+      "Long": 200
+    },
+    "leverage": {
+      "2": 200
+    },
+    "margin": {
+      "Cross": 200
+    },
+    "symbols": 94,
+    "peak_overlap": 4,
+    "duration_min_s": 982.317,
+    "duration_median_s": 28784.0245,
+    "duration_max_s": 30577.649,
+    "opening_hour_offset_min_ms": 18766,
+    "opening_hour_offset_max_ms": 290037,
+    "closing_anchor_offset_min_ms": -27772936,
+    "closing_anchor_offset_max_ms": 1804934,
+    "duration_8h_within60s": 171,
+    "close_after_8h_anchor_within60s": 177,
+    "opening_hours_utc": {
+      "16": 200
+    },
+    "close_after_8h_anchor_within20s": 99,
+    "features": {
+      "timer_loss_share": 0.97,
+      "timer_loss_mode_s": 28785,
+      "timer_all_share": 0.89,
+      "timer_all_mode_s": 28785
+    }
+  },
+  "all_timing": {
+    "n": 308,
+    "first_open": "2026-08-23T09:22:34.524000+00:00",
+    "last_close": "2026-11-07T16:46:32.256000+00:00",
+    "sides": {
+      "Long": 308
+    },
+    "leverage": {
+      "2": 308
+    },
+    "margin": {
+      "Cross": 308
+    },
+    "symbols": 127,
+    "peak_overlap": 4,
+    "duration_min_s": 982.317,
+    "duration_median_s": 28782.229,
+    "duration_max_s": 30577.649,
+    "opening_hour_offset_min_ms": 18766,
+    "opening_hour_offset_max_ms": 3341982,
+    "closing_anchor_offset_min_ms": -27772936,
+    "closing_anchor_offset_max_ms": 3333754,
+    "duration_8h_within60s": 249,
+    "close_after_8h_anchor_within60s": 233,
+    "opening_hours_utc": {
+      "9": 4,
+      "16": 272,
+      "15": 32
+    },
+    "close_after_8h_anchor_within20s": 129,
+    "features": {
+      "timer_loss_share": 0.95,
+      "timer_loss_mode_s": 28786,
+      "timer_all_share": 0.88,
+      "timer_all_mode_s": 28785
+    }
+  },
+  "regimes": {
+    "2026-08": {
+      "n": 40,
+      "first_open": "2026-08-23T09:22:34.524000+00:00",
+      "last_close": "2026-08-31T23:55:22.449000+00:00",
+      "sides": {
+        "Long": 40
+      },
+      "leverage": {
+        "2": 40
+      },
+      "margin": {
+        "Cross": 40
+      },
+      "symbols": 23,
+      "peak_overlap": 4,
+      "duration_min_s": 2659.068,
+      "duration_median_s": 28767.951500000003,
+      "duration_max_s": 28810.946,
+      "opening_hour_offset_min_ms": 1264919,
+      "opening_hour_offset_max_ms": 3341982,
+      "closing_anchor_offset_min_ms": -24784660,
+      "closing_anchor_offset_max_ms": 3333754,
+      "duration_8h_within60s": 29,
+      "close_after_8h_anchor_within60s": 0,
+      "opening_hours_utc": {
+        "9": 4,
+        "16": 4,
+        "15": 32
+      },
+      "close_after_8h_anchor_within20s": 0,
+      "features": {
+        "timer_loss_share": 0.83,
+        "timer_loss_mode_s": 28788,
+        "timer_all_share": 0.82,
+        "timer_all_mode_s": 28791
+      }
+    },
+    "2026-09": {
+      "n": 120,
+      "first_open": "2026-09-01T16:08:54.187000+00:00",
+      "last_close": "2026-10-01T00:00:26.152000+00:00",
+      "sides": {
+        "Long": 120
+      },
+      "leverage": {
+        "2": 120
+      },
+      "margin": {
+        "Cross": 120
+      },
+      "symbols": 63,
+      "peak_overlap": 4,
+      "duration_min_s": 8287.531,
+      "duration_median_s": 28782.3185,
+      "duration_max_s": 28807.826,
+      "opening_hour_offset_min_ms": 18766,
+      "opening_hour_offset_max_ms": 536221,
+      "closing_anchor_offset_min_ms": -20482935,
+      "closing_anchor_offset_max_ms": 46013,
+      "duration_8h_within60s": 97,
+      "close_after_8h_anchor_within60s": 106,
+      "opening_hours_utc": {
+        "16": 120
+      },
+      "close_after_8h_anchor_within20s": 49,
+      "features": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 28784,
+        "timer_all_share": 0.89,
+        "timer_all_mode_s": 28785
+      }
+    },
+    "2026-10": {
+      "n": 123,
+      "first_open": "2026-10-01T16:00:24.868000+00:00",
+      "last_close": "2026-11-01T00:00:11.902000+00:00",
+      "sides": {
+        "Long": 123
+      },
+      "leverage": {
+        "2": 123
+      },
+      "margin": {
+        "Cross": 123
+      },
+      "symbols": 57,
+      "peak_overlap": 4,
+      "duration_min_s": 982.317,
+      "duration_median_s": 28786.449,
+      "duration_max_s": 30577.649,
+      "opening_hour_offset_min_ms": 23232,
+      "opening_hour_offset_max_ms": 78781,
+      "closing_anchor_offset_min_ms": -27772936,
+      "closing_anchor_offset_max_ms": 1804934,
+      "duration_8h_within60s": 108,
+      "close_after_8h_anchor_within60s": 106,
+      "opening_hours_utc": {
+        "16": 123
+      },
+      "close_after_8h_anchor_within20s": 66,
+      "features": {
+        "timer_loss_share": 0.95,
+        "timer_loss_mode_s": 28787,
+        "timer_all_share": 0.89,
+        "timer_all_mode_s": 28787
+      }
+    },
+    "2026-11": {
+      "n": 25,
+      "first_open": "2026-11-01T16:01:36.780000+00:00",
+      "last_close": "2026-11-07T16:46:32.256000+00:00",
+      "sides": {
+        "Long": 25
+      },
+      "leverage": {
+        "2": 25
+      },
+      "margin": {
+        "Cross": 25
+      },
+      "symbols": 17,
+      "peak_overlap": 4,
+      "duration_min_s": 2762.316,
+      "duration_median_s": 28770.356,
+      "duration_max_s": 28800.825,
+      "opening_hour_offset_min_ms": 22593,
+      "opening_hour_offset_max_ms": 509276,
+      "closing_anchor_offset_min_ms": -26007744,
+      "closing_anchor_offset_max_ms": 33948,
+      "duration_8h_within60s": 15,
+      "close_after_8h_anchor_within60s": 21,
+      "opening_hours_utc": {
+        "16": 25
+      },
+      "close_after_8h_anchor_within20s": 14,
+      "features": {
+        "timer_loss_share": 0.92,
+        "timer_loss_mode_s": 28776,
+        "timer_all_share": 0.84,
+        "timer_all_mode_s": 28775
+      }
+    }
+  },
+  "order_count": 479,
+  "reported_order_total": 479,
+  "order_observed_totals": [
+    479,
+    479,
+    479,
+    479,
+    479,
+    479
+  ],
+  "order_raw_count": 479,
+  "order_duplicates": 0,
+  "assignment_tolerance_ms": 25,
+  "first_order": "2026-09-09T00:00:28.396000+00:00",
+  "last_order": "2026-11-07T16:46:32.256000+00:00",
+  "order_types": {
+    "MARKET:LONG:SELL": 240,
+    "MARKET:LONG:BUY": 239
+  },
+  "unmatched_order_indices": [
+    474,
+    475,
+    477
+  ],
+  "ambiguous_order_indices": [],
+  "missing_leg_count": 140,
+  "full_audit_sha256": "866adbc91198736d2cd72c0483af25f6d195719711d95b72f85c71f894a17fb8",
+  "independent_verification": "Fraction: 476 quantities and unique assignments; 236 full inventories"
+}

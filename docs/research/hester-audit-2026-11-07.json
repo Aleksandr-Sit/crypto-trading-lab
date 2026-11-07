@@ -1,0 +1,997 @@
+{
+  "portfolio_id": "5127540263600794368",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "script_sha256": "3950bff9d44cc6a4cc5a09ac9bcc0b9078ecd98ee3c594f8f0af93e3f0a4c07d",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "hester_5127540263600794368_scan_2026-10-25.json": "7c172d815f2628c359724fd82a737699ca2e7363768059b78f3136fd734bc737",
+    "hester_pages199_2026-11-07\\page_001.json": "735ed13e63f0280b69b7fa81540cff9be6db642e28cdca94b93e5b6b7bb5f353",
+    "hester_pages199_2026-11-07\\page_002.json": "5d52dd48ff5f9eb592439365e5f062438afdf9bd48c6b8d13c4ce29f984182f9",
+    "hester_pages199_2026-11-07\\page_003.json": "d4e39ad9a16245bc8b81ccae2e33c843851f06ae1580ce454c04a346cd89903f",
+    "hester_pages199_2026-11-07\\page_004.json": "eaf546430a7db8a0e937c8579b9985e376f9b4cc56652976f7ca97735d9f8028",
+    "hester_pages199_2026-11-07\\page_005.json": "b34252207c7f69b4bededaf10348b81f77bed12d1829770dc0567bf3e644102c",
+    "hester_pages199_2026-11-07\\page_006.json": "bc56aa7b3a60ffb568168900fd5f13ec07ccf6bd2051c4eb6bd4ffad62a2af8c",
+    "hester_pages199_2026-11-07\\page_007.json": "a2c5fbb6af0ce676cf70f95c7af6dae5b4c616935d8f4d7ff85c6d46a629e62c",
+    "hester_pages199_2026-11-07\\page_008.json": "3a6788461c61398896c92fa5775f47b57a49b727af2eeac6d22e69dcf02a92ce",
+    "hester_pages199_2026-11-07\\page_009.json": "99fd05ca31a63e642a4a39a0127fda1836696861cdae83fbe8cfe5348bf252e6",
+    "hester_pages199_2026-11-07\\page_010.json": "ec1bd406c843d3ff364052bf7da68310f7037b5031ac0f6e5e4bb07574cc021f",
+    "hester_pages199_2026-11-07\\page_011.json": "9142c4aeef9b67c9cca793d17197d39202b5b9ea8e9c49c267267f685d0b5605",
+    "hester_pages199_2026-11-07\\page_012.json": "90676d24c0fee60fc5243c3f42ec1872e728e135340b781428874fad53a7c71d",
+    "hester_pages199_2026-11-07\\page_013.json": "b09f8b2feb54140713f88a0a07e9588127dea3250c83524deae4ddf0fbf1fb3b",
+    "hester_pages199_2026-11-07\\page_014.json": "f7f5598d4073bea33ec441fcc86e84bc087c8ce9472ef6f619e154bc7035dbf4",
+    "hester_pages199_2026-11-07\\page_015.json": "0d23b92eb67b55dfaa127a9dcdba830ed6b646f2579e9fdd1505ca41d268c686",
+    "hester_pages199_2026-11-07\\page_016.json": "aab09b91c60a97fce46282083c7770fe3717ac758f94032d8ac001085cd3231b",
+    "hester_pages199_2026-11-07\\page_017.json": "a923bb736ba6c466fe7d69af6b23ae917766da365667619d05c2295c7759b825",
+    "hester_pages199_2026-11-07\\page_018.json": "06f8d192ebf8aa7983aa86eded2fe068354f65792c60585dcacdd139951a068a",
+    "hester_pages199_2026-11-07\\page_019.json": "5ff51afecfa3d35371d900b53e0be1a9df9b0f8d6fbe201d58a143045c2ff63c",
+    "hester_pages199_2026-11-07\\page_020.json": "9dbc29bfd3f83774a9b4d0f906b7905866364155cf8b8f695e968a93896fcf83",
+    "hester_pages199_2026-11-07\\page_021.json": "aa88afc2e4fddd846fcda4e3236d5fd9e7bbd5c19aac0d91e88140fe41de4d30",
+    "hester_pages199_2026-11-07\\page_022.json": "02bb81584c281a8a0d3cfa0a60b35e851a3a871d9bfa343740b32cf3381b7695",
+    "hester_pages200_2026-11-07\\page_001.json": "48974c4343e8d370a35393b5805ec8c34ce837e3eeca97ca1de82bd1cec15b98",
+    "hester_pages200_2026-11-07\\page_002.json": "c3d7a53a2d4fe211da1bebb64889ab5a6670e5e9fbac0854e978f34c494afa92",
+    "hester_pages200_2026-11-07\\page_003.json": "d08ae4623bb8442fbf5ea5c8bb7943cf2827dd07e399534a2c4e0a0dfb1634b3",
+    "hester_pages200_2026-11-07\\page_004.json": "88a5b9ddd8d69e89336c030d5acc3505a8ad1019837a05920cf13574b4ff81d7",
+    "hester_pages200_2026-11-07\\page_005.json": "e1f39ed18aa81534fd6fea57e39dd43966e58e387e377b5dd730b4c01310f75b",
+    "hester_pages200_2026-11-07\\page_006.json": "a320b9abaa32a999c88daa75eb5e4e26b914c989be750401722b24b4760b0ce2",
+    "hester_pages200_2026-11-07\\page_007.json": "6cb7ff013817e6cbd24afaf1e4c6f66ea5bd3c665e4f56573e086c11a7ce5614",
+    "hester_pages200_2026-11-07\\page_008.json": "385924855d813b2f4fa9a5df70038603d14e006e38ce01d74fe915e7b0777aef",
+    "hester_pages200_2026-11-07\\page_009.json": "274476b6268f709e9f25699c9d552cf86976fa93317e3306fc8321ac345a79b8",
+    "hester_pages200_2026-11-07\\page_010.json": "b05e26224e1d6734f2c75d0aba3d83db4ecea3a4eba1497394c4711095baf2d0",
+    "hester_pages200_2026-11-07\\page_011.json": "ffc18314c9f1c91d2d61229704bfb60a78860a7490c4b5cf2f01006bfa58ff76",
+    "hester_pages200_2026-11-07\\page_012.json": "c0554d8fc842838b2cb6bcafb69615e27215389fdd201430c40c390c11fdc426",
+    "hester_pages200_2026-11-07\\page_013.json": "3cc313b4f601549e63a8a7f796820566689706e5b008e8a1b9c211cd85fc1a9f",
+    "hester_pages200_2026-11-07\\page_014.json": "3909467e94666465bf44fd041316c5118b4046db7d55150ba6a099e4bbd0de38",
+    "hester_pages200_2026-11-07\\page_015.json": "7f0395558204010f7266c39afa8b7a6f1a1611f5eeca529bfb2898cf057c0b25",
+    "hester_pages200_2026-11-07\\page_016.json": "ac6419f14232eeca96f0fcc2ff712aad886569197be83ce1db3ec0dd7b93e3dc",
+    "hester_pages200_2026-11-07\\page_017.json": "b182365396b498e8fe12202258a3183e92e657e782306265581997f9d6be4d24",
+    "hester_pages200_2026-11-07\\page_018.json": "c20f9379c3f899a1d28b7194c07f92141be2f6932b6b84bdc074d04783eaffbc",
+    "hester_pages200_2026-11-07\\page_019.json": "f1acfcf0cad505bd3e28add4c769fc28532a3ab25e376f472ab19106f2c1fdf0",
+    "hester_pages200_2026-11-07\\page_020.json": "a44f72241538d6639479b89deaa562cbe1657ab541604dc6c71b7cd558599452",
+    "hester_pages200_2026-11-07\\page_021.json": "c159c1a2fd15654f242991e9cf444bcf63fc15b5613019641ff1d49b832a97ca",
+    "hester_pages200_2026-11-07\\page_022.json": "d1faf88a985d37b6df8bd541b0b1b47a315ede15d03e6382ba5fa05ad19431d2",
+    "hester_pages_2026-11-07\\page_001.json": "2ab3982b361d02b6ed90d8a4f216927b741788fbc7d3cf984dcd0754f421747c",
+    "hester_pages_2026-11-07\\page_002.json": "2f238de5d81e06e164a83f886a8fcba40bd7c03c30f218bc94eac75e5be4e8e0",
+    "hester_pages_2026-11-07\\page_003.json": "9567cb937e685bbc0db6f311a78eb71a04a791a9996805ab7724f0590a37c467",
+    "hester_pages_2026-11-07\\page_004.json": "b016412880ca0a5be4b1c85e26c2d81bd89aac954ad554920760f39f4bb8608b",
+    "hester_pages_2026-11-07\\page_005.json": "52aae036a3591b471f78ca028b90c63f99483a1565b07e003dd4dee5c2b359aa",
+    "hester_pages_2026-11-07\\page_006.json": "9d3c34d8b36b24c7c9cd9b2d42e175d9861117f77294701f82f6bb38ba7c0761",
+    "hester_pages_2026-11-07\\page_007.json": "1b2339b8668db9b06caab262c144f24268ecee202be4dea3416060f9e448c1ce",
+    "hester_pages_2026-11-07\\page_008.json": "49de270e51b0500ee79aab8cffc38f8c1d5b3d1b88c20dae7219e32919f1bcd2",
+    "hester_pages_2026-11-07\\page_009.json": "a69751adaaae24033f16f319a90fb1392690071c7b2fa968c60bf647351f4fea",
+    "hester_pages_2026-11-07\\page_010.json": "47c22c5503bc7244123ee13d6543ac96aa652dfd640226d4a3f8174004f3f81b",
+    "hester_pages_2026-11-07\\page_011.json": "f37d0bd86945741c346cc0ba10c1b0b4434534d8faad365e11dbf7783879bd20",
+    "hester_pages_2026-11-07\\page_012.json": "6fcf13b023b19ac90e212b24ef5b0ee1295260f8dbd609de949b330befbfc2a9",
+    "hester_pages_2026-11-07\\page_013.json": "cee54aed2ffd98414feb06137a0666e1cc6b73064bde50ca89f4efef42a409ff",
+    "hester_pages_2026-11-07\\page_014.json": "64436821faa26f2819f398e0b6f2c255abe56c08713236c37b1d7f8bb3b25848",
+    "hester_pages_2026-11-07\\page_015.json": "c93de66cfc68ae77965ab49611686e5f0635d35212b9b94c76631d5dae5727d9",
+    "hester_pages_2026-11-07\\page_016.json": "a07d9964f2c93cc6e7d04ba9b02ee7edf6b6e71a6d3b309753d85657a52fefdf",
+    "hester_pages_2026-11-07\\page_017.json": "821170ff48d655bcb501900506340f64735902cd45cd65efa8c286cb6590e9b9",
+    "hester_pages_2026-11-07\\page_018.json": "683c0f73a3ad6f7d9d75b82364689f3705e5005784cca06fe73c79508804afd6",
+    "hester_pages_2026-11-07\\page_019.json": "d49b035d09f5134febd771ec7fc6eb097740ba8f76b917735049a6ee5c3fb7af",
+    "hester_pages_2026-11-07\\page_020.json": "0e3509f685c17e5a60ff548dcd101928d7e598503600dc22963f59b5626c6214",
+    "hester_pages_2026-11-07\\page_021.json": "501a43370749156cf804e065fe3d759126d298b0bf75f06ca346feb47f7a64d5",
+    "hester_pages_2026-11-07\\page_022.json": "5dec1b1b6d3bc8d67a5a81599313c7c75b9ddf191c2192b74723f45e94905549",
+    "hester_pages_2026-11-07\\page_023.json": "d12a359e4932a2956b453ef1d130a7a1463c70b58c675ff93f758bfec88872d3",
+    "hester_pages_2026-11-07\\page_024.json": "94b18c67936f037a4df57565f7a7673c9d5e71364182548524b2d73ce28804e8",
+    "hester_pages_2026-11-07\\page_025.json": "db67209533b2eb6545c72d6a9fbe37c2b2d7e435eabd500c693fde8353c00b45",
+    "hester_pages_2026-11-07\\page_026.json": "7f129a947d1b2b31ec9dc4684ec783ac99da0696e8c347b88214584fcc953663",
+    "hester_pages_2026-11-07\\page_027.json": "de9fec1da8520009d2bdf208b31888bd68ecb4b4b73a63e876ff28c069d46292",
+    "hester_pages_2026-11-07\\page_028.json": "311bc28909cb22218528ab5eca3a19175ee5fe21aff61f34da477745916fb52a",
+    "hester_pages_2026-11-07\\page_029.json": "ae9e7acdbba1bf80a1857840d372efc8e87dcfe8e0bc37ab0266df38f8057764",
+    "hester_pages_2026-11-07\\page_030.json": "0d1757b9037a92fe9f18272063f3ea873c9d0f4c672c1a39f4b952b4fdca5c7d",
+    "hester_pages_2026-11-07\\page_031.json": "b0d135733ccef790181e936994824596d79b172348d7a15315ba0e53549415f0",
+    "hester_pages_2026-11-07\\page_032.json": "a374d7ef92ed8d01402056cc36619c13c483824474749280f355fd7b010f845e",
+    "hester_pages_2026-11-07\\page_033.json": "df7348db51a1b0a4c5167b81442428d79928f51de7c19a55546e4d60e32fb43b",
+    "hester_pages_2026-11-07\\page_034.json": "496c99aba60e02ec98bcbdc3e55dd55ff49cce4a3bf27dca3e0f21ec71b72458",
+    "hester_pages_2026-11-07\\page_035.json": "350b07a176ff168174d31880d5721a91e93d880dae6b271ca4f333cebb46d041",
+    "hester_pages_2026-11-07\\page_036.json": "9f0510e8245c5507ccfb2f7ec6d7d2902cea99dd2fbbebf82af4940e40522035",
+    "hester_pages_2026-11-07\\page_037.json": "fa729b77e6bf5c98e9f054d9262e07e49fe8814f42cddb35b99771b40d6a35a4",
+    "hester_pages_2026-11-07\\page_038.json": "5b15ce55c785833ccafef189e633a75b04d5213568dca88ccf006e0ff54771c2",
+    "hester_pages_2026-11-07\\page_039.json": "5e9c40cf4d170ac69583352d7abf6ce21ab81a9d75e1323dd186781e3a1839c2",
+    "hester_pages_2026-11-07\\page_040.json": "18870292127b3b3dd400d22192efd8180879210aaa08ca7a3ef907808c1f8f94",
+    "hester_pages_2026-11-07\\page_041.json": "173a9c9b571f6e0d892dd141b6a2bddb08e290e4c8e4778cfb28db0f390263f7",
+    "hester_pages_2026-11-07\\page_042.json": "9ffcbba129d8929f0726caf73eebec3fd11b03410d81a4b37747dfb26c54468b",
+    "hester_pages_2026-11-07\\page_043.json": "733bdd8810900ecd54be891222c3e2ff1f975a56ecaf1fd4cc55a72723264eb8",
+    "hester_pages_2026-11-07\\page_044.json": "ae95679946395a00cba9344ef953bc68f3091aa44a2fac815cf76a9cc1fb3376",
+    "hester_pages_2026-11-07\\page_045.json": "0da9dd08b401c941e909f1c68b938c1d4c4b0067e24c26ad34bd65ee54e6414c",
+    "hester_pages_2026-11-07\\page_046.json": "713ecc445c924a2022f07ab6dfa05467a475f4a8fc2f1ca81f5599e00dd436f2",
+    "hester_pages_2026-11-07\\page_047.json": "07a502eab46f76f95c1242cbd56b6f972ff4af1e82c9b47dc2e8f1ee72c84db9",
+    "hester_pages_2026-11-07\\page_048.json": "a3845fbd00001994f030ad0f347b5606d50687f12c33633dac81fe16615cd92c",
+    "hester_pages_2026-11-07\\page_049.json": "85475d6d0cc1b5266c82996d2c18ab1e2c268f81fa316866c784fa1de8687053",
+    "hester_pages_2026-11-07\\page_050.json": "ef2d8344fe5a54583b6848c7a4cb92dbec01c5d7dee836af18a978c68c1d187f",
+    "hester_pages_2026-11-07\\page_051.json": "fc25d6cd9332f395ec5a020b3c09a546b5e5cb0a6f085076e0cdd82602eb146c",
+    "hester_pages_2026-11-07\\page_052.json": "c7872cb581e6c2edc762dbdf06a812df4bc01b3a06de0b0d87c3029827b77e4e",
+    "hester_pages_2026-11-07\\page_053.json": "dd43f07a2f3592f662435dfc8ee06018b8c58472907e6c88b8f6bbf84ad184a1",
+    "hester_pages_2026-11-07\\page_054.json": "8d19099fa99aea88a61e0e8dfa722f7bc951bde6a77cdd26090cde935a1818e8",
+    "hester_pages_2026-11-07\\page_055.json": "aa10bc89e5b14c0be3cf3620694f73da6a8c370ed074fa512c53092c564ecb9a",
+    "hester_pages_2026-11-07\\page_056.json": "b0225f1b73a19b8e6d3f400d528026125d8ec9c941ba76a0f5b8153588a9f421",
+    "hester_pages_2026-11-07\\page_057.json": "b8a12185ec385641167bf7452146c343538f10a82e08c5e8ff85704d5cc233f0",
+    "hester_pages_2026-11-07\\page_058.json": "7c34ec7ff949ca7d735d543f80dbdd43daf846643dd6bcaee1983e112cc473e0",
+    "hester_pages_2026-11-07\\page_059.json": "14b9ca3fc8f582d5436c6af4501d1f827f2b91c20a8d4196a7bbe659d822f1ff",
+    "hester_pages_2026-11-07\\page_060.json": "a3cc3bb0ec6c9434eb91af5dc419fe0d4230ded488e34c45786e99ac905ce9bd",
+    "hester_pages_2026-11-07\\page_061.json": "d92307f7b36de51ae1e09144657c5a3cd21bad18171a0a3f77a56234f5b7c636",
+    "hester_pages_2026-11-07\\page_062.json": "48e44bae41b51b4d7aaf91655097a3b39e10e3076e8bbea38debc5f698fbc715",
+    "hester_pages_2026-11-07\\page_063.json": "214ada22392b6f5146ef3323e03f34d98d49720e34a18847d81580e1bd7cdd05",
+    "hester_pages_2026-11-07\\page_064.json": "e8ba17e42c3ef07e8ee8639ff18462554a76235fa52d8031c6477ceb2ea76ff6",
+    "hester_pages_2026-11-07\\page_065.json": "4f0b29d3abd86851bf2318272aadd95d5e6ad5751737d60d92425352e7c4680e",
+    "hester_pages_2026-11-07\\page_066.json": "62503088fd88583a13d2597db8031cbb75f9375accc00e710df4d7f3ff4ef43d",
+    "hester_pages_2026-11-07\\page_067.json": "4a1f994ae50c004efca33ee47f28d6fada753a3e9198ba95c8a1eab0a14de414",
+    "hester_pages_2026-11-07\\page_068.json": "de375fc2ffd5b047bd858613f0606fea367fd4aa6c976eec697282636143da59",
+    "hester_pages_2026-11-07\\page_069.json": "2aa684e67afd18d06b6935fcbd1da4c93995d288fbd7d58f019f666ba06c9fbc",
+    "hester_pages_2026-11-07\\page_070.json": "d0dacb48671828cc6bb7d581f061578f0d88b059e0e257fc2dc00eebe4a14cc1",
+    "hester_pages_2026-11-07\\page_071.json": "5a599624166d1055e87cb5147db9a28e75daaa80929b7a8a616d3d4a0e7b9152",
+    "hester_pages_2026-11-07\\page_072.json": "ed217073d4ef86e17597a9edcc37c0f3f215d5f9517059c1283fa4bdbf3fa354",
+    "hester_pages_2026-11-07\\page_073.json": "742903f83ac547785cc5bc42c2a84d83454c24328c18d9384e924e0ae72d841c",
+    "hester_pages_2026-11-07\\page_074.json": "5ef82a4669e73b9e017acf5d657f78ea2614c9e989be084d3c75a785172c70a7",
+    "hester_pages_2026-11-07\\page_075.json": "27687ba1c21d150b118d86d7b2cb8e0407c27dad2e3253973f4280af0434ffc7",
+    "hester_pages_2026-11-07\\page_076.json": "8db0d9e64c3bec63adb21adc719c7e2ada1ceaaca90cf152f6e3301f3e02f60a",
+    "hester_pages_2026-11-07\\page_077.json": "d5c65439295187da11cea02f67b1d6349066a94fc3a4111bcaf718b8bd965e32",
+    "hester_pages_2026-11-07\\page_078.json": "6f36ece5ea311b8e5c5c57933ee6adf4be1f46b37090a2584505c5293cdee8cd",
+    "hester_pages_2026-11-07\\page_079.json": "2dc716a2efa1f61cb2737a3a9f2d45b4c7dc9bdd6038f51249d22cba4d1081d8",
+    "hester_pages_2026-11-07\\page_080.json": "2e7a728a979be7ecd9811e3c35cb8b838c82ac1d0d50b07cc1361ad38b4b3aa6",
+    "hester_pages_2026-11-07\\page_081.json": "ce0a47cfdfe12ae92b81ecb884122669f60347e002a14975afde2af6fbc3dd96",
+    "hester_pages_2026-11-07\\page_082.json": "7084b9104351e7cc41dcdbbd171175652e71d6f6021a55bfc098c0e6cb815b57",
+    "hester_5127540263600794368_orders_pass99_2026-11-07.json": "cbcd97666a0b6c20d685d21099eebc0d0278c0f9e0aae942651c8ea1868c4dcf",
+    "hester_5127540263600794368_orders_rawpass_2026-11-07.json": "6c5f38edb222df4db4eaf3dff3d848a80d7b7807a1128d108c535b28955eced5",
+    "hester_5127540263600794368_orders_targeted_2026-11-07.json": "f2c1f9fe071ea6307b8c397d2c34c809df450275cffbe06c2b898a87d8e802cf",
+    "hester_pages_2026-11-07\\detail.json": "fd8d5cbea8d00e3fcdfc88c7d784052d4fd853ed6e74a5aa852525990f4afca5",
+    "hester_order_pages99_2026-11-07\\error_10_1794058568570313100.json": "7ea6442ecabb2399884844ec3c4915589fa4fb21c75aa9eb3b8e22c9987bfeed",
+    "hester_order_pages99_2026-11-07\\error_11_1794058573615655400.json": "0494f7a16bb5b0332a07ea781f400db940d3666da5c0dd7f412c892d972dd87a",
+    "hester_order_pages99_2026-11-07\\error_12_1794058578610454500.json": "aa5a356b342f74e6b143ffc77323cdeb349ceab3f842c4835bbb4c3747fe7afa",
+    "hester_order_pages99_2026-11-07\\error_13_1794058583601998000.json": "c1bb37d7ddd715c5a102730ca8bdd8e3ef6f6cbc7972e8e1ba70129ae969f9ac",
+    "hester_order_pages99_2026-11-07\\error_14_1794058588833917100.json": "ccfe93c1c2115f84cfacae364491acaaf23b22ab806f6b1e2384a599454be6e8",
+    "hester_order_pages99_2026-11-07\\error_15_1794058593812416000.json": "7205722a7e1c0dd85389b755e369888a8b3c047eee64609602a4efa22f9752fc",
+    "hester_order_pages99_2026-11-07\\error_16_1794058598887266300.json": "ab6a6369d1b0b9ad204a6b3ec03a6d1719824c31943bd42e6a2492110ddf7e0f",
+    "hester_order_pages99_2026-11-07\\error_17_1794058603997882300.json": "28d3db8b8b6a2aef62d0df1be009c2b38c40f7a3d62b91a4ed72b331695a57f8",
+    "hester_order_pages99_2026-11-07\\error_2_1794058528055573800.json": "c46d7b66e475604b2d44e8b86260c6faefb4520f853033526d25bec2b7a0ca27",
+    "hester_order_pages99_2026-11-07\\error_3_1794058533065928400.json": "0a224b17f54478eca8f7560d27f70e892bde05a34f9524eff44bb9bfe1fb605b",
+    "hester_order_pages99_2026-11-07\\error_4_1794058538113665300.json": "7ccbf09012cb16a9b707f19864c4b22db1a5042c9ec6e85b88a3bb2d3f400025",
+    "hester_order_pages99_2026-11-07\\error_5_1794058543077156700.json": "1f0c5ad6dd6d89227310bde49f1a41224cb425b4d7e7e0bc9e72c56ffbec151c",
+    "hester_order_pages99_2026-11-07\\error_6_1794058548071924400.json": "2b7622dbddc3d5586c540425b41218bc3ca34746056605af1c5f535ecc725da2",
+    "hester_order_pages99_2026-11-07\\error_7_1794058553171677800.json": "188aec729c70b7f6f60c407b3c0a52c5f68945efbed130748c89f5c6bb68159d",
+    "hester_order_pages99_2026-11-07\\error_8_1794058558162388700.json": "b061b04b3249b02239b0b69e10bd581793fbaf050d2ff72f9f84f285e709a583",
+    "hester_order_pages99_2026-11-07\\error_9_1794058563546022300.json": "bf25004c2249727540b7f9fdac837ca38c6a514222b2e1fc2a83f27cf6f3533a",
+    "hester_order_pages99_2026-11-07\\page_001.json": "14722c4d77da62b4e397e89d23d00083c844fcf4c8e6521f7072a0e55865c760",
+    "hester_order_pages99_2026-11-07\\page_002.json": "1f0aefdd7e8ef29933e56eb1085065530587774a46bf415f84f04c7b2d163349",
+    "hester_order_pages99_2026-11-07\\page_003.json": "66ba9ada6fb6ad99a430a5ff519f2f77f04eb465ed1dff9462746dea03b20174",
+    "hester_order_pages99_2026-11-07\\page_004.json": "e1684a137eb03bb3ff80a8d3eaaab1d9b664f88d3c1fae7b4c3d54ef69a0e156",
+    "hester_order_pages99_2026-11-07\\page_005.json": "c1f26f2f5c257c09519387d70af866035c7a9de5231bb6480d89b47031e7d08f",
+    "hester_order_pages99_2026-11-07\\page_006.json": "98f1aa4f95bc320cd4fbf479ccab8919915b1dfd0db73dfb911c83a1fb4fc9eb",
+    "hester_order_pages99_2026-11-07\\page_007.json": "2d240b59a343873bb9026617728172cfa407e779a89a0e568b2e6e795559252e",
+    "hester_order_pages99_2026-11-07\\page_008.json": "765acde29f9efa1122f90fbcca67e5cddd7f73a43ae8bb6a2618a89dd76ee634",
+    "hester_order_pages99_2026-11-07\\page_009.json": "11f0cc373485adda0f4c835771176ed02124c7f9857e2933cdcfbba1acffb5fa",
+    "hester_order_pages99_2026-11-07\\page_010.json": "64712a3ae431f89f010bf8781708bb2e62c74576468b710b40c40e94729814d4",
+    "hester_order_pages99_2026-11-07\\page_011.json": "9ec3fb8de0c617d88f37ebc21ba693bb89c51d0b19deb8a8543bd135257588da",
+    "hester_order_pages99_2026-11-07\\page_012.json": "e706147046d81e7689d30851aad96123eb242ac8a75cb147ce8e6d3083beeba9",
+    "hester_order_pages99_2026-11-07\\page_013.json": "796ed31f53a4bdc857b4c8b67e008a563064df57406d08c1d736e47be73145b6",
+    "hester_order_pages99_2026-11-07\\page_014.json": "15823b872592a3e6502a5466087babfa929a5d353ca22fb184b4fedf8ab55406",
+    "hester_order_pages99_2026-11-07\\page_015.json": "f27c34ba956b7712b5ed7c4b474312e209f2aad5dacd865b9c7642d47f32aed7",
+    "hester_order_pages99_2026-11-07\\page_016.json": "5975519a064794a4a60ffad02c9863eac2242f9f62e6be6f792925c7b7444f28",
+    "hester_order_pages99_2026-11-07\\page_017.json": "c666e93bffa40582986af1d77e848a9cf0b7b1b859529320268bee004f7e34f6",
+    "hester_order_pages_2026-11-07\\error_10_1794058447792786900.json": "63710ad35d804aa59615bb8c2539d33ef31335960dfcc8a37af37f272c98613a",
+    "hester_order_pages_2026-11-07\\error_11_1794058452810733000.json": "911ffed828a93a8e5a9e6908836b23b22bfcb9e7766765eba907374495457e3e",
+    "hester_order_pages_2026-11-07\\error_12_1794058457787476300.json": "659c9372f563d62347cbb1018cf1eab2a57b9f58ced05b46fcb11fdb6f4f9335",
+    "hester_order_pages_2026-11-07\\error_13_1794058462878575600.json": "c100427f87fb28aa176aa6f7f9a9b8feb66dd9de453e77a42ac1c58f636e0b34",
+    "hester_order_pages_2026-11-07\\error_14_1794058467988912500.json": "692687e7d3fed6a003e2e38bf86a32b2c52eee90116854bb630d66795e7d9f83",
+    "hester_order_pages_2026-11-07\\error_15_1794058473033670100.json": "a471590ae0ff79d1f7f2c3feb67408762c6a009cd49885240354a8b71c1a6820",
+    "hester_order_pages_2026-11-07\\error_16_1794058478030502800.json": "ea65233858bbca4568f6f362a4acf934b9e360490ab3891f6dbae57540067d34",
+    "hester_order_pages_2026-11-07\\error_17_1794058483025993900.json": "b3fd5fe548276169ed4d4a5435b929351f9ecaf64e4cff3d78979ca58ef09610",
+    "hester_order_pages_2026-11-07\\error_2_1794058407065060000.json": "d169d5604ba6c1abd523b24300b96586a098417bb187a619f2291c28bd2c149a",
+    "hester_order_pages_2026-11-07\\error_3_1794058412349548600.json": "bed24dfef41684444a245bfdc7c597c100c7414bdff53ed74a4c2db4b7c68d1d",
+    "hester_order_pages_2026-11-07\\error_4_1794058417425942300.json": "6a36546217ded3d81c84770f750608da999ca5ab8de2d33c0e548523cef1b533",
+    "hester_order_pages_2026-11-07\\error_5_1794058422430256500.json": "5f7067f82774cb99152c7ddc5a50211d57b1e20a0478f0e3127f7cc6bc2e2e25",
+    "hester_order_pages_2026-11-07\\error_6_1794058427364517300.json": "c66b3a0303c989306f6454281a44825ef32d992d3558f0d38edf7de36a5dd850",
+    "hester_order_pages_2026-11-07\\error_7_1794058432675631400.json": "619b17799dad12f47b54f0b7989f22071e7ff42459e8e94467cb9b6fc5f6d90f",
+    "hester_order_pages_2026-11-07\\error_8_1794058437659982200.json": "769d3e1c8ecbc8e9eb0632fbac7536dc4ceb62d9bba674c1a35695bfd322787a",
+    "hester_order_pages_2026-11-07\\error_9_1794058442724086000.json": "40901a0ad4183ec23a9569c4c4f18f63f08ad214a2bb28eabb528e93864a0533",
+    "hester_order_pages_2026-11-07\\page_001.json": "34beeaeea1b5773eaccc81ca6dfa83891c47674ac9baa345c9e7ae871e5badf0",
+    "hester_order_pages_2026-11-07\\page_002.json": "47d6008903936659f94ed013613f3872f29047912cb8b2218ddd94bbafe9caa3",
+    "hester_order_pages_2026-11-07\\page_003.json": "0c4c8db6241b1d02b2157bee45b391359475292a2b22a2f3a350d00e25a57cf6",
+    "hester_order_pages_2026-11-07\\page_004.json": "10e925a2c23515566e53773acb6f67b4cdc74dc73bb45c7f4b5ed5d81a3beb93",
+    "hester_order_pages_2026-11-07\\page_005.json": "82ae4acae9bec3448c0e6f343aacc10adacfd1a0937f32fe8ecbe3e69590de2d",
+    "hester_order_pages_2026-11-07\\page_006.json": "5d1fa2b1779a9a2b01bc7afb8eae27b7b11b191338638ccd08fb3f6feb0e6c5e",
+    "hester_order_pages_2026-11-07\\page_007.json": "ac6cce7fab72911c37a72ddae866f6e07500cd2b4a78ea1b085778cdc618880b",
+    "hester_order_pages_2026-11-07\\page_008.json": "10f7dd4f5415911a956d5c5e186025f21f09492909f9fe327a9099434bc9168c",
+    "hester_order_pages_2026-11-07\\page_009.json": "b0d6efbec5ae7083e1d60cc46b11936d129ecb78095ee386c120faa51a4ba3cd",
+    "hester_order_pages_2026-11-07\\page_010.json": "77fdaa1d63f741c7f3f822c286d3dc0fb04dc197f8ce6b4dc503a35b4b7ae959",
+    "hester_order_pages_2026-11-07\\page_011.json": "acebaf00a3a2741174557cfa02fe8994d55435b01ae456d6a6b4115368f7a154",
+    "hester_order_pages_2026-11-07\\page_012.json": "b2f86273293e6c2e2b97b0156460207ea10df7608b09ef4aeee4a5e3d8160d18",
+    "hester_order_pages_2026-11-07\\page_013.json": "a03ee2a6c2ad3c8c067f0fcefbc4aaf5984de3bcdc6309c36ce408c926f08936",
+    "hester_order_pages_2026-11-07\\page_014.json": "15d86c864ff8c6e170285776cf002f76c6ca957f87808f492663fc57223098c2",
+    "hester_order_pages_2026-11-07\\page_015.json": "205ecd9382dc5775a579523e02ef3aae50fc206e372f179eb5a24288f94c8ba0",
+    "hester_order_pages_2026-11-07\\page_016.json": "5782d31f2e943530fc1df515495ed0e71bff5a2ce44aaf924d288384f44ff0a3",
+    "hester_order_pages_2026-11-07\\page_017.json": "ba350fa4167e8fca407e01d6acfe91c10048bd0a8ad4012c0ba2cc13422dcb0c",
+    "hester_order_targeted_2026-11-07\\1790649949077_0.json": "adfcc54ac20ebcff2346a6341e45ab3ce3bbfd0ef0613c04f8c3fe13c4c1c7b6",
+    "hester_order_targeted_2026-11-07\\1790649949077_1.json": "6bd81c63005c80bf4a2d513dd5aeebdc1027282848c8a5642152f86529f41054",
+    "hester_order_targeted_2026-11-07\\1790650246199_0.json": "d690d047f35a837758a0c7e3530a5aa86abf51cf5474ee675cf0258b566f61da",
+    "hester_order_targeted_2026-11-07\\1790650309419_0.json": "8a9fe20ef8f014995541505ab0c4830c60f38a7e45a4784f1824a422ac47c4ad",
+    "hester_order_targeted_2026-11-07\\1790650309419_1.json": "0cdb01bcfbcae885584cf5fd4d1b75f0d4e80e4e95562266a21fb855a9e8c259"
+  },
+  "profile_description": "",
+  "position_passes": {
+    "hester_pages199_2026-11-07": {
+      "raw_count": 4028,
+      "unique_count": 4018
+    },
+    "hester_pages200_2026-11-07": {
+      "raw_count": 4028,
+      "unique_count": 4024
+    },
+    "hester_pages_2026-11-07": {
+      "raw_count": 4028,
+      "unique_count": 4006
+    }
+  },
+  "observed_position_totals": [
+    4028
+  ],
+  "current_count": 4028,
+  "current_complete": true,
+  "old_count": 197,
+  "old_raw_count": 200,
+  "old_duplicate_count": 3,
+  "union_count": 4028,
+  "changed_between_pages": [],
+  "old_missing_current": [],
+  "changed_shared": [],
+  "all_timing": {
+    "n": 4028,
+    "symbols": 409,
+    "first_open": "2026-07-09T08:48:52.473000+00:00",
+    "last_open": "2026-09-20T11:59:35.721000+00:00",
+    "first_close": "2026-07-13T05:40:00.190000+00:00",
+    "last_close": "2026-10-28T09:00:03.538000+00:00",
+    "open_span_ms": 6318643248,
+    "close_span_ms": 9256803348,
+    "sides": {
+      "Short": 2450,
+      "Long": 1578
+    },
+    "leverage": {
+      "20": 1370,
+      "5": 1782,
+      "25": 70,
+      "50": 390,
+      "75": 372,
+      "10": 32,
+      "40": 12
+    },
+    "timer": {
+      "timer_loss_share": 0.19,
+      "timer_loss_mode_s": 142061,
+      "timer_all_share": 0.1,
+      "timer_all_mode_s": 78213
+    }
+  },
+  "peak_closed_position_overlap": 415,
+  "scan_timing": {
+    "n": 200,
+    "symbols": 194,
+    "first_open": "2026-07-30T09:06:48.146000+00:00",
+    "last_open": "2026-09-20T11:59:35.721000+00:00",
+    "first_close": "2026-09-29T02:50:46.199000+00:00",
+    "last_close": "2026-10-23T08:46:33.768000+00:00",
+    "open_span_ms": 4503167575,
+    "close_span_ms": 2094947569,
+    "sides": {
+      "Short": 6,
+      "Long": 194
+    },
+    "leverage": {
+      "5": 89,
+      "50": 47,
+      "25": 12,
+      "75": 44,
+      "10": 4,
+      "20": 4
+    },
+    "timer": {
+      "timer_loss_share": 0.98,
+      "timer_loss_mode_s": 744835,
+      "timer_all_share": 0.97,
+      "timer_all_mode_s": 744855
+    }
+  },
+  "scan_unique_timing": {
+    "n": 197,
+    "symbols": 194,
+    "first_open": "2026-07-30T09:06:48.146000+00:00",
+    "last_open": "2026-09-20T11:59:35.721000+00:00",
+    "first_close": "2026-09-29T02:50:46.199000+00:00",
+    "last_close": "2026-10-23T08:46:33.768000+00:00",
+    "open_span_ms": 4503167575,
+    "close_span_ms": 2094947569,
+    "sides": {
+      "Short": 6,
+      "Long": 191
+    },
+    "leverage": {
+      "5": 87,
+      "50": 47,
+      "25": 12,
+      "75": 43,
+      "10": 4,
+      "20": 4
+    },
+    "timer": {
+      "timer_loss_share": 0.98,
+      "timer_loss_mode_s": 744823,
+      "timer_all_share": 0.97,
+      "timer_all_mode_s": 744856
+    }
+  },
+  "scan_episode": {
+    "n": 194,
+    "symbols": 191,
+    "first_open": "2026-09-20T11:55:38.720000+00:00",
+    "last_open": "2026-09-20T11:59:35.721000+00:00",
+    "first_close": "2026-09-29T02:50:46.199000+00:00",
+    "last_close": "2026-09-29T02:52:42.649000+00:00",
+    "open_span_ms": 237001,
+    "close_span_ms": 116450,
+    "sides": {
+      "Long": 194
+    },
+    "leverage": {
+      "50": 47,
+      "5": 83,
+      "25": 12,
+      "75": 44,
+      "10": 4,
+      "20": 4
+    },
+    "timer": {
+      "timer_loss_share": 1.0,
+      "timer_loss_mode_s": 744835,
+      "timer_all_share": 1.0,
+      "timer_all_mode_s": 744855
+    }
+  },
+  "scan_episode_unique": {
+    "n": 191,
+    "symbols": 191,
+    "first_open": "2026-09-20T11:55:38.720000+00:00",
+    "last_open": "2026-09-20T11:59:35.721000+00:00",
+    "first_close": "2026-09-29T02:50:46.199000+00:00",
+    "last_close": "2026-09-29T02:52:42.649000+00:00",
+    "open_span_ms": 237001,
+    "close_span_ms": 116450,
+    "sides": {
+      "Long": 191
+    },
+    "leverage": {
+      "50": 47,
+      "5": 81,
+      "25": 12,
+      "75": 43,
+      "10": 4,
+      "20": 4
+    },
+    "timer": {
+      "timer_loss_share": 1.0,
+      "timer_loss_mode_s": 744823,
+      "timer_all_share": 1.0,
+      "timer_all_mode_s": 744856
+    }
+  },
+  "scan_without_episode": {
+    "n": 6,
+    "symbols": 6,
+    "first_open": "2026-07-30T09:06:48.146000+00:00",
+    "last_open": "2026-07-30T09:10:08.900000+00:00",
+    "first_close": "2026-10-01T04:19:38.490000+00:00",
+    "last_close": "2026-10-23T08:46:33.768000+00:00",
+    "open_span_ms": 200754,
+    "close_span_ms": 1916815278,
+    "sides": {
+      "Short": 6
+    },
+    "leverage": {
+      "5": 6
+    },
+    "timer": {
+      "timer_loss_share": 1.0,
+      "timer_loss_mode_s": 5425851,
+      "timer_all_share": 0.5,
+      "timer_all_mode_s": 5425851
+    }
+  },
+  "day_pair_groups": [
+    {
+      "n": 400,
+      "symbols": 400,
+      "first_open": "2026-07-16T08:06:11.366000+00:00",
+      "last_open": "2026-07-16T08:10:18.882000+00:00",
+      "first_close": "2026-07-17T05:49:40.973000+00:00",
+      "last_close": "2026-07-17T05:53:54.900000+00:00",
+      "open_span_ms": 247516,
+      "close_span_ms": 253927,
+      "sides": {
+        "Short": 400
+      },
+      "leverage": {
+        "20": 222,
+        "5": 178
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 78207,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 78213
+      }
+    },
+    {
+      "n": 400,
+      "symbols": 400,
+      "first_open": "2026-07-19T14:39:18.922000+00:00",
+      "last_open": "2026-07-19T14:43:24.953000+00:00",
+      "first_close": "2026-07-20T05:52:57.371000+00:00",
+      "last_close": "2026-07-20T05:57:04.654000+00:00",
+      "open_span_ms": 246031,
+      "close_span_ms": 247283,
+      "sides": {
+        "Short": 400
+      },
+      "leverage": {
+        "20": 221,
+        "5": 179
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 54818,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 54819
+      }
+    },
+    {
+      "n": 400,
+      "symbols": 400,
+      "first_open": "2026-07-20T11:58:00.756000+00:00",
+      "last_open": "2026-07-20T12:02:12.233000+00:00",
+      "first_close": "2026-07-20T13:59:27.037000+00:00",
+      "last_close": "2026-07-20T14:03:36.618000+00:00",
+      "open_span_ms": 251477,
+      "close_span_ms": 249581,
+      "sides": {
+        "Short": 400
+      },
+      "leverage": {
+        "20": 221,
+        "5": 179
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 7246,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 7253
+      }
+    },
+    {
+      "n": 400,
+      "symbols": 400,
+      "first_open": "2026-07-22T06:46:55.476000+00:00",
+      "last_open": "2026-07-22T06:50:57.348000+00:00",
+      "first_close": "2026-07-24T06:30:04.190000+00:00",
+      "last_close": "2026-07-24T13:51:11.565000+00:00",
+      "open_span_ms": 241872,
+      "close_span_ms": 26467375,
+      "sides": {
+        "Short": 400
+      },
+      "leverage": {
+        "20": 221,
+        "5": 179
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 198020,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 198014
+      }
+    },
+    {
+      "n": 399,
+      "symbols": 399,
+      "first_open": "2026-07-09T08:48:52.473000+00:00",
+      "last_open": "2026-07-09T09:00:49.911000+00:00",
+      "first_close": "2026-07-13T05:40:00.190000+00:00",
+      "last_close": "2026-07-13T05:44:07.022000+00:00",
+      "open_span_ms": 717438,
+      "close_span_ms": 246832,
+      "sides": {
+        "Short": 399
+      },
+      "leverage": {
+        "20": 221,
+        "5": 178
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 334212,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 334229
+      }
+    },
+    {
+      "n": 399,
+      "symbols": 399,
+      "first_open": "2026-07-16T02:38:14.340000+00:00",
+      "last_open": "2026-07-16T02:42:18.889000+00:00",
+      "first_close": "2026-07-16T07:55:05.290000+00:00",
+      "last_close": "2026-07-16T07:59:08.218000+00:00",
+      "open_span_ms": 244549,
+      "close_span_ms": 242928,
+      "sides": {
+        "Short": 399
+      },
+      "leverage": {
+        "20": 221,
+        "5": 178
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 19026,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 19013
+      }
+    },
+    {
+      "n": 396,
+      "symbols": 396,
+      "first_open": "2026-08-06T20:23:06.937000+00:00",
+      "last_open": "2026-08-06T20:27:09.031000+00:00",
+      "first_close": "2026-08-09T07:19:22.158000+00:00",
+      "last_close": "2026-08-09T07:23:29.134000+00:00",
+      "open_span_ms": 242094,
+      "close_span_ms": 246976,
+      "sides": {
+        "Long": 396
+      },
+      "leverage": {
+        "50": 98,
+        "75": 98,
+        "5": 164,
+        "20": 6,
+        "10": 9,
+        "25": 18,
+        "40": 3
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 212165,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 212177
+      }
+    },
+    {
+      "n": 392,
+      "symbols": 392,
+      "first_open": "2026-09-18T16:30:09.997000+00:00",
+      "last_open": "2026-09-18T16:34:04.325000+00:00",
+      "first_close": "2026-09-20T07:57:44.658000+00:00",
+      "last_close": "2026-09-20T08:01:41.781000+00:00",
+      "open_span_ms": 234328,
+      "close_span_ms": 237123,
+      "sides": {
+        "Long": 392
+      },
+      "leverage": {
+        "5": 173,
+        "75": 90,
+        "10": 7,
+        "40": 3,
+        "20": 6,
+        "50": 96,
+        "25": 17
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 142061,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 142060
+      }
+    },
+    {
+      "n": 392,
+      "symbols": 392,
+      "first_open": "2026-09-20T11:55:38.720000+00:00",
+      "last_open": "2026-09-20T11:59:35.721000+00:00",
+      "first_close": "2026-09-29T02:44:52.412000+00:00",
+      "last_close": "2026-09-29T02:52:42.649000+00:00",
+      "open_span_ms": 237001,
+      "close_span_ms": 470237,
+      "sides": {
+        "Long": 392
+      },
+      "leverage": {
+        "75": 90,
+        "5": 173,
+        "50": 96,
+        "25": 17,
+        "10": 7,
+        "40": 3,
+        "20": 6
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 744762,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 744761
+      }
+    },
+    {
+      "n": 289,
+      "symbols": 289,
+      "first_open": "2026-08-20T23:56:58.802000+00:00",
+      "last_open": "2026-08-20T23:59:57.264000+00:00",
+      "first_close": "2026-08-22T11:05:48.814000+00:00",
+      "last_close": "2026-08-22T11:09:55.937000+00:00",
+      "open_span_ms": 178462,
+      "close_span_ms": 247123,
+      "sides": {
+        "Long": 289
+      },
+      "leverage": {
+        "50": 72,
+        "5": 126,
+        "75": 62,
+        "25": 15,
+        "40": 3,
+        "10": 7,
+        "20": 4
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 126574,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 126571
+      }
+    },
+    {
+      "n": 105,
+      "symbols": 105,
+      "first_open": "2026-08-21T00:00:00.505000+00:00",
+      "last_open": "2026-08-21T00:01:00.562000+00:00",
+      "first_close": "2026-08-22T08:19:24.156000+00:00",
+      "last_close": "2026-08-22T11:09:55.937000+00:00",
+      "open_span_ms": 60057,
+      "close_span_ms": 10231781,
+      "sides": {
+        "Long": 105
+      },
+      "leverage": {
+        "75": 32,
+        "50": 26,
+        "5": 41,
+        "20": 2,
+        "25": 2,
+        "10": 2
+      },
+      "timer": {
+        "timer_loss_share": 0.95,
+        "timer_loss_mode_s": 126404,
+        "timer_all_share": 0.99,
+        "timer_all_mode_s": 126430
+      }
+    },
+    {
+      "n": 37,
+      "symbols": 37,
+      "first_open": "2026-07-30T07:07:02.003000+00:00",
+      "last_open": "2026-07-30T07:10:51.785000+00:00",
+      "first_close": "2026-07-30T07:10:48.796000+00:00",
+      "last_close": "2026-07-30T07:20:05.074000+00:00",
+      "open_span_ms": 229782,
+      "close_span_ms": 556278,
+      "sides": {
+        "Short": 37
+      },
+      "leverage": {
+        "20": 19,
+        "5": 18
+      },
+      "timer": {
+        "timer_loss_share": 0.7,
+        "timer_loss_mode_s": 368,
+        "timer_all_share": 0.73,
+        "timer_all_mode_s": 368
+      }
+    },
+    {
+      "n": 4,
+      "symbols": 4,
+      "first_open": "2026-07-30T09:07:56.667000+00:00",
+      "last_open": "2026-07-30T09:10:21.192000+00:00",
+      "first_close": "2026-08-07T09:00:01.205000+00:00",
+      "last_close": "2026-08-07T09:01:35.488000+00:00",
+      "open_span_ms": 144525,
+      "close_span_ms": 94283,
+      "sides": {
+        "Short": 4
+      },
+      "leverage": {
+        "5": 4
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 690722,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 690721
+      }
+    },
+    {
+      "n": 4,
+      "symbols": 4,
+      "first_open": "2026-08-06T20:24:18.417000+00:00",
+      "last_open": "2026-08-06T20:26:59.624000+00:00",
+      "first_close": "2026-08-07T09:00:01.205000+00:00",
+      "last_close": "2026-08-07T09:01:35.488000+00:00",
+      "open_span_ms": 161207,
+      "close_span_ms": 94283,
+      "sides": {
+        "Long": 4
+      },
+      "leverage": {
+        "5": 4
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 45276,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 45307
+      }
+    },
+    {
+      "n": 3,
+      "symbols": 3,
+      "first_open": "2026-07-30T09:06:56.962000+00:00",
+      "last_open": "2026-07-30T09:09:59.843000+00:00",
+      "first_close": "2026-08-22T08:19:24.156000+00:00",
+      "last_close": "2026-08-22T08:19:24.156000+00:00",
+      "open_span_ms": 182881,
+      "close_span_ms": 0,
+      "sides": {
+        "Short": 3
+      },
+      "leverage": {
+        "25": 1,
+        "50": 1,
+        "5": 1
+      },
+      "timer": {
+        "timer_loss_share": 0.0,
+        "timer_loss_mode_s": 0,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 1984247
+      }
+    },
+    {
+      "n": 3,
+      "symbols": 3,
+      "first_open": "2026-07-30T09:07:31.598000+00:00",
+      "last_open": "2026-07-30T09:10:08.900000+00:00",
+      "first_close": "2026-10-01T04:19:38.490000+00:00",
+      "last_close": "2026-10-01T04:19:41.474000+00:00",
+      "open_span_ms": 157302,
+      "close_span_ms": 2984,
+      "sides": {
+        "Short": 3
+      },
+      "leverage": {
+        "5": 3
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 5425851,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 5425851
+      }
+    },
+    {
+      "n": 2,
+      "symbols": 2,
+      "first_open": "2026-07-30T09:06:48.146000+00:00",
+      "last_open": "2026-07-30T09:07:06.537000+00:00",
+      "first_close": "2026-10-23T08:46:33.768000+00:00",
+      "last_close": "2026-10-23T08:46:33.768000+00:00",
+      "open_span_ms": 18391,
+      "close_span_ms": 0,
+      "sides": {
+        "Short": 2
+      },
+      "leverage": {
+        "5": 2
+      },
+      "timer": {
+        "timer_loss_share": 0.0,
+        "timer_loss_mode_s": 0,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 7342776
+      }
+    },
+    {
+      "n": 1,
+      "symbols": 1,
+      "first_open": "2026-07-30T09:07:09.674000+00:00",
+      "last_open": "2026-07-30T09:07:09.674000+00:00",
+      "first_close": "2026-10-28T09:00:03.538000+00:00",
+      "last_close": "2026-10-28T09:00:03.538000+00:00",
+      "open_span_ms": 0,
+      "close_span_ms": 0,
+      "sides": {
+        "Short": 1
+      },
+      "leverage": {
+        "5": 1
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 7775574,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 7775574
+      }
+    },
+    {
+      "n": 1,
+      "symbols": 1,
+      "first_open": "2026-07-30T09:07:25.704000+00:00",
+      "last_open": "2026-07-30T09:07:25.704000+00:00",
+      "first_close": "2026-09-21T03:37:38.284000+00:00",
+      "last_close": "2026-09-21T03:37:38.284000+00:00",
+      "open_span_ms": 0,
+      "close_span_ms": 0,
+      "sides": {
+        "Short": 1
+      },
+      "leverage": {
+        "50": 1
+      },
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 4559413,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 4559413
+      }
+    },
+    {
+      "n": 1,
+      "symbols": 1,
+      "first_open": "2026-07-30T09:09:27.748000+00:00",
+      "last_open": "2026-07-30T09:09:27.748000+00:00",
+      "first_close": "2026-10-17T01:56:10.598000+00:00",
+      "last_close": "2026-10-17T01:56:10.598000+00:00",
+      "open_span_ms": 0,
+      "close_span_ms": 0,
+      "sides": {
+        "Short": 1
+      },
+      "leverage": {
+        "5": 1
+      },
+      "timer": {
+        "timer_loss_share": 0.0,
+        "timer_loss_mode_s": 0,
+        "timer_all_share": 1.0,
+        "timer_all_mode_s": 6799603
+      }
+    }
+  ],
+  "order_passes": {
+    "hester_5127540263600794368_orders_pass99_2026-11-07.json": {
+      "total": 1576,
+      "observed_totals": [
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576
+      ],
+      "raw_count": 1538,
+      "unique_count": 1538,
+      "duplicates": 0
+    },
+    "hester_5127540263600794368_orders_rawpass_2026-11-07.json": {
+      "total": 1576,
+      "observed_totals": [
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576,
+        1576
+      ],
+      "raw_count": 1543,
+      "unique_count": 1543,
+      "duplicates": 0
+    },
+    "hester_5127540263600794368_orders_targeted_2026-11-07.json": {
+      "total": 1576,
+      "observed_totals": [
+        1576
+      ],
+      "raw_count": 300,
+      "unique_count": 300,
+      "duplicates": 0
+    }
+  },
+  "order_count": 1576,
+  "first_order": "2026-09-18T16:30:09.996000+00:00",
+  "last_order": "2026-10-28T09:00:03.538000+00:00",
+  "order_types": {
+    "MARKET:LONG:BUY": 784,
+    "MARKET:LONG:SELL": 784,
+    "MARKET:SHORT:BUY": 7,
+    "LIMIT:SHORT:BUY": 1
+  },
+  "assignment_tolerance_ms": 10,
+  "covered_positions": 792,
+  "uncovered_positions": 3236,
+  "unmatched_order_indices": [],
+  "ambiguous_order_indices": [],
+  "missing_covered_legs": [
+    {
+      "position_id": "1135136402400354307",
+      "side": "SELL"
+    },
+    {
+      "position_id": "1135136479537799172",
+      "side": "SELL"
+    },
+    {
+      "position_id": "1135136492695330816",
+      "side": "SELL"
+    },
+    {
+      "position_id": "1135136559930023938",
+      "side": "SELL"
+    },
+    {
+      "position_id": "1135136584651251714",
+      "side": "SELL"
+    },
+    {
+      "position_id": "1135136901354758148",
+      "side": "SELL"
+    },
+    {
+      "position_id": "1135137071819661315",
+      "side": "SELL"
+    },
+    {
+      "position_id": "1135137244423659522",
+      "side": "SELL"
+    }
+  ],
+  "merged_positions_sha256": "6a99a0378fc8199fa09280c51e04b97392587adc07e8cfa9a381783f769745df",
+  "available_leg_count": 1576,
+  "full_order_positions": 784,
+  "exit_only_short_positions": 8,
+  "volume_mismatch_count": 0,
+  "price_precision_flag_count": 0,
+  "full_audit_path": "../lab-data/open-automata/hester_audit_2026-11-07.json",
+  "full_audit_sha256": "b4a3b96c6a1b0e3cb595783006fc7c5fe7d107b6c559bd6be5aab69f70b800b2"
+}

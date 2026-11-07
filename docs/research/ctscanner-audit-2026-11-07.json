@@ -1,0 +1,566 @@
+{
+  "portfolio_id": "5030491098292789505",
+  "script_sha256": "c849a06806db8cda4d89ec31e5bb7059aced0286a1f9c162b0989c2953d766ec",
+  "diagnostic_thresholds_pct": [
+    2,
+    5
+  ],
+  "timer_tolerance_seconds": 2,
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "sources": {
+    "ctscanner_5030491098292789505_scan_2026-10-25.json": "9c3e93b761b73f98453aa50489b87ae83c4aba8039514b5247ac366414c397df",
+    "ctscanner_5030491098292789505_2026-11-07.json": "3ea8ee91c0caad0da94c07a643c9459e7dd2c8ee6f1289c58b8cf26a8ef76328",
+    "ctscanner_5030491098292789505_orders_2026-11-07.json": "600f1c92b1e899965f9c0fb734abf81f60ebd5e55874392f5c1c454475ec0cad"
+  },
+  "old_count": 87,
+  "new_count": 82,
+  "reported_new_total": 82,
+  "union_count": 87,
+  "changed_shared_positions": [],
+  "old_only": [
+    "1123300493129216000",
+    "1125927805469388800",
+    "1126086365218140160",
+    "1126282621458640896",
+    "1127407548601528320"
+  ],
+  "order_count": 153,
+  "reported_order_total": 153,
+  "order_types": {
+    "MARKET": 153
+  },
+  "missing_legs": [
+    {
+      "position_id": "1123300493129216000",
+      "leg": "open"
+    },
+    {
+      "position_id": "1123300493129216000",
+      "leg": "close"
+    },
+    {
+      "position_id": "1125927805469388800",
+      "leg": "open"
+    },
+    {
+      "position_id": "1125927805469388800",
+      "leg": "close"
+    },
+    {
+      "position_id": "1126086365218140160",
+      "leg": "open"
+    },
+    {
+      "position_id": "1126086365218140160",
+      "leg": "close"
+    },
+    {
+      "position_id": "1126282621458640896",
+      "leg": "open"
+    },
+    {
+      "position_id": "1126282621458640896",
+      "leg": "close"
+    },
+    {
+      "position_id": "1127407548601528320",
+      "leg": "open"
+    },
+    {
+      "position_id": "1127407548601528320",
+      "leg": "close"
+    },
+    {
+      "position_id": "1128351278431006720",
+      "leg": "open"
+    },
+    {
+      "position_id": "1128351278431006720",
+      "leg": "close"
+    },
+    {
+      "position_id": "1128453193517035520",
+      "leg": "open"
+    },
+    {
+      "position_id": "1128453193517035520",
+      "leg": "close"
+    },
+    {
+      "position_id": "1128849552824922112",
+      "leg": "open"
+    },
+    {
+      "position_id": "1128849552824922112",
+      "leg": "close"
+    },
+    {
+      "position_id": "1130042396369547264",
+      "leg": "open"
+    },
+    {
+      "position_id": "1130042396369547264",
+      "leg": "close"
+    },
+    {
+      "position_id": "1134470336360542208",
+      "leg": "open"
+    },
+    {
+      "position_id": "1134470336360542208",
+      "leg": "close"
+    },
+    {
+      "position_id": "1136104879941283840",
+      "leg": "open"
+    },
+    {
+      "position_id": "1136104879941283840",
+      "leg": "close"
+    },
+    {
+      "position_id": "1148879023405592576",
+      "leg": "open"
+    },
+    {
+      "position_id": "1148879023405592576",
+      "leg": "close"
+    }
+  ],
+  "mismatches": [],
+  "reused_orders": [],
+  "unused_orders": [],
+  "days": {
+    "2026-06-27": {
+      "n": 1,
+      "sides": {
+        "Long": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 121845.342,
+      "duration_median": 121845.342,
+      "duration_max": 121845.342,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 4818.53040000704,
+      "notional_max": 4818.53040000704
+    },
+    "2026-07-04": {
+      "n": 1,
+      "sides": {
+        "Long": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 1965.011,
+      "duration_median": 1965.011,
+      "duration_max": 1965.011,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 1693.2627499999999,
+      "notional_max": 1693.2627499999999
+    },
+    "2026-07-05": {
+      "n": 2,
+      "sides": {
+        "Long": 2
+      },
+      "symbols": {
+        "ETHUSDT": 2
+      },
+      "duration_min": 1794.629,
+      "duration_median": 1807.8955,
+      "duration_max": 1821.162,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 2,
+      "notional_min": 1703.09055,
+      "notional_max": 1716.11132
+    },
+    "2026-07-09": {
+      "n": 1,
+      "sides": {
+        "Short": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 1792.499,
+      "duration_median": 1792.499,
+      "duration_max": 1792.499,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 1730.87069,
+      "notional_max": 1730.87069
+    },
+    "2026-07-11": {
+      "n": 2,
+      "sides": {
+        "Long": 2
+      },
+      "symbols": {
+        "ETHUSDT": 2
+      },
+      "duration_min": 2981.158,
+      "duration_median": 30804.559,
+      "duration_max": 58627.96,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 2,
+      "notional_min": 1750.9233,
+      "notional_max": 3484.43100000828
+    },
+    "2026-07-13": {
+      "n": 1,
+      "sides": {
+        "Long": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 696.624,
+      "duration_median": 696.624,
+      "duration_max": 696.624,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 1796.4441,
+      "notional_max": 1796.4441
+    },
+    "2026-07-16": {
+      "n": 1,
+      "sides": {
+        "Long": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 359514.277,
+      "duration_median": 359514.277,
+      "duration_max": 359514.277,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 5246.86180001285,
+      "notional_max": 5246.86180001285
+    },
+    "2026-07-28": {
+      "n": 1,
+      "sides": {
+        "Short": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 1900.431,
+      "duration_median": 1900.431,
+      "duration_max": 1900.431,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 1837.53011,
+      "notional_max": 1837.53011
+    },
+    "2026-08-02": {
+      "n": 1,
+      "sides": {
+        "Short": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 37796.789,
+      "duration_median": 37796.789,
+      "duration_max": 37796.789,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 3658.98677000132,
+      "notional_max": 3658.98677000132
+    },
+    "2026-09-06": {
+      "n": 1,
+      "sides": {
+        "Long": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 7808.867,
+      "duration_median": 7808.867,
+      "duration_max": 7808.867,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 1,
+      "notional_min": 1881.8654399999998,
+      "notional_max": 1881.8654399999998
+    },
+    "2026-09-15": {
+      "n": 4,
+      "sides": {
+        "Long": 2,
+        "Short": 2
+      },
+      "symbols": {
+        "XRPUSDT": 1,
+        "ETHUSDT": 3
+      },
+      "duration_min": 180.116,
+      "duration_median": 180.362,
+      "duration_max": 180.579,
+      "timer60_2s": 0,
+      "timer180_2s": 4,
+      "quarter_hour_15s": 0,
+      "notional_min": 6.00049,
+      "notional_max": 21.69306
+    },
+    "2026-09-16": {
+      "n": 17,
+      "sides": {
+        "Long": 11,
+        "Short": 6
+      },
+      "symbols": {
+        "XRPUSDT": 6,
+        "SOLUSDT": 1,
+        "ETHUSDT": 8,
+        "BTCUSDT": 2
+      },
+      "duration_min": 180.123,
+      "duration_median": 180.409,
+      "duration_max": 180.667,
+      "timer60_2s": 0,
+      "timer180_2s": 17,
+      "quarter_hour_15s": 0,
+      "notional_min": 5.87972,
+      "notional_max": 75.7236
+    },
+    "2026-09-25": {
+      "n": 35,
+      "sides": {
+        "Long": 35
+      },
+      "symbols": {
+        "BCHUSDT": 3,
+        "BTCUSDT": 11,
+        "SOLUSDT": 5,
+        "ETHUSDT": 16
+      },
+      "duration_min": 14.574,
+      "duration_median": 95.777,
+      "duration_max": 1820.562,
+      "timer60_2s": 9,
+      "timer180_2s": 10,
+      "quarter_hour_15s": 0,
+      "notional_min": 166.8882,
+      "notional_max": 374.5686
+    },
+    "2026-09-26": {
+      "n": 1,
+      "sides": {
+        "Long": 1
+      },
+      "symbols": {
+        "ETHUSDT": 1
+      },
+      "duration_min": 106.217,
+      "duration_median": 106.217,
+      "duration_max": 106.217,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 0,
+      "notional_min": 374.15560000000005,
+      "notional_max": 374.15560000000005
+    },
+    "2026-09-27": {
+      "n": 3,
+      "sides": {
+        "Long": 3
+      },
+      "symbols": {
+        "ETHUSDT": 3
+      },
+      "duration_min": 180.293,
+      "duration_median": 180.531,
+      "duration_max": 181.038,
+      "timer60_2s": 0,
+      "timer180_2s": 3,
+      "quarter_hour_15s": 0,
+      "notional_min": 372.00570000000005,
+      "notional_max": 373.12604000000005
+    },
+    "2026-09-28": {
+      "n": 7,
+      "sides": {
+        "Long": 7
+      },
+      "symbols": {
+        "ETHUSDT": 7
+      },
+      "duration_min": 60.282,
+      "duration_median": 88.639,
+      "duration_max": 181.214,
+      "timer60_2s": 2,
+      "timer180_2s": 1,
+      "quarter_hour_15s": 0,
+      "notional_min": 372.1018,
+      "notional_max": 374.71455
+    },
+    "2026-09-29": {
+      "n": 6,
+      "sides": {
+        "Long": 6
+      },
+      "symbols": {
+        "ETHUSDT": 6
+      },
+      "duration_min": 112.779,
+      "duration_median": 180.20499999999998,
+      "duration_max": 180.436,
+      "timer60_2s": 0,
+      "timer180_2s": 4,
+      "quarter_hour_15s": 0,
+      "notional_min": 371.94871,
+      "notional_max": 374.2046
+    },
+    "2026-10-15": {
+      "n": 2,
+      "sides": {
+        "Short": 2
+      },
+      "symbols": {
+        "ETHUSDT": 2
+      },
+      "duration_min": 1348.524,
+      "duration_median": 43537.4475,
+      "duration_max": 85726.371,
+      "timer60_2s": 0,
+      "timer180_2s": 0,
+      "quarter_hour_15s": 2,
+      "notional_min": 1870.5228800000002,
+      "notional_max": 5416.281570007399
+    }
+  },
+  "short_count": 70,
+  "candle_sources": {
+    "1152367843618910208.json": "bdb5a8d317ab9708223029bcc7eb8374eae95694951857654ecf92673ba73f28",
+    "1152381381024477184.json": "a8390edd0f39328676fa3bce8dc1474711c96002cba4d51293352ce9764a4cf2",
+    "1152383354616475648.json": "0442dc220052227fdd7f4c2d93609af709f7dd44a630f3fe1f6a00ae8cb4982a",
+    "1152386051889491968.json": "dd3844133ee45ead168310dc9d08e5f972d118ec2790ff7b6afd2ad738ee3135",
+    "1152417880394756096.json": "a2cb3d9c91ee7dae58d5aa78e05c977da49e829f0770519f846ed2d3a4c5e621",
+    "1152420809575034880.json": "44281a7e28ca0e49d75291021f08eff24740dd46fe677b203480a1783c70c54d",
+    "1152421329014419456.json": "d671df00135d83dd705aac2fb21cb079625ffa8cddf307f1e2ee6fdae900d481",
+    "1152421339076554752.json": "711f4194f966771c88676e01fca6b3a82eadaed2c077e524a4d9614a27446ede",
+    "1152421339919609856.json": "2061ceafab40689c1dfdb8205b614c49e4c8ad6fa256c0d8320d6ea3faa3440a",
+    "1152427942270005248.json": "29563e78348326c5cdd7c8d09da2e84aefaf4ce8748c9068a07b5ae29d2337da",
+    "1152431574331748352.json": "386114d4b27a7768b31f50e36675f904554adf86843b68ab7ec4cea2bb02b253",
+    "1152446559556530176.json": "9d81236d16ea2e7e6ba2cfdb475e066f3b3bc091bb8d48fdf1cd734804acd3a7",
+    "1152448005568000000.json": "c993f51e4bbb0e8383bdcf7276d2ce8dd14fdde2a677d72c15e30e3ba6899267",
+    "1152456455211511808.json": "4f4db2dc66148d8a9ea05814d7118fcbf11ea897a10959682a428a872a153b61",
+    "1152459363307024384.json": "ec98b3bee4e4a7fdb8a775265deee9356e796c0a2d832dd0b9c21028ff9c438f",
+    "1152469615867916288.json": "cdb773e9780b5cba65711729baa42751d31ea9308b6b747b9a8363921558797e",
+    "1152499006505283584.json": "16edb6b5d12198f672a588c62d47d957714fa0efe7bbcf01d7abdd52a10ac2e6",
+    "1152512203220119552.json": "8a7203671a1ef71f0951687089c45fd2b5e09c5cf99e1de0db3a37c762785e64",
+    "1152515106081140736.json": "6ca4f2c071e1c2c92b7cc7e27eac2a287d89aa10bee5f27c97b30e9233b81d77",
+    "1152515931935404032.json": "9f91a181f58783c5d09302a08ba5031cc22c6d6e85770919b2690620cbc225c0",
+    "1152515943356493824.json": "e6ea0f4df2b5eb481c70eff42b7ca150b822688edfac42dfe05a861d12d8464a",
+    "1155731828212822016.json": "2b64f8be2955d2762d35ecf5e8b920b68d86ed78468804f6bb3c804d8150d232",
+    "1155748941371600896.json": "b1c6b1ee6cf360715add8a4677c335263deeaef3489474fe8aa1c9c7065e5247",
+    "1155755470569140224.json": "8aa07d702e2a3748242c50441e56a5f0a3422594b53349138eb7d111d8d9eb93",
+    "1155763031838093312.json": "dfe73bb0eafc7996376a1ee9a868b2c59bfa40e0a5ddfd3cf64c424af0b46318",
+    "1155763053006745600.json": "aeb193e0e2741fd3db461012b10da0731aa93fd36c87e823b60a1deffbd63c18",
+    "1155763071709147136.json": "2957b84d423e3dbe2efdc239ec6bfa366a3ffca697dc839b3008d4fefb339fb1",
+    "1155771020980580352.json": "b106d7406c47ec27fd1f7c073b6eee071defbcf734b837fe8c554b757eb4b80c",
+    "1155806744593362944.json": "7ea5fb76e2d66ba376b54715271a07866eba057c77930a484933ae718eb4d8d7",
+    "1155827240147939328.json": "bf4f98e78ebb995b20f12d03a5a93ce1a2ea60d1a42ebb50f9b91d55dbb0b103",
+    "1155832677933051904.json": "ce2ee1a4849eae91c887a642bfc1f203b8e45076af5e42c65fcc0e613496f8d6",
+    "1155835262047940608.json": "5c9af7e0912a379d4524cc2c3396ec96608e5dc33672e98777df639c67581c4b",
+    "1155839172712132608.json": "24239b390210d853f2f02c0b2ace57f581193a4b8924862c344e46c811a51fd4",
+    "1155839784031940608.json": "258cb0eb60466f686a770f7f10593000157ae64d8c1062aaa1bbfa0ad4f09678",
+    "1155839790763798528.json": "315d5c874d8c8a2b78b7de701d2e6af751fe95c34f0a3e6cb40b0c57aaac30cb",
+    "1155839828785164288.json": "acde0b2b4c59d06ddcb66701e61bee166658ac524a9fd44ab0f72704b3f76241",
+    "1155840302733127680.json": "0c2b0017f7852a51f41e2b65cf05787e10d23061ac7b898103df1224bba0d668",
+    "1155840309418848256.json": "f1a9d464d7f7d7e26347c1ab2ecb80ba02d79c24c71d5681a0f49e619c561234",
+    "1155840466873020416.json": "73c799016ddf5707697a9f823557c4f73868adaf0de94c5a54bc2559485622f6",
+    "1155840758792384512.json": "1f7d6c5495f62f38ac59299528868d7b77d3106900258993a2d7a41b010b762c",
+    "1155840879152132096.json": "76fd963cc9392ffec23c6de55b284db4128adfa4a745593603f3000dfad52f65",
+    "1155845728220540928.json": "f4023a85fe71a5981fdc22d0a82691b3bf5e7100149d55585e4e61de228ebbaf",
+    "1155845928200761344.json": "d1e7dcd3c93054e2e65e782d9b93e30e1f97faecf9afab9335a3691d5faf5c89",
+    "1155857762651795456.json": "9f60c7df287cad5e75c40309472ad3585e0aaebd2460fcf6466f96fa4e308692",
+    "1155859073615065088.json": "f3ba9a5ec16ec4faf949d6a6d4a15b20743994c7f64e3f131060e3630a053bf4",
+    "1155859077486407680.json": "406da2406e6043f99539cdf7452c859cf0eb06ed99caafa903014e7852897dd1",
+    "1155862507252674560.json": "94d74bad4e7ee34b8cd0162d0400fcbc31204892880d9a226dad9f0a0a5692c0",
+    "1155862516073295872.json": "99975fcd5fe963afab93183c1cb72d4ccb65e7d38f52fb2b4115af7e6cf7ad72",
+    "1155863203054153728.json": "31f3a7915eb294a98bf1a9f037e356e17187cb559468e35e907cd52ca61292e9",
+    "1155863209777623040.json": "f2509a0b214ede8b55f5b513d1a231cbd95d0ae756223f493ffd32d3ee7d88e5",
+    "1155863222192762880.json": "ebd95c272d7d3f6505842aeb6d310b4885b7f67f3928ed7c5ac570c11516e57f",
+    "1155888127785365504.json": "fd88538bf0be1640667a4e88fb17703f4dbb6b41464292af0f3294140f2ba374",
+    "1155893333017292800.json": "3445953f1e3661866dc2e3d7b621b5dbb4734b5b6d56066801c89b0dee4cbd2a",
+    "1156330815907229696.json": "49d99a1ef4bbb983c69b33bd2a9383b491f9d009d663514401879261d55c87b2",
+    "1156576549952876544.json": "95b30e006056afe719b82c38aaa73f076f4cef6e09e25a130a8c79dc1e35e4fb",
+    "1156603552080916480.json": "8490c5ba95dfe5cad58ca4ea0ab15ed7569a41f03292ed85e97d72b9b75cc28b",
+    "1156712772847595520.json": "702c159b2df244bb427ae4495f0ffbc670d2864ad38d5d791a5ef218370a0098",
+    "1156758930508804096.json": "2ba62f44cf22829466e5acb4385f274e1e001de0a89cfc38ce83c6dee2c57c70",
+    "1156770048547549184.json": "eddd4bee07446fa97f2179263be4c557c102ee3903bcf3a47c05db9cd749906e",
+    "1156771275729596416.json": "1cb29b53094dc54e28194c2305f72a33d7674bf3196690d1f66d8206beaee5e2",
+    "1156796093095014400.json": "31427537fe11b7a24a87559cbedb6408196187d947a818718ce7e223b1deb506",
+    "1156974618938765312.json": "fe760aec48a37c34843500b4d932de4a3f87fc0907c1dee50ee59872611f2661",
+    "1157012893753733120.json": "fd8b050259f3d4c7823a59350ecdcbe9bfe2761afcc8056b5b7ac78519b6bd8f",
+    "1157039457136603136.json": "5922e9ba6fcaf471d8e9ba9ea5aba1317359db1c87b764e7810dfbb616858fca",
+    "1157108760380764160.json": "67edcc2f7db4c68c8950972eec9dd19600c3a99a78433a3de3ea789f9e317879",
+    "1157124773348438016.json": "ec1efc0eeaab05ae0dc59acf9361874c8a4a6b7a654aafdb59456e882cda0486",
+    "1157317950416154624.json": "1d1fda5ea3d0d68a2809a97781c53e330024a3026a7907a19e9c3e330590c1a9",
+    "1157332621386903552.json": "d429a4869f9d4c301982bfd751b5bddffb807aff9e42d2fc257c2c4c4f3d9ee7",
+    "1157338201660911616.json": "07e7a7e0eac4bf9701615237e6d78ab7d8b41cfa4c168bcdd3bf72813849daf3",
+    "1157366967917408256.json": "03d7db4954ad87da60f7ae6ff778d2cb253f2ca3bda57eae1160cfddd9979775"
+  },
+  "candle_gaps": [],
+  "event_days": {
+    "2026-09-15": {
+      "n": 4,
+      "event_2pct": 0,
+      "event_5pct": 0
+    },
+    "2026-09-16": {
+      "n": 17,
+      "event_2pct": 0,
+      "event_5pct": 0
+    },
+    "2026-09-25": {
+      "n": 32,
+      "event_2pct": 0,
+      "event_5pct": 0
+    },
+    "2026-09-26": {
+      "n": 1,
+      "event_2pct": 0,
+      "event_5pct": 0
+    },
+    "2026-09-27": {
+      "n": 3,
+      "event_2pct": 0,
+      "event_5pct": 0
+    },
+    "2026-09-28": {
+      "n": 7,
+      "event_2pct": 0,
+      "event_5pct": 0
+    },
+    "2026-09-29": {
+      "n": 6,
+      "event_2pct": 0,
+      "event_5pct": 0
+    }
+  },
+  "full_audit_path": "..\\lab-data\\open-automata\\ctscanner_audit_2026-11-07.json",
+  "full_audit_sha256": "b1bc7a640ce35cc801e25cc3143df1b990ad54cc6bb7165df1229635f95d2582",
+  "reconciled_legs_count": 150,
+  "missing_legs_count": 24
+}

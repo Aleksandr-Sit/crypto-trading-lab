@@ -1,0 +1,2181 @@
+{
+  "execution_groups": {
+    "LIMIT": [
+      {
+        "position_id": "1152569228188766208",
+        "duration_s": 293.201,
+        "placement_after_open_s": 29.138,
+        "update_after_placement_s": 264.063,
+        "price_move": 0.020002974419988107
+      },
+      {
+        "position_id": "1152584901002579968",
+        "duration_s": 627.26,
+        "placement_after_open_s": 12.701,
+        "update_after_placement_s": 614.559,
+        "price_move": 0.020003476117492758
+      },
+      {
+        "position_id": "1152603743175102464",
+        "duration_s": 139.357,
+        "placement_after_open_s": 20.017,
+        "update_after_placement_s": 119.34,
+        "price_move": 0.020011916027056653
+      },
+      {
+        "position_id": "1152630865901965312",
+        "duration_s": 52.377,
+        "placement_after_open_s": 33.467,
+        "update_after_placement_s": 18.91,
+        "price_move": 0.020000620174269068
+      },
+      {
+        "position_id": "1152646882392854528",
+        "duration_s": 754.267,
+        "placement_after_open_s": 54.907,
+        "update_after_placement_s": 699.36,
+        "price_move": 0.02000689044197279
+      },
+      {
+        "position_id": "1152667349489078272",
+        "duration_s": 36.041,
+        "placement_after_open_s": 35.133,
+        "update_after_placement_s": 0.908,
+        "price_move": 0.02001240278028993
+      },
+      {
+        "position_id": "1152689171894947840",
+        "duration_s": 4864.907,
+        "placement_after_open_s": 52.296,
+        "update_after_placement_s": 4812.611,
+        "price_move": 0.020000842732137647
+      },
+      {
+        "position_id": "1152859702967455744",
+        "duration_s": 675.917,
+        "placement_after_open_s": 14.476,
+        "update_after_placement_s": 661.441,
+        "price_move": 0.020155748969308496
+      },
+      {
+        "position_id": "1152983831880192000",
+        "duration_s": 59.919,
+        "placement_after_open_s": 59.919,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.022705039244682146
+      },
+      {
+        "position_id": "1153135334775377920",
+        "duration_s": 72.234,
+        "placement_after_open_s": 58.779,
+        "update_after_placement_s": 13.455,
+        "price_move": 0.020011726616870895
+      },
+      {
+        "position_id": "1153242394481446912",
+        "duration_s": 300.219,
+        "placement_after_open_s": 33.697,
+        "update_after_placement_s": 266.521,
+        "price_move": 0.020000487222587626
+      },
+      {
+        "position_id": "1153373092739600384",
+        "duration_s": 520.73,
+        "placement_after_open_s": 13.183,
+        "update_after_placement_s": 507.547,
+        "price_move": 0.02006532897806812
+      },
+      {
+        "position_id": "1153390240237146112",
+        "duration_s": 1466.151,
+        "placement_after_open_s": 4.824,
+        "update_after_placement_s": 1461.327,
+        "price_move": 0.020056157240272876
+      },
+      {
+        "position_id": "1153568580881403904",
+        "duration_s": 12443.053,
+        "placement_after_open_s": 25.083,
+        "update_after_placement_s": 12417.97,
+        "price_move": 0.020055710306406738
+      },
+      {
+        "position_id": "1153683344576008192",
+        "duration_s": 202.52,
+        "placement_after_open_s": 23.194,
+        "update_after_placement_s": 179.325,
+        "price_move": 0.020042248441444643
+      },
+      {
+        "position_id": "1153769568925962240",
+        "duration_s": 849.526,
+        "placement_after_open_s": 45.577,
+        "update_after_placement_s": 803.949,
+        "price_move": 0.020034843205574804
+      },
+      {
+        "position_id": "1153891951108214784",
+        "duration_s": 8460.076,
+        "placement_after_open_s": 27.559,
+        "update_after_placement_s": 8432.517,
+        "price_move": 0.020047796070100876
+      },
+      {
+        "position_id": "1154028365900730368",
+        "duration_s": 76.328,
+        "placement_after_open_s": 23.545,
+        "update_after_placement_s": 52.782,
+        "price_move": 0.020299145299145227
+      },
+      {
+        "position_id": "1154078615105490944",
+        "duration_s": 99.891,
+        "placement_after_open_s": 43.257,
+        "update_after_placement_s": 56.633,
+        "price_move": 0.02025957581513138
+      },
+      {
+        "position_id": "1154098255936409600",
+        "duration_s": 167.62,
+        "placement_after_open_s": 40.602,
+        "update_after_placement_s": 127.017,
+        "price_move": 0.020064915904396408
+      },
+      {
+        "position_id": "1154131284088115200",
+        "duration_s": 35.458,
+        "placement_after_open_s": 26.011,
+        "update_after_placement_s": 9.447,
+        "price_move": 0.020015801948907175
+      },
+      {
+        "position_id": "1154158316247371777",
+        "duration_s": 117.334,
+        "placement_after_open_s": 0.94,
+        "update_after_placement_s": 116.394,
+        "price_move": 0.02002781641168294
+      },
+      {
+        "position_id": "1154175368303529984",
+        "duration_s": 1407.863,
+        "placement_after_open_s": 15.604,
+        "update_after_placement_s": 1392.259,
+        "price_move": 0.020202020202020332
+      },
+      {
+        "position_id": "1154433317311664128",
+        "duration_s": 148.515,
+        "placement_after_open_s": 16.317,
+        "update_after_placement_s": 132.198,
+        "price_move": 0.02001008912056501
+      },
+      {
+        "position_id": "1154479759300546560",
+        "duration_s": 149.2,
+        "placement_after_open_s": 43.85,
+        "update_after_placement_s": 105.35,
+        "price_move": 0.020090406830738372
+      },
+      {
+        "position_id": "1154523731100225536",
+        "duration_s": 67.961,
+        "placement_after_open_s": 59.775,
+        "update_after_placement_s": 8.186,
+        "price_move": 0.020011362919007514
+      },
+      {
+        "position_id": "1154698110979330048",
+        "duration_s": 179.471,
+        "placement_after_open_s": 4.863,
+        "update_after_placement_s": 174.608,
+        "price_move": 0.020007726561070305
+      },
+      {
+        "position_id": "1154757706926313472",
+        "duration_s": 1483.77,
+        "placement_after_open_s": 15.547,
+        "update_after_placement_s": 1468.223,
+        "price_move": 0.020098258150960113
+      },
+      {
+        "position_id": "1154779201534742529",
+        "duration_s": 1427.984,
+        "placement_after_open_s": 52.268,
+        "update_after_placement_s": 1375.716,
+        "price_move": 0.02021845224262142
+      },
+      {
+        "position_id": "1154782613965950976",
+        "duration_s": 228.024,
+        "placement_after_open_s": 18.008,
+        "update_after_placement_s": 210.016,
+        "price_move": 0.02005627731545223
+      },
+      {
+        "position_id": "1154957843854315520",
+        "duration_s": 2069.498,
+        "placement_after_open_s": 58.725,
+        "update_after_placement_s": 2010.773,
+        "price_move": 0.020092938019503848
+      },
+      {
+        "position_id": "1155058582719090688",
+        "duration_s": 1237.505,
+        "placement_after_open_s": 40.933,
+        "update_after_placement_s": 1196.572,
+        "price_move": 0.02019056261343022
+      },
+      {
+        "position_id": "1155107261781954560",
+        "duration_s": 1480.992,
+        "placement_after_open_s": 14.71,
+        "update_after_placement_s": 1466.282,
+        "price_move": 0.0200217488645813
+      },
+      {
+        "position_id": "1155127958294024192",
+        "duration_s": 284.177,
+        "placement_after_open_s": 60.464,
+        "update_after_placement_s": 223.713,
+        "price_move": 0.020054313766450615
+      },
+      {
+        "position_id": "1155144243518164992",
+        "duration_s": 1149.437,
+        "placement_after_open_s": 18.415,
+        "update_after_placement_s": 1131.022,
+        "price_move": 0.020030513312663034
+      },
+      {
+        "position_id": "1155144505112711168",
+        "duration_s": 193.223,
+        "placement_after_open_s": 16.503,
+        "update_after_placement_s": 176.72,
+        "price_move": 0.02019081428888403
+      },
+      {
+        "position_id": "1155144716333666304",
+        "duration_s": 113.075,
+        "placement_after_open_s": 25.869,
+        "update_after_placement_s": 87.205,
+        "price_move": 0.020001349163518478
+      },
+      {
+        "position_id": "1155144789876592640",
+        "duration_s": 70.058,
+        "placement_after_open_s": 69.883,
+        "update_after_placement_s": 0.175,
+        "price_move": 0.020031628887717368
+      },
+      {
+        "position_id": "1155144822638301184",
+        "duration_s": 64.263,
+        "placement_after_open_s": 62.59,
+        "update_after_placement_s": 1.673,
+        "price_move": 0.020001342371971154
+      },
+      {
+        "position_id": "1155144823946924032",
+        "duration_s": 60.805,
+        "placement_after_open_s": 60.805,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.026284482456410352
+      },
+      {
+        "position_id": "1155144828137033728",
+        "duration_s": 60.182,
+        "placement_after_open_s": 59.276,
+        "update_after_placement_s": 0.906,
+        "price_move": 0.02000502056500686
+      },
+      {
+        "position_id": "1155144831773495296",
+        "duration_s": 61.254,
+        "placement_after_open_s": 61.253,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.025616254890921564
+      },
+      {
+        "position_id": "1155144832893374464",
+        "duration_s": 61.931,
+        "placement_after_open_s": 61.931,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.02730172930827668
+      },
+      {
+        "position_id": "1155144844801003520",
+        "duration_s": 57.879,
+        "placement_after_open_s": 57.879,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.023602348951374585
+      },
+      {
+        "position_id": "1155144845061050368",
+        "duration_s": 57.619,
+        "placement_after_open_s": 57.617,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.026584121550593087
+      },
+      {
+        "position_id": "1155144845723750400",
+        "duration_s": 60.937,
+        "placement_after_open_s": 56.199,
+        "update_after_placement_s": 4.738,
+        "price_move": 0.020020203875470655
+      },
+      {
+        "position_id": "1155144849104359424",
+        "duration_s": 57.549,
+        "placement_after_open_s": 57.549,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.02060120240480945
+      },
+      {
+        "position_id": "1155144853843922944",
+        "duration_s": 52.604,
+        "placement_after_open_s": 52.604,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.028819875776397552
+      },
+      {
+        "position_id": "1155144904297205760",
+        "duration_s": 101.901,
+        "placement_after_open_s": 101.901,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.03565786504175117
+      },
+      {
+        "position_id": "1155147476324110336",
+        "duration_s": 103.613,
+        "placement_after_open_s": 27.512,
+        "update_after_placement_s": 76.101,
+        "price_move": 0.020000609774688316
+      },
+      {
+        "position_id": "1155168659136368640",
+        "duration_s": 392.32,
+        "placement_after_open_s": 17.982,
+        "update_after_placement_s": 374.338,
+        "price_move": 0.020038371349392348
+      },
+      {
+        "position_id": "1155171596738809856",
+        "duration_s": 37.484,
+        "placement_after_open_s": 37.484,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.022534528713351154
+      },
+      {
+        "position_id": "1155334186165129216",
+        "duration_s": 3141.746,
+        "placement_after_open_s": 32.1,
+        "update_after_placement_s": 3109.645,
+        "price_move": 0.020021044017069167
+      },
+      {
+        "position_id": "1155353075909447680",
+        "duration_s": 1108.385,
+        "placement_after_open_s": 28.816,
+        "update_after_placement_s": 1079.568,
+        "price_move": 0.020018767594619957
+      },
+      {
+        "position_id": "1155373689084891136",
+        "duration_s": 102.296,
+        "placement_after_open_s": 33.539,
+        "update_after_placement_s": 68.757,
+        "price_move": 0.020004325259515454
+      },
+      {
+        "position_id": "1155381982553493504",
+        "duration_s": 36.782,
+        "placement_after_open_s": 36.782,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.03958573072497118
+      },
+      {
+        "position_id": "1155395048410238976",
+        "duration_s": 216.913,
+        "placement_after_open_s": 41.517,
+        "update_after_placement_s": 175.396,
+        "price_move": 0.020002091722010062
+      },
+      {
+        "position_id": "1155425483634823168",
+        "duration_s": 3153.013,
+        "placement_after_open_s": 45.577,
+        "update_after_placement_s": 3107.436,
+        "price_move": 0.020008948101014168
+      },
+      {
+        "position_id": "1155443337067286528",
+        "duration_s": 55.446,
+        "placement_after_open_s": 49.081,
+        "update_after_placement_s": 6.365,
+        "price_move": 0.020019691499835846
+      },
+      {
+        "position_id": "1155519408009695232",
+        "duration_s": 2349.159,
+        "placement_after_open_s": 31.336,
+        "update_after_placement_s": 2317.822,
+        "price_move": 0.020011117287381808
+      },
+      {
+        "position_id": "1155593165684396032",
+        "duration_s": 341.588,
+        "placement_after_open_s": 26.756,
+        "update_after_placement_s": 314.832,
+        "price_move": 0.020016777741529435
+      },
+      {
+        "position_id": "1155612754979901440",
+        "duration_s": 152.534,
+        "placement_after_open_s": 35.928,
+        "update_after_placement_s": 116.606,
+        "price_move": 0.02001181173905131
+      },
+      {
+        "position_id": "1155614173980053504",
+        "duration_s": 57.444,
+        "placement_after_open_s": 57.444,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.06570512820512842
+      },
+      {
+        "position_id": "1155630679405154304",
+        "duration_s": 22.368,
+        "placement_after_open_s": 22.368,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.021879815100154243
+      },
+      {
+        "position_id": "1155631260991541248",
+        "duration_s": 248.026,
+        "placement_after_open_s": 3.786,
+        "update_after_placement_s": 244.24,
+        "price_move": 0.02002080083203328
+      },
+      {
+        "position_id": "1155720099110113280",
+        "duration_s": 1934.648,
+        "placement_after_open_s": 2.892,
+        "update_after_placement_s": 1931.756,
+        "price_move": 0.020005272253302397
+      },
+      {
+        "position_id": "1155839623213928448",
+        "duration_s": 20.617,
+        "placement_after_open_s": 6.341,
+        "update_after_placement_s": 14.276,
+        "price_move": 0.020019632923818254
+      },
+      {
+        "position_id": "1155911046624235520",
+        "duration_s": 961.153,
+        "placement_after_open_s": 18.254,
+        "update_after_placement_s": 942.898,
+        "price_move": 0.020109164033323745
+      },
+      {
+        "position_id": "1156053625693065216",
+        "duration_s": 129.284,
+        "placement_after_open_s": 44.423,
+        "update_after_placement_s": 84.86,
+        "price_move": 0.020024271844659935
+      },
+      {
+        "position_id": "1156070426657214464",
+        "duration_s": 58.511,
+        "placement_after_open_s": 58.511,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.04075235109717856
+      },
+      {
+        "position_id": "1156227051175071744",
+        "duration_s": 36.56,
+        "placement_after_open_s": 36.56,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.02031693180416827
+      },
+      {
+        "position_id": "1156246788315598848",
+        "duration_s": 2185.933,
+        "placement_after_open_s": 10.608,
+        "update_after_placement_s": 2175.324,
+        "price_move": 0.020004475274110645
+      },
+      {
+        "position_id": "1156466942962094080",
+        "duration_s": 77.43,
+        "placement_after_open_s": 21.609,
+        "update_after_placement_s": 55.821,
+        "price_move": 0.02017094017094001
+      },
+      {
+        "position_id": "1156482798072942592",
+        "duration_s": 869.026,
+        "placement_after_open_s": 21.66,
+        "update_after_placement_s": 847.366,
+        "price_move": 0.020354315868827744
+      },
+      {
+        "position_id": "1157836605767864320",
+        "duration_s": 2042.034,
+        "placement_after_open_s": 48.715,
+        "update_after_placement_s": 1993.319,
+        "price_move": 0.020024803034724314
+      },
+      {
+        "position_id": "1158452050191503360",
+        "duration_s": 978.42,
+        "placement_after_open_s": 15.298,
+        "update_after_placement_s": 963.122,
+        "price_move": 0.020416843896214454
+      },
+      {
+        "position_id": "1158473396648726528",
+        "duration_s": 691.739,
+        "placement_after_open_s": 85.858,
+        "update_after_placement_s": 605.881,
+        "price_move": 0.02001520763325071
+      },
+      {
+        "position_id": "1158473397449838592",
+        "duration_s": 1302.941,
+        "placement_after_open_s": 85.923,
+        "update_after_placement_s": 1217.018,
+        "price_move": 0.02006446414182106
+      },
+      {
+        "position_id": "1158473398120927232",
+        "duration_s": 6305.611,
+        "placement_after_open_s": 85.945,
+        "update_after_placement_s": 6219.666,
+        "price_move": 0.020022474205741103
+      },
+      {
+        "position_id": "1158473467633127424",
+        "duration_s": 1061.542,
+        "placement_after_open_s": 68.701,
+        "update_after_placement_s": 992.841,
+        "price_move": 0.020000782197191924
+      },
+      {
+        "position_id": "1159440976653897728",
+        "duration_s": 96.123,
+        "placement_after_open_s": 36.792,
+        "update_after_placement_s": 59.331,
+        "price_move": 0.020382165605095537
+      },
+      {
+        "position_id": "1159641111186952193",
+        "duration_s": 3426.298,
+        "placement_after_open_s": 20.771,
+        "update_after_placement_s": 3405.526,
+        "price_move": 0.020009890820557708
+      },
+      {
+        "position_id": "1159745458713448448",
+        "duration_s": 336.458,
+        "placement_after_open_s": 303.231,
+        "update_after_placement_s": 33.227,
+        "price_move": 0.005826573746144259
+      },
+      {
+        "position_id": "1159768010462646272",
+        "duration_s": 513.024,
+        "placement_after_open_s": 435.819,
+        "update_after_placement_s": 77.205,
+        "price_move": -0.0008604871108135459
+      },
+      {
+        "position_id": "1160034034403561472",
+        "duration_s": 1180.172,
+        "placement_after_open_s": 62.108,
+        "update_after_placement_s": 1118.064,
+        "price_move": 0.020041431258476683
+      },
+      {
+        "position_id": "1160034061691703296",
+        "duration_s": 55.407,
+        "placement_after_open_s": 55.122,
+        "update_after_placement_s": 0.285,
+        "price_move": 0.020135607150195245
+      },
+      {
+        "position_id": "1160034070910783488",
+        "duration_s": 63.147,
+        "placement_after_open_s": 53.87,
+        "update_after_placement_s": 9.277,
+        "price_move": 0.020007145409074667
+      },
+      {
+        "position_id": "1160034073435754496",
+        "duration_s": 58.968,
+        "placement_after_open_s": 53.671,
+        "update_after_placement_s": 5.297,
+        "price_move": 0.020005436259853182
+      },
+      {
+        "position_id": "1160034073507057664",
+        "duration_s": 51.181,
+        "placement_after_open_s": 51.181,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.024321389793702464
+      },
+      {
+        "position_id": "1160034080230526976",
+        "duration_s": 50.309,
+        "placement_after_open_s": 50.309,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.03417837343236996
+      },
+      {
+        "position_id": "1160034080591237120",
+        "duration_s": 51.777,
+        "placement_after_open_s": 51.777,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.020617674736932212
+      },
+      {
+        "position_id": "1160034083191705600",
+        "duration_s": 49.422,
+        "placement_after_open_s": 49.422,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.024569351787314453
+      },
+      {
+        "position_id": "1160034083606941696",
+        "duration_s": 49.703,
+        "placement_after_open_s": 49.702,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.027318199307426072
+      },
+      {
+        "position_id": "1160034084093480960",
+        "duration_s": 52.736,
+        "placement_after_open_s": 49.026,
+        "update_after_placement_s": 3.71,
+        "price_move": 0.02008248162094306
+      },
+      {
+        "position_id": "1160034084508717056",
+        "duration_s": 50.405,
+        "placement_after_open_s": 50.405,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.024663677130044803
+      },
+      {
+        "position_id": "1160034085737648128",
+        "duration_s": 48.451,
+        "placement_after_open_s": 48.451,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.026813145889581946
+      },
+      {
+        "position_id": "1160598261392527360",
+        "duration_s": 136.782,
+        "placement_after_open_s": 59.607,
+        "update_after_placement_s": 77.175,
+        "price_move": 0.02004203745403399
+      },
+      {
+        "position_id": "1160598291188862976",
+        "duration_s": 54.764,
+        "placement_after_open_s": 53.314,
+        "update_after_placement_s": 1.45,
+        "price_move": 0.020027051791090322
+      },
+      {
+        "position_id": "1160598331168968704",
+        "duration_s": 102.646,
+        "placement_after_open_s": 102.646,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.021474878444084355
+      },
+      {
+        "position_id": "1160598336915165184",
+        "duration_s": 102.005,
+        "placement_after_open_s": 102.005,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.02575227431770477
+      },
+      {
+        "position_id": "1160598337506562048",
+        "duration_s": 109.28,
+        "placement_after_open_s": 100.72,
+        "update_after_placement_s": 8.56,
+        "price_move": 0.020058997050147687
+      },
+      {
+        "position_id": "1160598342296457216",
+        "duration_s": 99.33,
+        "placement_after_open_s": 99.33,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.022712238147739816
+      },
+      {
+        "position_id": "1160598342338400256",
+        "duration_s": 99.806,
+        "placement_after_open_s": 99.806,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.028034188034188112
+      },
+      {
+        "position_id": "1160598352803188736",
+        "duration_s": 97.688,
+        "placement_after_open_s": 97.688,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.02292814141155386
+      },
+      {
+        "position_id": "1160598372042461185",
+        "duration_s": 93.367,
+        "placement_after_open_s": 93.367,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.02573296772832734
+      },
+      {
+        "position_id": "1160622261875298304",
+        "duration_s": 36.076,
+        "placement_after_open_s": 36.076,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.022900763358778553
+      },
+      {
+        "position_id": "1162726633895677952",
+        "duration_s": 35.094,
+        "placement_after_open_s": 35.094,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.021520874751491004
+      },
+      {
+        "position_id": "1162729031510839296",
+        "duration_s": 64.391,
+        "placement_after_open_s": 64.39,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.02594555013143074
+      },
+      {
+        "position_id": "1162729046849409024",
+        "duration_s": 105.328,
+        "placement_after_open_s": 59.997,
+        "update_after_placement_s": 45.331,
+        "price_move": 0.020025371511417145
+      },
+      {
+        "position_id": "1162729105192177665",
+        "duration_s": 3648.196,
+        "placement_after_open_s": 106.778,
+        "update_after_placement_s": 3541.418,
+        "price_move": 0.020105683722129175
+      },
+      {
+        "position_id": "1162729130383167489",
+        "duration_s": 1151.492,
+        "placement_after_open_s": 100.001,
+        "update_after_placement_s": 1051.491,
+        "price_move": 0.020014232342999483
+      },
+      {
+        "position_id": "1162937570493779969",
+        "duration_s": 58.771,
+        "placement_after_open_s": 23.985,
+        "update_after_placement_s": 34.786,
+        "price_move": 0.020002921467306978
+      },
+      {
+        "position_id": "1162939022385664000",
+        "duration_s": 157.943,
+        "placement_after_open_s": 157.943,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.032962923389250776
+      },
+      {
+        "position_id": "1162939033257299968",
+        "duration_s": 155.167,
+        "placement_after_open_s": 155.167,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.030368763557483636
+      },
+      {
+        "position_id": "1162939035203457024",
+        "duration_s": 154.516,
+        "placement_after_open_s": 154.515,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.03144104803493453
+      },
+      {
+        "position_id": "1162939040068849664",
+        "duration_s": 153.949,
+        "placement_after_open_s": 153.949,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.03389027135916556
+      },
+      {
+        "position_id": "1162939120909864960",
+        "duration_s": 194.225,
+        "placement_after_open_s": 194.225,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.026467892586106156
+      },
+      {
+        "position_id": "1162940141824430081",
+        "duration_s": 132.946,
+        "placement_after_open_s": 130.875,
+        "update_after_placement_s": 2.071,
+        "price_move": 0.020020146058927102
+      },
+      {
+        "position_id": "1166379766714781696",
+        "duration_s": 199.832,
+        "placement_after_open_s": 80.176,
+        "update_after_placement_s": 119.656,
+        "price_move": 0.02006136417276383
+      },
+      {
+        "position_id": "1166660538193465344",
+        "duration_s": 10508.099,
+        "placement_after_open_s": 38.931,
+        "update_after_placement_s": 10469.167,
+        "price_move": 0.02013119203800051
+      },
+      {
+        "position_id": "1168103136288362496",
+        "duration_s": 151.262,
+        "placement_after_open_s": 17.094,
+        "update_after_placement_s": 134.168,
+        "price_move": 0.020057899090157205
+      },
+      {
+        "position_id": "1168206824021479424",
+        "duration_s": 272.904,
+        "placement_after_open_s": 15.7,
+        "update_after_placement_s": 257.203,
+        "price_move": 0.020019920318725015
+      },
+      {
+        "position_id": "1168288755690033152",
+        "duration_s": 2077.542,
+        "placement_after_open_s": 41.896,
+        "update_after_placement_s": 2035.646,
+        "price_move": 0.02007709604882746
+      },
+      {
+        "position_id": "1168288972493606912",
+        "duration_s": 111.104,
+        "placement_after_open_s": 110.323,
+        "update_after_placement_s": 0.781,
+        "price_move": 0.02027429934406677
+      },
+      {
+        "position_id": "1168289511079989248",
+        "duration_s": 221.655,
+        "placement_after_open_s": 221.642,
+        "update_after_placement_s": 0.013,
+        "price_move": 0.02020997375328082
+      },
+      {
+        "position_id": "1168343226935726080",
+        "duration_s": 1902.876,
+        "placement_after_open_s": 74.951,
+        "update_after_placement_s": 1827.925,
+        "price_move": 0.020116396761133526
+      },
+      {
+        "position_id": "1168343239778684928",
+        "duration_s": 7465.862,
+        "placement_after_open_s": 72.5,
+        "update_after_placement_s": 7393.362,
+        "price_move": 0.02010566480774867
+      },
+      {
+        "position_id": "1168343240151977984",
+        "duration_s": 2054.541,
+        "placement_after_open_s": 73.087,
+        "update_after_placement_s": 1981.454,
+        "price_move": 0.020535158680771604
+      },
+      {
+        "position_id": "1168343241926168576",
+        "duration_s": 1496.854,
+        "placement_after_open_s": 72.176,
+        "update_after_placement_s": 1424.678,
+        "price_move": 0.02002743484224978
+      },
+      {
+        "position_id": "1168343248137932800",
+        "duration_s": 3259.713,
+        "placement_after_open_s": 70.277,
+        "update_after_placement_s": 3189.436,
+        "price_move": 0.020001568750490195
+      },
+      {
+        "position_id": "1168343248263761920",
+        "duration_s": 2026.886,
+        "placement_after_open_s": 71.428,
+        "update_after_placement_s": 1955.458,
+        "price_move": 0.020008293593199333
+      },
+      {
+        "position_id": "1168343248272150528",
+        "duration_s": 1891.102,
+        "placement_after_open_s": 70.909,
+        "update_after_placement_s": 1820.192,
+        "price_move": 0.0200203596878179
+      },
+      {
+        "position_id": "1168343256849502208",
+        "duration_s": 1885.918,
+        "placement_after_open_s": 68.004,
+        "update_after_placement_s": 1817.913,
+        "price_move": 0.020077572438968794
+      },
+      {
+        "position_id": "1168343265338773504",
+        "duration_s": 125.941,
+        "placement_after_open_s": 125.94,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.024056380023040003
+      },
+      {
+        "position_id": "1168343265582043136",
+        "duration_s": 2539.015,
+        "placement_after_open_s": 125.631,
+        "update_after_placement_s": 2413.384,
+        "price_move": 0.02013888888888893
+      },
+      {
+        "position_id": "1168574505413300224",
+        "duration_s": 342.243,
+        "placement_after_open_s": 13.667,
+        "update_after_placement_s": 328.576,
+        "price_move": 0.020009344465435452
+      },
+      {
+        "position_id": "1168706361630707712",
+        "duration_s": 443.263,
+        "placement_after_open_s": 16.832,
+        "update_after_placement_s": 426.43,
+        "price_move": 0.020010794204342597
+      },
+      {
+        "position_id": "1168810422723989504",
+        "duration_s": 672.862,
+        "placement_after_open_s": 46.488,
+        "update_after_placement_s": 626.373,
+        "price_move": 0.020001882530120474
+      },
+      {
+        "position_id": "1168898691176386561",
+        "duration_s": 220.39,
+        "placement_after_open_s": 1.799,
+        "update_after_placement_s": 218.591,
+        "price_move": 0.02002909253664531
+      },
+      {
+        "position_id": "1168920830076047360",
+        "duration_s": 201.91,
+        "placement_after_open_s": 3.576,
+        "update_after_placement_s": 198.334,
+        "price_move": 0.020019497249495366
+      },
+      {
+        "position_id": "1170862758518640640",
+        "duration_s": 89.041,
+        "placement_after_open_s": 31.844,
+        "update_after_placement_s": 57.197,
+        "price_move": 0.020043684954387908
+      }
+    ],
+    "MARKET": [
+      {
+        "position_id": "1152584640179785728",
+        "duration_s": 14415.052,
+        "placement_after_open_s": 14415.051,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.013439139895046637
+      },
+      {
+        "position_id": "1152609884869283840",
+        "duration_s": 14455.902,
+        "placement_after_open_s": 14455.902,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.02686567164179099
+      },
+      {
+        "position_id": "1152718740005900288",
+        "duration_s": 14422.626,
+        "placement_after_open_s": 14422.626,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.3103754439370877
+      },
+      {
+        "position_id": "1153174941877456896",
+        "duration_s": 14435.976,
+        "placement_after_open_s": 14435.976,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.028529839883551733
+      },
+      {
+        "position_id": "1153285786460540928",
+        "duration_s": 14409.298,
+        "placement_after_open_s": 14409.298,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.022445009726170806
+      },
+      {
+        "position_id": "1153340584627064832",
+        "duration_s": 14423.463,
+        "placement_after_open_s": 14423.462,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.08459901225383848
+      },
+      {
+        "position_id": "1153370683594297344",
+        "duration_s": 14447.227,
+        "placement_after_open_s": 14447.226,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.003786086133459543
+      },
+      {
+        "position_id": "1153715851161817088",
+        "duration_s": 14413.175,
+        "placement_after_open_s": 14413.175,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.021030594280820325
+      },
+      {
+        "position_id": "1153813250953760768",
+        "duration_s": 14412.413,
+        "placement_after_open_s": 14412.413,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.00621504039776255
+      },
+      {
+        "position_id": "1153969710652248064",
+        "duration_s": 14427.962,
+        "placement_after_open_s": 14427.962,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.04429171439480706
+      },
+      {
+        "position_id": "1154206614962360320",
+        "duration_s": 14407.005,
+        "placement_after_open_s": 14407.005,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.10424028268551244
+      },
+      {
+        "position_id": "1154583103822155778",
+        "duration_s": 14404.071,
+        "placement_after_open_s": 14404.07,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.039837352138307414
+      },
+      {
+        "position_id": "1154664705961021440",
+        "duration_s": 14449.254,
+        "placement_after_open_s": 14449.253,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.11041954817888433
+      },
+      {
+        "position_id": "1155089691355959296",
+        "duration_s": 14404.367,
+        "placement_after_open_s": 14404.367,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.04914385218148409
+      },
+      {
+        "position_id": "1155655969879674880",
+        "duration_s": 14452.868,
+        "placement_after_open_s": 14452.868,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.6339355445777464
+      },
+      {
+        "position_id": "1156086017166200832",
+        "duration_s": 14401.555,
+        "placement_after_open_s": 14401.555,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.14089968976215095
+      },
+      {
+        "position_id": "1156860291783118848",
+        "duration_s": 14420.204,
+        "placement_after_open_s": 14420.204,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.0003829950210646471
+      },
+      {
+        "position_id": "1157126594833993729",
+        "duration_s": 14408.546,
+        "placement_after_open_s": 14408.546,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.010402906208718643
+      },
+      {
+        "position_id": "1159936900907978752",
+        "duration_s": 14459.051,
+        "placement_after_open_s": 14459.051,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.0040708548795247435
+      },
+      {
+        "position_id": "1160034004867272704",
+        "duration_s": 14407.871,
+        "placement_after_open_s": 14407.871,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.005899143672692619
+      },
+      {
+        "position_id": "1160431328613421056",
+        "duration_s": 14418.426,
+        "placement_after_open_s": 14418.426,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.0068184177119178235
+      },
+      {
+        "position_id": "1160598260922765312",
+        "duration_s": 14458.775,
+        "placement_after_open_s": 14458.775,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.011939013278641664
+      },
+      {
+        "position_id": "1160598264529866752",
+        "duration_s": 14457.708,
+        "placement_after_open_s": 14457.708,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.0161067648412333
+      },
+      {
+        "position_id": "1160598270221537280",
+        "duration_s": 14456.151,
+        "placement_after_open_s": 14456.151,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.0028222662071999416
+      },
+      {
+        "position_id": "1160598310931451904",
+        "duration_s": 14447.031,
+        "placement_after_open_s": 14447.031,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.00825121690609043
+      },
+      {
+        "position_id": "1162144089252876288",
+        "duration_s": 14424.283,
+        "placement_after_open_s": 14424.283,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.0019357336430508854
+      },
+      {
+        "position_id": "1162729093037084672",
+        "duration_s": 14450.397,
+        "placement_after_open_s": 14450.397,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.04739174906239341
+      },
+      {
+        "position_id": "1162729110456029184",
+        "duration_s": 14445.135,
+        "placement_after_open_s": 14445.135,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.010374456866669934
+      },
+      {
+        "position_id": "1162729117682814976",
+        "duration_s": 14443.167,
+        "placement_after_open_s": 14443.167,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.015326413813173012
+      },
+      {
+        "position_id": "1162729130383167488",
+        "duration_s": 14441.77,
+        "placement_after_open_s": 14441.77,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.0069838498472282184
+      },
+      {
+        "position_id": "1162729130391556096",
+        "duration_s": 14441.969,
+        "placement_after_open_s": 14441.968,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.004752280548423915
+      },
+      {
+        "position_id": "1162729130416721920",
+        "duration_s": 14441.267,
+        "placement_after_open_s": 14441.267,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.009949748743718456
+      },
+      {
+        "position_id": "1162729130488025089",
+        "duration_s": 14440.629,
+        "placement_after_open_s": 14440.629,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.015248796147672494
+      },
+      {
+        "position_id": "1162729130538356736",
+        "duration_s": 14440.993,
+        "placement_after_open_s": 14440.993,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.007864186743228196
+      },
+      {
+        "position_id": "1162729158707302400",
+        "duration_s": 14433.141,
+        "placement_after_open_s": 14433.14,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.015040920150409254
+      },
+      {
+        "position_id": "1162938467043037184",
+        "duration_s": 14450.475,
+        "placement_after_open_s": 14450.474,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.03415616377060182
+      },
+      {
+        "position_id": "1165637882983796736",
+        "duration_s": 14418.963,
+        "placement_after_open_s": 14418.963,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.013863216266173706
+      },
+      {
+        "position_id": "1168306276816179200",
+        "duration_s": 14404.569,
+        "placement_after_open_s": 14404.568,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.009485152745139946
+      },
+      {
+        "position_id": "1168343203640561664",
+        "duration_s": 14420.312,
+        "placement_after_open_s": 14420.312,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.046251238577562415
+      },
+      {
+        "position_id": "1168369748375556096",
+        "duration_s": 14451.847,
+        "placement_after_open_s": 14451.847,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.04179950407368038
+      },
+      {
+        "position_id": "1168949495983820800",
+        "duration_s": 14408.773,
+        "placement_after_open_s": 14408.773,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.17492385786802023
+      },
+      {
+        "position_id": "1170409731143815168",
+        "duration_s": 14441.975,
+        "placement_after_open_s": 14441.975,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.007374242823281474
+      }
+    ]
+  },
+  "multi_entries": [
+    {
+      "position_id": "1154957843854315520",
+      "symbol": "INJUSDT",
+      "buys": [
+        {
+          "symbol": "INJUSDT",
+          "baseAsset": "INJ",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 2.6,
+          "avgPrice": 7.644,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790128208053,
+          "orderTime": 1790128148164
+        },
+        {
+          "symbol": "INJUSDT",
+          "baseAsset": "INJ",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 2.6,
+          "avgPrice": 7.635,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790128208230,
+          "orderTime": 1790128208228
+        }
+      ]
+    },
+    {
+      "position_id": "1155144823946924032",
+      "symbol": "FILUSDT",
+      "buys": [
+        {
+          "symbol": "FILUSDT",
+          "baseAsset": "FIL",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 20.8,
+          "avgPrice": 0.9575,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172787520,
+          "orderTime": 1790172732411
+        },
+        {
+          "symbol": "FILUSDT",
+          "baseAsset": "FIL",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 21.0,
+          "avgPrice": 0.9083,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172790943,
+          "orderTime": 1790172790898
+        }
+      ]
+    },
+    {
+      "position_id": "1155144831773495296",
+      "symbol": "APTUSDT",
+      "buys": [
+        {
+          "symbol": "APTUSDT",
+          "baseAsset": "APT",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 25.9,
+          "avgPrice": 0.7695,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172789051,
+          "orderTime": 1790172734331
+        },
+        {
+          "symbol": "APTUSDT",
+          "baseAsset": "APT",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 26.4,
+          "avgPrice": 0.7519,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172794777,
+          "orderTime": 1790172794777
+        }
+      ]
+    },
+    {
+      "position_id": "1155144844801003520",
+      "symbol": "WLDUSDT",
+      "buys": [
+        {
+          "symbol": "WLDUSDT",
+          "baseAsset": "WLD",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 47.0,
+          "avgPrice": 0.4171,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172791844,
+          "orderTime": 1790172736391
+        },
+        {
+          "symbol": "WLDUSDT",
+          "baseAsset": "WLD",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 48.0,
+          "avgPrice": 0.4116,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172799571,
+          "orderTime": 1790172799571
+        }
+      ]
+    },
+    {
+      "position_id": "1155144845061050368",
+      "symbol": "DASHUSDT",
+      "buys": [
+        {
+          "symbol": "DASHUSDT",
+          "baseAsset": "DASH",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 0.327,
+          "avgPrice": 61.01,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172792189,
+          "orderTime": 1790172732411
+        },
+        {
+          "symbol": "DASHUSDT",
+          "baseAsset": "DASH",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 0.331,
+          "avgPrice": 58.56,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790172794777,
+          "orderTime": 1790172794777
+        }
+      ]
+    },
+    {
+      "position_id": "1160034034403561472",
+      "symbol": "SAGAUSDT",
+      "buys": [
+        {
+          "symbol": "SAGAUSDT",
+          "baseAsset": "SAGA",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 863.5,
+          "avgPrice": 0.02316,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791338466191,
+          "orderTime": 1791338407971
+        },
+        {
+          "symbol": "SAGAUSDT",
+          "baseAsset": "SAGA",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 871.0,
+          "avgPrice": 0.02258572,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791338468277,
+          "orderTime": 1791338468277
+        }
+      ]
+    },
+    {
+      "position_id": "1160598260922765312",
+      "symbol": "OPUSDT",
+      "buys": [
+        {
+          "symbol": "OPUSDT",
+          "baseAsset": "OP",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 172.3,
+          "avgPrice": 0.11607,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791472988061,
+          "orderTime": 1791472929716
+        },
+        {
+          "symbol": "OPUSDT",
+          "baseAsset": "OP",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 173.4,
+          "avgPrice": 0.11531,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791473003928,
+          "orderTime": 1791472990898
+        }
+      ]
+    },
+    {
+      "position_id": "1160598261392527360",
+      "symbol": "APTUSDT",
+      "buys": [
+        {
+          "symbol": "APTUSDT",
+          "baseAsset": "APT",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 27.3,
+          "avgPrice": 0.73,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791472988365,
+          "orderTime": 1791472930878
+        },
+        {
+          "symbol": "APTUSDT",
+          "baseAsset": "APT",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 27.6,
+          "avgPrice": 0.7237,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791473005193,
+          "orderTime": 1791472992910
+        }
+      ]
+    },
+    {
+      "position_id": "1160598270221537280",
+      "symbol": "INJUSDT",
+      "buys": [
+        {
+          "symbol": "INJUSDT",
+          "baseAsset": "INJ",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 2.9,
+          "avgPrice": 6.706,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791472990493,
+          "orderTime": 1791472930878
+        },
+        {
+          "symbol": "INJUSDT",
+          "baseAsset": "INJ",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "LIMIT",
+          "positionSide": "LONG",
+          "executedQty": 3.0,
+          "avgPrice": 6.663,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791473008111,
+          "orderTime": 1791472992910
+        }
+      ]
+    }
+  ],
+  "entry_update_offsets_ms": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    -1,
+    -1,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    6,
+    0,
+    0,
+    -1,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    177,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    -61,
+    3362,
+    -332,
+    -396,
+    5330,
+    0,
+    -709,
+    7018,
+    -426,
+    2162,
+    -103,
+    -73,
+    -9,
+    -21,
+    -36,
+    -1,
+    0,
+    -1,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    -1,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    11888,
+    0,
+    0,
+    -1,
+    0,
+    2086,
+    0,
+    -422,
+    -93,
+    -84,
+    0,
+    0,
+    -514,
+    -105,
+    0,
+    0,
+    -112,
+    0,
+    -215,
+    15652,
+    -23,
+    16805,
+    3,
+    0,
+    17618,
+    0,
+    -1335,
+    -112,
+    -1279,
+    -177,
+    -291,
+    -147,
+    -1,
+    -110,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    -2,
+    -2,
+    -2,
+    -4,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    -6,
+    0,
+    0,
+    0,
+    -1,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1
+  ],
+  "entry_placement_to_update_ms": [
+    29770,
+    43364,
+    46246,
+    38346,
+    62958,
+    85118,
+    4176,
+    23921,
+    6795,
+    36054,
+    44548,
+    58519,
+    0,
+    19592,
+    25077,
+    47051,
+    33272,
+    126335,
+    44838,
+    53835,
+    30862,
+    33310,
+    46217,
+    73378,
+    46185,
+    30304,
+    29304,
+    34905,
+    15610,
+    18424,
+    32822,
+    57984,
+    37396,
+    53323,
+    32857,
+    13555,
+    115637,
+    55031,
+    9503,
+    47673,
+    39575,
+    3023,
+    39670,
+    59889,
+    2,
+    17499,
+    50582,
+    43926,
+    57925,
+    37075,
+    41491,
+    31893,
+    43067,
+    54858,
+    55109,
+    45,
+    58218,
+    54720,
+    0,
+    57303,
+    55453,
+    0,
+    59778,
+    0,
+    56279,
+    59175,
+    58309,
+    15819,
+    30049,
+    40266,
+    21601,
+    26908,
+    30050,
+    25136,
+    21403,
+    16520,
+    13159,
+    9179,
+    27396,
+    32345,
+    23396,
+    1423,
+    35920,
+    54888,
+    6493,
+    115695,
+    52473,
+    40323,
+    14554,
+    0,
+    57527,
+    22114,
+    46650,
+    37355,
+    37355,
+    36467,
+    49079,
+    10622,
+    44120,
+    29841,
+    31094,
+    30192,
+    46765,
+    22061,
+    38161,
+    11889,
+    36734,
+    60055,
+    51177,
+    58220,
+    0,
+    4420,
+    6196,
+    4112,
+    5834,
+    7521,
+    8926,
+    3572,
+    6525,
+    4301,
+    8541,
+    8722,
+    38116,
+    58345,
+    13030,
+    57487,
+    12283,
+    23,
+    59615,
+    15201,
+    6376,
+    5954,
+    9464,
+    73029,
+    15460,
+    16488,
+    16642,
+    19283,
+    25543,
+    79192,
+    34895,
+    23679,
+    54702,
+    58359,
+    8622,
+    10022,
+    8320,
+    10043,
+    13069,
+    14625,
+    14627,
+    13075,
+    17552,
+    17564,
+    21380,
+    33666,
+    9209,
+    21489,
+    24081,
+    144669,
+    24410,
+    44979,
+    45613,
+    39724,
+    38435,
+    19839,
+    41834,
+    43109,
+    14756,
+    6614,
+    17009,
+    53160,
+    38637,
+    43069,
+    43484,
+    44760,
+    47765,
+    48124,
+    46694,
+    46696,
+    109894,
+    52225,
+    53405,
+    5141,
+    45069,
+    42075,
+    11698,
+    56463,
+    55327,
+    49613,
+    15310,
+    27037
+  ],
+  "order_coverage": {
+    "full_positions": 183,
+    "inventory_errors": [],
+    "counts": {
+      "(1, 1)": 174,
+      "(2, 1)": 9
+    }
+  },
+  "unmatched_orders": [],
+  "portfolio_id": "5108763538520982528",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "profile_description": "е‰Ґе¤ґзљ®з­–з•Ґ",
+  "script_sha256": "5cf08ef2068c5cb1b63056fe32cdd77e146028dd039b65c8fec4f5974d127278",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "btctonghui_5108763538520982528_scan_2026-10-25.json": "ee2adcdb514c03b8e2b4656c50d16f9215a6de134401bd68989c3dd95c895000",
+    "btctonghui_5108763538520982528_2026-11-07.json": "17354881582e8d4e64413036a2fbfe1ac5c19c6a558c98bab2289790cba88eec",
+    "btctonghui_5108763538520982528_orders_rawpass_2026-11-07.json": "5a05613b326d2fa742b4e31902ba53771372e8cfa417584ecf42a42fee63f9a6"
+  },
+  "raw_sources": {
+    "btctonghui_pages_2026-11-07\\detail.json": "b9bc1c9db60903be85fb6c9ad43e89215e636956a0d0c452721d59ff06bac104",
+    "btctonghui_pages_2026-11-07\\page_001.json": "3998afb27d73e45fe86f6bb16c9e1623bc4609c20b9248d2c7a9a8f17a0017dc",
+    "btctonghui_pages_2026-11-07\\page_002.json": "2c09105a4e9fcf37bb7f601b11d0937d1001a3409ec2593b99805932f3a621f0",
+    "btctonghui_pages_2026-11-07\\page_003.json": "4020dab38a36a4bc5b767d55801f64b8e16de1ca92e2ddc449b9d3b0bcbae413",
+    "btctonghui_pages_2026-11-07\\page_004.json": "cda57133397edcac0aafaeadd6c21c791e85ab186ae67352b0aa5f2df876de4b",
+    "btctonghui_order_pages_2026-11-07\\error_2_1794074201881700900.json": "6344be533082bfc0bfb3e110097b4d1538b135ac28d2d79a191eb7173dedef7d",
+    "btctonghui_order_pages_2026-11-07\\error_3_1794074207163493600.json": "4732e2ef59e373f21e053c74598396ce882bbbeb187d3be2dc95c7a0d40a62c2",
+    "btctonghui_order_pages_2026-11-07\\error_4_1794074212291289600.json": "1c3b9e20e9fc128b8a931a5f1a4e402d9095df393ce981d0fc15daf6c1af2a0c",
+    "btctonghui_order_pages_2026-11-07\\error_5_1794074217325086700.json": "e42b6a8ef238dbf332cfdc2e4890a5a643acbe98535c8dfb383752195bcc3166",
+    "btctonghui_order_pages_2026-11-07\\page_001.json": "0be290e7e90a8ff7a98a549958a75a204e3e5a88fb1275de4617c9473359d52e",
+    "btctonghui_order_pages_2026-11-07\\page_002.json": "67de603217f1638894ef8b33db18070bb15edae342da609caa30300d0bf31839",
+    "btctonghui_order_pages_2026-11-07\\page_003.json": "55e579ed6f17bdad1e1f2befee807dd5e6304f8d024591c048e46a4cbe7bccc6",
+    "btctonghui_order_pages_2026-11-07\\page_004.json": "d1189b5bc776036361c90b6c58f284f4e885af65cb934e493646f57f13f9cb61",
+    "btctonghui_order_pages_2026-11-07\\page_005.json": "a5ddd42e6be04a4d06f616f5deea42e1a30c32b4e1f6d7012172ccd81294d7d8"
+  },
+  "old_count": 156,
+  "new_count": 183,
+  "current_total": 183,
+  "current_complete": true,
+  "union_count": 183,
+  "old_missing_current": [],
+  "changed_shared": [],
+  "scan_timing": {
+    "n": 156,
+    "first_open": "2026-09-16T11:38:37.700000+00:00",
+    "last_close": "2026-10-24T14:20:06.504000+00:00",
+    "sides": {
+      "Long": 156
+    },
+    "leverage": {
+      "10": 115,
+      "5": 29,
+      "1": 11,
+      "20": 1
+    },
+    "margin": {
+      "Cross": 145,
+      "Isolated": 11
+    },
+    "symbols": 27,
+    "peak_overlap": 16,
+    "duration_min_s": 20.617,
+    "duration_median_s": 266.1015,
+    "duration_max_s": 14459.051,
+    "duration_4h_to_4h60s": 37,
+    "features": {
+      "timer_loss_share": 0.97,
+      "timer_loss_mode_s": 14426,
+      "timer_all_share": 0.24,
+      "timer_all_mode_s": 14436
+    }
+  },
+  "all_timing": {
+    "n": 183,
+    "first_open": "2026-09-16T11:38:37.700000+00:00",
+    "last_close": "2026-11-05T23:12:04.249000+00:00",
+    "sides": {
+      "Long": 183
+    },
+    "leverage": {
+      "10": 139,
+      "5": 30,
+      "1": 13,
+      "20": 1
+    },
+    "margin": {
+      "Cross": 170,
+      "Isolated": 13
+    },
+    "symbols": 28,
+    "peak_overlap": 16,
+    "duration_min_s": 20.617,
+    "duration_median_s": 342.243,
+    "duration_max_s": 14459.051,
+    "duration_4h_to_4h60s": 42,
+    "features": {
+      "timer_loss_share": 0.97,
+      "timer_loss_mode_s": 14424,
+      "timer_all_share": 0.23,
+      "timer_all_mode_s": 14435
+    }
+  },
+  "regimes": {
+    "2026-09": {
+      "n": 92,
+      "first_open": "2026-09-16T11:38:37.700000+00:00",
+      "last_close": "2026-09-29T05:28:07.126000+00:00",
+      "sides": {
+        "Long": 92
+      },
+      "leverage": {
+        "10": 62,
+        "5": 24,
+        "1": 6
+      },
+      "margin": {
+        "Cross": 86,
+        "Isolated": 6
+      },
+      "symbols": 19,
+      "peak_overlap": 16,
+      "duration_min_s": 20.617,
+      "duration_median_s": 288.689,
+      "duration_max_s": 14455.902,
+      "duration_4h_to_4h60s": 18,
+      "features": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 14418,
+        "timer_all_share": 0.2,
+        "timer_all_mode_s": 14418
+      }
+    },
+    "2026-10": {
+      "n": 89,
+      "first_open": "2026-10-01T00:29:18.378000+00:00",
+      "last_close": "2026-10-31T20:28:06.646000+00:00",
+      "sides": {
+        "Long": 89
+      },
+      "leverage": {
+        "10": 75,
+        "1": 7,
+        "5": 6,
+        "20": 1
+      },
+      "margin": {
+        "Cross": 82,
+        "Isolated": 7
+      },
+      "symbols": 27,
+      "peak_overlap": 13,
+      "duration_min_s": 35.094,
+      "duration_median_s": 672.862,
+      "duration_max_s": 14459.051,
+      "duration_4h_to_4h60s": 23,
+      "features": {
+        "timer_loss_share": 0.95,
+        "timer_loss_mode_s": 14441,
+        "timer_all_share": 0.26,
+        "timer_all_mode_s": 14442
+      }
+    },
+    "2026-11": {
+      "n": 2,
+      "first_open": "2026-11-04T17:10:25.065000+00:00",
+      "last_close": "2026-11-05T23:12:04.249000+00:00",
+      "sides": {
+        "Long": 2
+      },
+      "leverage": {
+        "10": 2
+      },
+      "margin": {
+        "Cross": 2
+      },
+      "symbols": 2,
+      "peak_overlap": 1,
+      "duration_min_s": 89.041,
+      "duration_median_s": 7265.508,
+      "duration_max_s": 14441.975,
+      "duration_4h_to_4h60s": 1,
+      "features": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 14442,
+        "timer_all_share": 0.5,
+        "timer_all_mode_s": 14442
+      }
+    }
+  },
+  "order_count": 375,
+  "reported_order_total": 375,
+  "order_observed_totals": [
+    375,
+    375,
+    375,
+    375,
+    375
+  ],
+  "order_raw_count": 375,
+  "order_duplicates": 0,
+  "assignment_tolerance_ms": 1500,
+  "first_order": "2026-09-16T11:38:07.930000+00:00",
+  "last_order": "2026-11-05T23:11:07.052000+00:00",
+  "order_types": {
+    "LIMIT:LONG:BUY": 192,
+    "LIMIT:LONG:SELL": 141,
+    "MARKET:LONG:SELL": 42
+  },
+  "unmatched_order_indices": [],
+  "ambiguous_order_indices": [],
+  "missing_legs": [],
+  "full_audit_sha256": "d6748433d842dada643d3e40267e0355ef9938e31dad784d3c5a23951359e7a9",
+  "independent_verification": "Fraction: 366 quantities/prices, 183 inventories, 375 unique assignments"
+}

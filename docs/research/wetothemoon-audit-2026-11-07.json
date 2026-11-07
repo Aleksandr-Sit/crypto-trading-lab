@@ -1,0 +1,984 @@
+{
+  "descriptive_target_tolerance": 0.0005,
+  "target_3_25pct": [
+    {
+      "position_id": "1124405114154307584",
+      "price_move": 0.03261368856224167,
+      "duration_s": 15380.315
+    },
+    {
+      "position_id": "1125049894626447360",
+      "price_move": 0.03249390739236402,
+      "duration_s": 44057.339
+    },
+    {
+      "position_id": "1127689735390416896",
+      "price_move": 0.032509228290543035,
+      "duration_s": 36284.999
+    },
+    {
+      "position_id": "1128349301350387712",
+      "price_move": 0.03250157265674147,
+      "duration_s": 1511.752
+    },
+    {
+      "position_id": "1129013807743291392",
+      "price_move": 0.03258845437616387,
+      "duration_s": 489.519
+    },
+    {
+      "position_id": "1131120288491950080",
+      "price_move": 0.032511185040725143,
+      "duration_s": 3504.053
+    },
+    {
+      "position_id": "1131759515621707776",
+      "price_move": 0.03244432224360727,
+      "duration_s": 23201.281
+    },
+    {
+      "position_id": "1131867971846459392",
+      "price_move": 0.03240997229916909,
+      "duration_s": 155.397
+    },
+    {
+      "position_id": "1132978045423767552",
+      "price_move": 0.03263861580810046,
+      "duration_s": 226.267
+    },
+    {
+      "position_id": "1133120440350068736",
+      "price_move": 0.032611832611832536,
+      "duration_s": 797.762
+    },
+    {
+      "position_id": "1133491660199350272",
+      "price_move": 0.03244426751592355,
+      "duration_s": 20876.648
+    },
+    {
+      "position_id": "1133671584482775040",
+      "price_move": 0.03246196700235693,
+      "duration_s": 161.314
+    },
+    {
+      "position_id": "1134487955374395392",
+      "price_move": 0.03246549560853196,
+      "duration_s": 5304.683
+    },
+    {
+      "position_id": "1134818154662121472",
+      "price_move": 0.03247052624645996,
+      "duration_s": 22077.764
+    },
+    {
+      "position_id": "1135876851052105728",
+      "price_move": 0.032493924411296504,
+      "duration_s": 297.595
+    },
+    {
+      "position_id": "1137892604479590400",
+      "price_move": 0.03259078193957876,
+      "duration_s": 4992.318
+    },
+    {
+      "position_id": "1137943454266740736",
+      "price_move": 0.03235294117647047,
+      "duration_s": 359.596
+    },
+    {
+      "position_id": "1139860142524518400",
+      "price_move": 0.0324371712448861,
+      "duration_s": 1313.023
+    },
+    {
+      "position_id": "1140112926889005056",
+      "price_move": 0.03249906611878961,
+      "duration_s": 200.991
+    },
+    {
+      "position_id": "1142499543029174272",
+      "price_move": 0.03256252949504468,
+      "duration_s": 55587.427
+    },
+    {
+      "position_id": "1142881348097986560",
+      "price_move": 0.032490974729241895,
+      "duration_s": 19359.631
+    },
+    {
+      "position_id": "1143108330572271616",
+      "price_move": 0.03249390739236402,
+      "duration_s": 1914.351
+    },
+    {
+      "position_id": "1143889559131312129",
+      "price_move": 0.03247896693406371,
+      "duration_s": 2788.35
+    },
+    {
+      "position_id": "1143939969833553920",
+      "price_move": 0.03254079254079256,
+      "duration_s": 649.577
+    },
+    {
+      "position_id": "1144329324603428864",
+      "price_move": 0.03257603565125633,
+      "duration_s": 30941.907
+    },
+    {
+      "position_id": "1145252931714207744",
+      "price_move": 0.0325463743676222,
+      "duration_s": 1663.629
+    },
+    {
+      "position_id": "1145361324575608832",
+      "price_move": 0.03248521889324385,
+      "duration_s": 1124.627
+    },
+    {
+      "position_id": "1145902237945221120",
+      "price_move": 0.03260452627541244,
+      "duration_s": 2124.715
+    },
+    {
+      "position_id": "1147272667700449280",
+      "price_move": 0.03247004252029373,
+      "duration_s": 24944.653
+    },
+    {
+      "position_id": "1147737075857805312",
+      "price_move": 0.03253677901455587,
+      "duration_s": 9196.352
+    },
+    {
+      "position_id": "1147944846280675328",
+      "price_move": 0.03253886010362694,
+      "duration_s": 64756.851
+    },
+    {
+      "position_id": "1148966908797440000",
+      "price_move": 0.03250451451590508,
+      "duration_s": 12865.048
+    },
+    {
+      "position_id": "1149601375807393792",
+      "price_move": 0.03248140866740745,
+      "duration_s": 2379.156
+    },
+    {
+      "position_id": "1150145298971807744",
+      "price_move": 0.032512647554806096,
+      "duration_s": 62956.177
+    },
+    {
+      "position_id": "1150434275956150272",
+      "price_move": 0.032457691336196026,
+      "duration_s": 958.65
+    },
+    {
+      "position_id": "1150668458200715264",
+      "price_move": 0.032543808973618304,
+      "duration_s": 2159.287
+    },
+    {
+      "position_id": "1152685692674691072",
+      "price_move": 0.03249743723129184,
+      "duration_s": 15744.544
+    },
+    {
+      "position_id": "1153041952599232512",
+      "price_move": 0.032526262001657535,
+      "duration_s": 21915.999
+    },
+    {
+      "position_id": "1153194596357689344",
+      "price_move": 0.03254543294928136,
+      "duration_s": 6166.481
+    },
+    {
+      "position_id": "1153271578898518016",
+      "price_move": 0.03228173147468816,
+      "duration_s": 1179.627
+    },
+    {
+      "position_id": "1153434539009036288",
+      "price_move": 0.032522838933470855,
+      "duration_s": 2955.183
+    },
+    {
+      "position_id": "1153460610760757248",
+      "price_move": 0.032496513249651304,
+      "duration_s": 5367.216
+    },
+    {
+      "position_id": "1153526671443021824",
+      "price_move": 0.03230059327620305,
+      "duration_s": 18116.453
+    },
+    {
+      "position_id": "1153915720670433280",
+      "price_move": 0.032509646170265194,
+      "duration_s": 42210.742
+    },
+    {
+      "position_id": "1154263386726125568",
+      "price_move": 0.032485787467982696,
+      "duration_s": 9657.733
+    },
+    {
+      "position_id": "1154328905013579776",
+      "price_move": 0.03250958107572344,
+      "duration_s": 10068.391
+    },
+    {
+      "position_id": "1155762274859536384",
+      "price_move": 0.03247244889374934,
+      "duration_s": 63624.699
+    },
+    {
+      "position_id": "1156278106043764736",
+      "price_move": 0.03256342294585379,
+      "duration_s": 1733.469
+    },
+    {
+      "position_id": "1156956201679638528",
+      "price_move": 0.032528856243441595,
+      "duration_s": 13268.359
+    },
+    {
+      "position_id": "1157692353885818880",
+      "price_move": 0.0324943201802963,
+      "duration_s": 4222.727
+    },
+    {
+      "position_id": "1161796753004744704",
+      "price_move": 0.03249836280288143,
+      "duration_s": 36893.535
+    },
+    {
+      "position_id": "1161986082566098944",
+      "price_move": 0.03253247499712608,
+      "duration_s": 1499.742
+    }
+  ],
+  "other_exits": [
+    {
+      "position_id": "1122738305302843392",
+      "price_move": -0.06539205518553748,
+      "duration_s": 64855.144
+    },
+    {
+      "position_id": "1124539064923246592",
+      "price_move": -0.014602397798742173,
+      "duration_s": 64822.886
+    },
+    {
+      "position_id": "1125820992804671488",
+      "price_move": -0.05485137549124697,
+      "duration_s": 64830.675
+    },
+    {
+      "position_id": "1126822683234586624",
+      "price_move": -0.0714869615163699,
+      "duration_s": 64868.219
+    },
+    {
+      "position_id": "1129431202567868416",
+      "price_move": 0.022172932330827066,
+      "duration_s": 64851.73
+    },
+    {
+      "position_id": "1130455720140787712",
+      "price_move": -0.029307272183151323,
+      "duration_s": 64849.416
+    },
+    {
+      "position_id": "1131980778743058432",
+      "price_move": -0.20596537694704053,
+      "duration_s": 9888.224
+    },
+    {
+      "position_id": "1132696522350972928",
+      "price_move": -0.12797070519618237,
+      "duration_s": 64869.462
+    },
+    {
+      "position_id": "1135114178924433408",
+      "price_move": -0.06476227121464218,
+      "duration_s": 65300.567
+    },
+    {
+      "position_id": "1137220844864196608",
+      "price_move": -0.06114495801847197,
+      "duration_s": 64877.135
+    },
+    {
+      "position_id": "1137592513680166912",
+      "price_move": -0.02191758241758246,
+      "duration_s": 71544.712
+    },
+    {
+      "position_id": "1138180591658520576",
+      "price_move": -0.03910243790248402,
+      "duration_s": 64896.943
+    },
+    {
+      "position_id": "1138745467300794368",
+      "price_move": -0.08189068265682653,
+      "duration_s": 64861.311
+    },
+    {
+      "position_id": "1139574478839009280",
+      "price_move": -0.2148960461789946,
+      "duration_s": 64911.915
+    },
+    {
+      "position_id": "1140256806166908928",
+      "price_move": -0.0050482994566311,
+      "duration_s": 64893.762
+    },
+    {
+      "position_id": "1143210745225072640",
+      "price_move": -0.13445349869451706,
+      "duration_s": 64906.402
+    },
+    {
+      "position_id": "1144924541048115200",
+      "price_move": -0.13897353634221488,
+      "duration_s": 66349.216
+    },
+    {
+      "position_id": "1145542347242393600",
+      "price_move": -0.1181211452529376,
+      "duration_s": 64914.327
+    },
+    {
+      "position_id": "1146099952096432128",
+      "price_move": -0.038128736310025224,
+      "duration_s": 64931.793
+    },
+    {
+      "position_id": "1146987092170821632",
+      "price_move": -0.05685959860383938,
+      "duration_s": 64922.982
+    },
+    {
+      "position_id": "1147384626068377600",
+      "price_move": -0.0003903503224989002,
+      "duration_s": 64884.624
+    },
+    {
+      "position_id": "1148229059382923264",
+      "price_move": -0.06279901418368372,
+      "duration_s": 64917.153
+    },
+    {
+      "position_id": "1148542798049103872",
+      "price_move": -0.06031169015081772,
+      "duration_s": 64937.066
+    },
+    {
+      "position_id": "1153624395026845696",
+      "price_move": -0.1585798816568048,
+      "duration_s": 64782.716
+    },
+    {
+      "position_id": "1154418392678846464",
+      "price_move": -0.07232908542542804,
+      "duration_s": 64651.442
+    },
+    {
+      "position_id": "1154706259527389184",
+      "price_move": 0.006521911196911256,
+      "duration_s": 64658.692
+    },
+    {
+      "position_id": "1155045717762166784",
+      "price_move": -0.1047639975388942,
+      "duration_s": 64664.606
+    },
+    {
+      "position_id": "1156679550198665216",
+      "price_move": -0.049252634158294395,
+      "duration_s": 64649.638
+    },
+    {
+      "position_id": "1158328147101143040",
+      "price_move": -0.08208594881699671,
+      "duration_s": 64717.506
+    },
+    {
+      "position_id": "1159025898982002688",
+      "price_move": -0.05688707176089103,
+      "duration_s": 64918.367
+    },
+    {
+      "position_id": "1161001174578286592",
+      "price_move": -0.028485214242607082,
+      "duration_s": 64712.672
+    },
+    {
+      "position_id": "1161485523702566912",
+      "price_move": -0.03881578947368414,
+      "duration_s": 64635.138
+    },
+    {
+      "position_id": "1165745475480768512",
+      "price_move": -0.018321729571271317,
+      "duration_s": 64663.051
+    },
+    {
+      "position_id": "1168957910467530752",
+      "price_move": -0.010768811341330564,
+      "duration_s": 64680.901
+    }
+  ],
+  "second_order_pass": {
+    "unique_count": 60,
+    "raw_count": 62,
+    "duplicates": 2,
+    "observed_totals": [
+      60,
+      60,
+      60
+    ]
+  },
+  "order_termination": "Repeated boundary cursor in both passes; no empty page",
+  "position_side_mapping": "BOTH mapped to Long; no overlapping candidates",
+  "execution_groups": {
+    "LIMIT": [
+      {
+        "position_id": "1150145298971807744",
+        "duration_s": 62956.177,
+        "placement_after_open_s": 33.478,
+        "update_after_placement_s": 62922.699,
+        "price_move": 0.032512647554806096
+      },
+      {
+        "position_id": "1150434275956150272",
+        "duration_s": 958.65,
+        "placement_after_open_s": 16.853,
+        "update_after_placement_s": 941.797,
+        "price_move": 0.032457691336196026
+      },
+      {
+        "position_id": "1150668458200715264",
+        "duration_s": 2159.287,
+        "placement_after_open_s": 44.45,
+        "update_after_placement_s": 2114.836,
+        "price_move": 0.032543808973618304
+      },
+      {
+        "position_id": "1152685692674691072",
+        "duration_s": 15744.544,
+        "placement_after_open_s": 38.204,
+        "update_after_placement_s": 15706.34,
+        "price_move": 0.03249743723129184
+      },
+      {
+        "position_id": "1153041952599232512",
+        "duration_s": 21915.999,
+        "placement_after_open_s": 58.69,
+        "update_after_placement_s": 21857.309,
+        "price_move": 0.032526262001657535
+      },
+      {
+        "position_id": "1153194596357689344",
+        "duration_s": 6166.481,
+        "placement_after_open_s": 25.08,
+        "update_after_placement_s": 6141.401,
+        "price_move": 0.03254543294928136
+      },
+      {
+        "position_id": "1153271578898518016",
+        "duration_s": 1179.627,
+        "placement_after_open_s": 32.127,
+        "update_after_placement_s": 1147.499,
+        "price_move": 0.03228173147468816
+      },
+      {
+        "position_id": "1153434539009036288",
+        "duration_s": 2955.183,
+        "placement_after_open_s": 58.571,
+        "update_after_placement_s": 2896.611,
+        "price_move": 0.032522838933470855
+      },
+      {
+        "position_id": "1153460610760757248",
+        "duration_s": 5367.216,
+        "placement_after_open_s": 23.162,
+        "update_after_placement_s": 5344.053,
+        "price_move": 0.032496513249651304
+      },
+      {
+        "position_id": "1153526671443021824",
+        "duration_s": 18116.453,
+        "placement_after_open_s": 52.828,
+        "update_after_placement_s": 18063.625,
+        "price_move": 0.03230059327620305
+      },
+      {
+        "position_id": "1153624395026845696",
+        "duration_s": 64782.716,
+        "placement_after_open_s": 64653.835,
+        "update_after_placement_s": 128.88,
+        "price_move": -0.1585798816568048
+      },
+      {
+        "position_id": "1153915720670433280",
+        "duration_s": 42210.742,
+        "placement_after_open_s": 56.355,
+        "update_after_placement_s": 42154.387,
+        "price_move": 0.032509646170265194
+      },
+      {
+        "position_id": "1154263386726125568",
+        "duration_s": 9657.733,
+        "placement_after_open_s": 26.56,
+        "update_after_placement_s": 9631.173,
+        "price_move": 0.032485787467982696
+      },
+      {
+        "position_id": "1154328905013579776",
+        "duration_s": 10068.391,
+        "placement_after_open_s": 5.005,
+        "update_after_placement_s": 10063.386,
+        "price_move": 0.03250958107572344
+      },
+      {
+        "position_id": "1154418392678846464",
+        "duration_s": 64651.442,
+        "placement_after_open_s": 64651.441,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.07232908542542804
+      },
+      {
+        "position_id": "1154706259527389184",
+        "duration_s": 64658.692,
+        "placement_after_open_s": 64658.692,
+        "update_after_placement_s": 0.0,
+        "price_move": 0.006521911196911256
+      },
+      {
+        "position_id": "1155045717762166784",
+        "duration_s": 64664.606,
+        "placement_after_open_s": 64664.605,
+        "update_after_placement_s": 0.001,
+        "price_move": -0.1047639975388942
+      },
+      {
+        "position_id": "1155762274859536384",
+        "duration_s": 63624.699,
+        "placement_after_open_s": 24.102,
+        "update_after_placement_s": 63600.597,
+        "price_move": 0.03247244889374934
+      },
+      {
+        "position_id": "1156278106043764736",
+        "duration_s": 1733.469,
+        "placement_after_open_s": 40.497,
+        "update_after_placement_s": 1692.972,
+        "price_move": 0.03256342294585379
+      },
+      {
+        "position_id": "1156679550198665216",
+        "duration_s": 64649.638,
+        "placement_after_open_s": 64649.412,
+        "update_after_placement_s": 0.226,
+        "price_move": -0.049252634158294395
+      },
+      {
+        "position_id": "1156956201679638528",
+        "duration_s": 13268.359,
+        "placement_after_open_s": 9.631,
+        "update_after_placement_s": 13258.728,
+        "price_move": 0.032528856243441595
+      },
+      {
+        "position_id": "1157692353885818880",
+        "duration_s": 4222.727,
+        "placement_after_open_s": 57.595,
+        "update_after_placement_s": 4165.132,
+        "price_move": 0.0324943201802963
+      },
+      {
+        "position_id": "1158328147101143040",
+        "duration_s": 64717.506,
+        "placement_after_open_s": 64653.16,
+        "update_after_placement_s": 64.346,
+        "price_move": -0.08208594881699671
+      },
+      {
+        "position_id": "1159025898982002688",
+        "duration_s": 64918.367,
+        "placement_after_open_s": 64915.948,
+        "update_after_placement_s": 2.419,
+        "price_move": -0.05688707176089103
+      },
+      {
+        "position_id": "1161001174578286592",
+        "duration_s": 64712.672,
+        "placement_after_open_s": 64672.818,
+        "update_after_placement_s": 39.854,
+        "price_move": -0.028485214242607082
+      },
+      {
+        "position_id": "1161485523702566912",
+        "duration_s": 64635.138,
+        "placement_after_open_s": 64635.137,
+        "update_after_placement_s": 0.001,
+        "price_move": -0.03881578947368414
+      },
+      {
+        "position_id": "1161796753004744704",
+        "duration_s": 36893.535,
+        "placement_after_open_s": 31.878,
+        "update_after_placement_s": 36861.657,
+        "price_move": 0.03249836280288143
+      },
+      {
+        "position_id": "1161986082566098944",
+        "duration_s": 1499.742,
+        "placement_after_open_s": 12.272,
+        "update_after_placement_s": 1487.47,
+        "price_move": 0.03253247499712608
+      },
+      {
+        "position_id": "1165745475480768512",
+        "duration_s": 64663.051,
+        "placement_after_open_s": 64663.051,
+        "update_after_placement_s": 0.0,
+        "price_move": -0.018321729571271317
+      },
+      {
+        "position_id": "1168957910467530752",
+        "duration_s": 64680.901,
+        "placement_after_open_s": 64659.067,
+        "update_after_placement_s": 21.834,
+        "price_move": -0.010768811341330564
+      }
+    ]
+  },
+  "multi_entries": [],
+  "entry_update_offsets_ms": [
+    26733,
+    1766,
+    0,
+    -1,
+    0,
+    5937,
+    -1,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    144,
+    287181,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    0
+  ],
+  "entry_placement_to_update_ms": [
+    411577,
+    883050,
+    2714326,
+    1275477,
+    0,
+    396688,
+    561914,
+    0,
+    3214542,
+    10325447,
+    1877974,
+    2937275,
+    3030589,
+    4243519,
+    3923269,
+    615738,
+    2292839,
+    386352,
+    4577609,
+    3087731,
+    645801,
+    0,
+    142176,
+    1189746,
+    245490,
+    463039,
+    6265622,
+    1005817,
+    4514623,
+    3678653
+  ],
+  "order_coverage": {
+    "full_positions": 30,
+    "inventory_errors": [],
+    "counts": {
+      "(0, 0)": 56,
+      "(1, 1)": 30
+    }
+  },
+  "unmatched_orders": [],
+  "portfolio_id": "5085926543686119937",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "profile_description": "Private: YxIdj74d",
+  "script_sha256": "ae59bf6539a3369363db3615415784dac4868ea2c5f26dd081ef961735f1ff2e",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "wetothemoon_5085926543686119937_scan_2026-10-25.json": "afcc42eadcf17a0bb1d3b867d712470e5cc265f4ed64b4471148c34b769d3317",
+    "wetothemoon_5085926543686119937_2026-11-07.json": "4f26dbe723dcb3bd10fed1ec73a013f301a966ae9fcf473547b1db3bcd2f1a6a",
+    "wetothemoon_5085926543686119937_orders_rawpass_2026-11-07.json": "89f0ea2bb37de8c2b4451ca5047f04cefb31977a98d7772e60310bb9db6d813b",
+    "wetothemoon_5085926543686119937_orders50_rawpass_2026-11-07.json": "01737d5579a92e5c9eeb86e6c988324d88350a8284ef245eb719eae8f5564cd7"
+  },
+  "raw_sources": {
+    "wetothemoon_pages_2026-11-07\\detail.json": "1ba91a0b35f57e69a150dbb59949267d3d673e50c268efe0d497cf8fbb60fd25",
+    "wetothemoon_pages_2026-11-07\\page_001.json": "f432a47022717c2f8cf1f1d32a063fb92498e894ac0f9a717c68e8f39cbfed8f",
+    "wetothemoon_pages_2026-11-07\\page_002.json": "395cc50e5288395f2643892be4cab8f7fc1712d8b78f99df712c7d11874c4125",
+    "wetothemoon_order_pages_2026-11-07\\boundary_before.json": "20da9df04acbaf293822be4d2c99edee962fa53187fc68c0bd7a12d41082fdae",
+    "wetothemoon_order_pages_2026-11-07\\error_2_1794074673405489900.json": "b0a655bf6c3216b4f79f23b2525c39880e4f5a6ef926e2bdd71724666d16bb09",
+    "wetothemoon_order_pages_2026-11-07\\error_independent50_1794074704620986900.json": "0924275069787966ff5aab693fabf720d6239c091abe51811f284afb44c4d465",
+    "wetothemoon_order_pages_2026-11-07\\independent50.json": "9140ccf5383d3e88c9966822ba86f67d29699f5a81d271b2c4da1407bd6247bd",
+    "wetothemoon_order_pages_2026-11-07\\page_001.json": "ffc6930ff71ad074dc5e4ed7c6f1eadf601d330879774d7bae90fe4cad39ead1",
+    "wetothemoon_order_pages_2026-11-07\\page_002.json": "62485cb0dfbdf01dd20dcdba93375f9b24ef0e62f8d76baf5fdeb6c75d626f4d",
+    "wetothemoon_order_pages50_2026-11-07\\error_2_1794074727392790200.json": "a35501a74ea6f730f2f3a448ee68769f7b7498fc977afe6f12c7996ebadedb07",
+    "wetothemoon_order_pages50_2026-11-07\\error_3_1794074732267003500.json": "dcf7260add16a77b5dbad9959578cb66cdf17d755f10a876ceeab85985ffef10",
+    "wetothemoon_order_pages50_2026-11-07\\page_001.json": "2290670ff1c18b08606c8bfeae8240f5f2b62a9f350365353bac041824ad7abc",
+    "wetothemoon_order_pages50_2026-11-07\\page_002.json": "007a99b035418760b2811c4989a59ea65dec39ba60fcd9f291a5b943eba5c45a",
+    "wetothemoon_order_pages50_2026-11-07\\page_003.json": "6242bf59e90627c71925e832d8e38913948548b2a06ecf2ec4430fb91fb514e9"
+  },
+  "old_count": 85,
+  "new_count": 79,
+  "current_total": 79,
+  "current_complete": true,
+  "union_count": 86,
+  "old_missing_current": [
+    "1122738305302843392",
+    "1124405114154307584",
+    "1124539064923246592",
+    "1125049894626447360",
+    "1125820992804671488",
+    "1126822683234586624",
+    "1127689735390416896"
+  ],
+  "changed_shared": [],
+  "scan_timing": {
+    "n": 85,
+    "first_open": "2026-06-26T04:01:11.453000+00:00",
+    "last_close": "2026-10-23T14:14:02.909000+00:00",
+    "sides": {
+      "Long": 85
+    },
+    "leverage": {
+      "1": 85
+    },
+    "margin": {
+      "Cross": 85
+    },
+    "symbols": 31,
+    "peak_overlap": 1,
+    "duration_min_s": 155.397,
+    "duration_median_s": 23201.281,
+    "duration_max_s": 71544.712,
+    "duration_18h_within5min": 30,
+    "features": {
+      "timer_loss_share": 0.94,
+      "timer_loss_mode_s": 64869,
+      "timer_all_share": 0.4,
+      "timer_all_mode_s": 64858
+    }
+  },
+  "all_timing": {
+    "n": 86,
+    "first_open": "2026-06-26T04:01:11.453000+00:00",
+    "last_close": "2026-11-01T10:59:24.944000+00:00",
+    "sides": {
+      "Long": 86
+    },
+    "leverage": {
+      "1": 86
+    },
+    "margin": {
+      "Cross": 86
+    },
+    "symbols": 31,
+    "peak_overlap": 1,
+    "duration_min_s": 155.397,
+    "duration_median_s": 24072.966999999997,
+    "duration_max_s": 71544.712,
+    "duration_18h_within5min": 31,
+    "features": {
+      "timer_loss_share": 0.94,
+      "timer_loss_mode_s": 64868,
+      "timer_all_share": 0.41,
+      "timer_all_mode_s": 64855
+    }
+  },
+  "regimes": {
+    "2026-06": {
+      "n": 2,
+      "first_open": "2026-06-26T04:01:11.453000+00:00",
+      "last_close": "2026-06-30T22:40:49.966000+00:00",
+      "sides": {
+        "Long": 2
+      },
+      "leverage": {
+        "1": 2
+      },
+      "margin": {
+        "Cross": 2
+      },
+      "symbols": 1,
+      "peak_overlap": 1,
+      "duration_min_s": 15380.315,
+      "duration_median_s": 40117.7295,
+      "duration_max_s": 64855.144,
+      "duration_18h_within5min": 1,
+      "features": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 64855,
+        "timer_all_share": 0.5,
+        "timer_all_mode_s": 64855
+      }
+    },
+    "2026-07": {
+      "n": 21,
+      "first_open": "2026-07-01T03:16:46.003000+00:00",
+      "last_close": "2026-07-31T01:46:50.224000+00:00",
+      "sides": {
+        "Long": 21
+      },
+      "leverage": {
+        "1": 21
+      },
+      "margin": {
+        "Cross": 21
+      },
+      "symbols": 13,
+      "peak_overlap": 1,
+      "duration_min_s": 155.397,
+      "duration_median_s": 22077.764,
+      "duration_max_s": 65300.567,
+      "duration_18h_within5min": 6,
+      "features": {
+        "timer_loss_share": 0.86,
+        "timer_loss_mode_s": 64859,
+        "timer_all_share": 0.33,
+        "timer_all_mode_s": 64852
+      }
+    },
+    "2026-08": {
+      "n": 24,
+      "first_open": "2026-08-01T10:09:04.862000+00:00",
+      "last_close": "2026-08-30T09:14:13.880000+00:00",
+      "sides": {
+        "Long": 24
+      },
+      "leverage": {
+        "1": 24
+      },
+      "margin": {
+        "Cross": 24
+      },
+      "symbols": 13,
+      "peak_overlap": 1,
+      "duration_min_s": 200.991,
+      "duration_median_s": 25150.769,
+      "duration_max_s": 71544.712,
+      "duration_18h_within5min": 8,
+      "features": {
+        "timer_loss_share": 0.9,
+        "timer_loss_mode_s": 64902,
+        "timer_all_share": 0.38,
+        "timer_all_mode_s": 64902
+      }
+    },
+    "2026-09": {
+      "n": 31,
+      "first_open": "2026-09-01T01:57:12.763000+00:00",
+      "last_close": "2026-09-30T16:06:28.777000+00:00",
+      "sides": {
+        "Long": 31
+      },
+      "leverage": {
+        "1": 31
+      },
+      "margin": {
+        "Cross": 31
+      },
+      "symbols": 22,
+      "peak_overlap": 1,
+      "duration_min_s": 958.65,
+      "duration_median_s": 18116.453,
+      "duration_max_s": 64937.066,
+      "duration_18h_within5min": 10,
+      "features": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 64834,
+        "timer_all_share": 0.39,
+        "timer_all_mode_s": 64757
+      }
+    },
+    "2026-10": {
+      "n": 8,
+      "first_open": "2026-10-02T09:02:30.965000+00:00",
+      "last_close": "2026-11-01T10:59:24.944000+00:00",
+      "sides": {
+        "Long": 8
+      },
+      "leverage": {
+        "1": 8
+      },
+      "margin": {
+        "Cross": 8
+      },
+      "symbols": 8,
+      "peak_overlap": 1,
+      "duration_min_s": 1499.742,
+      "duration_median_s": 64671.975999999995,
+      "duration_max_s": 64918.367,
+      "duration_18h_within5min": 6,
+      "features": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 64697,
+        "timer_all_share": 0.75,
+        "timer_all_mode_s": 64697
+      }
+    }
+  },
+  "order_count": 60,
+  "reported_order_total": 60,
+  "order_observed_totals": [
+    60,
+    60
+  ],
+  "order_raw_count": 61,
+  "order_duplicates": 1,
+  "assignment_tolerance_ms": 10,
+  "first_order": "2026-09-09T19:00:23.097000+00:00",
+  "last_order": "2026-11-01T10:59:03.110000+00:00",
+  "order_types": {
+    "LIMIT:BOTH:BUY": 30,
+    "LIMIT:BOTH:SELL": 30
+  },
+  "unmatched_order_indices": [],
+  "ambiguous_order_indices": [],
+  "missing_leg_count": 112,
+  "full_audit_sha256": "e78200eb8ff7a56cb95d1b578390ceff3efc6b577b6115557d1d9fa5dff2071e",
+  "independent_verification": "Fraction: 60 quantities/prices and unique assignments; 30 complete inventories"
+}

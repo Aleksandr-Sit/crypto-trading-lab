@@ -1,0 +1,165 @@
+{
+  "portfolio_id": "5262575735183470080",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "script_sha256": "96c48827c8accb21c9ba4ee30e6b642cc180a4c600640e11795c58c8909d572c",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "angelcat_5262575735183470080_scan_2026-10-25.json": "158c57e057f80d1cca9e5788296b1709d905fec10aa6beb651f01d3421356e39",
+    "angelcat_5262575735183470080_2026-11-07.json": "50540bea87f0780f1702d24971f258f84e575f4e273f966e5300f0b8df29573f",
+    "angelcat_5262575735183470080_orders_2026-11-07.json": "35fe7b74a3e57f9d73f17d775ba16f71da842c2449e445b95518eebbb0d5722e"
+  },
+  "old_count": 169,
+  "new_count": 187,
+  "reported_new_total": 187,
+  "union_count": 187,
+  "old_missing_current": [],
+  "changed_shared": [],
+  "order_count": 632,
+  "reported_order_total": 632,
+  "order_types": {
+    "MARKET:BUY": 376,
+    "MARKET:SELL": 161,
+    "LIMIT:BUY": 69,
+    "LIMIT:SELL": 26
+  },
+  "first_order": "2026-10-10T13:05:10.967000+00:00",
+  "last_order": "2026-11-02T09:46:22.763000+00:00",
+  "ambiguous_orders": [],
+  "unmatched_sides": {
+    "BUY": 51
+  },
+  "unmatched_symbols": 12,
+  "unmatched_net_qty": {
+    "ADAUSDT": "2350.0",
+    "GRAMUSDT": "69.7",
+    "ARUSDT": "30.7",
+    "DUSKUSDT": "6063.0",
+    "FILUSDT": "129.9",
+    "ONDOUSDT": "141.1",
+    "DOGEUSDT": "377.0",
+    "NEARUSDT": "14.0",
+    "SOLUSDT": "0.47",
+    "BNBUSDT": "1.83",
+    "BNCUSDT": "8.92",
+    "GOOGLUSDT": "3.4"
+  },
+  "missing_legs": [],
+  "scan_timer": {
+    "timer_loss_share": 0.4,
+    "timer_loss_mode_s": 4595,
+    "timer_all_share": 0.09,
+    "timer_all_mode_s": 40259
+  },
+  "current_timer": {
+    "timer_loss_share": 0.4,
+    "timer_loss_mode_s": 4595,
+    "timer_all_share": 0.09,
+    "timer_all_mode_s": 40262
+  },
+  "scan_negative_price_positions": [
+    {
+      "position_id": "1163397904382472192",
+      "symbol": "SUIUSDT",
+      "opened": "2026-10-16T08:47:55.292000+00:00",
+      "closed": "2026-10-16T10:00:23.417000+00:00",
+      "holding_seconds": 4348.125,
+      "bin": 172,
+      "in_timer_group": true
+    },
+    {
+      "position_id": "1163398680496484352",
+      "symbol": "SKYUSDT",
+      "opened": "2026-10-16T08:51:00.332000+00:00",
+      "closed": "2026-10-16T09:30:02.651000+00:00",
+      "holding_seconds": 2342.319,
+      "bin": 159,
+      "in_timer_group": false
+    },
+    {
+      "position_id": "1163356897280438272",
+      "symbol": "FILUSDT",
+      "opened": "2026-10-16T06:04:58.437000+00:00",
+      "closed": "2026-10-16T06:30:00.930000+00:00",
+      "holding_seconds": 1502.493,
+      "bin": 150,
+      "in_timer_group": false
+    },
+    {
+      "position_id": "1163302111843627008",
+      "symbol": "JUPUSDT",
+      "opened": "2026-10-16T02:27:16.571000+00:00",
+      "closed": "2026-10-16T03:45:04.257000+00:00",
+      "holding_seconds": 4667.686,
+      "bin": 173,
+      "in_timer_group": true
+    },
+    {
+      "position_id": "1163269241603272704",
+      "symbol": "ARBUSDT",
+      "opened": "2026-10-16T00:16:39.695000+00:00",
+      "closed": "2026-10-16T01:37:37.254000+00:00",
+      "holding_seconds": 4857.559,
+      "bin": 174,
+      "in_timer_group": true
+    },
+    {
+      "position_id": "1163140571815391232",
+      "symbol": "XRPUSDT",
+      "opened": "2026-10-15T15:45:22.427000+00:00",
+      "closed": "2026-10-15T23:28:10.468000+00:00",
+      "holding_seconds": 27768.041,
+      "bin": 210,
+      "in_timer_group": false
+    },
+    {
+      "position_id": "1163187936156889088",
+      "symbol": "ICPUSDT",
+      "opened": "2026-10-15T18:53:34.966000+00:00",
+      "closed": "2026-10-15T22:30:03.735000+00:00",
+      "holding_seconds": 12988.769,
+      "bin": 194,
+      "in_timer_group": false
+    },
+    {
+      "position_id": "1163140394929008640",
+      "symbol": "JUPUSDT",
+      "opened": "2026-10-15T15:44:40.254000+00:00",
+      "closed": "2026-10-15T17:00:02.767000+00:00",
+      "holding_seconds": 4522.513,
+      "bin": 173,
+      "in_timer_group": true
+    },
+    {
+      "position_id": "1161613423380180992",
+      "symbol": "SKYUSDT",
+      "opened": "2026-10-11T10:37:01.867000+00:00",
+      "closed": "2026-10-15T02:23:40.182000+00:00",
+      "holding_seconds": 315998.315,
+      "bin": 260,
+      "in_timer_group": false
+    },
+    {
+      "position_id": "1161288319102267392",
+      "symbol": "ADAUSDT",
+      "opened": "2026-10-10T13:05:10.967000+00:00",
+      "closed": "2026-10-10T13:09:35.604000+00:00",
+      "holding_seconds": 264.637,
+      "bin": 114,
+      "in_timer_group": false
+    }
+  ],
+  "full_audit_path": "..\\lab-data\\open-automata\\angelcat_audit_2026-11-07.json",
+  "full_audit_sha256": "65786b465ac21fdf0b5b8d580ca6a64f8356345407fd2466d4d2ac4291fa894e",
+  "matched_order_count": 581,
+  "matched_position_legs": 374,
+  "multi_entry_position_count": 43,
+  "max_entry_order_count": 41,
+  "additional_entry_pair_count": 207,
+  "additional_lower_price_count": 79,
+  "pairs_within60s": 159,
+  "longer_gap_pairs": 48,
+  "longer_gap_lower_price_pairs": 33,
+  "unmatched_order_count": 51,
+  "verification": "Independent Decimal quantity conservation for 374 legs, unique attribution of 581 orders, 51 unmatched BUYs/12 symbols, scan timer numerator/denominator checked."
+}

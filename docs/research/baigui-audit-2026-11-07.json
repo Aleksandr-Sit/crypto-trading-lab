@@ -1,0 +1,1616 @@
+{
+  "incomplete_flows": [
+    {
+      "position_id": "1149134687764393984",
+      "opened": "2026-09-07T00:10:59.453000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497288243458048",
+      "opened": "2026-09-08T00:11:50.144000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497294778183680",
+      "opened": "2026-09-08T00:11:51.702000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497301321297920",
+      "opened": "2026-09-08T00:11:53.262000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497307851829248",
+      "opened": "2026-09-08T00:11:54.819000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497316483706880",
+      "opened": "2026-09-08T00:11:56.877000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497320896114688",
+      "opened": "2026-09-08T00:11:57.929000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497331935522816",
+      "opened": "2026-09-08T00:12:00.561000+00:00",
+      "before_first_order": true
+    },
+    {
+      "position_id": "1149497336419233792",
+      "opened": "2026-09-08T00:12:01.630000+00:00",
+      "before_first_order": true
+    }
+  ],
+  "first_order_update": "2026-09-09T00:07:28.507000+00:00",
+  "opening_hours_utc": {
+    "0": 957
+  },
+  "closing_hours_utc": {
+    "0": 927,
+    "1": 4,
+    "4": 2,
+    "22": 3,
+    "8": 3,
+    "9": 1,
+    "14": 6,
+    "15": 2,
+    "13": 5,
+    "23": 1,
+    "5": 1,
+    "7": 1,
+    "21": 1
+  },
+  "duration_nearest_days": {
+    "2": 127,
+    "1": 788,
+    "0": 16,
+    "3": 19,
+    "4": 5,
+    "6": 1,
+    "5": 1
+  },
+  "duration_day_multiple_within10min": 921,
+  "multi_entries": [
+    {
+      "position_id": "1149497320896114688",
+      "symbol": "HEMIUSDT",
+      "entries": [
+        {
+          "symbol": "HEMIUSDT",
+          "baseAsset": "HEMI",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 2768.0,
+          "avgPrice": 0.007821,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1788912464827,
+          "orderTime": 1788912464827
+        },
+        {
+          "symbol": "HEMIUSDT",
+          "baseAsset": "HEMI",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 1256.0,
+          "avgPrice": 0.006664,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1788998906742,
+          "orderTime": 1788998906742
+        }
+      ]
+    },
+    {
+      "position_id": "1150583791614865408",
+      "symbol": "SAGAUSDT",
+      "entries": [
+        {
+          "symbol": "SAGAUSDT",
+          "baseAsset": "SAGA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 3300.4,
+          "avgPrice": 0.01753,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789085352734,
+          "orderTime": 1789085352734
+        },
+        {
+          "symbol": "SAGAUSDT",
+          "baseAsset": "SAGA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 1147.5,
+          "avgPrice": 0.01639,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789171792401,
+          "orderTime": 1789171792401
+        }
+      ]
+    },
+    {
+      "position_id": "1151671567638769664",
+      "symbol": "FILUSDT",
+      "entries": [
+        {
+          "symbol": "FILUSDT",
+          "baseAsset": "FIL",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 48.4,
+          "avgPrice": 0.9687,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789344698747,
+          "orderTime": 1789344698747
+        },
+        {
+          "symbol": "FILUSDT",
+          "baseAsset": "FIL",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 17.0,
+          "avgPrice": 0.928,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789431150366,
+          "orderTime": 1789431150366
+        }
+      ]
+    },
+    {
+      "position_id": "1151671572067954688",
+      "symbol": "REZUSDT",
+      "entries": [
+        {
+          "symbol": "REZUSDT",
+          "baseAsset": "REZ",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 10411.0,
+          "avgPrice": 0.004518,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789344699804,
+          "orderTime": 1789344699804
+        },
+        {
+          "symbol": "REZUSDT",
+          "baseAsset": "REZ",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 3925.0,
+          "avgPrice": 0.004037,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789431151422,
+          "orderTime": 1789431151422
+        }
+      ]
+    },
+    {
+      "position_id": "1151671583052836864",
+      "symbol": "VTHOUSDT",
+      "entries": [
+        {
+          "symbol": "VTHOUSDT",
+          "baseAsset": "VTHO",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 59899.0,
+          "avgPrice": 0.0007867,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789344702423,
+          "orderTime": 1789344702423
+        },
+        {
+          "symbol": "VTHOUSDT",
+          "baseAsset": "VTHO",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 25619.0,
+          "avgPrice": 0.000622,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789431155032,
+          "orderTime": 1789431155032
+        },
+        {
+          "symbol": "VTHOUSDT",
+          "baseAsset": "VTHO",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 12685.0,
+          "avgPrice": 0.0006836,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789603766691,
+          "orderTime": 1789603766691
+        }
+      ]
+    },
+    {
+      "position_id": "1151671589629505536",
+      "symbol": "STEEMUSDT",
+      "entries": [
+        {
+          "symbol": "STEEMUSDT",
+          "baseAsset": "STEEM",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 823.0,
+          "avgPrice": 0.056793,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789344703990,
+          "orderTime": 1789344703990
+        },
+        {
+          "symbol": "STEEMUSDT",
+          "baseAsset": "STEEM",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 274.0,
+          "avgPrice": 0.05754,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789431156091,
+          "orderTime": 1789431156091
+        }
+      ]
+    },
+    {
+      "position_id": "1152395547672752128",
+      "symbol": "SAGAUSDT",
+      "entries": [
+        {
+          "symbol": "SAGAUSDT",
+          "baseAsset": "SAGA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 1955.9,
+          "avgPrice": 0.02341,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789517309039,
+          "orderTime": 1789517309039
+        },
+        {
+          "symbol": "SAGAUSDT",
+          "baseAsset": "SAGA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 434.6,
+          "avgPrice": 0.01998,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789603761441,
+          "orderTime": 1789603761441
+        }
+      ]
+    },
+    {
+      "position_id": "1152395571987132416",
+      "symbol": "AINUSDT",
+      "entries": [
+        {
+          "symbol": "AINUSDT",
+          "baseAsset": "AIN",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 274.0,
+          "avgPrice": 0.16642,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789517314836,
+          "orderTime": 1789517314836
+        },
+        {
+          "symbol": "AINUSDT",
+          "baseAsset": "AIN",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 386.0,
+          "avgPrice": 0.0224,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789603770947,
+          "orderTime": 1789603770947
+        }
+      ]
+    },
+    {
+      "position_id": "1154207372299120640",
+      "symbol": "PTBUSDT",
+      "entries": [
+        {
+          "symbol": "PTBUSDT",
+          "baseAsset": "PTB",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 45022.0,
+          "avgPrice": 0.0009606,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1789949281692,
+          "orderTime": 1789949281692
+        },
+        {
+          "symbol": "PTBUSDT",
+          "baseAsset": "PTB",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 10908.0,
+          "avgPrice": 0.0012533,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790035745718,
+          "orderTime": 1790035745718
+        }
+      ]
+    },
+    {
+      "position_id": "1155295268515000320",
+      "symbol": "ZROUSDT",
+      "entries": [
+        {
+          "symbol": "ZROUSDT",
+          "baseAsset": "ZRO",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 27.9,
+          "avgPrice": 1.5142,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790208656362,
+          "orderTime": 1790208656362
+        },
+        {
+          "symbol": "ZROUSDT",
+          "baseAsset": "ZRO",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 9.7,
+          "avgPrice": 1.4384,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790295108016,
+          "orderTime": 1790295108016
+        }
+      ]
+    },
+    {
+      "position_id": "1156381860411387904",
+      "symbol": "QUSDT",
+      "entries": [
+        {
+          "symbol": "QUSDT",
+          "baseAsset": "Q",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 248.0,
+          "avgPrice": 0.0341826,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790467720058,
+          "orderTime": 1790467720058
+        },
+        {
+          "symbol": "QUSDT",
+          "baseAsset": "Q",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 1367.0,
+          "avgPrice": 0.031623,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790554167818,
+          "orderTime": 1790554167818
+        }
+      ]
+    },
+    {
+      "position_id": "1158555985137545216",
+      "symbol": "VELVETUSDT",
+      "entries": [
+        {
+          "symbol": "VELVETUSDT",
+          "baseAsset": "VELVET",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 329.0,
+          "avgPrice": 0.09399,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790986071786,
+          "orderTime": 1790986071786
+        },
+        {
+          "symbol": "VELVETUSDT",
+          "baseAsset": "VELVET",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 295.0,
+          "avgPrice": 0.07781,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791072521380,
+          "orderTime": 1791072521380
+        }
+      ]
+    },
+    {
+      "position_id": "1158555991810682880",
+      "symbol": "GALAUSDT",
+      "entries": [
+        {
+          "symbol": "GALAUSDT",
+          "baseAsset": "GALA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 11809.0,
+          "avgPrice": 0.002659,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1790986073377,
+          "orderTime": 1790986073377
+        },
+        {
+          "symbol": "GALAUSDT",
+          "baseAsset": "GALA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 9166.0,
+          "avgPrice": 0.002509,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791072523500,
+          "orderTime": 1791072523500
+        }
+      ]
+    },
+    {
+      "position_id": "1159643797861609472",
+      "symbol": "MOVRUSDT",
+      "entries": [
+        {
+          "symbol": "MOVRUSDT",
+          "baseAsset": "MOVR",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 11.02,
+          "avgPrice": 2.005,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791245426550,
+          "orderTime": 1791245426550
+        },
+        {
+          "symbol": "MOVRUSDT",
+          "baseAsset": "MOVR",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 8.06,
+          "avgPrice": 1.8473,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791331887322,
+          "orderTime": 1791331887322
+        }
+      ]
+    },
+    {
+      "position_id": "1160006478565126144",
+      "symbol": "MINAUSDT",
+      "entries": [
+        {
+          "symbol": "MINAUSDT",
+          "baseAsset": "MINA",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 330.0,
+          "avgPrice": 0.11167,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791331896367,
+          "orderTime": 1791331896367
+        },
+        {
+          "symbol": "MINAUSDT",
+          "baseAsset": "MINA",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 80.0,
+          "avgPrice": 0.09181,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791418338712,
+          "orderTime": 1791418338712
+        }
+      ]
+    },
+    {
+      "position_id": "1160731312433573888",
+      "symbol": "PYTHUSDT",
+      "entries": [
+        {
+          "symbol": "PYTHUSDT",
+          "baseAsset": "PYTH",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 544.0,
+          "avgPrice": 0.08152,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791504710229,
+          "orderTime": 1791504710229
+        },
+        {
+          "symbol": "PYTHUSDT",
+          "baseAsset": "PYTH",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 194.0,
+          "avgPrice": 0.08004,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791591139027,
+          "orderTime": 1791591139027
+        }
+      ]
+    },
+    {
+      "position_id": "1160731328007024640",
+      "symbol": "OGNUSDT",
+      "entries": [
+        {
+          "symbol": "OGNUSDT",
+          "baseAsset": "OGN",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 963.0,
+          "avgPrice": 0.0418,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791504713942,
+          "orderTime": 1791504713942
+        },
+        {
+          "symbol": "OGNUSDT",
+          "baseAsset": "OGN",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 402.0,
+          "avgPrice": 0.0386,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791591145396,
+          "orderTime": 1791591145396
+        }
+      ]
+    },
+    {
+      "position_id": "1162180569917206528",
+      "symbol": "GTCUSDT",
+      "entries": [
+        {
+          "symbol": "GTCUSDT",
+          "baseAsset": "GTC",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 173.2,
+          "avgPrice": 0.2799585,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791850240139,
+          "orderTime": 1791850240139
+        },
+        {
+          "symbol": "GTCUSDT",
+          "baseAsset": "GTC",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 94.4,
+          "avgPrice": 0.22328,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791936700257,
+          "orderTime": 1791936700257
+        }
+      ]
+    },
+    {
+      "position_id": "1162543229762449408",
+      "symbol": "BATUSDT",
+      "entries": [
+        {
+          "symbol": "BATUSDT",
+          "baseAsset": "BAT",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 354.9,
+          "avgPrice": 0.1960213,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1791936704984,
+          "orderTime": 1791936704984
+        },
+        {
+          "symbol": "BATUSDT",
+          "baseAsset": "BAT",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 87.1,
+          "avgPrice": 0.21599,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1792109516624,
+          "orderTime": 1792109516624
+        }
+      ]
+    },
+    {
+      "position_id": "1162905435934994432",
+      "symbol": "WALUSDT",
+      "entries": [
+        {
+          "symbol": "WALUSDT",
+          "baseAsset": "WAL",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 912.0,
+          "avgPrice": 0.05758,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1792023061665,
+          "orderTime": 1792023061665
+        },
+        {
+          "symbol": "WALUSDT",
+          "baseAsset": "WAL",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 374.0,
+          "avgPrice": 0.05034,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1792109507174,
+          "orderTime": 1792109507174
+        }
+      ]
+    },
+    {
+      "position_id": "1164354674829471744",
+      "symbol": "GTCUSDT",
+      "entries": [
+        {
+          "symbol": "GTCUSDT",
+          "baseAsset": "GTC",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 249.9,
+          "avgPrice": 0.25474,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1792368587143,
+          "orderTime": 1792368587143
+        },
+        {
+          "symbol": "GTCUSDT",
+          "baseAsset": "GTC",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 15.3,
+          "avgPrice": 0.34945,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1792455037334,
+          "orderTime": 1792455037334
+        }
+      ]
+    },
+    {
+      "position_id": "1166891650120069120",
+      "symbol": "CAPUSDT",
+      "entries": [
+        {
+          "symbol": "CAPUSDT",
+          "baseAsset": "CAP",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 392.0,
+          "avgPrice": 0.11065,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1792973449187,
+          "orderTime": 1792973449187
+        },
+        {
+          "symbol": "CAPUSDT",
+          "baseAsset": "CAP",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 110.0,
+          "avgPrice": 0.09371,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793146320496,
+          "orderTime": 1793146320496
+        }
+      ]
+    },
+    {
+      "position_id": "1167254103001575424",
+      "symbol": "AINUSDT",
+      "entries": [
+        {
+          "symbol": "AINUSDT",
+          "baseAsset": "AIN",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 675.0,
+          "avgPrice": 0.0708,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793059864688,
+          "orderTime": 1793059864688
+        },
+        {
+          "symbol": "AINUSDT",
+          "baseAsset": "AIN",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 41.0,
+          "avgPrice": 0.15648,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793146310060,
+          "orderTime": 1793146310060
+        }
+      ]
+    },
+    {
+      "position_id": "1167254127324344320",
+      "symbol": "IRYSUSDT",
+      "entries": [
+        {
+          "symbol": "IRYSUSDT",
+          "baseAsset": "IRYS",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 1655.0,
+          "avgPrice": 0.03023,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793059870486,
+          "orderTime": 1793059870486
+        },
+        {
+          "symbol": "IRYSUSDT",
+          "baseAsset": "IRYS",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 266.0,
+          "avgPrice": 0.02446,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793146319441,
+          "orderTime": 1793146319441
+        }
+      ]
+    },
+    {
+      "position_id": "1168340562374733824",
+      "symbol": "BLESSUSDT",
+      "entries": [
+        {
+          "symbol": "BLESSUSDT",
+          "baseAsset": "BLESS",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 3357.0,
+          "avgPrice": 0.0128504,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793318896788,
+          "orderTime": 1793318896788
+        },
+        {
+          "symbol": "BLESSUSDT",
+          "baseAsset": "BLESS",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 1364.0,
+          "avgPrice": 0.009813,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793405343585,
+          "orderTime": 1793405343585
+        }
+      ]
+    },
+    {
+      "position_id": "1168340577918824448",
+      "symbol": "PARTIUSDT",
+      "entries": [
+        {
+          "symbol": "PARTIUSDT",
+          "baseAsset": "PARTI",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 721.0,
+          "avgPrice": 0.0596587,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793318900494,
+          "orderTime": 1793318900494
+        },
+        {
+          "symbol": "PARTIUSDT",
+          "baseAsset": "PARTI",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 262.0,
+          "avgPrice": 0.05111,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793405344649,
+          "orderTime": 1793405344649
+        }
+      ]
+    },
+    {
+      "position_id": "1168340584508076032",
+      "symbol": "TRXUSDT",
+      "entries": [
+        {
+          "symbol": "TRXUSDT",
+          "baseAsset": "TRX",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 120.0,
+          "avgPrice": 0.35903,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793318902065,
+          "orderTime": 1793318902065
+        },
+        {
+          "symbol": "TRXUSDT",
+          "baseAsset": "TRX",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 41.0,
+          "avgPrice": 0.32681,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793405350423,
+          "orderTime": 1793405350423
+        }
+      ]
+    },
+    {
+      "position_id": "1169428074912460800",
+      "symbol": "BEAMXUSDT",
+      "entries": [
+        {
+          "symbol": "BEAMXUSDT",
+          "baseAsset": "BEAMX",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 2183.0,
+          "avgPrice": 0.005627,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793578179982,
+          "orderTime": 1793578179982
+        },
+        {
+          "symbol": "BEAMXUSDT",
+          "baseAsset": "BEAMX",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 7601.0,
+          "avgPrice": 0.004463,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793664623067,
+          "orderTime": 1793664623067
+        }
+      ]
+    },
+    {
+      "position_id": "1169428081556238336",
+      "symbol": "牛来USDT",
+      "entries": [
+        {
+          "symbol": "牛来USDT",
+          "baseAsset": "牛来",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 177.0,
+          "avgPrice": 0.06926,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793578181566,
+          "orderTime": 1793578181566
+        },
+        {
+          "symbol": "牛来USDT",
+          "baseAsset": "牛来",
+          "quoteAsset": "USDT",
+          "side": "BUY",
+          "type": "MARKET",
+          "positionSide": "LONG",
+          "executedQty": 532.0,
+          "avgPrice": 0.0638735,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793664624130,
+          "orderTime": 1793664624129
+        }
+      ]
+    },
+    {
+      "position_id": "1169428090511077376",
+      "symbol": "EVAAUSDT",
+      "entries": [
+        {
+          "symbol": "EVAAUSDT",
+          "baseAsset": "EVAA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 10.0,
+          "avgPrice": 1.2259,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793578183701,
+          "orderTime": 1793578183701
+        },
+        {
+          "symbol": "EVAAUSDT",
+          "baseAsset": "EVAA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 23.0,
+          "avgPrice": 1.4727347,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793664618821,
+          "orderTime": 1793664618821
+        }
+      ]
+    },
+    {
+      "position_id": "1170153293423751168",
+      "symbol": "HUMAUSDT",
+      "entries": [
+        {
+          "symbol": "HUMAUSDT",
+          "baseAsset": "HUMA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 2519.0,
+          "avgPrice": 0.0217754,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793751085549,
+          "orderTime": 1793751085549
+        },
+        {
+          "symbol": "HUMAUSDT",
+          "baseAsset": "HUMA",
+          "quoteAsset": "USDT",
+          "side": "SELL",
+          "type": "MARKET",
+          "positionSide": "SHORT",
+          "executedQty": 371.0,
+          "avgPrice": 0.016709,
+          "totalPnl": 0.0,
+          "orderUpdateTime": 1793837541732,
+          "orderTime": 1793837541732
+        }
+      ]
+    }
+  ],
+  "order_coverage": {
+    "full_positions": 459,
+    "incomplete_positions_with_orders": 9,
+    "inventory_errors": [],
+    "counts": {
+      "(0, 0)": 489,
+      "(0, 1)": 7,
+      "(1, 1)": 404,
+      "(2, 1)": 29,
+      "(1, 2)": 26,
+      "(3, 2)": 1,
+      "(2, 3)": 1
+    }
+  },
+  "unmatched_orders": [
+    {
+      "symbol": "JCTUSDT",
+      "baseAsset": "JCT",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 11186.0,
+      "avgPrice": 0.005465,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1793837539620,
+      "orderTime": 1793837539620
+    },
+    {
+      "symbol": "CLANKERUSDT",
+      "baseAsset": "CLANKER",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 2.42,
+      "avgPrice": 19.0894628,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1793923679729,
+      "orderTime": 1793923679728
+    },
+    {
+      "symbol": "ARIAUSDT",
+      "baseAsset": "ARIA",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 291.0,
+      "avgPrice": 0.15856,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1793923682913,
+      "orderTime": 1793923682913
+    },
+    {
+      "symbol": "LITUSDT",
+      "baseAsset": "LIT",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 13.4,
+      "avgPrice": 3.4412,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1793923683981,
+      "orderTime": 1793923683981
+    },
+    {
+      "symbol": "CAPUSDT",
+      "baseAsset": "CAP",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 425.0,
+      "avgPrice": 0.10834,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1793923686102,
+      "orderTime": 1793923686102
+    },
+    {
+      "symbol": "ICNTUSDT",
+      "baseAsset": "ICNT",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 205.0,
+      "avgPrice": 0.2982,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010125784,
+      "orderTime": 1794010125784
+    },
+    {
+      "symbol": "AINUSDT",
+      "baseAsset": "AIN",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 587.0,
+      "avgPrice": 0.10439,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010126844,
+      "orderTime": 1794010126844
+    },
+    {
+      "symbol": "BIRBUSDT",
+      "baseAsset": "BIRB",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 597.0,
+      "avgPrice": 0.10234,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010127904,
+      "orderTime": 1794010127904
+    },
+    {
+      "symbol": "CLANKERUSDT",
+      "baseAsset": "CLANKER",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 0.95,
+      "avgPrice": 15.64,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010128969,
+      "orderTime": 1794010128969
+    },
+    {
+      "symbol": "ARIAUSDT",
+      "baseAsset": "ARIA",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 101.0,
+      "avgPrice": 0.14702,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010130027,
+      "orderTime": 1794010130027
+    },
+    {
+      "symbol": "TIAUSDT",
+      "baseAsset": "TIA",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 140.0,
+      "avgPrice": 0.4348,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010131090,
+      "orderTime": 1794010131090
+    },
+    {
+      "symbol": "LITUSDT",
+      "baseAsset": "LIT",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 4.5,
+      "avgPrice": 3.3306,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010132146,
+      "orderTime": 1794010132146
+    },
+    {
+      "symbol": "LYNUSDT",
+      "baseAsset": "LYN",
+      "quoteAsset": "USDT",
+      "side": "BUY",
+      "type": "MARKET",
+      "positionSide": "LONG",
+      "executedQty": 2521.0,
+      "avgPrice": 0.02428,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010133204,
+      "orderTime": 1794010133204
+    },
+    {
+      "symbol": "CAPUSDT",
+      "baseAsset": "CAP",
+      "quoteAsset": "USDT",
+      "side": "SELL",
+      "type": "MARKET",
+      "positionSide": "SHORT",
+      "executedQty": 149.0,
+      "avgPrice": 0.10041,
+      "totalPnl": 0.0,
+      "orderUpdateTime": 1794010134263,
+      "orderTime": 1794010134263
+    }
+  ],
+  "portfolio_id": "5073563794731136000",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "profile_description": "量化策略全自动交易。（私域是另一套策略，私域邀请码：2rn9TGtH ）",
+  "script_sha256": "dba33ff4f69eca1a4609ef24edab51154d3df003753e21ef19ed1ea759a6ed0b",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "baigui_5073563794731136000_scan_2026-10-25.json": "b3a84e280c9e0ac1ae738dd48fe8c7df61cf3ef61065bd3a9e158cdc799691bc",
+    "baigui_5073563794731136000_2026-11-07.json": "a2ec41b3f50736a4c0f9ccbbea0e4e24a2162d298689c8560a6e61e64364aec5",
+    "baigui_5073563794731136000_orders_rawpass_2026-11-07.json": "dbdf82c7a3d066798f5294431904ab25f6910a411baca4e0eb07cf90307d1af1"
+  },
+  "raw_sources": {
+    "baigui_pages_2026-11-07\\detail.json": "0ae46a94dca61c443baba928a891c4a447b307216df37b50375ae9f228094263",
+    "baigui_pages_2026-11-07\\page_001.json": "8495ebb6d91ca8759730eaeaec40ff9ddc1b476f71a15c28b083dd39e58e349b",
+    "baigui_pages_2026-11-07\\page_002.json": "be3e5be689eee0a72978a0a76c13172018b909a658449c90f360e66be3a97cd3",
+    "baigui_pages_2026-11-07\\page_003.json": "76fdc559c2053582d7778a34a3850bee753bdbd8c174a52befcc4e800dce0a85",
+    "baigui_pages_2026-11-07\\page_004.json": "34c5f84e91511297aba0e1ba17a5a358e50d87d24916bb36590ba7a1e5fc65a5",
+    "baigui_pages_2026-11-07\\page_005.json": "d9c859922dccaff93ce07b90e6e1896e0f7c69e7fb749bfc3d7be3b0c5d24ede",
+    "baigui_pages_2026-11-07\\page_006.json": "1236a5f28984f4d98a0ab58b54ce48ecc276fa7b5d97d3e209e0e37987b5d1e9",
+    "baigui_pages_2026-11-07\\page_007.json": "b0469c4cc80fc1ef07838561f24b0754f64ac0edaa3c019cc4569c9e5e53de7b",
+    "baigui_pages_2026-11-07\\page_008.json": "ba644af903598865a3a41cd32a9b097fc8e6bcc117e8147ca4787cf67e68204c",
+    "baigui_pages_2026-11-07\\page_009.json": "0f65601307dc8643f4eabcdb2758484aadca201bccdfd46f03b9a0b1b879bc9e",
+    "baigui_pages_2026-11-07\\page_010.json": "ffe4321d722bd18bfe46573776c00314e196cae979eb370a0bd837e93ecfe8a5",
+    "baigui_pages_2026-11-07\\page_011.json": "8ed0824d856c2703abdae4af9567543663c7e4e1fc5cf5c8bda4c8d436a75d5b",
+    "baigui_pages_2026-11-07\\page_012.json": "9f8e2f55c26160c11941158e3eda3226115d878f301f4c6fce233a167c7c0396",
+    "baigui_pages_2026-11-07\\page_013.json": "9a9e4b47d6555cd32b5855b92c016318231e3c225d68520e329cb0696d4afad9",
+    "baigui_pages_2026-11-07\\page_014.json": "20b78408dc89a6c1e3d15853b70fb3ecc158a6788b2f4f188a18252c59e01031",
+    "baigui_pages_2026-11-07\\page_015.json": "26979285a6b5ed0967fe43712b2b48225424900e58d146b058c0716d0701a280",
+    "baigui_pages_2026-11-07\\page_016.json": "cc6f672a788c96b1a02c263a1a5b10bb8cb3e0660be6da05bd00aa1f88ae8295",
+    "baigui_pages_2026-11-07\\page_017.json": "0e432ebe7ffc4e1d4b825b54eef00540139076f2b50801532b992baa9c6d58c6",
+    "baigui_pages_2026-11-07\\page_018.json": "d6bb83a109a28229c4c6e45f8795faab08200428dc2b66a3fa307c9b96133b4b",
+    "baigui_pages_2026-11-07\\page_019.json": "115c30ccbf9f5bafe626b7c388776966971643759900ef936e64f89ff7609555",
+    "baigui_pages_2026-11-07\\page_020.json": "9032b3faa13b0c2174eb228e64a2a6f19351eabeefd6c61f3a5b375f9be7c56a",
+    "baigui_order_pages_2026-11-07\\error_10_1794075337843699600.json": "029ad31dd6a5992c5942e707086a805faf6c0d21ca2d1e2bcea5bb46ed825467",
+    "baigui_order_pages_2026-11-07\\error_11_1794075342661830400.json": "38ee0b34639e440510fb47d6cc802626274cf0f4897a38008067dedfbbfbe146",
+    "baigui_order_pages_2026-11-07\\error_12_1794075347664877300.json": "19890fd10ada55f2e6c4a49a000d1ec8a0a05676af1f44ebb02f9f7c45ccdb64",
+    "baigui_order_pages_2026-11-07\\error_2_1794075298066113800.json": "340d811fdd7c53565810d0c4394b6e9ab73912dc286b845d0d3d6c44e3b95c6c",
+    "baigui_order_pages_2026-11-07\\error_3_1794075303062179400.json": "b3360ee25bf5f18f16637ab04d6bc39e5f671141b5c6bdb113ae2b36336b5261",
+    "baigui_order_pages_2026-11-07\\error_4_1794075307983402300.json": "e6fd6ba047479501c2c307c96f4acec8ca2dacdeb4c11bb1c9d037b438aaf3b0",
+    "baigui_order_pages_2026-11-07\\error_5_1794075313112997800.json": "a395bb3216d1d8859fe01ed154c27281eeeeaa8bfa7d988bd00c9878b8f09a60",
+    "baigui_order_pages_2026-11-07\\error_6_1794075317977418200.json": "98257ef48d880bd6ed2912051da53283009d2a692a9c5224e2b1ebe0a22d2103",
+    "baigui_order_pages_2026-11-07\\error_7_1794075322841279000.json": "3095d0f6f93f1a611aad2b1cdf71e2de8f65c346cac39c81f8734de057043240",
+    "baigui_order_pages_2026-11-07\\error_8_1794075327827433900.json": "cd97274f9fab0ed9f4c832202ff9d2754d3246a55f456171978cc9506899f313",
+    "baigui_order_pages_2026-11-07\\error_9_1794075332944589500.json": "ef6ebadd20bd1477caf9af465b1c3c7c893b33d3e945a7c87e763c12c942d457",
+    "baigui_order_pages_2026-11-07\\page_001.json": "632b1a1a7317e363cabcad70a0cd9b43ac2ddc1e3a431c450889a570af8c379b",
+    "baigui_order_pages_2026-11-07\\page_002.json": "3dd3487399c296913b25f251537afc47d83f2648a4d6cd71ec5f69dd227f78fd",
+    "baigui_order_pages_2026-11-07\\page_003.json": "531d43fa7ab15f0636665da23c52c7af3c0c7ead585c30fdafedc7f3251bde5c",
+    "baigui_order_pages_2026-11-07\\page_004.json": "7d6506b3e783eb1af0f21d9e2a82f84ce8a536f17b7c1f41c5c931ac7ce79d45",
+    "baigui_order_pages_2026-11-07\\page_005.json": "e2b91a6d7f1c9e08ab96f55f07752a6e13f76c938927a37b8a1503ba222b96c0",
+    "baigui_order_pages_2026-11-07\\page_006.json": "6ccdd975ca052fd5e10b0094826624feed0f18f51ff3404c1d6118a9a33bf95c",
+    "baigui_order_pages_2026-11-07\\page_007.json": "c31388bc5856a6b550756f31bc69c33c5c6feacd8357aad904eba6adb53ff0ad",
+    "baigui_order_pages_2026-11-07\\page_008.json": "b0fa012eb3343c716403659c3ad284d9499a03e5145aabd5a24b1211ae25a735",
+    "baigui_order_pages_2026-11-07\\page_009.json": "c11370025b110875ee450fdb950456a5cc85e03cb642d57e9e10256ee23a14cb",
+    "baigui_order_pages_2026-11-07\\page_010.json": "74caa6242f1ee54660f31d0c0083be408ae232d0d70bc8414e8569c1cfc3276f",
+    "baigui_order_pages_2026-11-07\\page_011.json": "0f9a6668d10a7b2b639bb35be8670ca5fb9a64d2d4f351bec471d210b98f9462",
+    "baigui_order_pages_2026-11-07\\page_012.json": "eacab34f9edbf6d3785c07b51f0545e6137190a0cf3f9b524cc6f7e45510bac2"
+  },
+  "old_count": 199,
+  "new_count": 957,
+  "current_total": 957,
+  "current_complete": true,
+  "union_count": 957,
+  "old_missing_current": [],
+  "changed_shared": [],
+  "scan_timing": {
+    "n": 199,
+    "first_open": "2026-09-27T00:08:40.058000+00:00",
+    "last_close": "2026-10-24T00:08:53.379000+00:00",
+    "sides": {
+      "Short": 101,
+      "Long": 98
+    },
+    "leverage": {
+      "5": 199
+    },
+    "margin": {
+      "Cross": 199
+    },
+    "symbols": 101,
+    "peak_overlap": 10,
+    "duration_min_s": 86120.388,
+    "duration_median_s": 86442.455,
+    "duration_max_s": 431872.7,
+    "duration_24h_within60s": 127,
+    "features": {
+      "timer_loss_share": 0.81,
+      "timer_loss_mode_s": 86441,
+      "timer_all_share": 0.82,
+      "timer_all_mode_s": 86441
+    }
+  },
+  "all_timing": {
+    "n": 957,
+    "first_open": "2026-07-09T00:11:27.240000+00:00",
+    "last_close": "2026-11-07T00:08:44.725000+00:00",
+    "sides": {
+      "Short": 470,
+      "Long": 487
+    },
+    "leverage": {
+      "5": 957
+    },
+    "margin": {
+      "Cross": 957
+    },
+    "symbols": 300,
+    "peak_overlap": 10,
+    "duration_min_s": 912.572,
+    "duration_median_s": 86438.521,
+    "duration_max_s": 518299.244,
+    "duration_24h_within60s": 604,
+    "features": {
+      "timer_loss_share": 0.79,
+      "timer_loss_mode_s": 86438,
+      "timer_all_share": 0.81,
+      "timer_all_mode_s": 86436
+    }
+  },
+  "regimes": {
+    "2026-07": {
+      "n": 177,
+      "first_open": "2026-07-09T00:11:27.240000+00:00",
+      "last_close": "2026-08-02T00:11:26.820000+00:00",
+      "sides": {
+        "Short": 85,
+        "Long": 92
+      },
+      "leverage": {
+        "5": 177
+      },
+      "margin": {
+        "Cross": 177
+      },
+      "symbols": 82,
+      "peak_overlap": 10,
+      "duration_min_s": 2099.283,
+      "duration_median_s": 86434.899,
+      "duration_max_s": 259311.963,
+      "duration_24h_within60s": 111,
+      "features": {
+        "timer_loss_share": 0.77,
+        "timer_loss_mode_s": 86433,
+        "timer_all_share": 0.77,
+        "timer_all_mode_s": 86433
+      }
+    },
+    "2026-08": {
+      "n": 258,
+      "first_open": "2026-08-01T00:10:48.870000+00:00",
+      "last_close": "2026-09-06T00:09:54.502000+00:00",
+      "sides": {
+        "Short": 126,
+        "Long": 132
+      },
+      "leverage": {
+        "5": 258
+      },
+      "margin": {
+        "Cross": 258
+      },
+      "symbols": 133,
+      "peak_overlap": 10,
+      "duration_min_s": 912.572,
+      "duration_median_s": 86433.333,
+      "duration_max_s": 518299.244,
+      "duration_24h_within60s": 155,
+      "features": {
+        "timer_loss_share": 0.76,
+        "timer_loss_mode_s": 86431,
+        "timer_all_share": 0.81,
+        "timer_all_mode_s": 86431
+      }
+    },
+    "2026-09": {
+      "n": 239,
+      "first_open": "2026-09-01T00:07:27.672000+00:00",
+      "last_close": "2026-09-30T00:10:46.452000+00:00",
+      "sides": {
+        "Short": 119,
+        "Long": 120
+      },
+      "leverage": {
+        "5": 239
+      },
+      "margin": {
+        "Cross": 239
+      },
+      "symbols": 125,
+      "peak_overlap": 10,
+      "duration_min_s": 14491.959,
+      "duration_median_s": 86440.594,
+      "duration_max_s": 345509.529,
+      "duration_24h_within60s": 157,
+      "features": {
+        "timer_loss_share": 0.83,
+        "timer_loss_mode_s": 86440,
+        "timer_all_share": 0.83,
+        "timer_all_mode_s": 86440
+      }
+    },
+    "2026-10": {
+      "n": 245,
+      "first_open": "2026-10-01T00:11:05.654000+00:00",
+      "last_close": "2026-11-01T00:09:31.864000+00:00",
+      "sides": {
+        "Short": 122,
+        "Long": 123
+      },
+      "leverage": {
+        "5": 245
+      },
+      "margin": {
+        "Cross": 245
+      },
+      "symbols": 112,
+      "peak_overlap": 10,
+      "duration_min_s": 86120.388,
+      "duration_median_s": 86441.49,
+      "duration_max_s": 431872.7,
+      "duration_24h_within60s": 155,
+      "features": {
+        "timer_loss_share": 0.81,
+        "timer_loss_mode_s": 86440,
+        "timer_all_share": 0.81,
+        "timer_all_mode_s": 86438
+      }
+    },
+    "2026-11": {
+      "n": 38,
+      "first_open": "2026-11-02T00:09:39.982000+00:00",
+      "last_close": "2026-11-07T00:08:44.725000+00:00",
+      "sides": {
+        "Long": 20,
+        "Short": 18
+      },
+      "leverage": {
+        "5": 38
+      },
+      "margin": {
+        "Cross": 38
+      },
+      "symbols": 27,
+      "peak_overlap": 10,
+      "duration_min_s": 86132.997,
+      "duration_median_s": 86444.283,
+      "duration_max_s": 172888.168,
+      "duration_24h_within60s": 26,
+      "features": {
+        "timer_loss_share": 0.77,
+        "timer_loss_mode_s": 86445,
+        "timer_all_share": 0.84,
+        "timer_all_mode_s": 86442
+      }
+    }
+  },
+  "order_count": 1004,
+  "reported_order_total": 1004,
+  "order_observed_totals": [
+    1004,
+    1004,
+    1004,
+    1004,
+    1004,
+    1004,
+    1004,
+    1004,
+    1004,
+    1004,
+    1004,
+    1004
+  ],
+  "order_raw_count": 1004,
+  "order_duplicates": 0,
+  "assignment_tolerance_ms": 10,
+  "first_order": "2026-09-09T00:07:28.507000+00:00",
+  "last_order": "2026-11-07T00:08:54.263000+00:00",
+  "order_types": {
+    "MARKET:SHORT:BUY": 245,
+    "MARKET:LONG:SELL": 252,
+    "MARKET:LONG:BUY": 248,
+    "MARKET:SHORT:SELL": 259
+  },
+  "unmatched_order_indices": [
+    968,
+    983,
+    986,
+    987,
+    989,
+    995,
+    996,
+    997,
+    998,
+    999,
+    1000,
+    1001,
+    1002,
+    1003
+  ],
+  "ambiguous_order_indices": [],
+  "missing_leg_count": 985,
+  "qty_deficits": [
+    [
+      "1149134687764393984",
+      "SELL",
+      "-148"
+    ],
+    [
+      "1149497288243458048",
+      "BUY",
+      "-208"
+    ],
+    [
+      "1149497320896114688",
+      "BUY",
+      "-3614"
+    ]
+  ],
+  "price_flags": [
+    [
+      "1149134687764393984",
+      "SELL"
+    ],
+    [
+      "1149497288243458048",
+      "BUY"
+    ],
+    [
+      "1149497320896114688",
+      "BUY"
+    ]
+  ],
+  "full_audit_sha256": "2b4244b94664921ddcd9b71964c943026ae6e18e9a7afd29c8286ea08e57e271",
+  "independent_verification": "Fraction: 929 legs with 3 early deficits; 990 unique assignments; 459 complete inventories"
+}

@@ -1,0 +1,430 @@
+{
+  "portfolio_id": "4810377016221347072",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "script_sha256": "05b54e5c2fc4a7f22e0ae53f51c0036cbe7dd0ff7ed39cd2b7043a08973a8a75",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "pxtrader_4810377016221347072_scan_2026-10-25.json": "44c03db201e77abcab6cd72b60b26c933d989b912ef5c988f6d43b51fa1fa296",
+    "pxtrader_4810377016221347072_2026-11-07.json": "c2a9083032d37602edb1aa554a9a8ed061cea9c2f786591894ffa65f72ab0be4",
+    "pxtrader_4810377016221347072_orders_2026-11-07.json": "b47ccd9dac2185913857ae05cbdd3b694dc65b53e37447933b46b078c205213f"
+  },
+  "peer_sources": {
+    "hourly_4883987534523154688_2026-11-07.json": "c95f7643f9f7cee5d1b8a4b8670153cdb9ee3cf104993ce239b1bd6e638e6f53",
+    "hourly_4894215989067406336_2026-11-07.json": "c4de683770899d2bd53014088bb4d78488660c43a6e04b6c3309fa4748d33208",
+    "hourly_4693119134299763969_2026-11-07.json": "4fe3e323dfeed2ebc98f7135ae9f3ebe9ca7a30ccf16e63a42363a66dd030551"
+  },
+  "peer_comparison": {
+    "4883987534523154688": {
+      "first_open": "2026-07-10T10:02:10.579000+00:00",
+      "last_open": "2026-10-21T18:01:40.922000+00:00",
+      "common_new_open_hours": 10,
+      "unambiguous_hours": 10,
+      "identical_symbols": 0
+    },
+    "4894215989067406336": {
+      "first_open": "2026-08-01T16:02:55.936000+00:00",
+      "last_open": "2026-10-21T18:02:14.482000+00:00",
+      "common_new_open_hours": 0,
+      "unambiguous_hours": 0,
+      "identical_symbols": 0
+    },
+    "4693119134299763969": {
+      "first_open": "2026-07-10T10:04:08.568000+00:00",
+      "last_open": "2026-11-07T06:03:02.258000+00:00",
+      "common_new_open_hours": 15,
+      "unambiguous_hours": 15,
+      "identical_symbols": 1
+    }
+  },
+  "old_rows": 131,
+  "old_unique": 131,
+  "new_rows": 54,
+  "new_unique": 54,
+  "reported_new_total": 54,
+  "new_not_in_scan": [],
+  "old_missing_current": [
+    "1122949478552182784",
+    "1123130661420408832",
+    "1123568558699192320",
+    "1123644036634124288",
+    "1123659167447392256",
+    "1123810115960446976",
+    "1123900738621153280",
+    "1124263124616093696",
+    "1124278235611275264",
+    "1124353722064838656",
+    "1124383919807930368",
+    "1124399017968541696",
+    "1124429222644817920",
+    "1124444321258414080",
+    "1124489630101544960",
+    "1124504728299905024",
+    "1124534928748322816",
+    "1124550016486088704",
+    "1124565124146798592",
+    "1124595332967047168",
+    "1124610425259827200",
+    "1124640613611872256",
+    "1124655716872757248",
+    "1124685925122580480",
+    "1124701007281922048",
+    "1124851977534054400",
+    "1125002999657144320",
+    "1125018100166565888",
+    "1125033209089761280",
+    "1125048313533440000",
+    "1125063407428444160",
+    "1125154013274185728",
+    "1125244598337150976",
+    "1125259671478738944",
+    "1125305000597135360",
+    "1125395581201555456",
+    "1125425793352081408",
+    "1125471080783290368",
+    "1125486186715947008",
+    "1125516384534536192",
+    "1125591883893972992",
+    "1125606986160807936",
+    "1125622086380822528",
+    "1125773094763372544",
+    "1126090185857048576",
+    "1126165671354310656",
+    "1126226080862052352",
+    "1126407288241790976",
+    "1126437455903334400",
+    "1126497872260374528",
+    "1126512959830368256",
+    "1126558265930424320",
+    "1126573314736660480",
+    "1126588432723746816",
+    "1126633747073998848",
+    "1126648878763876352",
+    "1126663959799144448",
+    "1126679084895576064",
+    "1126694161728151552",
+    "1126799843735379968",
+    "1126860219613192192",
+    "1127237738963148800",
+    "1127252829699842048",
+    "1127283017871532032",
+    "1127343443275685888",
+    "1127358537040666624",
+    "1127449140315299840",
+    "1127494436458078208",
+    "1127509528025243648",
+    "1127585014407503872",
+    "1127600114463940608",
+    "1127615227438833664",
+    "1127705822236778496",
+    "1127720926865006592",
+    "1127736033372282880",
+    "1127871929576857600",
+    "1127902116695777280"
+  ],
+  "changed_shared": [],
+  "union_unique": 131,
+  "union_closed": 131,
+  "order_count": 0,
+  "reported_order_total": 0,
+  "profile_description": "Check private channel",
+  "overall": {
+    "n": 131,
+    "sides": {
+      "Long": 109,
+      "Short": 22
+    },
+    "leverage": {
+      "2": 109,
+      "50": 6,
+      "5": 11,
+      "10": 3,
+      "20": 1,
+      "4": 1
+    },
+    "margin": {
+      "Cross": 131
+    },
+    "symbols": 68,
+    "first_open": "2026-06-26T18:00:19.079000+00:00",
+    "last_open": "2026-08-03T08:08:08.367000+00:00",
+    "first_close": "2026-06-27T06:00:06.874000+00:00",
+    "last_close": "2026-08-03T08:11:49.327000+00:00",
+    "peak_closed_position_overlap": 20,
+    "opened_first3min": 110,
+    "opened_within30s_of_hour": 107,
+    "closed_within30s_of_hour": 108,
+    "one_hour_30s": 44,
+    "integer_hour_30s": 107,
+    "holding_min_seconds": 218.856,
+    "holding_median_seconds": 3600.539,
+    "holding_max_seconds": 1684041.851,
+    "peak_notional_median": 39.78539393,
+    "timer": {
+      "timer_loss_share": 0.42,
+      "timer_loss_mode_s": 3590,
+      "timer_all_share": 0.34,
+      "timer_all_mode_s": 3590
+    }
+  },
+  "months": {
+    "2026-06": {
+      "n": 14,
+      "sides": {
+        "Long": 14
+      },
+      "leverage": {
+        "2": 14
+      },
+      "margin": {
+        "Cross": 14
+      },
+      "symbols": 11,
+      "first_open": "2026-06-26T18:00:19.079000+00:00",
+      "last_open": "2026-06-30T21:00:17.353000+00:00",
+      "first_close": "2026-06-27T06:00:06.874000+00:00",
+      "last_close": "2026-07-01T00:00:10.743000+00:00",
+      "peak_closed_position_overlap": 1,
+      "opened_first3min": 14,
+      "opened_within30s_of_hour": 14,
+      "closed_within30s_of_hour": 14,
+      "one_hour_30s": 4,
+      "integer_hour_30s": 14,
+      "holding_min_seconds": 3589.587,
+      "holding_median_seconds": 14390.871,
+      "holding_max_seconds": 104391.279,
+      "peak_notional_median": 243.21730058,
+      "timer": {
+        "timer_loss_share": 0.33,
+        "timer_loss_mode_s": 3592,
+        "timer_all_share": 0.29,
+        "timer_all_mode_s": 3591
+      }
+    },
+    "2026-07": {
+      "n": 95,
+      "sides": {
+        "Long": 95
+      },
+      "leverage": {
+        "2": 95
+      },
+      "margin": {
+        "Cross": 95
+      },
+      "symbols": 43,
+      "first_open": "2026-07-01T00:00:19.823000+00:00",
+      "last_open": "2026-07-14T20:00:17.314000+00:00",
+      "first_close": "2026-07-01T01:00:07.560000+00:00",
+      "last_close": "2026-08-03T07:47:39.165000+00:00",
+      "peak_closed_position_overlap": 1,
+      "opened_first3min": 95,
+      "opened_within30s_of_hour": 93,
+      "closed_within30s_of_hour": 94,
+      "one_hour_30s": 40,
+      "integer_hour_30s": 93,
+      "holding_min_seconds": 3572.03,
+      "holding_median_seconds": 7187.864,
+      "holding_max_seconds": 1684041.851,
+      "peak_notional_median": 49.57834,
+      "timer": {
+        "timer_loss_share": 0.49,
+        "timer_loss_mode_s": 3590,
+        "timer_all_share": 0.42,
+        "timer_all_mode_s": 3590
+      }
+    },
+    "2026-08": {
+      "n": 22,
+      "sides": {
+        "Short": 22
+      },
+      "leverage": {
+        "50": 6,
+        "5": 11,
+        "10": 3,
+        "20": 1,
+        "4": 1
+      },
+      "margin": {
+        "Cross": 22
+      },
+      "symbols": 20,
+      "first_open": "2026-08-03T07:53:09.832000+00:00",
+      "last_open": "2026-08-03T08:08:08.367000+00:00",
+      "first_close": "2026-08-03T08:01:43.612000+00:00",
+      "last_close": "2026-08-03T08:11:49.327000+00:00",
+      "peak_closed_position_overlap": 20,
+      "opened_first3min": 1,
+      "opened_within30s_of_hour": 0,
+      "closed_within30s_of_hour": 0,
+      "one_hour_30s": 0,
+      "integer_hour_30s": 0,
+      "holding_min_seconds": 218.856,
+      "holding_median_seconds": 1113.211,
+      "holding_max_seconds": 1117.466,
+      "peak_notional_median": 10.23389453,
+      "timer": {
+        "timer_loss_share": 1.0,
+        "timer_loss_mode_s": 1115,
+        "timer_all_share": 0.86,
+        "timer_all_mode_s": 1114
+      }
+    }
+  },
+  "early_regime": {
+    "n": 109,
+    "sides": {
+      "Long": 109
+    },
+    "leverage": {
+      "2": 109
+    },
+    "margin": {
+      "Cross": 109
+    },
+    "symbols": 51,
+    "first_open": "2026-06-26T18:00:19.079000+00:00",
+    "last_open": "2026-07-14T20:00:17.314000+00:00",
+    "first_close": "2026-06-27T06:00:06.874000+00:00",
+    "last_close": "2026-08-03T07:47:39.165000+00:00",
+    "peak_closed_position_overlap": 1,
+    "opened_first3min": 109,
+    "opened_within30s_of_hour": 107,
+    "closed_within30s_of_hour": 108,
+    "one_hour_30s": 44,
+    "integer_hour_30s": 107,
+    "holding_min_seconds": 3572.03,
+    "holding_median_seconds": 7189.889,
+    "holding_max_seconds": 1684041.851,
+    "peak_notional_median": 61.5115,
+    "timer": {
+      "timer_loss_share": 0.47,
+      "timer_loss_mode_s": 3590,
+      "timer_all_share": 0.4,
+      "timer_all_mode_s": 3590
+    }
+  },
+  "late_regime": {
+    "n": 22,
+    "sides": {
+      "Short": 22
+    },
+    "leverage": {
+      "50": 6,
+      "5": 11,
+      "10": 3,
+      "20": 1,
+      "4": 1
+    },
+    "margin": {
+      "Cross": 22
+    },
+    "symbols": 20,
+    "first_open": "2026-08-03T07:53:09.832000+00:00",
+    "last_open": "2026-08-03T08:08:08.367000+00:00",
+    "first_close": "2026-08-03T08:01:43.612000+00:00",
+    "last_close": "2026-08-03T08:11:49.327000+00:00",
+    "peak_closed_position_overlap": 20,
+    "opened_first3min": 1,
+    "opened_within30s_of_hour": 0,
+    "closed_within30s_of_hour": 0,
+    "one_hour_30s": 0,
+    "integer_hour_30s": 0,
+    "holding_min_seconds": 218.856,
+    "holding_median_seconds": 1113.211,
+    "holding_max_seconds": 1117.466,
+    "peak_notional_median": 10.23389453,
+    "timer": {
+      "timer_loss_share": 1.0,
+      "timer_loss_mode_s": 1115,
+      "timer_all_share": 0.86,
+      "timer_all_mode_s": 1114
+    }
+  },
+  "largest_second_groups": [
+    {
+      "n": 7,
+      "first_close": "2026-08-03T08:11:48.027000+00:00",
+      "last_close": "2026-08-03T08:11:48.996000+00:00",
+      "close_span_ms": 969,
+      "first_open": "2026-08-03T07:53:10.561000+00:00",
+      "last_open": "2026-08-03T07:53:16.839000+00:00",
+      "position_ids": [
+        "1136567425166221312",
+        "1136567432648859648",
+        "1136567435941388288",
+        "1136567441201045504",
+        "1136567446167101440",
+        "1136567448868233216",
+        "1136567451498061824"
+      ]
+    },
+    {
+      "n": 6,
+      "first_close": "2026-08-03T08:11:47.091000+00:00",
+      "last_close": "2026-08-03T08:11:47.863000+00:00",
+      "close_span_ms": 772,
+      "first_open": "2026-08-03T07:53:10.208000+00:00",
+      "last_open": "2026-08-03T08:08:08.367000+00:00",
+      "position_ids": [
+        "1136567423685632000",
+        "1136567426927828992",
+        "1136567442690023424",
+        "1136567443763765248",
+        "1136567447714799616",
+        "1136571190837518336"
+      ]
+    },
+    {
+      "n": 5,
+      "first_close": "2026-08-03T08:11:46.189000+00:00",
+      "last_close": "2026-08-03T08:11:46.912000+00:00",
+      "close_span_ms": 723,
+      "first_open": "2026-08-03T07:53:11.433000+00:00",
+      "last_open": "2026-08-03T07:53:16.479000+00:00",
+      "position_ids": [
+        "1136567428823654400",
+        "1136567430736257024",
+        "1136567439800147968",
+        "1136567445068193792",
+        "1136567449988112384"
+      ]
+    },
+    {
+      "n": 2,
+      "first_close": "2026-08-03T08:11:49.165000+00:00",
+      "last_close": "2026-08-03T08:11:49.327000+00:00",
+      "close_span_ms": 162,
+      "first_open": "2026-08-03T07:53:12.731000+00:00",
+      "last_open": "2026-08-03T07:53:13.771000+00:00",
+      "position_ids": [
+        "1136567434267860992",
+        "1136567438629937152"
+      ]
+    },
+    {
+      "n": 1,
+      "first_close": "2026-06-27T06:00:06.874000+00:00",
+      "last_close": "2026-06-27T06:00:06.874000+00:00",
+      "close_span_ms": 0,
+      "first_open": "2026-06-26T18:00:19.079000+00:00",
+      "last_open": "2026-06-26T18:00:19.079000+00:00",
+      "position_ids": [
+        "1122949478552182784"
+      ]
+    }
+  ],
+  "position_volume_differences": [
+    "1136567422108573696",
+    "1136567425166221312",
+    "1136567449988112384",
+    "1136567451498061824"
+  ],
+  "full_audit_path": "..\\lab-data\\open-automata\\pxtrader_audit_2026-11-07.json",
+  "full_audit_sha256": "dde75955fe7a00ed68cfa0879748f7b16088f25679ba42527519e97324e85285",
+  "early_switch_count": 108,
+  "early_switch_within30s": 107,
+  "late_closed_0811_utc": 20,
+  "verification": "Independent counts, interval overlap, timing boundaries and pairwise peer comparison passed."
+}

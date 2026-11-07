@@ -1,0 +1,2208 @@
+{
+  "method": "saved_minute_metadata_and_joint_opening_inventory_v1",
+  "hashes": {
+    "anno_klines/4USDT.json": "2d0df420f8ead2a5f9dcb068912249a41a3a2e04847a43c5cf1e3685065293a8",
+    "anno_klines/AAOIUSDT.json": "b5ed2ffe52e59c5562c8445299fa1d546cfa1dd57b0436619af9b03d48ce1756",
+    "anno_klines/ACEUSDT.json": "0bc0791baa0aae7f019947710029f4b70273208269f2b91b2025e098e9de5405",
+    "anno_klines/ACTUSDT.json": "db5c4f2860d5508357f6ef9f43325f8703876d60fdf160518db284886aedf017",
+    "anno_klines/AGTUSDT.json": "13815e66731d1e14f447fccef1a2c3f1a31383e9032a3feb448e1b8f173b84f9",
+    "anno_klines/AKEUSDT.json": "9fa8258d3122e11c48885193ccf436d4793127886aa16cca1153d8a0d523ff6f",
+    "anno_klines/ALGOUSDT.json": "7dfdff59756488569386779776ba8d2d689bf1415de9f51de5ba3f59bce505f9",
+    "anno_klines/ALTUSDT.json": "a659a710f0d198945853cb3aa0e78359e278c3f077f7ae369122b3a10d8c7dfe",
+    "anno_klines/ANIMEUSDT.json": "2df05df525a3374eecc14990cd3f46b760d2075dd24c6bf2e8f40d84a11a8398",
+    "anno_klines/APRUSDT.json": "1e4d99f553df4711a99f740f1a80d1227c9905c2f14d087a4ce0f75cc62201a6",
+    "anno_klines/APTUSDT.json": "4d72b8514121a3e62e010bd6de6fe339d1c0f186cf652516543eb5f540d6bb34",
+    "anno_klines/ARCUSDT.json": "36ba856333d65317bf82fc5d8c279025ff4914e3a6c908418f8004eb6def6024",
+    "anno_klines/ARIAUSDT.json": "11b0aa0c1c98b2285a3cd5e7fa999c077db89e3194c513326e9a19227caa7df6",
+    "anno_klines/ARKUSDT.json": "4dcc90b6b2fee14378968713ca6c224d422056d6965e8fea29d46b717baa8361",
+    "anno_klines/ATOMUSDT.json": "cbc6bffb88341253be3460711117fb74136e20150a0208ac49515934f79f2b23",
+    "anno_klines/AUSDT.json": "525f666135519fcea20dd10f06d9e80748fca231814ef4f8d8d83a1086f1c8dc",
+    "anno_klines/AVAUSDT.json": "b810c94019dc10c2f1f49f41cc5090bed96f3c0b0ad9ba3773ec5195ebfec47f",
+    "anno_klines/AXTIUSDT.json": "98b4dc36e559bcb9f0612565ef741232b033cbdbe91d730aff496ff2627cc093",
+    "anno_klines/BASEDUSDT.json": "20b8944f01d961a50489b49b01bc19af8c2cf4cee2d84ef70c237a2d9d8b9d4c",
+    "anno_klines/BATUSDT.json": "1d384fa0b1182401bd557ab45c0bca4a511e0a18577c3013befee2c691a182fe",
+    "anno_klines/BERAUSDT.json": "a391cc5eff3de798b35cace7f5fabc0b8e782d6f75212c46cf637d8753a11317",
+    "anno_klines/BEUSDT.json": "807f9df211334e4b25e00a2541c84abef777ce1961a3752b797dfe714aa3d9a5",
+    "anno_klines/BOMEUSDT.json": "d29f5694a44bab43377666195751180ae5df33545fe0e68d759449a8530f9155",
+    "anno_klines/BRUSDT.json": "5e89da55cf669dd90ae256583e1c1b799bc5226c049ee6c9eef478ec0350b9e3",
+    "anno_klines/BSPUSDT.json": "ab4a8749941a5bfa736d5ea6c8d90efb1ce1a29ad963141ade0876d69a1bd1d8",
+    "anno_klines/BTRUSDT.json": "69c4f717f05d35dda00d94544b75f6d166ebab1068746c3247a2163e32d226b2",
+    "anno_klines/BTWUSDT.json": "05d02f0283eb532ceec0aeb94200dd17574e0099e1a7eaf20cd16b5373042110",
+    "anno_klines/BULLAUSDT.json": "f77c80b492c4e0bdad762830382b2b21c24ce15efdd91f6363b7f16861a7819d",
+    "anno_klines/CAPUSDT.json": "4cdb07e94a5b882907b2358827bf2722a16f3a07f7e3066719181f1d2b09f0dd",
+    "anno_klines/CFXUSDT.json": "768b97a64c9001a384f3b20a74fa8aa7d7021979faa7a277b29fbae686c9d7cd",
+    "anno_klines/CHIPUSDT.json": "989e3ee28ea876bd450d5175f3b4ecd3212ed34257f3858c847beabd99de5543",
+    "anno_klines/CKBUSDT.json": "e3f01b297dade18ad9fb2c428cf8eadd3135dd99b7c739b8cae9580e34c2e20f",
+    "anno_klines/COMPUSDT.json": "d07fa11c36166d552576b147f60861a1eda0273749589c2ebfedc12900e21994",
+    "anno_klines/CSOPSKHYNIX2LUSDT.json": "b26c320bfdff3aea2b13879d681c0cd804f98ec46f1a3a5c58a38f91a117575b",
+    "anno_klines/CTUSDT.json": "ea3bc4bb45171c22e20576616e37acd5160ac0d8d13451227584fec60aab3bb5",
+    "anno_klines/CVXUSDT.json": "7a2964bd733cc7ac69a3f668cc2681b6d97a97a5891682da52946679153a77a0",
+    "anno_klines/DEEPUSDT.json": "42005e3fd4924ab0b50ec5ef60a2aad125d372757cc45f39ac5415f2e293b262",
+    "anno_klines/DOODUSDT.json": "fdadeb9e33332f63878d3b3d052ee1c4bc643891d29b5fefa62fb8f1f964f83c",
+    "anno_klines/DOSUSDT.json": "21aa9151077d19f87b58d5387a0b94e625e8f8bfbf4eb10c30df5785fe53d833",
+    "anno_klines/DYMUSDT.json": "83fd4eb56f560073069308e5c764b3409b24140743b9fe5dac11fd69340b37fc",
+    "anno_klines/EIGENUSDT.json": "e55a836f6053f8bd8278a2419f6cb6f59d8ab3532d72d49f6da3ed15adba15d9",
+    "anno_klines/ELSAUSDT.json": "2d7ba3be736a80242ba0bb14a61fe130581070cd5b6b717e4c05c254b3eb0fff",
+    "anno_klines/ERAUSDT.json": "e16114af8dfaeb931236c7a099353dc7d953afbb86a1ecbb5cb5cf84520e3ca1",
+    "anno_klines/ETHFIUSDT.json": "539d93814456c277afdfe21b9ddd9296d027b424f5bea9e41935fd5d03aa15b3",
+    "anno_klines/FILUSDT.json": "89f13b32ec6cbdb90a1de8ed6767c83aa5b2296410f6f110ce356a314dff56de",
+    "anno_klines/FOLKSUSDT.json": "deb13164ea2efb3042dd0e4118d3055003e157cb423eda256bceeef4cd971da4",
+    "anno_klines/GRASSUSDT.json": "068d0372653c84c95c2449cde898d76a35903e79fa9cc5361f05549889c96c30",
+    "anno_klines/GRVTUSDT.json": "c45b67d45d65dd22cfd311766646bb534126fba1b9d095b3c4e2ee40803156e3",
+    "anno_klines/GTCUSDT.json": "0d9d95bf4ab2a0027060b4a38fa67cca03e3c4455cbfd9729fa2d890b8fd47ae",
+    "anno_klines/GUSDT.json": "f37feb4cd4fb3a1381f2d461c81f5598929029b4427809566990e5f8dae40b27",
+    "anno_klines/GWEIUSDT.json": "bb49218610b7da5ca8f6dad919ad2ab1ae85d8678be815d2950e618bb2056098",
+    "anno_klines/HEMIUSDT.json": "e1fd903f21186bfb9d95a19af356da92fafd2f40ef94f909f9c976f3eeaceb48",
+    "anno_klines/ICNTUSDT.json": "6503643af155b510af01e95f1d0ea3590ec550041a1d993a1e46d18103b08cab",
+    "anno_klines/INITUSDT.json": "507419fbb3d9ded357430d7a870c124911680dc65c7d9c8ea8262509fb68782e",
+    "anno_klines/INJUSDT.json": "8caf29ed79abed87dd0147188ddca523c748c623a7a1f5f1b58d4c1567751bad",
+    "anno_klines/INTWUSDT.json": "bdcdb3b08985df748d9be80af7e1c7f701606d9159dcd6c6780bea5da1663891",
+    "anno_klines/INUSDT.json": "25059d131825eae2b438ec944dd6a095ddb81dac1133f673e3fca39faf8e2512",
+    "anno_klines/IOSTUSDT.json": "69d7d886546750b14e4e77de14b7350cf742da984eb93a9ecd5340ee3a92f9d9",
+    "anno_klines/IOTXUSDT.json": "6183a4a6be04016531de5926db6368303d25a400bf6a9ac02c65ed3b872e6142",
+    "anno_klines/IOUSDT.json": "4e4e5817e2bbb84861fa10f7f578f208312c37a707c253d8009bd609cb2ff99b",
+    "anno_klines/IRYSUSDT.json": "d5a1f8a810482db79bf4fcc98ce0fd3db3fc1eedb0033b433d949ce4d5463ec5",
+    "anno_klines/JCTUSDT.json": "34b601ebad3d03c245075fb384e419fea701ffac38e815f4d760cca228bb7927",
+    "anno_klines/JTOUSDT.json": "5b0c5b1d1b0f88bd2f1117c01c790ff9db917a28712f5ac0f2f46610f851b4eb",
+    "anno_klines/JUPUSDT.json": "5146d05a75754852ac91bdfe5952ed89b0ab0d395a11bd3352766088008e73eb",
+    "anno_klines/KATUSDT.json": "a9757ff4c4acaa24302ba85a86a781bd301ccca26b2be42b376d0cca9365c0c6",
+    "anno_klines/KMNOUSDT.json": "71f94f8314fc88c239cb098c7381151f948487cecd050d32e9ada9dbb5e3b64d",
+    "anno_klines/KORUUSDT.json": "f0b9e4fd72cdf8a3062d3a6e02e42931c59b87936ad9c99f67c5e468aab8edb2",
+    "anno_klines/LABUSDT.json": "18287700cefa60c46df616b1afbc7285e773824bd2d0deddaf521f664f854198",
+    "anno_klines/LAUSDT.json": "7403547a7d11ad86c7d88ad07b28fd8ab482d6e1a734d7fc0b365bcf1b9f9e36",
+    "anno_klines/LDOUSDT.json": "f8ed9bbb091de55e6618a396b6aaaf3787c9a69d55432f115a977ba741e4b320",
+    "anno_klines/LITUSDT.json": "8e790b6d99d01b9205e4db6e84c9a603eccde9bf63a2b570ac925045b48ff80f",
+    "anno_klines/LPTUSDT.json": "f1123eb4b03e056e7e307769f178449b65d69fab2e624ed9b35f4c42c222fc0a",
+    "anno_klines/LSKUSDT.json": "4550c9f56c994c836f5cb26d30295e9540689f302b897538e3004cbfc74fd8f4",
+    "anno_klines/LUMIAUSDT.json": "a1d1fca17145b44e4c74781503990b52a49f3c6c85f2f834551d927f1774e663",
+    "anno_klines/MAGICUSDT.json": "a7af31af1bd0b5df30845fcae00c4c0284c07ad3a9c323f8c5b8440936ba36d8",
+    "anno_klines/MAGMAUSDT.json": "f8b6f7a3ecdc9a1bbfea78add5411e72ad08be4064cad5d806d00171f7d07839",
+    "anno_klines/MANAUSDT.json": "c4581f58761035acc50a66ae7fc162b44d5e12fb80bd1e454b06ac5853278875",
+    "anno_klines/MARSCOINUSDT.json": "b7aa0c565c800aaad9f3a26f228189528bf7dc20309da7866da01eba4d15d36c",
+    "anno_klines/MASKUSDT.json": "f25f6bb34cce863267c651e4c5896a508e58895d3b588f465f9e993bc3b12767",
+    "anno_klines/METISUSDT.json": "4e33e2ef43fb9e76e6b4cdf4f3ff1b4a55125508408e805fd02c07960f19c642",
+    "anno_klines/METUSDT.json": "6385eefe85d07c06c5b1332b0fd4e13dcc2af3621b42a63c60cf43f1eef0e50f",
+    "anno_klines/MEWUSDT.json": "e883ec39b1774c8163177caf83f3415b6cdee7ec6ace57dbecb02e87e1b2b907",
+    "anno_klines/MONUSDT.json": "f347f76eaf9d21a8553261b4206dcbd38a4bf8efc6248fe8795f9cb73d53a51a",
+    "anno_klines/MOVRUSDT.json": "8971c9edc2380139c557584a9683a5dc5a67e03ac73dbd60ba6206b6d6098b60",
+    "anno_klines/MSTUUSDT.json": "6050ef809a7fa69f480bf653810b5c2b008aecf7991737138f72ab398eb7d362",
+    "anno_klines/MUBARAKUSDT.json": "969a3b6fb783964635df3965104fef923e6abe9ff2bc1f7db6f0b57bf7e99bc6",
+    "anno_klines/MUUUSDT.json": "b9f2dc421edcf1861a2a59f9c6d142aacb279f21a4a13a2fb3b151dc5bf2c6ec",
+    "anno_klines/MVLLUSDT.json": "a1c526fd43d0ceb930d5dea11d63672854471a5b9f23508dbf0a2ad905811838",
+    "anno_klines/NEARUSDT.json": "4f135c1a3281d6d75c91555b58117377b07e8efdc99ac524f006f36f561a3407",
+    "anno_klines/NEOUSDT.json": "9ee4b3870a343fb6afe8326b3d4ecf3a8dc63931473412532ba446a9f5ced68b",
+    "anno_klines/NIGHTUSDT.json": "752b00a5e7031d8cb7ac2a680905c1a88d686a3aabbe8f63d9fe5b99383ac7af",
+    "anno_klines/NILUSDT.json": "ff594ff3a1c16b4f815ac2eaff288c970335f4addf6458a251a2a78b4f75d258",
+    "anno_klines/NMRUSDT.json": "232e3df928449c78d29bad013503d02c04213e339a834c2982ddd8f164a80157",
+    "anno_klines/OGNUSDT.json": "36435db3d8d7fdc158c69f92e308d99350418c457176a379f84acaef28fe2883",
+    "anno_klines/ONUSDT.json": "5029e76fa70e91057c50bf8df5ba5d6efb1620c46b89228438cfa84bd5cae18c",
+    "anno_klines/OPUSDT.json": "d306e4af2f07c27c2d1e258d63e5b311c49faa01a4c5353a5bea97cd006c37e3",
+    "anno_klines/PHAUSDT.json": "4d142361cb72e22536b571ab39830275da994b9a7619f4925698bae844e6a7ea",
+    "anno_klines/PLUMEUSDT.json": "bb5b371fcd1f09798702d2ae46027e16c3b3e4664cd120b71648d665c1993ca3",
+    "anno_klines/PONSUSDT.json": "4d809158344a226a6e45062c9c73004449670dc01177cf40327e0f45b71735b5",
+    "anno_klines/PROMUSDT.json": "81e19a51259b2715269fac4abba73f720cd1953566ba97a13120dbe0a0ae20c7",
+    "anno_klines/PUMPUSDT.json": "c3535cd9b5277993e95f0c7b8af2899dfa4a512d7f0c57ba777f34dc5de16581",
+    "anno_klines/PYTHUSDT.json": "b375fc43e6186f686c977010dd04e99327ee0b9702ac53f656b62e2c1498e2a8",
+    "anno_klines/QNTUSDT.json": "0d6b81b770f32412a5b39d900d5b3ee07647f5021e1d9248f83b6038eb87deb5",
+    "anno_klines/QUSDT.json": "2e035a6239f0cdaac5901303c6ed9444ec290bf23f2237ae7aa4a3035c558acf",
+    "anno_klines/RAYSOLUSDT.json": "405c3eff5565202d1d2b524f5d9bd07e8b9e46a4da00f6d6126441555b838b0c",
+    "anno_klines/REDUSDT.json": "2a675548c70025c933d750b456c41b6d0469ab19fa1851209fd0abd437525a21",
+    "anno_klines/RENDERUSDT.json": "949d30be3e42cfa7f3b8140177919b55c6c7e3874910f725c9dea49918c58a55",
+    "anno_klines/REZUSDT.json": "b65173bfeb0d60ce5b005a57ba9fa5180c860d3c8db37d5277755bc90ac81ae3",
+    "anno_klines/RLCUSDT.json": "9c5b6739640b6ce8f1ed1c6feef5f614254853be32f452d8269cf3254b7a7a83",
+    "anno_klines/RONINUSDT.json": "3c954d860f16ad3319ee07cbdc626b02a55b8094f16c586546c0d76761be1520",
+    "anno_klines/ROSEUSDT.json": "566a983b7057e0e8e2946524e51c749b5211b223dcbe2fad980a7f0791972f3b",
+    "anno_klines/RSRUSDT.json": "302a607e11e4ea96efb9fbf0717d277b1014756a2d68da0b94bd93e58db66890",
+    "anno_klines/SANDUSDT.json": "f0063a35c829785468a0a464155ba873aa8f8a441ffb0c0663be9e4d42649740",
+    "anno_klines/SIRENUSDT.json": "7611deb098f6e964e40a4ca625752b0bc9b039c6eb7314a1dbbaf5d055b08ba2",
+    "anno_klines/SKYAIUSDT.json": "58f342d45978403d08af484d5f1aeb532b73040c079a3b0440564881c23eb5ba",
+    "anno_klines/SNXXUSDT.json": "6dc33659925943f9ee84567c43598fa4435e826cbd697073cb3af282974106e8",
+    "anno_klines/SOXLUSDT.json": "6f14cd99e83532ea48cb30fbdee0d1c4e12837a3fed93aecbd440dc4c4121f2f",
+    "anno_klines/SOXSUSDT.json": "b7aa4dd4ba43d34f1d7b04133f7e3f5de4a02fc617b49a2d73746105da68ce39",
+    "anno_klines/STRKUSDT.json": "eaac69e686a3c0c8c8046eec19b295db6ff17a2b2df3a477bf9b1870f172af37",
+    "anno_klines/STXUSDT.json": "ff40dc4b3581516c636709314cbb8cff75fb8a1aed2ecae2c2e4ab580cde1f6e",
+    "anno_klines/SUSDT.json": "fb4fe117279edb1e1000e3d7febe8e65885fdf3fc1d70461adede35ae55ac1f0",
+    "anno_klines/TAKEUSDT.json": "0595d5bf38986656322a7700789b05e6156102ac0e35b5dee1dd9090574491a4",
+    "anno_klines/TIAUSDT.json": "ab57c77454d3ac3b9ba918ed22cde16625d1114789a30e7168dd5c6bd7a0cebe",
+    "anno_klines/TRBUSDT.json": "cf482cb570a8427259d928377af2576d6aac32b23b2fd1249bf1a501aeb6c24c",
+    "anno_klines/TREEUSDT.json": "9cfce7123182ef31225dac54c1ed75f69f676e3eba48025a783e299436ea296a",
+    "anno_klines/TRUSTUSDT.json": "3541f5cff53691ff16db355199d33f6f0f4e5df3de6f3c4e1b2f2e73c29b4b0b",
+    "anno_klines/TRUTHUSDT.json": "bb6d009fd289eafd6d709fcd256976a74e3db2e4c87fead22318519c7f46855d",
+    "anno_klines/USELESSUSDT.json": "f176bf76f9cb72b7ea2c92d4224ac463e8685e1003e091c37aaab3c03e216387",
+    "anno_klines/VTHOUSDT.json": "e17e894050c195c3d51cff2e24a36dafc7f0348284ac67f3782cee86d1f9676b",
+    "anno_klines/VVVUSDT.json": "8828ec1e558bf6d681558d9a8c014d7dbb8010089c70302e3af7a7843f1590fd",
+    "anno_klines/WALUSDT.json": "f3ac024acb73f73d847dd7abba9dd1c222c805a6af2286355aba56f80b46ac65",
+    "anno_klines/WLDUSDT.json": "5b24105cabbd14c75ba3d799a5e1e7cf4e38623c6628d9478ed0723eb4a4a7e7",
+    "anno_klines/WOOUSDT.json": "77589a9beebf169b9db19a707c3d671380e671838d910076efeebce587a17413",
+    "anno_klines/WUSDT.json": "2a1fe5a0a3f823ff2dc7247d9856522f72cdaa65c005f72f1dcd35a7e7785cc9",
+    "anno_klines/XAIUSDT.json": "5574a32bd451db9c347fa7a84737e9ecdddc55dc70a1cd49d9a5aab62812a70d",
+    "anno_klines/ZAMAUSDT.json": "592cfeef35066f51c5637bebf226f198bf6aa173617449246010a86836a54216",
+    "anno_klines/ZEREBROUSDT.json": "d4418355db87d5031ad8eefb83c3f2ad9b656ae019f9b446c575495ec3156bbb",
+    "anno_klines/ZKUSDT.json": "43f10752393719ad2cdbc01c9b1f15cfe86e2bfa803a59e19aed0c513bdf7be0",
+    "anno_klines/ZORAUSDT.json": "35a1bddac7bbcd6d7c321aa063daa77e484cb2a7f8e0ddaaeb451105abf7a9d4",
+    "anno_klines/ZROUSDT.json": "45048e596caeca81829d4f4c1715235ac364ad9e76050725fdc0703706c4e636",
+    "anno_klines/\u5e01\u5b89\u4eba\u751fUSDT.json": "9e59f12f701ecdaf3b1823ccd3049a91d8b46efef5f93842ff49df9ae5efd58f",
+    "anno_klines/\u725b\u6765USDT.json": "4057e843e83a7a22c8fde47b2d8a17e283b44839108147b25548430284a2ebcf",
+    "anno_klines/\u9f99\u867eUSDT.json": "1c81a12d2e6656393a331486d43e3934e06a00fef2e44a81462d9a01ee1ea06b",
+    "dhz_klines/AGTUSDT.json": "76d49ba436f52860f50d4d42fc3080d22bbb00a40114e2c2d2a32b632e663c05",
+    "dhz_klines/AKEUSDT.json": "da6adc0fc959bfc1ccf6ef5edcec8c3a1248eab2f51e900db56999d9485828aa",
+    "dhz_klines/APRUSDT.json": "e629fe5177babaab322a1f5b170a1f02b3133854d4fdc925f0d9d6340f06e86d",
+    "dhz_klines/ARIAUSDT.json": "0dfd1cbe3fd8ad291aefe25154e577e6c025ebea609c3311004eaaf79341b474",
+    "dhz_klines/AVAUSDT.json": "1b7cf355b62b7eeafe4cf954719bfbcc6a8fcd262ccd6459095ad5df7dbdd3f4",
+    "dhz_klines/BILLUSDT.json": "e3353db23d57ef36646d4a236fe72dde79d95a2318df298b967f16dc69e98796",
+    "dhz_klines/BTRUSDT.json": "d7f840d72171f284d91232aad1b0b08a25cce35e2c8eb90fd3431ec803d2c851",
+    "dhz_klines/BTWUSDT.json": "4b9a80e86fae2bd3d8b5ca4229198355b85b8b7d2cf6e5f3295a40142973c79d",
+    "dhz_klines/CAPUSDT.json": "8dee006491c53e5c88c47aff1c1f5a7c020b6a92310e8cbf8ba6da9fb66b9b5d",
+    "dhz_klines/CHIPUSDT.json": "1aea71b81f3ffc6d9fdafef55e41c9381b7cfc4cab5f61d783a03cc21a941b78",
+    "dhz_klines/CTUSDT.json": "625f8fcfd696f8485a165b73c7eabd451accc1790183cccd8cdcdcdfffd1ff70",
+    "dhz_klines/DASHUSDT.json": "b38414cea9e1de018d297957c4930b324673308c4f7e6b5e3ab660dcd9d9c039",
+    "dhz_klines/ENAUSDT.json": "024264ce911caafee7220e7f28c37399080811e0cecab71e8e1035b1342a865c",
+    "dhz_klines/ERAUSDT.json": "cc53a18ffcfcb109e3451d7cf053ee4e0b86817d39745251079c0be10a5290c5",
+    "dhz_klines/GRASSUSDT.json": "64b105b7f0ebec665640dc87caa3d3034db6c902bf70d645594104207c885c75",
+    "dhz_klines/GTCUSDT.json": "5dc522bc8124be77f2c7e18763f2140ae469cd08a580bd6a27ee951323ddc164",
+    "dhz_klines/ICNTUSDT.json": "02b3a74ca07ebdb3996eb8a19a414d29827b6813769aaaa78ba29b8c0246be07",
+    "dhz_klines/INITUSDT.json": "339ff93a45cf02c690c17cf9ddd185017f5378d0227ae7b538f76222626294c0",
+    "dhz_klines/INUSDT.json": "cfb16b8c9ea1152828da53c4791de07c97b1a085fd16758463a00599607cfec4",
+    "dhz_klines/IRYSUSDT.json": "eeab1c848f1d02de93572a7ecc4da93f91394630d44deda58d54ca21fefab948",
+    "dhz_klines/JCTUSDT.json": "85765af51ef54672dd97532152f2a830373997a9d8cfff5e2811e1bc72932d35",
+    "dhz_klines/KATUSDT.json": "7f4a3a1a6e0155f1c8ee5838de6e02b4aa179681d867276b5feaee71b3991a85",
+    "dhz_klines/KMNOUSDT.json": "1cd9ccbf55857302eae52abca9bbd80ddc016794b52ba7a83b0aae352b97a362",
+    "dhz_klines/LAUSDT.json": "6537fcdb7567e6ca6e2cd11a3be814e953b66fc63b3bd12b2205f4db0c3bd42b",
+    "dhz_klines/LITUSDT.json": "34d36edb30ca04653029dd836523185ddcf10752439e92f691ab5fdf0ec2dd29",
+    "dhz_klines/LUMIAUSDT.json": "9261448b2ee1fb99fc04cc3480f8512288a844b55abfdc253af16e553675d706",
+    "dhz_klines/MEWUSDT.json": "8ff358c7bf70a5b1421d76ce65682e349245decf43d622bf421aa5df8f8871a5",
+    "dhz_klines/PARTIUSDT.json": "07e5e93f03dd3569e9cd64efa3d8a5f69668efa5a5163bca2f749d1b867ef974",
+    "dhz_klines/PHAUSDT.json": "60bca657ad8e0fc2e627eeeb8c62f8babe76e5fd81895b53f4e67540716e4ce0",
+    "dhz_klines/QUSDT.json": "69990b1c1dec0ce931cb1bc8bc8ae2c83287a940cf4e49abb8756a74202d4f11",
+    "dhz_klines/REZUSDT.json": "9cde4aa4c6db4a9d2d92b9b0a3b745578d8bbcd9fa6a5c9126817017dfa1cdc0",
+    "dhz_klines/SKYAIUSDT.json": "305b39a6c65a31c54d83b7ef28445a3e68ea44b48c9d26ccb8f06c3a74d4e166",
+    "dhz_klines/TAGUSDT.json": "19dcf43ee93bb8b594ee4eb6310c2f3ee7c3c943a24f1974b59c0e0887c2c378",
+    "dhz_klines/TAUSDT.json": "b00d70045a4fd5e16263f1c2bec41c19e45f99e968fce61ca74b2131884cb196",
+    "dhz_klines/TREEUSDT.json": "2e3b570fc092e151c85903bbc080337b5135f8e0cc33cf04a964fe5e680c7497",
+    "dhz_klines/USELESSUSDT.json": "356afc674cb0d1da539b6c5efa431e56ae56bdd0c17826bfa6a3602edb4bbaa5",
+    "dhz_klines/WLDUSDT.json": "0327b028c0904a66ec51b294db9432547b52cbcefd784aeea29f406f919a7d02",
+    "dhz_klines/XMRUSDT.json": "bb76d4ccbc4df4c387f4b2f2be71e67ecc5e8a391b99f1eab577be614b41e34f",
+    "twin_klines/1000BONKUSDT.json": "f1b5483a4782f04b847789a3f9b5b36374498b0df29c3d16936928b6e57af239",
+    "twin_klines/1000CATUSDT.json": "7903a871cf0adcfe5a7942a0117690a2fef68c9c520dabcc606fd9bf44310c78",
+    "twin_klines/1000PEPEUSDT.json": "adf1e327970bd4c51e2eefa098fea773ff8fe72d476010f6d11fc024dd4090fe",
+    "twin_klines/1000SHIBUSDT.json": "dba84346228946e17aac1f1dd9b0912977283e29284757b3768ac764f0100c98",
+    "twin_klines/1000XECUSDT.json": "5dbd61a1410e1eeffce64dfb36470060dc989d2189dc000c5f9e0f379f44d432",
+    "twin_klines/_missing.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "twin_klines/AAOIUSDT.json": "76d83ad5b98dc6dcd761ec602913984c40b90b031d23c564999204b8f07abd13",
+    "twin_klines/AEVOUSDT.json": "b98934f59b5504122e69f09901753c59c6a15ca038850c7d8c9691d9871cca65",
+    "twin_klines/AIGENSYNUSDT.json": "df97dcfbade39fc64807927b59cd68593d80e946c973efc811377f1988879f40",
+    "twin_klines/AINUSDT.json": "45bd5a499bda35cfedfba5827785879b5edf456dcc83f43086d79f6c734eb87c",
+    "twin_klines/AIOUSDT.json": "c0ee08906804a324e2e23ef1b1419a6c2b2223c45b6f0849632f0d4795c3a314",
+    "twin_klines/AKEUSDT.json": "1d21e265eed4c42ea5ed7e265be3844f75d219f5ec092ae62b73f422e73390b4",
+    "twin_klines/ARIAUSDT.json": "8d6bc63d0948397cbdc5127e61c287c3e9a6b6d314a9ece28c24a1072661917a",
+    "twin_klines/ARMUSDT.json": "50bf85636449fa2476f4486a87f414710563d44ae98cb47aac875d2c5f5dbaa5",
+    "twin_klines/ARPAUSDT.json": "b695731c2db611fa3b2c15247ff068d19e5e77d6751525c9b58a067d92fe331c",
+    "twin_klines/ARXUSDT.json": "1e1dc5773e086a2a8ba58b75d6d838cfc6b10463409e1f7d90590468ac90086c",
+    "twin_klines/AVNTUSDT.json": "247133df94fa9c05e62019d2e65cfde1c04588e2f14197d37e0f8c6e43cb7029",
+    "twin_klines/AXTIUSDT.json": "74e379018519e53d451a7851f1ce6aa794803e88d0a3b2b3cbc11e0792553775",
+    "twin_klines/BANKUSDT.json": "daddae92d90e95ffe8a81dd253499bd2b793ca6df87147916bc487a6f0214666",
+    "twin_klines/BASEDUSDT.json": "4e3763bd0a48da1c92d24de2e90ca4dc05820775132625fbca4918707988b95a",
+    "twin_klines/BBUSDT.json": "7326a02fdd3ea72658203dd2c9009680dad88874e7fa6039dbdd9ff8ced5b8db",
+    "twin_klines/BEUSDT.json": "0555e69044bcadbb511ba062a7bee8b7e187ce34c9f8cb95ff260495a850b0c6",
+    "twin_klines/BILLUSDT.json": "db8360b9cdcd06df90c657b37b07209aa53e285f3cadba306f6d0fe3f6492f6b",
+    "twin_klines/BIRBUSDT.json": "0fba68d630a576046c1c5c7925101e7babe9e8ceeb88d412dc05128729a739fa",
+    "twin_klines/BLESSUSDT.json": "47aad1c9ede2c0c3bb62822c3c087b57b119ddb7334f6b006b9d064a57238644",
+    "twin_klines/BMTUSDT.json": "1ab2e162e80206f114c4888f5403e56607d382e4b1967198ad959aa1b31b1f66",
+    "twin_klines/BOMEUSDT.json": "e4bcfd12cf80f8543d550250807cd0e4ec466e48cf04bbbb130b19a952578212",
+    "twin_klines/BREVUSDT.json": "840a22e1b2a1b80cbf458a9cfe020ddd9b69feadca2c29cedcd8a6b534f5768b",
+    "twin_klines/BTWUSDT.json": "e09ab9eb79875032ee4a59af5cfd9e541fcba9b0aa63e85108f4f48e8a74a056",
+    "twin_klines/BZUSDT.json": "7779bbba634c8d67600f0505f691722db292e99d3c922f30e125f565cac8105c",
+    "twin_klines/C98USDT.json": "fec9c79ba612369b6f4e7340b2ae884717f396cc143a4ca8792b3248d96b775b",
+    "twin_klines/CAPUSDT.json": "4e77322b195940dd12c43754486a282f2616e099cde1ba06a1c9c75e851806e6",
+    "twin_klines/CBRSUSDT.json": "bdf3bbc2330cd53f99ae2492b7853848c3469abffdd10a87c45849f8f2756a06",
+    "twin_klines/CHIPUSDT.json": "f4c1f5144e82a30bb5cb4c1c0451feb4a38964028f72f451847dfc5eea543d9f",
+    "twin_klines/CLUSDT.json": "6d5080677bf93bae9c5b0ef8ecab1faf1420c78f157f001cfd77f2d2c5b9ae2b",
+    "twin_klines/COAIUSDT.json": "f3079c0fe30ebde08c16ad2daf7ae77a54fb4cf11aaad491a60b0ef4b2f05d8a",
+    "twin_klines/COHRUSDT.json": "36c8f013efc5312a0c5ec4636362a28201f962015a94cf1d024834a6b6427b6e",
+    "twin_klines/COLLECTUSDT.json": "f5d82b405c1d40d2bb8bb13beece82268c9faa7214da5a7277d5241ee57be279",
+    "twin_klines/CRCLUSDT.json": "86bccfd14ed314a72e7083435ea1b2c371d5d32eabc9598fc5059d1f1a4dd6cd",
+    "twin_klines/CYSUSDT.json": "86f5790365ca87cd571b4accd21452a32707a9a1c085afa1ebf95cf610dc9ef0",
+    "twin_klines/DIAUSDT.json": "4b0ed39f20e05550e2ca0929e494f11fce72b131ce83964981648c076dd4875e",
+    "twin_klines/DOGSUSDT.json": "2ec0fd510769af25e38b886398e33ceab7db26a82bb6b8a479e78f0a35a677ed",
+    "twin_klines/DOSUSDT.json": "edd2d3ecdf792a6206b6a89854a63c7c206b1f2461b8ab9338760cd6bb53fba4",
+    "twin_klines/EDENUSDT.json": "dc03edcaf031e4836d7b7ae7690f827fb1f0e39d6631011b371b0716773ab12e",
+    "twin_klines/ENAUSDT.json": "24029a647d38afe49054eac2fca48904bfb37bb8889dad629438100d5a606c4e",
+    "twin_klines/ERAUSDT.json": "c68c69168c2db0fd62b3b5b0c04d7a193e31f1f0397e459cc5e3e743e6f41754",
+    "twin_klines/ESPORTSUSDT.json": "e1577886fab560033566ecf0bf06596d84f22edc8469b22fd43a9e3fe162081a",
+    "twin_klines/ESPUSDT.json": "6613da869947262d551565488196764951bb1656d6472bd25aa3cb045bc9aeb4",
+    "twin_klines/EULUSDT.json": "16b25a4a65fd79b1aa3b301ec4f130e096b684e14aa249561ac2688ae342db1e",
+    "twin_klines/EVAAUSDT.json": "1312102da34ec9b5a2b9f3778818e01e06146b1dd202ada9f2e9f9a311cdd8ef",
+    "twin_klines/FFUSDT.json": "3dda8a3a38f361582b039f2690a9b84c459f7835f298acafe583fe8170c67297",
+    "twin_klines/FIGHTUSDT.json": "3073ffccac3cd501aa46977ec5944db764c505247c3c80b9ad85be29cdcfc8ba",
+    "twin_klines/FILUSDT.json": "b62915afce6504f68eb4c9bb2bc14c6eebc234077ba16e52acb3360756aae28a",
+    "twin_klines/FLOCKUSDT.json": "610a19897f2ceace185c25c66744ea066cdf3864d18c8dc760e5ba6fb5085f39",
+    "twin_klines/GIGGLEUSDT.json": "817088e5d269b64d70f5d106fcb86ffbefe3c0c5c15c84c6e7c742934f506097",
+    "twin_klines/GRVTUSDT.json": "fb558055f28a43332eddf1341b0e99884a48394fdc4b82ca7cd80162b9549e57",
+    "twin_klines/GWEIUSDT.json": "c4a751cb3497a8f2e34cc31d0d6ce9072cb9c97851aac83766a18764ffb451a2",
+    "twin_klines/HOLOUSDT.json": "8405c1b2914f7540d9074873b421494b93e228f64dd85e14bff8bccf6523bee8",
+    "twin_klines/HOTUSDT.json": "cf244d16e492c6783ad12d7f394902d08c28b997a9c6101f1d27ce379a408ffe",
+    "twin_klines/HUSDT.json": "5323fb21d84858c1c62667bdba2d3a1d40964f27749cbd9cf73e7ebfe4129e3d",
+    "twin_klines/ICNTUSDT.json": "1c0f864609262bb5c843c2ebac7cbe6b89f54d8e0c6a9df2ba2023a5d335d2f9",
+    "twin_klines/IDOLUSDT.json": "74545ea47fb293a9a906b8e7414a177553a5f5b3cddb00204444651fc3dd54c5",
+    "twin_klines/INTCUSDT.json": "c0c288027ed7ecd980951f7fa8adff16b4e54bd62f9fce769f29d86e04e166bf",
+    "twin_klines/INXUSDT.json": "67cd44d357087ed099bcba165d163d04f109754de6f3ef5a48fb7a3bd51c06e5",
+    "twin_klines/IOTXUSDT.json": "1bd729d248bdba12813919bcf49dc7526d7a89169bcd9422a73b4a5b6cc380a4",
+    "twin_klines/JTOUSDT.json": "16e6902d1a7fffe24b7c97eef580fdfa37e93db240692783f17b73792d8ba7c2",
+    "twin_klines/KATUSDT.json": "699e3bc15d14eb962dc264e241319d7a9f3eb666c0553fd47ab8578ea0288e16",
+    "twin_klines/KORUUSDT.json": "50f356ceed70c5eb0b60b0f35a0bb884800a9a11a5abfae0c019cc754c07d1a1",
+    "twin_klines/LABUSDT.json": "d871bbb584777b99f43a583417cc7b39f82a3659daa5978bc5abe430a5e0f169",
+    "twin_klines/LAUSDT.json": "265184b44db04aab38fbfd7b273e788f6b19bfb3465d91954641014b98dd3ab7",
+    "twin_klines/LITUSDT.json": "0cd147bc6a52b96b6a371ce99da74cd1f8b67551585b44bb0b165c852f68b024",
+    "twin_klines/LSKUSDT.json": "22a7eef68c6fb124d90518f313da25720758b6d05b11018725bc3a9ee9c11f7a",
+    "twin_klines/LUNA2USDT.json": "0006bc8699e078f71dcc52e71a66c3c0fd760aeb79b33e0f9e4d8b75276c0aa5",
+    "twin_klines/MAGMAUSDT.json": "f85f9e037e3e1629042347f636890893506c5579cacb31ca194d7ae47e51460f",
+    "twin_klines/MANAUSDT.json": "5f0c4e2b167f15ce5c7d5ab56b32d86238a064ff878d33c345e1114411ddc138",
+    "twin_klines/MANTAUSDT.json": "40383a37909a3ce771f917e54d49afb1c05ef6f3bab07cfe7150197007b17110",
+    "twin_klines/MANTRAUSDT.json": "fe90b5b5df860300d9018e257e49d13e8cd22ceee73fad00f52155a801d9ddc7",
+    "twin_klines/MARSCOINUSDT.json": "2a87e6a353a96bb32c77fd83b114073c1c0edb22b1babf9cd0f2aba25a118258",
+    "twin_klines/METAUSDT.json": "2015648fe4ce0da2b449d3b0aa35c6356fca44cd5cd09582057218133a765250",
+    "twin_klines/MINIMAXUSDT.json": "8508dc574778ff33c7dacfea2d7b379c79d4ed71e172610bb76dd888a4e65c64",
+    "twin_klines/MIRAUSDT.json": "4c87878a0c5bc3922abe220d4bd6ba1f390c6538bce5037c1bfb6aaa615647b3",
+    "twin_klines/MSTRUSDT.json": "4acaf63740892f60a38f0210d078d1ed52f32c1c8d936b394b78a65776a8dfdd",
+    "twin_klines/MUUUSDT.json": "d698264e98d091d25e16503a8b3e85dda5ba531544c4e71240c32fc0938533ab",
+    "twin_klines/MVLLUSDT.json": "53afd1f4b13b3c0843943ad3de068843faf72eadc7a930e1bf8d92116a5a2d1f",
+    "twin_klines/NBISUSDT.json": "d520b280e5190dfac4a29d651798b714e67b7b6a194988b7294049288dc3b21c",
+    "twin_klines/NEARUSDT.json": "955b5537fdb1174c92447466effde357c0ce29ac9188e4404ded9689bd97528c",
+    "twin_klines/NEIROUSDT.json": "0b7abd0c33293e46f8291cf61a607a0981ad3b04ac604f372ba3917717e44bcc",
+    "twin_klines/NIGHTUSDT.json": "120135e64065e476f0e0cbc8670d668eea7d547a1fd81b15cbc9ddccde6be40d",
+    "twin_klines/OGNUSDT.json": "53c2b8d95088c5a42d28225cb168b84f785c21ab2e9c539f43932a9a60f16476",
+    "twin_klines/ONEUSDT.json": "39d368b5e771843c1e4865daded1e1dc96598d19312457c680e223b6c6d1b3ee",
+    "twin_klines/ONGUSDT.json": "ed1a35cf3355fabb40b7488fb5593d93401ff17fbf6f145377511e91997120ba",
+    "twin_klines/OPNUSDT.json": "63b6882855ab9e56ae0c2107d1af3ac9d5f18c670dc902d9843a94418f725274",
+    "twin_klines/OPUSDT.json": "7d9cb0ea3111d5a6b17c9ccafe42af81bd1b05653ac21f39f985972787543a90",
+    "twin_klines/ORCLUSDT.json": "674a720962e8a642b6482c0153a4b06e172f0f62020d9c5b8fefcc83b1559adb",
+    "twin_klines/ORDIUSDT.json": "8acc8883456402a817e750f521d4c19d38783fd01cb79bd7423bfc3268ef3837",
+    "twin_klines/OUSDT.json": "dd9f3ccba8eae3e85b12929035154b1dbb970df9acdf61f16243e35f28bbe16f",
+    "twin_klines/PHAROSUSDT.json": "85ff9d7695b31f844bcff52f2575eeada33daa6c1f82e3be2a57fe05dc334cce",
+    "twin_klines/PORTALUSDT.json": "540e2b1256466dfc11974e26f6162de4a2e2322d2823cfec22a0924184cb5a63",
+    "twin_klines/PRLUSDT.json": "9a8df62c63e8a20382a3771e226f88791252fb7447509bbb0db4b9713c5c4979",
+    "twin_klines/PTBUSDT.json": "93cc9c04815ea45c615b812666085dcbd35186ed82864398e2b3fb6368135e8f",
+    "twin_klines/REUSDT.json": "449e5489ba7ecf92e9da425cffd64a3c14ca933fd85f91a6c023c8ae53c82ab3",
+    "twin_klines/RKLBUSDT.json": "2718446395a0f6d29f75e941c7c020e94f97358963b7ad4fdb19e88ed9961265",
+    "twin_klines/ROBOUSDT.json": "83c5fa89da1360c972c66f42a0cbed60cb09c55a25987e914f334799d110b71f",
+    "twin_klines/RPLUSDT.json": "fc193e95e95141d95e5e0ba419f60cd326dccc78886b1f92a20031ffbfd4fc06",
+    "twin_klines/SAFEUSDT.json": "cf65558a82672bf0a564587db07b5257c8d2dc80e9a4fd982a0340982d4efcf9",
+    "twin_klines/SAMSUNGUSDT.json": "6c483f15e6e46a64c910ce70ca7bb9c5b8d86a6f25411516dba0dfc19b8604a4",
+    "twin_klines/SANDUSDT.json": "97ed5074b0256b134ebaa9f7a4f23465d155bdc39da690400045a8d298ff20d7",
+    "twin_klines/SENTUSDT.json": "f3e4fb42b2b24a50f998dce8a20fe0d25b46af52a95d65cf89f54d33a0715c65",
+    "twin_klines/SKHYNIXUSDT.json": "71bf84c59944faa762accd2f04d6d04f645448a81d614b42fb61caf1c46b92e6",
+    "twin_klines/SKHYUSDT.json": "ab63dfb68fd831d4dbfc8169a5586772a8e3c50b4f0b9bb3d8a1ee7b416b75a5",
+    "twin_klines/SKLUSDT.json": "59cf6cfda783a4f367432e5d29f28a10b020d7c966759195748ad4406abe9def",
+    "twin_klines/SKRUSDT.json": "6106b79bdff0b4da5a60309dd4b6914036bd102f2561e9431732efa8bd0b7cad",
+    "twin_klines/SLXUSDT.json": "703010631e370d5dd3f78d2a01efbc8f8636487952d99fbebf73324fe11b9f4c",
+    "twin_klines/SNXXUSDT.json": "779046286cc5fe5affe91e86522b6d65175cb5036dc344521d5a084d147a5cc0",
+    "twin_klines/SOXLUSDT.json": "36d87e3ad1e4b984e86ca2d7a157001e6d7f41d55687036d366c0a7875d91f15",
+    "twin_klines/SOXSUSDT.json": "2d875b64f055fef0b9f378eed38949fc8afb30602c9be0c8b6710b3cb46c5cab",
+    "twin_klines/SPCXUSDT.json": "41ad90dce671bacbb3670f7f65cf6fb508bc9acfc47be003acc5a0569dfc5bba",
+    "twin_klines/SPELLUSDT.json": "08ca6330c14a7246090a273389a124f08ea5a6c68001f57ea5d5b2aae5692942",
+    "twin_klines/SPORTFUNUSDT.json": "4af9857e86277420f0cc5430674349a3af920030021dfe2a22b93647b2758e66",
+    "twin_klines/SQDUSDT.json": "39dd67d772a95cb4c09b70982106e33e579c4283a2e67646dc89595881d68615",
+    "twin_klines/STARUSDT.json": "7ed3772e142e9e872cb456e386d2173064409358aafabde1d04f6cd457c6351a",
+    "twin_klines/SUIUSDT.json": "b9da2ca4d1d5a3ebc01eeb605c7f0f1bc9d67f7d217f2cd3f5a0d038c366492e",
+    "twin_klines/TACUSDT.json": "e4c67d95085fa91d3c34ff86a366e1894636e55aed3346c6ecd2b39cd7429a27",
+    "twin_klines/TAIKOUSDT.json": "ac20cc09427ae4232d070b91077245c13015b28611c9125c2c1997a6bee5696c",
+    "twin_klines/TRIAUSDT.json": "82e216eed3a14c5319e0affa76c4627d24124411dee038178ef6be781be8ac14",
+    "twin_klines/TUSDT.json": "e4337f37e9a91e5afadeb2025d7448246036eea31fd8aff687c0479440c31700",
+    "twin_klines/TUTUSDT.json": "ae185e455b01e1ecc9142d9ee9f11283447ba05efbce056258920d4f9677d170",
+    "twin_klines/USELESSUSDT.json": "bae447bfd955777789436fe6b7868944c529cc92b446c4aea1666b2dbf82450b",
+    "twin_klines/VELVETUSDT.json": "529f5605f7591eab653850628044ed082a7c7f9453156891b1cb822f27f5768a",
+    "twin_klines/WLDUSDT.json": "51cdc1af3819def775668230e4383827914206825931b4afb91738079a0f2da8",
+    "twin_klines/YFIUSDT.json": "274b18f96ca81a2831af11d7a2ebc377104e1ced42e4a674bc07548555ffba2e",
+    "twin_klines/ZAMAUSDT.json": "7593593a2b0a6f89e7eb6ac25fc8f6df42de75e390ce03af3d501c7658ee7fc0",
+    "twin_klines/ZBTUSDT.json": "43f26dc02c6769030c9789593a4601a48d19c17e9f177f396524fce3e8125fc9",
+    "twin_klines/ZECUSDT.json": "4ad1db73bc35bb62072efea8d405fe409f94934a5edc16bd863a03c53694b23e",
+    "twin_klines/ZHIPUUSDT.json": "80a723e3c78ebfda4cc16e2b0f81a05da03b4a872b0e7eaf33b74fd7f9d91723",
+    "twin_klines/ZILUSDT.json": "31d08da7195d2b774930327e9ce1de14ae8b27c5942c5857d18e6a48dde192cb",
+    "twin_klines/ZKPUSDT.json": "db6eac440c3303c4690f431bf103b265f59c8a6d40494bb4888eaefc0d92e3a9",
+    "twin_klines/ZROUSDT.json": "f0998268abe77eff2efc5c31cfa99ee8d0a44ff3b389f2a1ffcad722e31f43ff",
+    "twin_klines/\u54c8\u57fa\u7c73USDT.json": "51270c7689bf2cd1a82ec5cb9d7a83272fdb52c5747209d9176d55471214712b",
+    "twin_klines/\u725b\u6765USDT.json": "af204335bc016a8cd371d0cb9c3e03a514dbef81415bd8e60338f3b69b59fb3a",
+    "twin_klines/\u9f99\u867eUSDT.json": "628dd8c00a217875db92eefe417b90927a7da48da8db6d3f5dcc3a816e0b8cd3",
+    "twin_exchangeinfo_2026-10-27.json": "64eb3ea7364fbdbf438ebe1a017573a9a6869ad2c813ae0e38db9c598862b264",
+    "hourly_universe_symbols_2026-10-26.json": "61808af92136a85a0215a394930c6404f86bc0acce58768ac111a415c3431ca8",
+    "hourly_4883987534523154688_2026-11-07.json": "c95f7643f9f7cee5d1b8a4b8670153cdb9ee3cf104993ce239b1bd6e638e6f53",
+    "hourly_4883987534523154688_orders_2026-11-07.json": "d387f2e306f7a9894a157c4d09035c75645fe4d051c6b9ba1ec7e2d6d0bec4a4",
+    "hourly_4894215989067406336_2026-11-07.json": "c4de683770899d2bd53014088bb4d78488660c43a6e04b6c3309fa4748d33208",
+    "hourly_4894215989067406336_orders_2026-11-07.json": "f00c0df288d70eb0377636d212343191a5f66f9264f7a5618e610e7c38277012",
+    "hourly_4693119134299763969_2026-11-07.json": "4fe3e323dfeed2ebc98f7135ae9f3ebe9ca7a30ccf16e63a42363a66dd030551",
+    "hourly_4693119134299763969_orders_2026-11-07.json": "8a7752470b913f4fe7c6cd7899d5922a0963acfd3570909ad6cec1d2b2e2d039",
+    "hourly_evidence_audit.py": "b6b24921bd9e9356821faac4b7ad1b701a96d68cfd9b35934c5554be50b61989"
+  },
+  "minute_inventory": {
+    "anno_klines": {
+      "files": 143,
+      "rows": 273944
+    },
+    "dhz_klines": {
+      "files": 38,
+      "rows": 88811
+    },
+    "twin_klines": {
+      "files": 141,
+      "rows": 68065
+    }
+  },
+  "conflicting_symbol_minutes": 0,
+  "metadata": {
+    "twin_exchangeinfo_2026-10-27.json": {
+      "symbols": 936,
+      "fields": [
+        "ct",
+        "onboard",
+        "status",
+        "underlyingSubType"
+      ]
+    },
+    "hourly_universe_symbols_2026-10-26.json": {
+      "symbols": 659,
+      "fields": [
+        "ct",
+        "onboard",
+        "status"
+      ]
+    }
+  },
+  "order_evidence": {
+    "4883987534523154688": {
+      "coverage": {
+        "buy_orders": 38,
+        "last_closed_minute": 2,
+        "selected_return_1h_available": 2,
+        "selected_return_4h_available": 1,
+        "selected_return_12h_available": 0,
+        "selected_return_24h_available": 0,
+        "selected_return_48h_available": 0
+      },
+      "buy_notional_min": 4.95,
+      "buy_notional_median": 6.810575500000001,
+      "buy_notional_max": 7.882,
+      "examples": [
+        {
+          "symbol": "NEARUSDT",
+          "order_time": 1791428508948,
+          "closed_minute": 1791428400000,
+          "close": 5.384
+        },
+        {
+          "symbol": "NEARUSDT",
+          "order_time": 1791435708529,
+          "closed_minute": 1791435600000,
+          "close": 5.363
+        }
+      ]
+    },
+    "4894215989067406336": {
+      "coverage": {
+        "buy_orders": 38,
+        "last_closed_minute": 4,
+        "selected_return_1h_available": 4,
+        "selected_return_4h_available": 2,
+        "selected_return_12h_available": 0,
+        "selected_return_24h_available": 0,
+        "selected_return_48h_available": 0
+      },
+      "buy_notional_min": 4.9284,
+      "buy_notional_median": 5.372,
+      "buy_notional_max": 8.0514,
+      "examples": [
+        {
+          "symbol": "NEARUSDT",
+          "order_time": 1791428547826,
+          "closed_minute": 1791428460000,
+          "close": 5.379
+        },
+        {
+          "symbol": "NEARUSDT",
+          "order_time": 1791435745121,
+          "closed_minute": 1791435660000,
+          "close": 5.38
+        },
+        {
+          "symbol": "BTWUSDT",
+          "order_time": 1791882146368,
+          "closed_minute": 1791882060000,
+          "close": 1.8071
+        }
+      ]
+    },
+    "4693119134299763969": {
+      "coverage": {
+        "buy_orders": 758,
+        "last_closed_minute": 54,
+        "selected_return_1h_available": 46,
+        "selected_return_4h_available": 37,
+        "selected_return_12h_available": 23,
+        "selected_return_24h_available": 9,
+        "selected_return_48h_available": 4
+      },
+      "buy_notional_min": 4.9508,
+      "buy_notional_median": 15.099710000000002,
+      "buy_notional_max": 48.7038272,
+      "examples": [
+        {
+          "symbol": "LSKUSDT",
+          "order_time": 1789261359254,
+          "closed_minute": 1789261260000,
+          "close": 0.43221
+        },
+        {
+          "symbol": "LSKUSDT",
+          "order_time": 1789268568381,
+          "closed_minute": 1789268460000,
+          "close": 0.72278
+        },
+        {
+          "symbol": "AKEUSDT",
+          "order_time": 1789898572484,
+          "closed_minute": 1789898460000,
+          "close": 0.087174
+        }
+      ]
+    }
+  },
+  "paired_openings": {
+    "4883987534523154688/4894215989067406336": {
+      "common_opening_hours": 41,
+      "single_symbol_hours": 41,
+      "same_symbol_hours": 40,
+      "different_symbol_hours": 1,
+      "multiple_symbol_hours": 0,
+      "monthly": {
+        "2026-07": {
+          "n": 0,
+          "same": 0
+        },
+        "2026-08": {
+          "n": 9,
+          "same": 9
+        },
+        "2026-09": {
+          "n": 26,
+          "same": 25
+        },
+        "2026-10": {
+          "n": 6,
+          "same": 6
+        },
+        "2026-11": {
+          "n": 0,
+          "same": 0
+        }
+      },
+      "mismatches": [
+        {
+          "hour": "2026-09-07T05:00:00+00:00",
+          "left": [
+            "TAOUSDT"
+          ],
+          "right": [
+            "ICPUSDT"
+          ]
+        }
+      ]
+    },
+    "4883987534523154688/4693119134299763969": {
+      "common_opening_hours": 446,
+      "single_symbol_hours": 446,
+      "same_symbol_hours": 283,
+      "different_symbol_hours": 163,
+      "multiple_symbol_hours": 0,
+      "monthly": {
+        "2026-07": {
+          "n": 107,
+          "same": 69
+        },
+        "2026-08": {
+          "n": 234,
+          "same": 148
+        },
+        "2026-09": {
+          "n": 100,
+          "same": 65
+        },
+        "2026-10": {
+          "n": 5,
+          "same": 1
+        },
+        "2026-11": {
+          "n": 0,
+          "same": 0
+        }
+      },
+      "mismatches": [
+        {
+          "hour": "2026-07-10T10:00:00+00:00",
+          "left": [
+            "AAVEUSDT"
+          ],
+          "right": [
+            "MORPHOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-10T13:00:00+00:00",
+          "left": [
+            "UNIUSDT"
+          ],
+          "right": [
+            "JSTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-11T17:00:00+00:00",
+          "left": [
+            "DEXEUSDT"
+          ],
+          "right": [
+            "SYRUPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-13T18:00:00+00:00",
+          "left": [
+            "ALLOUSDT"
+          ],
+          "right": [
+            "TIAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-15T04:00:00+00:00",
+          "left": [
+            "AAVEUSDT"
+          ],
+          "right": [
+            "LDOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-15T18:00:00+00:00",
+          "left": [
+            "AAVEUSDT"
+          ],
+          "right": [
+            "LDOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-16T11:00:00+00:00",
+          "left": [
+            "AKEUSDT"
+          ],
+          "right": [
+            "BANKUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-16T19:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "PYTHUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-17T14:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "LDOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-17T16:00:00+00:00",
+          "left": [
+            "AKEUSDT"
+          ],
+          "right": [
+            "USUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-17T21:00:00+00:00",
+          "left": [
+            "1000XECUSDT"
+          ],
+          "right": [
+            "USUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-18T04:00:00+00:00",
+          "left": [
+            "AKEUSDT"
+          ],
+          "right": [
+            "AVAAIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-18T08:00:00+00:00",
+          "left": [
+            "1000XECUSDT"
+          ],
+          "right": [
+            "ETHFIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-18T18:00:00+00:00",
+          "left": [
+            "BANKUSDT"
+          ],
+          "right": [
+            "ETHFIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-18T19:00:00+00:00",
+          "left": [
+            "AKEUSDT"
+          ],
+          "right": [
+            "USUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-19T05:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "ETHFIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-19T15:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "LTCUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-19T18:00:00+00:00",
+          "left": [
+            "BANKUSDT"
+          ],
+          "right": [
+            "LTCUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-20T09:00:00+00:00",
+          "left": [
+            "BANKUSDT"
+          ],
+          "right": [
+            "KAITOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-20T15:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "PROMUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-21T09:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "ETHFIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-22T09:00:00+00:00",
+          "left": [
+            "UNIUSDT"
+          ],
+          "right": [
+            "ETHFIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-23T01:00:00+00:00",
+          "left": [
+            "UNIUSDT"
+          ],
+          "right": [
+            "LDOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-23T02:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "ZAMAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-23T04:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "LDOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-23T16:00:00+00:00",
+          "left": [
+            "UNIUSDT"
+          ],
+          "right": [
+            "ZAMAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-25T17:00:00+00:00",
+          "left": [
+            "BANKUSDT"
+          ],
+          "right": [
+            "TRXUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-25T18:00:00+00:00",
+          "left": [
+            "AKEUSDT"
+          ],
+          "right": [
+            "CHILLGUYUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-26T04:00:00+00:00",
+          "left": [
+            "BANKUSDT"
+          ],
+          "right": [
+            "1000SHIBUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-26T05:00:00+00:00",
+          "left": [
+            "AKEUSDT"
+          ],
+          "right": [
+            "CHILLGUYUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-26T23:00:00+00:00",
+          "left": [
+            "UNIUSDT"
+          ],
+          "right": [
+            "LINKUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-27T05:00:00+00:00",
+          "left": [
+            "UNIUSDT"
+          ],
+          "right": [
+            "ETHUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-27T14:00:00+00:00",
+          "left": [
+            "UNIUSDT"
+          ],
+          "right": [
+            "TAGUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-27T15:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "SOONUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-28T01:00:00+00:00",
+          "left": [
+            "KAITOUSDT"
+          ],
+          "right": [
+            "TAGUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-28T10:00:00+00:00",
+          "left": [
+            "AAVEUSDT"
+          ],
+          "right": [
+            "SOONUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-30T06:00:00+00:00",
+          "left": [
+            "EPICUSDT"
+          ],
+          "right": [
+            "KOMAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-07-31T20:00:00+00:00",
+          "left": [
+            "KOMAUSDT"
+          ],
+          "right": [
+            "TAGUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-01T02:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "TAGUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-01T09:00:00+00:00",
+          "left": [
+            "UBUSDT"
+          ],
+          "right": [
+            "BEATUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-01T15:00:00+00:00",
+          "left": [
+            "UBUSDT"
+          ],
+          "right": [
+            "BEATUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-02T04:00:00+00:00",
+          "left": [
+            "UBUSDT"
+          ],
+          "right": [
+            "UAIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-02T09:00:00+00:00",
+          "left": [
+            "1000RATSUSDT"
+          ],
+          "right": [
+            "BLESSUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-02T10:00:00+00:00",
+          "left": [
+            "EPICUSDT"
+          ],
+          "right": [
+            "BOMEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-03T01:00:00+00:00",
+          "left": [
+            "BLESSUSDT"
+          ],
+          "right": [
+            "UAIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-03T06:00:00+00:00",
+          "left": [
+            "EPICUSDT"
+          ],
+          "right": [
+            "TAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-03T20:00:00+00:00",
+          "left": [
+            "EPICUSDT"
+          ],
+          "right": [
+            "TAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-04T06:00:00+00:00",
+          "left": [
+            "UBUSDT"
+          ],
+          "right": [
+            "TUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-04T10:00:00+00:00",
+          "left": [
+            "EPICUSDT"
+          ],
+          "right": [
+            "UBUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-05T04:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "BTWUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-05T13:00:00+00:00",
+          "left": [
+            "HEIUSDT"
+          ],
+          "right": [
+            "TUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-05T16:00:00+00:00",
+          "left": [
+            "CYSUSDT"
+          ],
+          "right": [
+            "TUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-05T21:00:00+00:00",
+          "left": [
+            "ONUSDT"
+          ],
+          "right": [
+            "BICOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-06T05:00:00+00:00",
+          "left": [
+            "CYSUSDT"
+          ],
+          "right": [
+            "BTWUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-06T11:00:00+00:00",
+          "left": [
+            "BLESSUSDT"
+          ],
+          "right": [
+            "BTWUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T01:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "ZBTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T02:00:00+00:00",
+          "left": [
+            "ONUSDT"
+          ],
+          "right": [
+            "ENAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T03:00:00+00:00",
+          "left": [
+            "BTWUSDT"
+          ],
+          "right": [
+            "TAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T04:00:00+00:00",
+          "left": [
+            "ONUSDT"
+          ],
+          "right": [
+            "XMRUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T06:00:00+00:00",
+          "left": [
+            "BTWUSDT"
+          ],
+          "right": [
+            "XMRUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T07:00:00+00:00",
+          "left": [
+            "ONUSDT"
+          ],
+          "right": [
+            "XAUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T10:00:00+00:00",
+          "left": [
+            "ENAUSDT"
+          ],
+          "right": [
+            "XAUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T13:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "XMRUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-07T19:00:00+00:00",
+          "left": [
+            "EPICUSDT"
+          ],
+          "right": [
+            "XMRUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-08T11:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "BLUAIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-09T03:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "XAUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-09T06:00:00+00:00",
+          "left": [
+            "TUTUSDT"
+          ],
+          "right": [
+            "XAUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-09T16:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "BOMEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-10T08:00:00+00:00",
+          "left": [
+            "GRVTUSDT"
+          ],
+          "right": [
+            "XAUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-10T14:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-10T18:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-11T03:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-11T17:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-13T19:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "EDENUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-14T10:00:00+00:00",
+          "left": [
+            "ACEUSDT"
+          ],
+          "right": [
+            "CAPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-15T05:00:00+00:00",
+          "left": [
+            "BTWUSDT"
+          ],
+          "right": [
+            "PRLUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-15T07:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "NILUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-16T16:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "PRLUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-17T20:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "COMPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-17T21:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "XAUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-18T02:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "PIEVERSEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-18T21:00:00+00:00",
+          "left": [
+            "BTWUSDT"
+          ],
+          "right": [
+            "PRLUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-19T05:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "COMPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-20T00:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "ETHFIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-20T12:00:00+00:00",
+          "left": [
+            "BOMEUSDT"
+          ],
+          "right": [
+            "PNUTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-20T15:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "AVAAIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-20T22:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "NEIROUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T08:00:00+00:00",
+          "left": [
+            "AAVEUSDT"
+          ],
+          "right": [
+            "ORDIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T11:00:00+00:00",
+          "left": [
+            "PENGUUSDT"
+          ],
+          "right": [
+            "VIRTUALUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T12:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T13:00:00+00:00",
+          "left": [
+            "HBARUSDT"
+          ],
+          "right": [
+            "ALGOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T14:00:00+00:00",
+          "left": [
+            "ADAUSDT"
+          ],
+          "right": [
+            "FARTCOINUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T18:00:00+00:00",
+          "left": [
+            "1000PEPEUSDT"
+          ],
+          "right": [
+            "CAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T20:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T22:00:00+00:00",
+          "left": [
+            "WIFUSDT"
+          ],
+          "right": [
+            "ALGOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-21T23:00:00+00:00",
+          "left": [
+            "TRXUSDT"
+          ],
+          "right": [
+            "HBARUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-22T05:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "VIRTUALUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-22T07:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "POLUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-22T18:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "STXUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-23T07:00:00+00:00",
+          "left": [
+            "PUMPUSDT"
+          ],
+          "right": [
+            "FFUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-23T08:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "ZROUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-23T09:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "ENAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-23T11:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "ETHFIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-23T12:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "STXUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-23T15:00:00+00:00",
+          "left": [
+            "XAUTUSDT"
+          ],
+          "right": [
+            "MONUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-25T05:00:00+00:00",
+          "left": [
+            "PROMUSDT"
+          ],
+          "right": [
+            "JUPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-25T17:00:00+00:00",
+          "left": [
+            "ZROUSDT"
+          ],
+          "right": [
+            "SPXUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-26T03:00:00+00:00",
+          "left": [
+            "HYPEUSDT"
+          ],
+          "right": [
+            "SPXUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-27T05:00:00+00:00",
+          "left": [
+            "BTRUSDT"
+          ],
+          "right": [
+            "TACUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-27T06:00:00+00:00",
+          "left": [
+            "SOLUSDT"
+          ],
+          "right": [
+            "VVVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-27T07:00:00+00:00",
+          "left": [
+            "PROMUSDT"
+          ],
+          "right": [
+            "RUNEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-27T10:00:00+00:00",
+          "left": [
+            "HYPEUSDT"
+          ],
+          "right": [
+            "VVVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-27T13:00:00+00:00",
+          "left": [
+            "SOLUSDT"
+          ],
+          "right": [
+            "VVVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-27T18:00:00+00:00",
+          "left": [
+            "HYPEUSDT"
+          ],
+          "right": [
+            "JUPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-27T22:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "JUPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-28T07:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "HUMAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-29T11:00:00+00:00",
+          "left": [
+            "PROMUSDT"
+          ],
+          "right": [
+            "\u9f99\u867eUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-29T14:00:00+00:00",
+          "left": [
+            "\u9f99\u867eUSDT"
+          ],
+          "right": [
+            "NILUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-30T01:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "ZKPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-30T16:00:00+00:00",
+          "left": [
+            "ZECUSDT"
+          ],
+          "right": [
+            "CAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-30T20:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "SKRUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-31T05:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "ZKUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-31T13:00:00+00:00",
+          "left": [
+            "XMRUSDT"
+          ],
+          "right": [
+            "CAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-31T21:00:00+00:00",
+          "left": [
+            "HYPEUSDT"
+          ],
+          "right": [
+            "TWTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-01T02:00:00+00:00",
+          "left": [
+            "HYPEUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-02T12:00:00+00:00",
+          "left": [
+            "MAGMAUSDT"
+          ],
+          "right": [
+            "CLOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-02T15:00:00+00:00",
+          "left": [
+            "ARBUSDT"
+          ],
+          "right": [
+            "PYTHUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-02T17:00:00+00:00",
+          "left": [
+            "MAGMAUSDT"
+          ],
+          "right": [
+            "KITEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-02T21:00:00+00:00",
+          "left": [
+            "ARBUSDT"
+          ],
+          "right": [
+            "EGLDUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-03T03:00:00+00:00",
+          "left": [
+            "ARBUSDT"
+          ],
+          "right": [
+            "PYTHUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-03T04:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "ARUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-03T07:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "CHIPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-03T10:00:00+00:00",
+          "left": [
+            "ARBUSDT"
+          ],
+          "right": [
+            "CHIPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-03T11:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "CAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-05T13:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "CAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-05T18:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "SUSHIUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-05T22:00:00+00:00",
+          "left": [
+            "ARBUSDT"
+          ],
+          "right": [
+            "LDOUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-06T06:00:00+00:00",
+          "left": [
+            "DASHUSDT"
+          ],
+          "right": [
+            "PENDLEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T01:00:00+00:00",
+          "left": [
+            "DOTUSDT"
+          ],
+          "right": [
+            "METISUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T04:00:00+00:00",
+          "left": [
+            "UAIUSDT"
+          ],
+          "right": [
+            "KASUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T05:00:00+00:00",
+          "left": [
+            "TAOUSDT"
+          ],
+          "right": [
+            "ICPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T15:00:00+00:00",
+          "left": [
+            "DOTUSDT"
+          ],
+          "right": [
+            "SOLVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T17:00:00+00:00",
+          "left": [
+            "DOTUSDT"
+          ],
+          "right": [
+            "KAVAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T19:00:00+00:00",
+          "left": [
+            "INJUSDT"
+          ],
+          "right": [
+            "AEROUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T21:00:00+00:00",
+          "left": [
+            "FETUSDT"
+          ],
+          "right": [
+            "SOPHUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T23:00:00+00:00",
+          "left": [
+            "WLDUSDT"
+          ],
+          "right": [
+            "SOPHUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T03:00:00+00:00",
+          "left": [
+            "FETUSDT"
+          ],
+          "right": [
+            "SOPHUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T04:00:00+00:00",
+          "left": [
+            "UAIUSDT"
+          ],
+          "right": [
+            "AEROUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T07:00:00+00:00",
+          "left": [
+            "FETUSDT"
+          ],
+          "right": [
+            "CAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T09:00:00+00:00",
+          "left": [
+            "ICPUSDT"
+          ],
+          "right": [
+            "VETUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T13:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "VVVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T15:00:00+00:00",
+          "left": [
+            "ATOMUSDT"
+          ],
+          "right": [
+            "PENDLEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T19:00:00+00:00",
+          "left": [
+            "LITUSDT"
+          ],
+          "right": [
+            "VETUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-09T00:00:00+00:00",
+          "left": [
+            "VVVUSDT"
+          ],
+          "right": [
+            "VETUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-09T21:00:00+00:00",
+          "left": [
+            "ZECUSDT"
+          ],
+          "right": [
+            "MINAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-10T03:00:00+00:00",
+          "left": [
+            "ZECUSDT"
+          ],
+          "right": [
+            "SAHARAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-12T13:00:00+00:00",
+          "left": [
+            "UAIUSDT"
+          ],
+          "right": [
+            "KAVAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-25T14:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "AEROUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-27T07:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "USUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-01T05:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "STXUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-08T03:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "WUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-08T05:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "JUPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-11T23:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "PLUMEUSDT"
+          ]
+        }
+      ]
+    },
+    "4894215989067406336/4693119134299763969": {
+      "common_opening_hours": 58,
+      "single_symbol_hours": 58,
+      "same_symbol_hours": 40,
+      "different_symbol_hours": 18,
+      "multiple_symbol_hours": 0,
+      "monthly": {
+        "2026-07": {
+          "n": 0,
+          "same": 0
+        },
+        "2026-08": {
+          "n": 10,
+          "same": 7
+        },
+        "2026-09": {
+          "n": 38,
+          "same": 31
+        },
+        "2026-10": {
+          "n": 10,
+          "same": 2
+        },
+        "2026-11": {
+          "n": 0,
+          "same": 0
+        }
+      },
+      "mismatches": [
+        {
+          "hour": "2026-08-10T11:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "\u9f99\u867eUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-11T17:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "CRVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-08-20T22:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "NEIROUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-05T13:00:00+00:00",
+          "left": [
+            "BNBUSDT"
+          ],
+          "right": [
+            "CAKEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-07T10:00:00+00:00",
+          "left": [
+            "ICPUSDT"
+          ],
+          "right": [
+            "KASUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-08T06:00:00+00:00",
+          "left": [
+            "UAIUSDT"
+          ],
+          "right": [
+            "SOLVUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-10T03:00:00+00:00",
+          "left": [
+            "ZECUSDT"
+          ],
+          "right": [
+            "SAHARAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-24T23:00:00+00:00",
+          "left": [
+            "CAKEUSDT"
+          ],
+          "right": [
+            "SAGAUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-25T14:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "AEROUSDT"
+          ]
+        },
+        {
+          "hour": "2026-09-27T07:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "USUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-01T05:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "STXUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-08T03:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "WUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-08T05:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "JUPUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-10T11:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "JCTUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-11T23:00:00+00:00",
+          "left": [
+            "NEARUSDT"
+          ],
+          "right": [
+            "PLUMEUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-12T23:00:00+00:00",
+          "left": [
+            "BTWUSDT"
+          ],
+          "right": [
+            "RENDERUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-14T06:00:00+00:00",
+          "left": [
+            "BTWUSDT"
+          ],
+          "right": [
+            "WALUSDT"
+          ]
+        },
+        {
+          "hour": "2026-10-17T18:00:00+00:00",
+          "left": [
+            "BTWUSDT"
+          ],
+          "right": [
+            "AVAUSDT"
+          ]
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Local open-automata archives only; no historical order filters found.",
+    "Minute endpoint coverage does not prove intermediate continuity.",
+    "Selected-symbol returns cannot establish ranks across the universe.",
+    "Shared opening hours exclude ongoing positions and idle hours.",
+    "Same choice does not prove identical signals or account ownership."
+  ]
+}
