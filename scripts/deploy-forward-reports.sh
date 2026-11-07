@@ -43,6 +43,4 @@ for service in worker bot web crash-paper crash-forward; do
         "crypto-trading-lab-$service-1" > "$STATE/$service.after"
     cmp "$STATE/$service.before" "$STATE/$service.after"
 done
-docker exec crypto-trading-lab-forward-report-1 /app/.venv/bin/python3 \
-    /reports/forward_report.py once --send-now daily
-echo 'Reporting sidecar ready; initial daily report enqueued. Verify outbox delivery separately.'
+echo 'Reporting sidecar ready; due reports are queued by its loop. Verify delivery separately.'

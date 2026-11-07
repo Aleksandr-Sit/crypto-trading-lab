@@ -1,0 +1,29 @@
+{
+  "captured_at": "2026-11-07T11:13:21.556863+00:00",
+  "state": {
+    "problems": [],
+    "checked_at": "2026-11-07T11:12:58.785317+00:00",
+    "last_daily": "2026-11-07T09:05:00+04:00",
+    "pending_since": null,
+    "observation_id": "863b354817e6466596e3aa84b961a8d1",
+    "last_manual_daily": "manual:2026-11-07"
+  },
+  "messages": [
+    {
+      "id": 162,
+      "ref": "forward:daily:manual:2026-11-07",
+      "created_at": "2026-11-07T11:11:17.166099+00:00",
+      "delivered_at": "2026-11-07T11:12:00.082474+00:00",
+      "dead": false,
+      "attempts": 1
+    },
+    {
+      "id": 161,
+      "ref": "forward:daily:2026-11-07T09:05:00+04:00",
+      "created_at": "2026-11-07T11:10:57.162901+00:00",
+      "delivered_at": "2026-11-07T11:11:00.072041+00:00",
+      "dead": false,
+      "attempts": 1
+    }
+  ]
+}
