@@ -1,0 +1,24 @@
+# Run alongside the main compose file; uses the existing worker image without rebuilding lab.
+services:
+  forward-report:
+    image: crypto-trading-lab-worker
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://lab:${POSTGRES_PASSWORD:-lab}@db:5432/lab
+      LAB_DATA_ROOT: /app/data
+    volumes:
+      - ../scripts/forward_report.py:/reports/forward_report.py:ro
+      - ../config:/app/config:ro
+      - lab_data:/app/data:ro
+    command: ["/app/.venv/bin/python3", "/reports/forward_report.py", "loop"]
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: "0.5"
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(cat /tmp/forward-report-heartbeat) )) -lt 180"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
