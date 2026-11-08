@@ -1,0 +1,529 @@
+{
+  "status": "entry_candidate",
+  "supported_conditions": [
+    "H1",
+    "H2",
+    "H3"
+  ],
+  "profitability_tested": false,
+  "scope": "Pre-order state for early Long x1 five-hour regime only. Later SOL x10 and mixed x5/x10 regimes excluded; no profitability or full rule inference.",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T09:10:23.977571+00:00",
+    "split_sha256": "3bc7eb8cac8ec5866e1274c5b8b9650e1330d5e60657bccaaed1818e1fc48252",
+    "development_sha256": "5396ae37115d2fc14503a269a539ad22b361059eb5dbfe8a6e301f4ed8bb875f",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_5m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_5m",
+            "operator": "gt",
+            "threshold": "0"
+          },
+          {
+            "feature": "return_60m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "development_exploration": [
+      {
+        "lag_minutes": 1,
+        "positive": 17,
+        "negative": 5,
+        "n": 24
+      },
+      {
+        "lag_minutes": 5,
+        "positive": 24,
+        "negative": 0,
+        "n": 24
+      },
+      {
+        "lag_minutes": 15,
+        "positive": 13,
+        "negative": 9,
+        "n": 24
+      },
+      {
+        "lag_minutes": 60,
+        "positive": 0,
+        "negative": 24,
+        "n": 24
+      },
+      {
+        "lag_minutes": 1440,
+        "positive": 14,
+        "negative": 10,
+        "n": 24
+      }
+    ],
+    "scope": "Pre-order state for early Long x1 five-hour regime only. Later SOL x10 and mixed x5/x10 regimes excluded; no profitability or full rule inference.",
+    "background": "12 same-symbol windows 2-24h before each order, not labeled nonentries.",
+    "unknown_policy": "All clause comparisons strict; zero or unavailable values fail and remain in denominator. No post-holdout tuning."
+  },
+  "hypotheses_sha256": "64c78c6808ff741725fcf5d342fdb5461e93f2cc440afdd3a7604099bf3ac10f",
+  "split_sha256": "3bc7eb8cac8ec5866e1274c5b8b9650e1330d5e60657bccaaed1818e1fc48252",
+  "script_sha256": "bee9227b40e728e09e37dddac983aaeb1f29071248614514f87bfaedab885f88",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "phases": {
+    "development": {
+      "sources": {
+        "fanjiang_early_revisit_market_development_2026-11-08\\1153553665397841920.json": "701358ac44bdee8b20b5a55dbbdd7f265e5f952a176a6405e0ce049bc41475a2",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1153810423475298304.json": "c961c29ffeb2c5b5ffc94ca4a2720516c3e9345b5447ff9dfe72c60336996891",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1153868218065182720.json": "9465e0205764871f874b0b47559f3db307482432d7dd68018db6df01b514f0a2",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1153889592641019904.json": "69227179fce3d08fee630eae8c13b211476a5f9816069265bf189d4b59ecc6c3",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1153889599544844288.json": "2f0295eca4c49edbda965a1f230a567e6068ee77cf191798b5bfaf9e27edd8e2",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1154239480713142272.json": "bfac79ff2b413f76776bfea5a1eb1e98b44947f9a8d8efa726b228e79e7d559d",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1154960457617072128.json": "6bb4949b3c70467da81c74f376ccb2f665a0888a3a0d649eefb56c425ae156ad",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1155066083693256704.json": "1d6f238fdbfd221d4ffd437dc7567b6a32757de1bb8c635d1c8baa0692aa5013",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1155150365157711872.json": "0e6708e9874a5032fb8784c3346573b1cdee357880453873ab065285b4814770",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1155441121688772608.json": "99502dc5b776029bea0ed472238c74c0125632f17e234b1baa69b5cdcd62603c",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1155441150612692992.json": "90456e372771bfa38fd5bcf8f41bba72573272bd685c382be29e49e65fa9f5af",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1155441157218721792.json": "2525588f16224060749110fe98ab91a1f977e8f803f1a4f5bb3f836dd395d235",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1156825197565927424.json": "17093f661d44e0909feba7f9d5849d72fe7f9a674d8777d15edada95141f7429",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1157050430675705856.json": "0d0c87eb67835655870c1b71ad7308c3b1e2f7d524788672d07ab834e9adc647",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1157130933340692480.json": "0642db3e71398e17ad26f09de3db13856243766627d1d56e352d5fbdc95b24e0",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1157339853971742720.json": "91d64334a166a8ea42dc96931d15499759c2eb6e7f06a44f7d95f36fbc4f2190",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1157339861714427904.json": "6c0cd2c1e972da603d573138dd924e6e2bc3593380ab2f4c7d52e990a20b14a3",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1157690959058919424.json": "49d340067d976d8a25cca5d911d1c5eea87fa4e681bf27bc5235e6f8708b38e9",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1157690976553361408.json": "ee94edb46724aac7e7c733c57e7da6d7e5a8ddc6eee43333c954c541b6d8ff49",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1157802871134314496.json": "a9b35e711b1c4391c65545083b66f966a53439115ab00887d4f97011c5a763ec",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1158421962111016960.json": "b1b7c45debd168d1459b50ea99874311d3fe1e6e18699b38412c343b21f0c5f3",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1158477322792427520.json": "35552f9356741d0962c73aecdcb09b7d40046e39b876f3c02a7c76e3f1266541",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1158477331533357056.json": "1a15579a23dab534badad6c70632321874d87eab09dc15d582c323434e91cbd4",
+        "fanjiang_early_revisit_market_development_2026-11-08\\1158672353306304512.json": "889190ebeb2fbd168fa7dfecaae00eca1d08bf584289ed19a5019da50e728e94"
+      },
+      "summary": {
+        "H1": {
+          "n": 24,
+          "hits": 24,
+          "coverage": 1.0,
+          "background_n": 288,
+          "background_hits": 145,
+          "background_rate": 0.5034722222222222,
+          "advantage_over_background": 0.4965277777777778,
+          "frequency_ratio": 1.986206896551724,
+          "day_counts": {
+            "20715": {
+              "n": 2,
+              "hits": 2
+            },
+            "20716": {
+              "n": 3,
+              "hits": 3
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 3,
+              "hits": 3
+            },
+            "20720": {
+              "n": 3,
+              "hits": 3
+            },
+            "20724": {
+              "n": 2,
+              "hits": 2
+            },
+            "20725": {
+              "n": 3,
+              "hits": 3
+            },
+            "20726": {
+              "n": 3,
+              "hits": 3
+            },
+            "20728": {
+              "n": 3,
+              "hits": 3
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 24,
+          "hits": 24,
+          "coverage": 1.0,
+          "background_n": 288,
+          "background_hits": 113,
+          "background_rate": 0.3923611111111111,
+          "advantage_over_background": 0.6076388888888888,
+          "frequency_ratio": 2.5486725663716814,
+          "day_counts": {
+            "20715": {
+              "n": 2,
+              "hits": 2
+            },
+            "20716": {
+              "n": 3,
+              "hits": 3
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 3,
+              "hits": 3
+            },
+            "20720": {
+              "n": 3,
+              "hits": 3
+            },
+            "20724": {
+              "n": 2,
+              "hits": 2
+            },
+            "20725": {
+              "n": 3,
+              "hits": 3
+            },
+            "20726": {
+              "n": 3,
+              "hits": 3
+            },
+            "20728": {
+              "n": 3,
+              "hits": 3
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 24,
+          "hits": 24,
+          "coverage": 1.0,
+          "background_n": 288,
+          "background_hits": 40,
+          "background_rate": 0.1388888888888889,
+          "advantage_over_background": 0.8611111111111112,
+          "frequency_ratio": 7.199999999999999,
+          "day_counts": {
+            "20715": {
+              "n": 2,
+              "hits": 2
+            },
+            "20716": {
+              "n": 3,
+              "hits": 3
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 3,
+              "hits": 3
+            },
+            "20720": {
+              "n": 3,
+              "hits": 3
+            },
+            "20724": {
+              "n": 2,
+              "hits": 2
+            },
+            "20725": {
+              "n": 3,
+              "hits": 3
+            },
+            "20726": {
+              "n": 3,
+              "hits": 3
+            },
+            "20728": {
+              "n": 3,
+              "hits": 3
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        }
+      }
+    },
+    "holdout": {
+      "sources": {
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1159523071344992256.json": "59bdc65c7ddc4447e631cde6711f466f328b23398c5246085260b1ceebb66af5",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1160038919692312576.json": "1a21a42a0f0a0c8eb05b7e4f960fe72f39b32f63fe7ad683cd3b15caf3aeb3c3",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1160038929318240256.json": "15740704c76e6ce8727ecbb60dad8308f874771a2d83131c65047ee1a69746da",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1164081694733721600.json": "b2f3442bba78654d1fe0bccfcac8880adc2a0df11902a0a76c3054280efe8831",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1165479729380417536.json": "c9cf93a7732542faaebcbc371ee9c0593b3e56c768b778623ae4d87f9fc262fd",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1165662242639929344.json": "89b5e033b35998de724e3ceb989ea16de954caf99c135d7bd89b7176ddb449a3",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1168011352500035584.json": "444a79b1f120df81a44506fbc2086f150b14b20fc18431ca58d2385f097303f9",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1168281963151450112.json": "e424b2ee3bd6249f9357700b2fd5f6ab6ab6af6a6f17f5aab950d83a08a85667",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1168295725111664640.json": "b8087e819e81b5a688482896267b32dc4a0cdfbd6f69bad4142fa7a3a556b343",
+        "fanjiang_early_revisit_market_holdout_2026-11-08\\1168532367504269312.json": "a511cbe4399026b72fc21dd3424093ab75a07baec9f33bd9b8cb5f93944fb829"
+      },
+      "summary": {
+        "H1": {
+          "n": 10,
+          "hits": 10,
+          "coverage": 1.0,
+          "background_n": 120,
+          "background_hits": 52,
+          "background_rate": 0.43333333333333335,
+          "advantage_over_background": 0.5666666666666667,
+          "frequency_ratio": 2.3076923076923075,
+          "day_counts": {
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 2,
+              "hits": 2
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 2,
+              "hits": 2
+            },
+            "20755": {
+              "n": 3,
+              "hits": 3
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 10,
+          "hits": 10,
+          "coverage": 1.0,
+          "background_n": 120,
+          "background_hits": 59,
+          "background_rate": 0.49166666666666664,
+          "advantage_over_background": 0.5083333333333333,
+          "frequency_ratio": 2.0338983050847457,
+          "day_counts": {
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 2,
+              "hits": 2
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 2,
+              "hits": 2
+            },
+            "20755": {
+              "n": 3,
+              "hits": 3
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 10,
+          "hits": 10,
+          "coverage": 1.0,
+          "background_n": 120,
+          "background_hits": 21,
+          "background_rate": 0.175,
+          "advantage_over_background": 0.825,
+          "frequency_ratio": 5.714285714285714,
+          "day_counts": {
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 2,
+              "hits": 2
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 2,
+              "hits": 2
+            },
+            "20755": {
+              "n": 3,
+              "hits": 3
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        }
+      }
+    }
+  },
+  "cohort": {
+    "eligible_count": 42,
+    "reported_total": 66,
+    "complete": false,
+    "definition": "Early Long x1 five-hour regime only; opened is first MARKET BUY placement time; later 7 SOL x10 and 17 mixed x5/x10 excluded",
+    "original_source_hashes": {
+      "fanjiang_5226612818704717824_2026-11-07.json": "f77fa18063ac1892185882dd454f646b9b9d1832bf7f938828f16ce361efe9d5",
+      "fanjiang_5226612818704717824_orders_rawpass_2026-11-07.json": "ede6ccbf2372b09ac11e22705a15c3c3f8e56e75e41f379eef2a3e49f77fa4ce",
+      "fanjiang_audit_2026-11-07.json": "c1830698fd5173ab23815e995e1cacfa5c0049725dfd8c82db81f550415a2981"
+    },
+    "excluded_later_regimes": [
+      {
+        "n": 7,
+        "active_days": 4
+      },
+      {
+        "n": 17,
+        "active_days": 5
+      }
+    ]
+  },
+  "split_frozen_at": "2026-11-08T09:08:49.099498+00:00",
+  "split": {
+    "development": {
+      "days": [
+        "2026-09-19",
+        "2026-09-20",
+        "2026-09-21",
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-02",
+        "2026-10-03"
+      ],
+      "sample_ids": [
+        "1153553665397841920",
+        "1153810423475298304",
+        "1153868218065182720",
+        "1153889592641019904",
+        "1153889599544844288",
+        "1154239480713142272",
+        "1154960457617072128",
+        "1155066083693256704",
+        "1155150365157711872",
+        "1155441121688772608",
+        "1155441150612692992",
+        "1155441157218721792",
+        "1156825197565927424",
+        "1157050430675705856",
+        "1157130933340692480",
+        "1157339853971742720",
+        "1157339861714427904",
+        "1157690959058919424",
+        "1157690976553361408",
+        "1157802871134314496",
+        "1158421962111016960",
+        "1158477322792427520",
+        "1158477331533357056",
+        "1158672353306304512"
+      ]
+    },
+    "holdout": {
+      "days": [
+        "2026-10-05",
+        "2026-10-07",
+        "2026-10-18",
+        "2026-10-22",
+        "2026-10-29",
+        "2026-10-30"
+      ],
+      "sample_ids": [
+        "1159523071344992256",
+        "1160038919692312576",
+        "1160038929318240256",
+        "1164081694733721600",
+        "1165479729380417536",
+        "1165662242639929344",
+        "1168011352500035584",
+        "1168281963151450112",
+        "1168295725111664640",
+        "1168532367504269312"
+      ]
+    }
+  },
+  "independent_verification": {
+    "method": "Decimal close comparisons independent of Fraction evaluator; all 42 original first BUY orders and chronological split/freeze checked",
+    "cohort_positions_checked": 42,
+    "entries_checked": 34,
+    "background_windows_checked": 408,
+    "hypotheses_checked": 3,
+    "holdout_access_after_freeze": true,
+    "script_sha256": "a66e7750f69dad6f2360bce500c6254efe0e70211e8dcf8dd63eadb32733fe7c"
+  },
+  "sources": {
+    "fanjiang_early_revisit_5226612818704717824_2026-11-08.json": "5c4930297579dfe30460e917e2438b9bed1fc836bd257080100355249c740eb4",
+    "fanjiang_early_revisit_entry_split_2026-11-08.json": "3bc7eb8cac8ec5866e1274c5b8b9650e1330d5e60657bccaaed1818e1fc48252",
+    "fanjiang_early_revisit_entry_development_2026-11-08.json": "5396ae37115d2fc14503a269a539ad22b361059eb5dbfe8a6e301f4ed8bb875f",
+    "fanjiang_early_revisit_entry_hypotheses_2026-11-08.json": "64c78c6808ff741725fcf5d342fdb5461e93f2cc440afdd3a7604099bf3ac10f",
+    "fanjiang_revisit_verify_2026-11-08.py": "a66e7750f69dad6f2360bce500c6254efe0e70211e8dcf8dd63eadb32733fe7c",
+    "fanjiang_revisit_verification_2026-11-08.json": "97fdccd83c28eabc9f9dbccaa6c1c3bbb5a45f3a8ee6870f449f0a4847212a76"
+  },
+  "saved_market_errors": {
+    "development": 0,
+    "holdout": 0
+  }
+}
