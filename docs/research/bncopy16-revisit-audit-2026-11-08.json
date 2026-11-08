@@ -1,0 +1,914 @@
+{
+  "status": "entry_candidate",
+  "scope": "Direction at observed entries only; background has no ground-truth side labels",
+  "supported_direction_candidates": [
+    "H1"
+  ],
+  "profitability_tested": false,
+  "hypotheses": {
+    "frozen_at": "2026-11-08T08:34:27.621406+00:00",
+    "split_sha256": "c80c577890ead27950cfe8b27b8447afe0a2800a42d76a3c2a1f646dcbc6c967",
+    "development_sha256": "0629f7bf8da0b14981c8367e400d1d6336e78ca29e6d62a2d89a56d224ba00eb",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "lag_minutes": 1440,
+        "mode": "momentum"
+      },
+      {
+        "id": "H2",
+        "lag_minutes": 60,
+        "mode": "momentum"
+      }
+    ],
+    "exploratory_comparisons": [
+      {
+        "lag_minutes": 1,
+        "mode": "momentum",
+        "hits": 15,
+        "n": 30,
+        "zero_abstentions": 6
+      },
+      {
+        "lag_minutes": 1,
+        "mode": "contrarian",
+        "hits": 9,
+        "n": 30,
+        "zero_abstentions": 6
+      },
+      {
+        "lag_minutes": 5,
+        "mode": "momentum",
+        "hits": 14,
+        "n": 30,
+        "zero_abstentions": 1
+      },
+      {
+        "lag_minutes": 5,
+        "mode": "contrarian",
+        "hits": 15,
+        "n": 30,
+        "zero_abstentions": 1
+      },
+      {
+        "lag_minutes": 15,
+        "mode": "momentum",
+        "hits": 18,
+        "n": 30,
+        "zero_abstentions": 1
+      },
+      {
+        "lag_minutes": 15,
+        "mode": "contrarian",
+        "hits": 11,
+        "n": 30,
+        "zero_abstentions": 1
+      },
+      {
+        "lag_minutes": 60,
+        "mode": "momentum",
+        "hits": 23,
+        "n": 30,
+        "zero_abstentions": 0
+      },
+      {
+        "lag_minutes": 60,
+        "mode": "contrarian",
+        "hits": 7,
+        "n": 30,
+        "zero_abstentions": 0
+      },
+      {
+        "lag_minutes": 1440,
+        "mode": "momentum",
+        "hits": 27,
+        "n": 30,
+        "zero_abstentions": 0
+      },
+      {
+        "lag_minutes": 1440,
+        "mode": "contrarian",
+        "hits": 3,
+        "n": 30,
+        "zero_abstentions": 0
+      }
+    ],
+    "rule": "Long if the selected completed-bar return is strictly positive; Short if strictly negative; zero abstains. No magnitude fitting.",
+    "candidate_criteria": {
+      "min_sample_coverage": 0.9,
+      "min_agreement": 0.75,
+      "min_balanced_accuracy": 0.7,
+      "min_advantage_over_majority": 0.15,
+      "min_advantage_over_matched_background": 0.15,
+      "require_both_phases": true
+    },
+    "scope": "Side at observed position opening only, not symbol selection, order placement, entry timing, sizing or profitability. Entry orders unavailable.",
+    "background": "12 same-symbol windows 2-24h earlier, matched to the actual entry side as a reference. No true side labels or nonentry labels in background.",
+    "unknown_policy": "Zero-return abstentions remain in all sample denominators. No post-holdout tuning."
+  },
+  "hypotheses_sha256": "748e3fbda91d7f75c7cb972e671ca81072f1f2a908ade8125f3932352c130833",
+  "split_sha256": "c80c577890ead27950cfe8b27b8447afe0a2800a42d76a3c2a1f646dcbc6c967",
+  "script_sha256": "892d3a136473e44feede23b1286403b6786cbfa66f01728816031ce49a67c7b4",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "phases": {
+    "development": {
+      "sides": {
+        "Long": 13,
+        "Short": 17
+      },
+      "sources": {
+        "bncopy16_market_development_2026-11-08\\1127902078464684032.json": "d10e23658e5e24d1edbd14a8ce73fd15473134fa25a8186094ced4b69fcb0639",
+        "bncopy16_market_development_2026-11-08\\1128219227431366656.json": "f25b2536a1248d0980536db6a36568be25581c0e755824883b6ba2362cb20639",
+        "bncopy16_market_development_2026-11-08\\1128475942278131712.json": "dbf5bef3f5cbba2d6d1c12922cd7c5c39ba85938d523393fee9b0aea439d471d",
+        "bncopy16_market_development_2026-11-08\\1128815594436554752.json": "16dd09b3f325430392bb5487edd4a1f346f03ff02bee68cf27226a0fbf41f118",
+        "bncopy16_market_development_2026-11-08\\1129170462636503040.json": "a1dad8984f938c975f87b6bafa667239df4eb574ad2b870ffd148d6de7de234b",
+        "bncopy16_market_development_2026-11-08\\1129638507834241024.json": "314f66fdd1c4efaab774e8c0887019be39ebca400af762057bfee5f628c6581a",
+        "bncopy16_market_development_2026-11-08\\1136304918686068736.json": "bf14dc5267bcb42d4d5544d23b6c47a055f27cc1827bbe0aba8423f3016330ab",
+        "bncopy16_market_development_2026-11-08\\1136523939834490880.json": "c534ef054f10ffdc3e83aa160fa9cdb1343ef82448e3e9c99e816e5651138d77",
+        "bncopy16_market_development_2026-11-08\\1136999542484365312.json": "2b611e5caa310727cfa7c5c1f5af6ce3c3bb32ac46baf24f47e1c0f42816e05a",
+        "bncopy16_market_development_2026-11-08\\1137301512608804864.json": "fbef46dba2588ca1569ce32f3207585911570f070e172b245f4241d61e3949bf",
+        "bncopy16_market_development_2026-11-08\\1137731857506365440.json": "4bbae575d584ed5ea9cbfa64cc154ecebea99c8be7d2a5900e60a827c3f1a17a",
+        "bncopy16_market_development_2026-11-08\\1137920610480943104.json": "5deae3d2204cb51c2b61792618ba04434405b7567795f8c9e9cd76dfa3e134c6",
+        "bncopy16_market_development_2026-11-08\\1138283004700913664.json": "b5c2ab1b16b6c21a0e13d3b0c99b0a8b27e8eb1ecce57421e97b4f9ecc443da4",
+        "bncopy16_market_development_2026-11-08\\1138652946969391104.json": "8d864ad03ae23ecbe411acf23522dbe5f02cd2a8dc8387ac5df7e5c0b16bea66",
+        "bncopy16_market_development_2026-11-08\\1138985082142322688.json": "3164848cddc0af4b836b609b152bf4eb6e6f1257bba96969df3222acd12ce311",
+        "bncopy16_market_development_2026-11-08\\1139279574330241024.json": "b389f5ac07fcece33bc6cc1b2b103a3f10311b484a1771e70cf7aacd7bda20c1",
+        "bncopy16_market_development_2026-11-08\\1139596669119098880.json": "f612d9beb257a53000997c4ae9c0bb9b9ed11ad6914a79df8b5a307e693de9cb",
+        "bncopy16_market_development_2026-11-08\\1140049654706073600.json": "07ca089c71f261a5c468a28a9cac0c53bc03d70478304cc3959c89b1fe8e7553",
+        "bncopy16_market_development_2026-11-08\\1140208212902932480.json": "76672d44c9101d14ac052656c6420d49a03f70677af41262ca12fa8a99b61036",
+        "bncopy16_market_development_2026-11-08\\1140540390824210432.json": "b7c623e4190ece8a376238f651b278a2f45f48efa5002edf416acbf79c76df43",
+        "bncopy16_market_development_2026-11-08\\1141053744441454592.json": "327da7a49db97aa3a8ca4d1e6db892f0420b9068735d07c6df320db5cd79d738",
+        "bncopy16_market_development_2026-11-08\\1141340608176058368.json": "b53e1115aa5a6e352eea793a3a33a7d1b7bd92b19c346d0418c865071185d904",
+        "bncopy16_market_development_2026-11-08\\1141763476751904768.json": "e85ea6733606ab2b0a4e598c3ba5730fe15f3ad67b847a799475817985588247",
+        "bncopy16_market_development_2026-11-08\\1141921935266934784.json": "3e169d30db7e253d3f5a1b11093cafc91ad6cecca70b0e6fc688c297ecb897cb",
+        "bncopy16_market_development_2026-11-08\\1142254230863605760.json": "3f0dbbcbf93d74620586ccc57c2faabcb5e8a3d12f20c8c51578837a5c26dd78",
+        "bncopy16_market_development_2026-11-08\\1142654271394672640.json": "5acb025930be2f2faab85a70c264d2d11e7ffc2e3ef43c8a61637c044f1c1f92",
+        "bncopy16_market_development_2026-11-08\\1144028326735638528.json": "479b25979ba8c3d1b14e25e974342173a8440104cd085408420a197b9b5e5541",
+        "bncopy16_market_development_2026-11-08\\1144043436099235840.json": "4673df4f65732928dc713e5e5c8f1ea0215ea66da0389269b700d2e15e8016db",
+        "bncopy16_market_development_2026-11-08\\1144262366243844096.json": "cef79186353e675f3de55fd5ef18194e8f51bd07f7c9a0e2821e1cd4e2c34dee",
+        "bncopy16_market_development_2026-11-08\\1144745596814356480.json": "6665ceb3253cd789f5ca9507d1844ada22faf5d082009a543f483b5a74bb3cb8"
+      },
+      "summary": {
+        "H1": {
+          "n": 30,
+          "agrees": 27,
+          "coverage": 1.0,
+          "agreement": 0.9,
+          "balanced_accuracy": 0.8846153846153846,
+          "recalls": {
+            "Long": 0.7692307692307693,
+            "Short": 1.0
+          },
+          "majority_side_agreement": 0.5666666666666667,
+          "background_n": 360,
+          "background_agrees": 240,
+          "background_reference_agreement": 0.6666666666666666,
+          "advantage_over_majority": 0.33333333333333337,
+          "advantage_over_background": 0.2333333333333334,
+          "day_counts": {
+            "20644": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20645": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20646": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20647": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20649": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20667": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20668": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20669": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20670": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20671": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20672": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20673": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20674": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20675": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20676": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20677": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20678": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20679": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20680": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20681": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20682": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20683": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20684": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20685": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20688": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20689": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20690": {
+              "n": 1,
+              "agrees": 1
+            }
+          },
+          "macro_day_agreement": 0.8888888888888888,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 30,
+          "agrees": 23,
+          "coverage": 1.0,
+          "agreement": 0.7666666666666667,
+          "balanced_accuracy": 0.748868778280543,
+          "recalls": {
+            "Long": 0.6153846153846154,
+            "Short": 0.8823529411764706
+          },
+          "majority_side_agreement": 0.5666666666666667,
+          "background_n": 360,
+          "background_agrees": 183,
+          "background_reference_agreement": 0.5083333333333333,
+          "advantage_over_majority": 0.20000000000000007,
+          "advantage_over_background": 0.2583333333333334,
+          "day_counts": {
+            "20644": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20645": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20646": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20647": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20649": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20667": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20668": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20669": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20670": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20671": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20672": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20673": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20674": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20675": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20676": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20677": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20678": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20679": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20680": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20681": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20682": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20683": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20684": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20685": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20688": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20689": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20690": {
+              "n": 1,
+              "agrees": 1
+            }
+          },
+          "macro_day_agreement": 0.7407407407407407,
+          "meets_frozen_screen": true
+        }
+      }
+    },
+    "holdout": {
+      "sides": {
+        "Short": 12,
+        "Long": 8
+      },
+      "sources": {
+        "bncopy16_market_holdout_2026-11-08\\1144873974313775104.json": "7ebaa44b414d0bf14157f9ab5240afaec619ffa83890b8a591a6bfb193175a84",
+        "bncopy16_market_holdout_2026-11-08\\1145047528686743552.json": "b81a513cc56a367d57638d7340422b20079df4fa76099638151aaa830d27df51",
+        "bncopy16_market_holdout_2026-11-08\\1145364722473758720.json": "d9b9055a88fe656808c3183e8e805426306efefb0153070a13d523fd447a9ffd",
+        "bncopy16_market_holdout_2026-11-08\\1145568498166001664.json": "51a0749532766f50d48d4d808e8b73dfe0b3385c5f0a5d6f83961adb9f5b8b89",
+        "bncopy16_market_holdout_2026-11-08\\1145757207469486080.json": "26334a70c0df01f7c831b6d2981588c0dc9a3c570d2577ac4527adeb00fa4a50",
+        "bncopy16_market_holdout_2026-11-08\\1146406558747324416.json": "5114ffe08073dfcb518eb4d6404ff546f8beef8ef607770d48f6a010b86c130d",
+        "bncopy16_market_holdout_2026-11-08\\1146602888228761600.json": "224664760785e36bc74aad1eca177338d33a12a44ea326a1cbd97965116775fb",
+        "bncopy16_market_holdout_2026-11-08\\1146731130017280000.json": "12e821ca0c64e879710545532373e2ede73cccdf9691f819ebb12e167af214f0",
+        "bncopy16_market_holdout_2026-11-08\\1147169042190036992.json": "7b8cbf32831d2e9f165c54132da8da59dd7441fd067dcdecb9ce5a429fc37ad2",
+        "bncopy16_market_holdout_2026-11-08\\1147350213754613760.json": "0c9a39dde8b492528b4d2b11fe73790d852a8c864acb4ad74978d483b481a255",
+        "bncopy16_market_holdout_2026-11-08\\1147584378701869056.json": "fb022146f4ad00d2209beed52035b5500dcf3582948c6fddbf93dc95bb5cd32a",
+        "bncopy16_market_holdout_2026-11-08\\1147818377399496704.json": "965178b9dd1afae9c799ac27a22b026b8f5b8613f23dfef938b721ddbacd966c",
+        "bncopy16_market_holdout_2026-11-08\\1148301512704782336.json": "39462086d4d150e9079d4ab194dd4b6bd0c85e6a608b76e0b3406ae81e55f7bf",
+        "bncopy16_market_holdout_2026-11-08\\1148444979649048576.json": "254f7cfe0a925f36c12eb27d9bf063e4a6d676fcef8a7f9a527b00b6cde22be8",
+        "bncopy16_market_holdout_2026-11-08\\1148799762104840192.json": "7893a5467cca52238fa62b64f30b9b204d7b43cfbc42fc31004874e593abcacc",
+        "bncopy16_market_holdout_2026-11-08\\1149139528461578240.json": "d7d41c380fe1ff0e2462b280971e316c688f32fda2b83c7386e24ca88d96e74c",
+        "bncopy16_market_holdout_2026-11-08\\1149373567357415424.json": "6c41fd91a575adaec1afd5cce6ccbd26968760e1a75e5980aa3f905d2589a50a",
+        "bncopy16_market_holdout_2026-11-08\\1149645325675261952.json": "16d8814e37729a2a481f617616cc504fce2ff517febf403d790693aa7af8eccf",
+        "bncopy16_market_holdout_2026-11-08\\1149894484948938752.json": "e9739cba82cce8b366a9e992a90d58d111ed831c975e45c251cf2f4419bc9d47",
+        "bncopy16_market_holdout_2026-11-08\\1149902037518905344.json": "613410b25fe95fe7c9beada7f94ad19ec2cd4d23ed564ed94c5951d3d1faa8c9"
+      },
+      "summary": {
+        "H1": {
+          "n": 20,
+          "agrees": 19,
+          "coverage": 1.0,
+          "agreement": 0.95,
+          "balanced_accuracy": 0.9583333333333333,
+          "recalls": {
+            "Short": 0.9166666666666666,
+            "Long": 1.0
+          },
+          "majority_side_agreement": 0.6,
+          "background_n": 240,
+          "background_agrees": 178,
+          "background_reference_agreement": 0.7416666666666667,
+          "advantage_over_majority": 0.35,
+          "advantage_over_background": 0.20833333333333326,
+          "day_counts": {
+            "20691": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20692": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20693": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20695": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20696": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20697": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20698": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20699": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20700": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20701": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20702": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20703": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20704": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20705": {
+              "n": 2,
+              "agrees": 1
+            }
+          },
+          "macro_day_agreement": 0.9642857142857143,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 20,
+          "agrees": 10,
+          "coverage": 1.0,
+          "agreement": 0.5,
+          "balanced_accuracy": 0.5208333333333334,
+          "recalls": {
+            "Short": 0.4166666666666667,
+            "Long": 0.625
+          },
+          "majority_side_agreement": 0.6,
+          "background_n": 240,
+          "background_agrees": 129,
+          "background_reference_agreement": 0.5375,
+          "advantage_over_majority": -0.09999999999999998,
+          "advantage_over_background": -0.03749999999999998,
+          "day_counts": {
+            "20691": {
+              "n": 2,
+              "agrees": 0
+            },
+            "20692": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20693": {
+              "n": 2,
+              "agrees": 1
+            },
+            "20695": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20696": {
+              "n": 2,
+              "agrees": 1
+            },
+            "20697": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20698": {
+              "n": 2,
+              "agrees": 1
+            },
+            "20699": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20700": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20701": {
+              "n": 1,
+              "agrees": 0
+            },
+            "20702": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20703": {
+              "n": 2,
+              "agrees": 2
+            },
+            "20704": {
+              "n": 1,
+              "agrees": 1
+            },
+            "20705": {
+              "n": 2,
+              "agrees": 1
+            }
+          },
+          "macro_day_agreement": 0.5,
+          "meets_frozen_screen": false
+        }
+      }
+    }
+  },
+  "split_frozen_at": "2026-11-08T08:32:27.638218+00:00",
+  "source_snapshot_sha256": "b219a86b912e876f10db5bd0fd90c30d2b724f1c7964c706e26ee2dde1da29b4",
+  "split": {
+    "development": {
+      "days": [
+        "2026-07-10",
+        "2026-07-11",
+        "2026-07-12",
+        "2026-07-13",
+        "2026-07-14",
+        "2026-07-15",
+        "2026-08-02",
+        "2026-08-03",
+        "2026-08-04",
+        "2026-08-05",
+        "2026-08-06",
+        "2026-08-07",
+        "2026-08-08",
+        "2026-08-09",
+        "2026-08-10",
+        "2026-08-11",
+        "2026-08-12",
+        "2026-08-13",
+        "2026-08-14",
+        "2026-08-15",
+        "2026-08-16",
+        "2026-08-17",
+        "2026-08-18",
+        "2026-08-19",
+        "2026-08-20",
+        "2026-08-21",
+        "2026-08-23",
+        "2026-08-24",
+        "2026-08-25"
+      ],
+      "sample_ids": [
+        "1127902078464684032",
+        "1128219227431366656",
+        "1128475942278131712",
+        "1128815594436554752",
+        "1129170462636503040",
+        "1129638507834241024",
+        "1136304918686068736",
+        "1136523939834490880",
+        "1136999542484365312",
+        "1137301512608804864",
+        "1137731857506365440",
+        "1137920610480943104",
+        "1138283004700913664",
+        "1138652946969391104",
+        "1138985082142322688",
+        "1139279574330241024",
+        "1139596669119098880",
+        "1140049654706073600",
+        "1140208212902932480",
+        "1140540390824210432",
+        "1141053744441454592",
+        "1141340608176058368",
+        "1141763476751904768",
+        "1141921935266934784",
+        "1142254230863605760",
+        "1142654271394672640",
+        "1144028326735638528",
+        "1144043436099235840",
+        "1144262366243844096",
+        "1144745596814356480"
+      ]
+    },
+    "holdout": {
+      "days": [
+        "2026-08-26",
+        "2026-08-27",
+        "2026-08-28",
+        "2026-08-29",
+        "2026-08-30",
+        "2026-08-31",
+        "2026-09-01",
+        "2026-09-02",
+        "2026-09-03",
+        "2026-09-04",
+        "2026-09-05",
+        "2026-09-06",
+        "2026-09-07",
+        "2026-09-08",
+        "2026-09-09"
+      ],
+      "sample_ids": [
+        "1144873974313775104",
+        "1145047528686743552",
+        "1145364722473758720",
+        "1145568498166001664",
+        "1145757207469486080",
+        "1146406558747324416",
+        "1146602888228761600",
+        "1146731130017280000",
+        "1147169042190036992",
+        "1147350213754613760",
+        "1147584378701869056",
+        "1147818377399496704",
+        "1148301512704782336",
+        "1148444979649048576",
+        "1148799762104840192",
+        "1149139528461578240",
+        "1149373567357415424",
+        "1149645325675261952",
+        "1149894484948938752",
+        "1149902037518905344"
+      ]
+    }
+  },
+  "exceptions": {
+    "development": [
+      {
+        "position_id": "1127902078464684032",
+        "symbol": "EIGENUSDT",
+        "side": "Long",
+        "day": 20644,
+        "tests": {
+          "H1": {
+            "predicted": "Short",
+            "agrees": false,
+            "background_predictions": [
+              "Short",
+              "Short",
+              "Short",
+              "Short",
+              "Short",
+              "Short",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long"
+            ],
+            "background_agrees": 6
+          },
+          "H2": {
+            "predicted": "Long",
+            "agrees": true,
+            "background_predictions": [
+              "Short",
+              "Long",
+              null,
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Short",
+              "Short",
+              "Long"
+            ],
+            "background_agrees": 5
+          }
+        }
+      },
+      {
+        "position_id": "1141053744441454592",
+        "symbol": "1000SHIBUSDT",
+        "side": "Long",
+        "day": 20680,
+        "tests": {
+          "H1": {
+            "predicted": "Short",
+            "agrees": false,
+            "background_predictions": [
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long",
+              "Long"
+            ],
+            "background_agrees": 12
+          },
+          "H2": {
+            "predicted": "Short",
+            "agrees": false,
+            "background_predictions": [
+              "Long",
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Short",
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Short",
+              "Short"
+            ],
+            "background_agrees": 5
+          }
+        }
+      },
+      {
+        "position_id": "1142254230863605760",
+        "symbol": "LDOUSDT",
+        "side": "Long",
+        "day": 20684,
+        "tests": {
+          "H1": {
+            "predicted": "Short",
+            "agrees": false,
+            "background_predictions": [
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Short",
+              "Short",
+              "Short",
+              "Short",
+              "Short",
+              "Long"
+            ],
+            "background_agrees": 4
+          },
+          "H2": {
+            "predicted": "Short",
+            "agrees": false,
+            "background_predictions": [
+              null,
+              "Short",
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Long",
+              "Long",
+              "Short",
+              "Long"
+            ],
+            "background_agrees": 6
+          }
+        }
+      }
+    ],
+    "holdout": [
+      {
+        "position_id": "1149894484948938752",
+        "symbol": "CETUSUSDT",
+        "side": "Short",
+        "day": 20705,
+        "tests": {
+          "H1": {
+            "predicted": "Long",
+            "agrees": false,
+            "background_predictions": [
+              "Long",
+              "Long",
+              "Short",
+              "Long",
+              "Long",
+              "Short",
+              "Short",
+              "Long",
+              "Short",
+              "Short",
+              "Short",
+              "Short"
+            ],
+            "background_agrees": 7
+          },
+          "H2": {
+            "predicted": "Long",
+            "agrees": false,
+            "background_predictions": [
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Short",
+              "Long",
+              "Short",
+              "Long",
+              "Short",
+              "Short",
+              "Short",
+              "Short"
+            ],
+            "background_agrees": 8
+          }
+        }
+      }
+    ]
+  },
+  "independent_verification": {
+    "method": "Fraction price signs, direction matches, class balance and all time controls; chronological split and freeze checks",
+    "entries_checked": 50,
+    "background_windows_checked": 600,
+    "hypotheses_checked": 2,
+    "holdout_access_after_freeze": true,
+    "scope": "Observed entry direction only",
+    "script_sha256": "4b86bc3490575dba5079511f8a235afdbc3ac792394eec8d00f53b224a195267"
+  },
+  "sources": {
+    "bncopy16_4937955534211236097_2026-11-08.json": "b219a86b912e876f10db5bd0fd90c30d2b724f1c7964c706e26ee2dde1da29b4",
+    "bncopy16_entry_split_2026-11-08.json": "c80c577890ead27950cfe8b27b8447afe0a2800a42d76a3c2a1f646dcbc6c967",
+    "bncopy16_entry_development_2026-11-08.json": "0629f7bf8da0b14981c8367e400d1d6336e78ca29e6d62a2d89a56d224ba00eb",
+    "bncopy16_entry_hypotheses_2026-11-08.json": "748e3fbda91d7f75c7cb972e671ca81072f1f2a908ade8125f3932352c130833",
+    "bncopy16_revisit_verify_2026-11-08.py": "4b86bc3490575dba5079511f8a235afdbc3ac792394eec8d00f53b224a195267",
+    "bncopy16_revisit_verification_2026-11-08.json": "d45895d8a4a2273cc616013f9f3699a841bb7336ab8cb9ac0cf65bc7b9676afe"
+  }
+}
