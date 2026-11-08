@@ -1,0 +1,1600 @@
+{
+  "position_merge_verified": true,
+  "order_pagination": {
+    "cursor_chain_verified": true,
+    "terminal_empty": true,
+    "cursor_unique_count": 16994,
+    "targeted_added": 58,
+    "target_queries": [
+      {
+        "day": "2026-09-16",
+        "stamp": 1789570097141,
+        "new": 6,
+        "remaining": 5
+      },
+      {
+        "day": "2026-09-16",
+        "stamp": 1789570097110,
+        "new": 5,
+        "remaining": 0
+      },
+      {
+        "day": "2026-09-23",
+        "stamp": 1790202027148,
+        "new": 4,
+        "remaining": 1
+      },
+      {
+        "day": "2026-09-23",
+        "stamp": 1790173155995,
+        "new": 1,
+        "remaining": 0
+      },
+      {
+        "day": "2026-09-28",
+        "stamp": 1790605936986,
+        "new": 7,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-01",
+        "stamp": 1790864229989,
+        "new": 6,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-05",
+        "stamp": 1791208721263,
+        "new": 4,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-07",
+        "stamp": 1791339670304,
+        "new": 1,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-08",
+        "stamp": 1791473435748,
+        "new": 2,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-12",
+        "stamp": 1791846148985,
+        "new": 3,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-16",
+        "stamp": 1792176686227,
+        "new": 6,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-23",
+        "stamp": 1792795595771,
+        "new": 4,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-24",
+        "stamp": 1792855875768,
+        "new": 7,
+        "remaining": 0
+      },
+      {
+        "day": "2026-10-29",
+        "stamp": 1793247190607,
+        "new": 2,
+        "remaining": 0
+      }
+    ],
+    "targeted_saved_errors": 10,
+    "page_count": 120,
+    "request_sizes": {
+      "100": 67,
+      "200": 53
+    },
+    "total_is_not_history_length": true,
+    "saved_errors": 92
+  },
+  "scan_close_bursts": [
+    {
+      "count": 200,
+      "first_close": "2026-10-24T15:31:15.756000+00:00",
+      "last_close": "2026-10-24T15:31:15.807000+00:00",
+      "close_span_ms": 51,
+      "open_span_ms": 39209357,
+      "symbols": 199,
+      "sides": {
+        "Short": 200
+      }
+    }
+  ],
+  "first_order_update": "2026-09-09T16:45:02.706000+00:00",
+  "opening_hours_utc": {
+    "13": 1256,
+    "17": 479,
+    "20": 145,
+    "12": 550,
+    "14": 903,
+    "15": 1013,
+    "0": 814,
+    "11": 655,
+    "2": 547,
+    "3": 423,
+    "19": 423,
+    "10": 578,
+    "7": 445,
+    "16": 955,
+    "9": 311,
+    "18": 265,
+    "21": 409,
+    "8": 300,
+    "5": 369,
+    "4": 331,
+    "23": 499,
+    "6": 209,
+    "1": 335,
+    "22": 247
+  },
+  "closing_hours_utc": {
+    "23": 1993,
+    "11": 160,
+    "17": 588,
+    "22": 582,
+    "21": 244,
+    "19": 13,
+    "15": 1133,
+    "14": 1888,
+    "3": 449,
+    "18": 248,
+    "2": 1048,
+    "20": 521,
+    "16": 16,
+    "9": 543,
+    "5": 320,
+    "7": 300,
+    "0": 614,
+    "10": 170,
+    "12": 289,
+    "13": 88,
+    "4": 767,
+    "8": 14,
+    "1": 292,
+    "6": 181
+  },
+  "order_coverage": {
+    "full_positions": 6676,
+    "incomplete_positions_with_orders": 262,
+    "inventory_errors": [],
+    "counts": {
+      "(0, 0)": 5523,
+      "(0, 2)": 39,
+      "(0, 1)": 222,
+      "(1, 2)": 1,
+      "(1, 1)": 5393,
+      "(4, 1)": 162,
+      "(3, 1)": 268,
+      "(2, 1)": 746,
+      "(21, 1)": 1,
+      "(5, 1)": 86,
+      "(28, 1)": 1,
+      "(16, 1)": 1,
+      "(25, 1)": 1,
+      "(18, 1)": 1,
+      "(12, 1)": 1,
+      "(7, 1)": 1,
+      "(23, 1)": 1,
+      "(10, 1)": 1,
+      "(8, 1)": 1,
+      "(45, 1)": 1,
+      "(55, 144)": 1,
+      "(94, 211)": 1,
+      "(9, 9)": 1,
+      "(41, 1)": 1,
+      "(45, 148)": 1,
+      "(50, 82)": 1,
+      "(52, 11)": 1,
+      "(40, 1)": 1,
+      "(99, 1)": 1,
+      "(9, 1)": 1
+    }
+  },
+  "unmatched_orders": [],
+  "portfolio_id": "4997465541846537217",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "profile_description": "路遥知马力\n只求认知以内的稳定长期收益",
+  "script_sha256": "2c87e9510d607540f506a7a50bd4e0f169f1107796b1a487aa37f958fee1c7e3",
+  "feature_script_sha256": "89af2100f80482487bdd9ecbcbea1e3af6a34ddf82788ea1c6effc25dca3670f",
+  "sources": {
+    "fanxing_4997465541846537217_scan_2026-10-25.json": "5d943d0c7cebe4df1fb8078a4880a6747124d1ae526425cceb16c1ec894adc82",
+    "fanxing_4997465541846537217_2026-11-08.json": "d5ac2a7fc4ecd37d250b602f704b16f38a849114ca5111a6a769703b62513ece",
+    "fanxing_4997465541846537217_orders_merged_2026-11-08.json": "d0f631a49d08d71378d14403f2ab6f233374f78067d4b75616a5cad6cd1dac27",
+    "fanxing_4997465541846537217_orders_rawpass_2026-11-08.json": "64a423a7780e89e3ce8e7c842ef56f4a521463cc1edbc7120fd38961347b1414"
+  },
+  "raw_sources": {
+    "fanxing_pages_2026-11-08\\detail.json": "d1c2aff05f5b125de58b98e33da0c79f98f45a86a56878c2ea4f967282c401fe",
+    "fanxing_pages_2026-11-08\\page_001.json": "85b33ac019123aa301b1f4fb704ed13a8735d2f5e1d9cca65655ae9af870d4fa",
+    "fanxing_pages_2026-11-08\\page_002.json": "2970243f7a5be49b8ed841c4a0daf72e59db40c150225dc2aedf280c13092b87",
+    "fanxing_pages_2026-11-08\\page_003.json": "5322b5909324e03c034fcf51ceb9911444a705704689b76f7ffe5dbf14fd4661",
+    "fanxing_pages_2026-11-08\\page_004.json": "2d5c89491082d79abd5a1639f7cc8eca6d18ad413abc24cf347f739d3bfb2168",
+    "fanxing_pages_2026-11-08\\page_005.json": "d4be6798c82ee03d97b7fe2c7a79976b87907739e8ea8efef95bc87591263118",
+    "fanxing_pages_2026-11-08\\page_006.json": "00d622c619a5ef81874c24f0ff53865085331c6e8c5925e53d67160cefa99634",
+    "fanxing_pages_2026-11-08\\page_007.json": "8d51f52bf09f08b71940c4208f62145783ed8f7c7461f15a9098aafd51463949",
+    "fanxing_pages_2026-11-08\\page_008.json": "76ed719df41dafb5fd1fcaa63c78b8ae954694945bb61b568c8b0779945d92ee",
+    "fanxing_pages_2026-11-08\\page_009.json": "862500cc5d933fc20433828edfaa87d35a291a04b890fe1c741c6e2cf9e8e605",
+    "fanxing_pages_2026-11-08\\page_010.json": "2a5fb4ca5a51c936a2496b4d8dcbb83411f1ad4baa98499b5f71f9f963fb4e86",
+    "fanxing_pages_2026-11-08\\page_011.json": "c24529ac0b6d65845fdeb07dd1e7f3796c85cf743992e4366e6f6df68af12511",
+    "fanxing_pages_2026-11-08\\page_012.json": "433c8f31ec63ba7903c8dbe854ef96ec266e29056f9bb95c18e44e70f5c22448",
+    "fanxing_pages_2026-11-08\\page_013.json": "cad43b3daa680efbbbaeff5e221608f506815bd6c93433a2f5061a7e4377ba99",
+    "fanxing_pages_2026-11-08\\page_014.json": "625c4c03376d807f46a900d3285007d1d5ed16306396847e698d448cdd4d35cf",
+    "fanxing_pages200_2026-11-08\\detail.json": "d1c2aff05f5b125de58b98e33da0c79f98f45a86a56878c2ea4f967282c401fe",
+    "fanxing_pages200_2026-11-08\\error_016_1794122310005453200.json": "1090dc3c5b03d5f613dc64c6cb44459bae7766a14f4f7b9a0a4e05816b677f8b",
+    "fanxing_pages200_2026-11-08\\error_016_1794122316233984200.json": "3350535dbafc95cc9f5552c3ccf9c5117306ea3125ade32bf874c39e3bcff550",
+    "fanxing_pages200_2026-11-08\\error_046_1794122380640774100.json": "b105520b12f630a58f67354d631597934f5d9f2cd21db2b731987ae814f79d9d",
+    "fanxing_pages200_2026-11-08\\page_001.json": "d13e2c8c2a48d0f82661985eea87b248196c170e0dfc5a98ad28999f8847feb7",
+    "fanxing_pages200_2026-11-08\\page_002.json": "c87efa338c04f0141561ae04c335b352ff3c18d40012f0e761dbbb85b34cb4a0",
+    "fanxing_pages200_2026-11-08\\page_003.json": "cf108148337ccb01773f5d3f2d5894adcc4ae68d3a3c684a9b0d2b69978bc9a8",
+    "fanxing_pages200_2026-11-08\\page_004.json": "f418375254a1699259e940a737e7f54a220f8f8cbb64d978e8ca4fce422d4f47",
+    "fanxing_pages200_2026-11-08\\page_005.json": "019066394ae7d7ff4c3f66fe0bba7f66ff18a7962f229af12907c7640057d72a",
+    "fanxing_pages200_2026-11-08\\page_006.json": "2c69a3b9c93fe7375c3a25e8e4e9aa34bc4931071661eb269d47afdfee7daed3",
+    "fanxing_pages200_2026-11-08\\page_007.json": "d0f658090c8809b3de2578ccc0a9b008c80185974730b7846d9e568f1c7cb0fb",
+    "fanxing_pages200_2026-11-08\\page_008.json": "f29155e8c15996a3cc92e0564685f9589a23f36a687d32924beab16e5a824440",
+    "fanxing_pages200_2026-11-08\\page_009.json": "c1cc3354574bcc8d91be37a957174408731ad8dd07488cb1430192a34347ac04",
+    "fanxing_pages200_2026-11-08\\page_010.json": "a1c84664dcc279f333a6cb6accd5d5664e8e087b1ad554a3680b1ba238357a27",
+    "fanxing_pages200_2026-11-08\\page_011.json": "142544625a367c017ca2371389948a66e7c2c25b88c1279d2d57a8a7c96a7ea8",
+    "fanxing_pages200_2026-11-08\\page_012.json": "20405804b2b7a2e7c80356d2ffa29bc0056dd47333e65a0e97140062ac22ab0f",
+    "fanxing_pages200_2026-11-08\\page_013.json": "60c3d459864c69bc2520d172ee79e72448bc8f414d3f21ab97d579470af66236",
+    "fanxing_pages200_2026-11-08\\page_014.json": "24d358aebd03866463b5982e54b816b35195caeb6da49ec403ba204ba1017537",
+    "fanxing_pages200_2026-11-08\\page_015.json": "8df41ec32f68d15242947bb20a367f6ff7703caf765ea0073231e9da3f4d082d",
+    "fanxing_pages200_2026-11-08\\page_016.json": "8d5d815d58fb5002d81e6c4486ed12f3737566075028de3d4ba030788feb256d",
+    "fanxing_pages200_2026-11-08\\page_017.json": "2184407a0506ea16be09c465574dbef4f3d652630e0671bdf57da1932f106235",
+    "fanxing_pages200_2026-11-08\\page_018.json": "3728f972a7999f3bf5ecec50784691bfb494f2476bc203faf5760ecd9ec8ecb8",
+    "fanxing_pages200_2026-11-08\\page_019.json": "2d9f3b7a65be57d705b2419d2aa646242b9b80724083efd7af504020883f9e04",
+    "fanxing_pages200_2026-11-08\\page_020.json": "7cdde0cd3fd7290ef779e7e117a31d304fd1d64fe9ddb457b85f02e77ac61fa4",
+    "fanxing_pages200_2026-11-08\\page_021.json": "84bea5003e70fc76b8fc339563b850605366b24420babe3fd91e21f15b1d63d5",
+    "fanxing_pages200_2026-11-08\\page_022.json": "26ccece1912c7b2724bf32431bf916190589cd66506db75d98d4c98f1ba07e1c",
+    "fanxing_pages200_2026-11-08\\page_023.json": "e00acaeef2c61fbf73ee77c2a3287192684fc5ddc2d35de960d690db9ce2e2d7",
+    "fanxing_pages200_2026-11-08\\page_024.json": "a6a31d173fce0aedb8bc50bcdf83853c67cf01c658a31a987f873bfc62f531b6",
+    "fanxing_pages200_2026-11-08\\page_025.json": "9666fbf958a1d085ee46dc750ac97fc0622325298d3a49de833bfc2d78316ab3",
+    "fanxing_pages200_2026-11-08\\page_026.json": "9773e3111b1cdd3efafe4f49891ade443a91dd9d29679f5f363b2d8a56ea3b16",
+    "fanxing_pages200_2026-11-08\\page_027.json": "e21f14e4d728b13151efd86497b586710f368c54a2763e97d61118621ee9b554",
+    "fanxing_pages200_2026-11-08\\page_028.json": "0fd71f9b6ff323e67d6bd4025f75f71dcc96df955aafde13a2e1c8a158826c4b",
+    "fanxing_pages200_2026-11-08\\page_029.json": "d877f707c780ff30c5d769856f92a5828ac74588bfea04bdbd19070ec3b2790a",
+    "fanxing_pages200_2026-11-08\\page_030.json": "b1c641ad16209ad22e20de28bb3e4a79ee5cb8222d12d6704991f3881b133be1",
+    "fanxing_pages200_2026-11-08\\page_031.json": "66291aae5b819bcd08288461e192d058a7212768c44ca4bcda5ea8e1f0fb554b",
+    "fanxing_pages200_2026-11-08\\page_032.json": "45d7e2e65dd43342dacfd5a3bc27413ce81aeb2db55decce53a7da5ca283a06a",
+    "fanxing_pages200_2026-11-08\\page_033.json": "9500f2649001f2fa6f10ba9ef8489e1f012ecef5ac1a0586996df65a159a10af",
+    "fanxing_pages200_2026-11-08\\page_034.json": "fe3112f7d95fb2015c0a1df7e0e9d6b16da866e50d9bd5c2887bc7841bd98284",
+    "fanxing_pages200_2026-11-08\\page_035.json": "ec90ef2df4250b9a60c9a88974a3cfcc89207c6ed2e85b1b74eb070df2493db8",
+    "fanxing_pages200_2026-11-08\\page_036.json": "0deace5ed0058530187738228d9e735005dfcb9ae05855ae7ae41235c36a5de2",
+    "fanxing_pages200_2026-11-08\\page_037.json": "e86794bd7187625c875990ee2c642d87620fec901de476ee7dc5efe7fa52fcea",
+    "fanxing_pages200_2026-11-08\\page_038.json": "b484564aa7cb3e5c160ac069b4d97f89c19488049c8aedbb74841e1cd9ec2bc6",
+    "fanxing_pages200_2026-11-08\\page_039.json": "167fa91006a79efb29bf097ee5358433f7498c5f5f0b116e89d998d121456d71",
+    "fanxing_pages200_2026-11-08\\page_040.json": "7b29b8c03a0ad41dd137e3b4b63b64caa590d258888cf03789f2c7c19ca64d84",
+    "fanxing_pages200_2026-11-08\\page_041.json": "fbef36c937ae88ad721957fecf6d17d6fbebc1814c8b07e431dcada2e90e2359",
+    "fanxing_pages200_2026-11-08\\page_042.json": "806c9a0b56b54e605275eece6d3cc0f2d6cd2453c58a07d3cc25456ccde99d28",
+    "fanxing_pages200_2026-11-08\\page_043.json": "f7a82c2477ff7ed01b82ecc0ba0de5b43a656f8aedff2921a7a50377cc51b292",
+    "fanxing_pages200_2026-11-08\\page_044.json": "dc73a9a7c0fdbe568a638458a291b7c89aecdeafd829cdd443ff1f5ae4354824",
+    "fanxing_pages200_2026-11-08\\page_045.json": "1093a4edf89127b43cc3a765f63404256dc130ed1772b7e7d80fe09736f9a95d",
+    "fanxing_pages200_2026-11-08\\page_046.json": "3368aaa58f1588d572370732ff9503d3d307d4ff5a14a16e954e809c9a206d36",
+    "fanxing_pages200_2026-11-08\\page_047.json": "625b55d67eaa9927df67e8205d1f1d88452982f27eec6f6ac744d8fee6f19f03",
+    "fanxing_pages200_2026-11-08\\page_048.json": "8c34b47078f9e26257392c975fc82687135e338db6050ad90e1d2c42d6dc36f8",
+    "fanxing_pages200_2026-11-08\\page_049.json": "de74bc1d8c54cdf8f765c28256ad1ab7a62b1d359f3ac9fbb01e22faae0ec59d",
+    "fanxing_pages200_2026-11-08\\page_050.json": "3f90fadb795fa6abf2def596e07e6c6947aa5e8057a33830ad67dafd9bb26879",
+    "fanxing_pages200_2026-11-08\\page_051.json": "6ff269760ac40fbcb58c12be11fa0938792ab5219167123ed1cb58f95c9d3b47",
+    "fanxing_pages200_2026-11-08\\page_052.json": "4a5bf9c7f8e866e5ace3274a117de7e4c4c02093f53c250a697e88600f783b2d",
+    "fanxing_pages200_2026-11-08\\page_053.json": "c395ec0888de81fb53ec205956f5c8138b71b2ec4529de0a98e1268313e3018e",
+    "fanxing_pages200_2026-11-08\\page_054.json": "54bc4df55aef5e4a024ae278c6dfff61a42e004e5e9f89fe11436fc7532ec2f1",
+    "fanxing_pages200_2026-11-08\\page_055.json": "10bfc3edb4d33e64d8350c1832071d09c4e6432fc3f59f7e4feb2663b077b0ba",
+    "fanxing_pages200_2026-11-08\\page_056.json": "27ce41fb7b2e230c010b5fa3be5cc43b6e25419e2d888176cd1b8147078b33c7",
+    "fanxing_pages200_2026-11-08\\page_057.json": "0345cf870a624bebc3d1e0f9cbaf3114c829a332d0e14144b8b4d084854fcd79",
+    "fanxing_pages200_2026-11-08\\page_058.json": "e3f8fd18eed22cbf0ff82f6da36156938404b68f9f54a2dd8934ae990fee9a25",
+    "fanxing_pages200_2026-11-08\\page_059.json": "d11ba0c93dc35209550218832bd47161453a8fab4e882a3f7c53c54b8d58701c",
+    "fanxing_pages200_2026-11-08\\page_060.json": "5fe3eb88c7036a366934f81e7b6a9c2a5226b6dfe5b7cd50d0d362dc7476cc24",
+    "fanxing_pages200_2026-11-08\\page_061.json": "ab302b8ee2a68d8876f6988df9bc3514a7f75fdde94839ce80a9331e8f5fa67e",
+    "fanxing_pages200_2026-11-08\\page_062.json": "5b86565168c50d56dd067c9ed1ad63b128cc206f6a03afe69d572fa374053220",
+    "fanxing_pages200_2026-11-08\\page_063.json": "0268bcda54ccbfc4599b9d5d4142faa4fad7b9acb92bd966951653ed56dab1ec",
+    "fanxing_pages200_2026-11-08\\page_064.json": "ab1275c49e5c3d9dca7c85b31e10caa3d41d0a4b849d3f512ed083665b1022bf",
+    "fanxing_pages199_2026-11-08\\detail.json": "d1c2aff05f5b125de58b98e33da0c79f98f45a86a56878c2ea4f967282c401fe",
+    "fanxing_pages199_2026-11-08\\error_020_1794122466974042900.json": "0c97fc51d2b143a43aaf0d2a6b3e69dc75510e0f0e6fc8631acec5b2388252d8",
+    "fanxing_pages199_2026-11-08\\error_031_1794122490033344200.json": "4fe436f2dee228ff5b5a2bfec11180ccc7de2ba1808756151cda8b266b72bbf3",
+    "fanxing_pages199_2026-11-08\\error_061_1794122568554946200.json": "f919ea89c8d186bb898fb50c436846e2fe6ee4451cb93a9a7a933f1cc789917d",
+    "fanxing_pages199_2026-11-08\\page_001.json": "ac24ba1d267bb4ae3043698385dab9d87f65ba8da5dda08f58e6f05190a15456",
+    "fanxing_pages199_2026-11-08\\page_002.json": "45378c0e8295048391e2cc9d86705abf05437e291ae701786741d9f8a83cd40c",
+    "fanxing_pages199_2026-11-08\\page_003.json": "e19e346efb237d2af1efb413650ea0fbaf8bc3c2ece5eea4be55b388a263022b",
+    "fanxing_pages199_2026-11-08\\page_004.json": "c6df62304163ccb7c07f596363ac67f56785f7db7205df62615409077cf12746",
+    "fanxing_pages199_2026-11-08\\page_005.json": "ed77d9061f722c0c315895d424ffda13760e590ed54a98ba658f7077f542cc20",
+    "fanxing_pages199_2026-11-08\\page_006.json": "5216e3684364dd8868ce4023f371829c43496f65675cfca7d51fc6e1190f49d6",
+    "fanxing_pages199_2026-11-08\\page_007.json": "0d85752eb899d68444b440ba6aebef42aab0cd058b420e66b72466f5c1a436b9",
+    "fanxing_pages199_2026-11-08\\page_008.json": "71b0dabdb98cb1652ed4a045f3b79f6ad9492bf20fc8d9ed6aafd0e515399f28",
+    "fanxing_pages199_2026-11-08\\page_009.json": "8bea302a29d34c25c506af75d5ebdc14a7b3553ce7733c37bda14b2de2849200",
+    "fanxing_pages199_2026-11-08\\page_010.json": "2ffdb217f5d0bae6b876f58dbdbd83d15117d8ec446001b32e11541e46a2828d",
+    "fanxing_pages199_2026-11-08\\page_011.json": "246287adc2f36c9f070821f99603eb0b147ad05fd5f1d50c5a8042ce112004df",
+    "fanxing_pages199_2026-11-08\\page_012.json": "690af83a7620aa8e44d47e62316daf625dcecfd60cae34c92ff3e79c8a43cb56",
+    "fanxing_pages199_2026-11-08\\page_013.json": "61f510669ef2f01c114d11e96911b5e59e081acada013c8bddceda71769b3851",
+    "fanxing_pages199_2026-11-08\\page_014.json": "060b9eeac4e59cbd15daa6c12e8b08d0d0b0d48cb7f3312c071a357e1948e674",
+    "fanxing_pages199_2026-11-08\\page_015.json": "a44699a4716e94450d40eb0562bd281950f6d99e444e0583a74f7e232708dd90",
+    "fanxing_pages199_2026-11-08\\page_016.json": "0412ee2919d2d876da045dea712582bce65600406e3f186b0e9ed09206ae6515",
+    "fanxing_pages199_2026-11-08\\page_017.json": "a1e7f329fa99b0414ab2b3912ce579f782fc20c7801666934aafb69fea489cfe",
+    "fanxing_pages199_2026-11-08\\page_018.json": "40fd3507ff33d5becc40a6808db9c29f090fc3276b068971aa229e5b2a811715",
+    "fanxing_pages199_2026-11-08\\page_019.json": "ccaffa211cd974e6614f47b8384a0ed0419647036c440e8459dbd15ac1a3e336",
+    "fanxing_pages199_2026-11-08\\page_020.json": "a9f7f2f5a8f00ad6ad34cc9d86f87b7041b88ca97c44d47910b5bda6d690d683",
+    "fanxing_pages199_2026-11-08\\page_021.json": "2d65da9397f3b36693da07e4d385b73a30fec9caac38cd477d8fd1abec624bef",
+    "fanxing_pages199_2026-11-08\\page_022.json": "63bc3b71f39d3e17eea3b5b8b78f4215e960ea0024e06d4a10a9efbc98a77875",
+    "fanxing_pages199_2026-11-08\\page_023.json": "cb24a84d694e02d7968837482dab90cbf8c67c24f0209cbbd503e75ea2ae5b4f",
+    "fanxing_pages199_2026-11-08\\page_024.json": "43f88036a4de94a2a8b53b5ba55be94952f6c834f4ac1c453c8aa0493556d19b",
+    "fanxing_pages199_2026-11-08\\page_025.json": "c21602a2c3bac5bc9705701a62f6788d5dbff568557260868ed938c69b689b38",
+    "fanxing_pages199_2026-11-08\\page_026.json": "228b39ae6e2e79fad879d5e7fcc3940383c5d4a23f628032b8d0fb35829ad8fc",
+    "fanxing_pages199_2026-11-08\\page_027.json": "74060cba83cce40280a120fbd8bd6fb198f60cc6dde9ae164bc94d8594ff4189",
+    "fanxing_pages199_2026-11-08\\page_028.json": "d86fb9d1763d883c87f976e5e47b4c87c7a57e389ab87c0f00da0f1aff194184",
+    "fanxing_pages199_2026-11-08\\page_029.json": "520ee7658670455fd9a5204aa8ab27ed1dbec71224636290bf42897347078736",
+    "fanxing_pages199_2026-11-08\\page_030.json": "8a43ad9ec79bdb37dd5acc854d371bbed85f7007e32bb16fe5364a12789d2bab",
+    "fanxing_pages199_2026-11-08\\page_031.json": "f0e8b3ef6fac41d703f32129e24c78a20870b1c7de5aacf1685806b9d7d63e4a",
+    "fanxing_pages199_2026-11-08\\page_032.json": "c8e72d37328e54c0738b0d11ee2504fde6967543b0c9073d8db45e2f50f1b3b4",
+    "fanxing_pages199_2026-11-08\\page_033.json": "8dfcd0ee18a5e107a35795827c246893fe622dd5ee018afa905f2d552435cfd5",
+    "fanxing_pages199_2026-11-08\\page_034.json": "c1ebf04cb63543bb5941e5f9109076a58eecd9deba756a44db596a7bb680e718",
+    "fanxing_pages199_2026-11-08\\page_035.json": "7875c990ecc44beb2def8318a9d2eaa706af1912ff24b6e01579e54c0b87fa5a",
+    "fanxing_pages199_2026-11-08\\page_036.json": "244c9dcf90a0c23ef2b186d6629ba86935855bba341c2f99cbec16f1e826ede7",
+    "fanxing_pages199_2026-11-08\\page_037.json": "a56f39a501d09d7354d567f9e9e7514ef8338bfff03477ca6728b448291e2ea1",
+    "fanxing_pages199_2026-11-08\\page_038.json": "815c2800ceaeea0ce8618b48731e8f4c2bc0a20ae27864d02a84c13740aa183f",
+    "fanxing_pages199_2026-11-08\\page_039.json": "0ff22146a5fe63ddee843ea7a23477d51698872ab925996477a8744b5fe22852",
+    "fanxing_pages199_2026-11-08\\page_040.json": "3e32a76f21e8e57de6b17a8ed32016a299eed6be8f81a1947ae69e7a775d1a51",
+    "fanxing_pages199_2026-11-08\\page_041.json": "0d42b05aa3cf4ceb2eaa919b5f1f23be966804b28aab9f5fcf68fbbbde5c688a",
+    "fanxing_pages199_2026-11-08\\page_042.json": "5eed47aa3fc98c6ee9ccb8f6b409c0be0fe37c601f2ff1562df2aceb6bb117df",
+    "fanxing_pages199_2026-11-08\\page_043.json": "288b2afc4d08359bdc568ec4cd7346a681bdb13f73e99b16b2da5bc6ba4b9774",
+    "fanxing_pages199_2026-11-08\\page_044.json": "cb2cba9a698fb52dce722c63a0895a29afa33194d5f5eff457d5280c875e0e07",
+    "fanxing_pages199_2026-11-08\\page_045.json": "860a91a30d620f11d1a682c9ff0b416c6a1ac8cba114a7b18bd303200a23c713",
+    "fanxing_pages199_2026-11-08\\page_046.json": "654f517cce61363683cc8a793829b008e3791eab705dcd4aaf95e3838ea43958",
+    "fanxing_pages199_2026-11-08\\page_047.json": "a4b013045d8dcc92c194e3250a1e4baaba00ab54308fffd47c57cf6771166f03",
+    "fanxing_pages199_2026-11-08\\page_048.json": "615ad5d7a1cacc6bc7cf74c84aa7248363c949428990358d73032dfc24639479",
+    "fanxing_pages199_2026-11-08\\page_049.json": "dcac6b18cfae7e49f3b5cba2f39f713d0eb0c64b1c75cc72618d2c8012f17bc7",
+    "fanxing_pages199_2026-11-08\\page_050.json": "ba4b0d44abce4aa2a08bd88adad9d70294afb0d177fece22a336141aec747d08",
+    "fanxing_pages199_2026-11-08\\page_051.json": "30397ebcbc00f32910107f2945764d2c5d2d8bb535b84b79074bde59dcbd1989",
+    "fanxing_pages199_2026-11-08\\page_052.json": "c056ef97828055673d007ef05fe89d265eaee63968018fd11d34855cbbc50138",
+    "fanxing_pages199_2026-11-08\\page_053.json": "5d4e019b469e1d54584df5da1cb8859811ad361a9a32f7328e530f5d515ed15f",
+    "fanxing_pages199_2026-11-08\\page_054.json": "16049470034ffee1ac4ace1737a120ac9052a1fc857c59c7b5fb996caed53a6e",
+    "fanxing_pages199_2026-11-08\\page_055.json": "1679d86fda3b07b06582e4ba32625ec302f4a6af537bf29eea8033f3eecb3575",
+    "fanxing_pages199_2026-11-08\\page_056.json": "bc6368f662c2f148652d3f2e08bab06af8aa68f86be742ba86496a743282c5c7",
+    "fanxing_pages199_2026-11-08\\page_057.json": "330b619b675f756f29db48d2b0be607b1b0e6e6d897661e7e9035175bd384fa0",
+    "fanxing_pages199_2026-11-08\\page_058.json": "6ea9b8c8c201a1c37f006a8cd6e3ebd7c31c977fbc6be4e3ad243ca75370fa8c",
+    "fanxing_pages199_2026-11-08\\page_059.json": "b08f10daa092fafb034b3e03b0fbe84bb29bae8fa8ca35b6f1684ee6178f0d35",
+    "fanxing_pages199_2026-11-08\\page_060.json": "ef129f483220f31f55fea93a037f2acc0cbe42ac29ab97f25977f67161049ed4",
+    "fanxing_pages199_2026-11-08\\page_061.json": "9170f31dfc1c67947616bd09896f2fc1dd6f6572445f865bea74d0a0339a768f",
+    "fanxing_pages199_2026-11-08\\page_062.json": "2f8970402f89c20cc06274d87325ceece30c34ac53ea30f33d0cae26e880f5c8",
+    "fanxing_pages199_2026-11-08\\page_063.json": "9d41d027105b3d029e0ec622117c028b7b263204ca563686ff7e91c9c80a8e8b",
+    "fanxing_pages199_2026-11-08\\page_064.json": "764bf80a932b4a4dc2ea03e31029c27249c4cb729b68258de3ed2cc8f9ffa648",
+    "fanxing_order_pages_2026-11-08\\error_100_1794122785213616600.json": "c86382dd2a069f3ff1c057778bdf8f77e1e4940507d2435d207df34b4438e8af",
+    "fanxing_order_pages_2026-11-08\\error_101_1794122790883311100.json": "ab190997cb87ea8df9cc40ec17b5bd922ae25a2ec0c9874cb00e77e65dd2f6c7",
+    "fanxing_order_pages_2026-11-08\\error_102_1794122795988488700.json": "f1d0eb1341538fd5cfe5d23569c2098f41ccf27a0fe82ea496a79016ed2290b0",
+    "fanxing_order_pages_2026-11-08\\error_103_1794122801534475200.json": "bef15f833c82cf60fe95353c0c85fbb50cf76f439c95961c52ebd48e7580ac5a",
+    "fanxing_order_pages_2026-11-08\\error_105_1794122809040052200.json": "53d923cf6e9b2ed46f98f7d16b83443ccc55324313e7b8cc2b8ef8eb6440bb9f",
+    "fanxing_order_pages_2026-11-08\\error_107_1794122816264098600.json": "0a1a3b46f5a200522eafc7b2d405179a1cea26ccb937cb281ce8b7bf7f1bc6ca",
+    "fanxing_order_pages_2026-11-08\\error_108_1794122821432537100.json": "1407e82e16f2e10aab46085cf1bf830c38a8225281e8369e42a0509001bbc711",
+    "fanxing_order_pages_2026-11-08\\error_109_1794122826814195500.json": "c80653d899b78ac0617dff5bfe9c1f55ddd4e73b94c86acd074541e2836dbfd3",
+    "fanxing_order_pages_2026-11-08\\error_10_1794122346319349900.json": "fdaf8954afebaa3ff92b7677166dadf22260c5cb537303edd5f548bbdd442581",
+    "fanxing_order_pages_2026-11-08\\error_110_1794122832248949000.json": "bf74129cace57c695242d0e79681af8d51eac2cea73a212d7536f91d591f0061",
+    "fanxing_order_pages_2026-11-08\\error_111_1794122837528992400.json": "22454af079a52f988429218bc2fb20aa68796680870a1658ca76a06e2026df37",
+    "fanxing_order_pages_2026-11-08\\error_112_1794122842814277600.json": "6a5b270a6436877717b920194658574c3f2f16ba6ab243e0cc436207e14cfb74",
+    "fanxing_order_pages_2026-11-08\\error_113_1794122847972523100.json": "9e28ac5e6ccf42e4d8072ef135f912b819d201b9d4e2b158a87e29b442569e97",
+    "fanxing_order_pages_2026-11-08\\error_114_1794122853252344900.json": "d816303e3e068be614ac4f8a8200c6baf50dde1b95eeac1d4feb6812acd6489d",
+    "fanxing_order_pages_2026-11-08\\error_115_1794122858498992400.json": "d0c56f4910102e0333a63d25e95f9811917ab0af3cbb83f1326f3990186b37b9",
+    "fanxing_order_pages_2026-11-08\\error_116_1794122863935959700.json": "ee6afcb72369af3eb0e085f162bedc8ccdb2346d1f3c8dac5e6cc6745752f5b9",
+    "fanxing_order_pages_2026-11-08\\error_117_1794122869043054200.json": "0b829f8028be07c240c24651c47643879ec19c857abab4b4590c62749fdb77c4",
+    "fanxing_order_pages_2026-11-08\\error_118_1794122874214143600.json": "eb6b8171e1b7e826acbe291b0df1afd57f4666c80f4bcae0fc2ba013a72d7ef4",
+    "fanxing_order_pages_2026-11-08\\error_119_1794122879615209300.json": "ad7ca558555d824c429aa4b7c653ad0720b8b06c158c6b9b462e1398b23b0e70",
+    "fanxing_order_pages_2026-11-08\\error_11_1794122351380862200.json": "3bdcb621bf0833237adea792b79fd48c198938a11fa1ca3bc034c221d4eaf62b",
+    "fanxing_order_pages_2026-11-08\\error_120_1794122885055463900.json": "893e260bd115477e71740249d51409a07f59bc3875bf72170c11d73b4520a3b8",
+    "fanxing_order_pages_2026-11-08\\error_12_1794122356289054700.json": "726e25e113488110917b20c08f08c22ee12a0a98914f4b5db8b1f2a4296ce6f1",
+    "fanxing_order_pages_2026-11-08\\error_13_1794122361371783200.json": "db4a4a2f56dd38bad1be9c2aac8b2bedc4ab146c943ab74a81881b4cec9bf860",
+    "fanxing_order_pages_2026-11-08\\error_14_1794122366333730400.json": "112a92ac0275639503e5d68b088d03f66880f95880070821346bc30195a89fd8",
+    "fanxing_order_pages_2026-11-08\\error_16_1794122374208736800.json": "6a4cd7653bd78a31920d57f85f255490192d3a4c160281f2d95a67e90ee81083",
+    "fanxing_order_pages_2026-11-08\\error_19_1794122385047749200.json": "8edf2313d5eeed15d977a3f8a8609e6a8751dc80ca9292bd589a6e6641afe9f0",
+    "fanxing_order_pages_2026-11-08\\error_21_1794122410941282600.json": "c20494d7385dbfd24edf78b087812b6e2ff0ad56e5a9585adc361b8f3fd9f221",
+    "fanxing_order_pages_2026-11-08\\error_23_1794122419549788000.json": "09194d7a0c94b6b9e6f64b246ed5a36c0a0560537659245b04731e6f4791e28b",
+    "fanxing_order_pages_2026-11-08\\error_24_1794122427112386100.json": "b48469df5a7d0b80f3dfd9fdf6e1400a9c08fc1e5f298dd1f92a4dc516507a6a",
+    "fanxing_order_pages_2026-11-08\\error_25_1794122432093653400.json": "eb90838ac5e16007689450220cf14e74233677a8fb0c57d7b286bbbe0648a323",
+    "fanxing_order_pages_2026-11-08\\error_26_1794122437051986800.json": "a176133cbedf9b251a6679d2ae2dcd87349f48a982a09b3b16c1d8ef725f7490",
+    "fanxing_order_pages_2026-11-08\\error_27_1794122442171008800.json": "c2ecab41968b1bb2011f212b9063d45af9028a98840c90fa2c69a12ead83e706",
+    "fanxing_order_pages_2026-11-08\\error_28_1794122447081225000.json": "d500307032eabea5b03fb62f7b4141f901b606c3b02ad48e1bb674a247d4470e",
+    "fanxing_order_pages_2026-11-08\\error_29_1794122451900308900.json": "53d244a9de11973b1addae7bdb220f437e50f0510072f63510a40c9caef36a6a",
+    "fanxing_order_pages_2026-11-08\\error_2_1794122305844956100.json": "63d47e572ef2490bb21f968697ff7049f9833921f60637713da85e18397468de",
+    "fanxing_order_pages_2026-11-08\\error_30_1794122456838196200.json": "fbaabc1d71a960754a9ccb51fdc483260abe65248b57346348f094a6ed30fcc8",
+    "fanxing_order_pages_2026-11-08\\error_31_1794122462006415700.json": "c921c85d849f18244d0ea7ec4cffae84d571e13c8e16edc32cfe5476bc5cdeec",
+    "fanxing_order_pages_2026-11-08\\error_32_1794122467018894100.json": "bc91ebad19b6f77452b18d9ac40649a1c7404ea7ad75020bf51b8e9d325d2fec",
+    "fanxing_order_pages_2026-11-08\\error_33_1794122472020777400.json": "c28b3ca437c19f02d707acb044976664d414de5185de542b7ae2058dbdeac12e",
+    "fanxing_order_pages_2026-11-08\\error_34_1794122477004288000.json": "3f78a56e4ee3f1bc5d86611fb0a9549dcd3f499fc5d8a62f26ddaaac07e773a7",
+    "fanxing_order_pages_2026-11-08\\error_35_1794122481921387400.json": "b461d00355d6002f00aba837c38382497b5c6b8931c848b5f4d3505f0eba15ca",
+    "fanxing_order_pages_2026-11-08\\error_36_1794122486754959500.json": "958843d78ca721d4c32e7bd749c34104c011a2cf97999dbb57dbc5a3a596def4",
+    "fanxing_order_pages_2026-11-08\\error_38_1794122494370999700.json": "3ca2c892ae4cece931d519c0433f85a62072ee74480912ba905921dc2401dfb4",
+    "fanxing_order_pages_2026-11-08\\error_39_1794122499800116300.json": "3b8d5fcf5a74f8e1ae7d044a82b5ebaabe5cc20b4fb26cb44b1a45cfa096f081",
+    "fanxing_order_pages_2026-11-08\\error_3_1794122311284881400.json": "b611b4279eeaa0d43e17ce12f858ca5874f789ab2ef940a9a500248ae9ccfd70",
+    "fanxing_order_pages_2026-11-08\\error_40_1794122505503350500.json": "e73fc43ae7d0851d1ce15678fb6879ac5d7490b51b4483e0f01f3b9f692c70fe",
+    "fanxing_order_pages_2026-11-08\\error_44_1794122520730043000.json": "9bfd3d08608d5e49fde7d8b4b3083acb5b3adc1413ea7734795b1da492b39c6e",
+    "fanxing_order_pages_2026-11-08\\error_45_1794122526905002200.json": "8a792e37f18f6c321da7bc7f95e00c1d13d48f46366092f4de6cb0ac6ab9d570",
+    "fanxing_order_pages_2026-11-08\\error_47_1794122536555244700.json": "2814a88db020d51ecb5176c4642f8b95a4d46a506558a17c01bf50775a42251e",
+    "fanxing_order_pages_2026-11-08\\error_49_1794122545081237400.json": "ccf25bb7b42440850183b5be7a7bcd9d273e368b61e71c85f3dce116855ae590",
+    "fanxing_order_pages_2026-11-08\\error_4_1794122316639731400.json": "98f3a8bc20cb3601fba67bbc4bc9574fda6a761e774276d783b910cddcab9285",
+    "fanxing_order_pages_2026-11-08\\error_50_1794122550122554200.json": "c455406d837b9e004a2e38f493ff3c13b5020a14ac9d0eeda5edf57ec2503d39",
+    "fanxing_order_pages_2026-11-08\\error_51_1794122555133988200.json": "35fcbf2391c38d339cc5379488848b58a5a74cfc6cdd3c13bbbd5185b5e384e8",
+    "fanxing_order_pages_2026-11-08\\error_52_1794122560249677800.json": "317d0a899f07cc7ecdebe2295036270c9dff110740a0a4574a50d4c962bb6d8c",
+    "fanxing_order_pages_2026-11-08\\error_53_1794122565337303800.json": "5bcaa5532df788f4e838abb59df1a22a73f7699f70df6e8960a7fa11e7f2035a",
+    "fanxing_order_pages_2026-11-08\\error_55_1794122572732756900.json": "53859558bb77ff8f9dbd58ea183a705e1bc384769bd60732ba00d4d91e702b48",
+    "fanxing_order_pages_2026-11-08\\error_56_1794122577961335700.json": "50bc7d75aee894637b925dbbf2f3fdacef7b95e23b34fa674e6ac41f803119c4",
+    "fanxing_order_pages_2026-11-08\\error_57_1794122582927309500.json": "791e3e1c2905da549ef2b3fbbbdb0463946e9b40cd58d641886e95fc8f0a75a9",
+    "fanxing_order_pages_2026-11-08\\error_58_1794122587936859400.json": "82dc1b481188f6498211b8b3018b09d28e6179664205a2e9c155c8fb98acdff4",
+    "fanxing_order_pages_2026-11-08\\error_59_1794122593003168000.json": "e9d5e45eae3e62595f50690993f4e89a99a2e0082e6561d450b284d511027c5f",
+    "fanxing_order_pages_2026-11-08\\error_5_1794122321664939600.json": "99a371da04f99c33a3324ad04513638c3a1862b1789b64082ec111d0a1a3abe7",
+    "fanxing_order_pages_2026-11-08\\error_60_1794122598127330800.json": "95e88ebb3b34cb19e3d2b074b9ba889d70ce38569f755323638c2d509383fe8d",
+    "fanxing_order_pages_2026-11-08\\error_61_1794122603132403400.json": "525fa9fb060c5a1aa5c90eedaa780908d946315d3fd53f223a2a5caa4bb69d88",
+    "fanxing_order_pages_2026-11-08\\error_62_1794122608088131900.json": "5d49766fda154d5f5c014ed9e0dbb3d856e389f6979ab22ea0b42f9009fa3a76",
+    "fanxing_order_pages_2026-11-08\\error_63_1794122613145325500.json": "1369f36a18f7facaefb62e765873c7b4885c4f8ea29e0abe33b8ecced9f9d972",
+    "fanxing_order_pages_2026-11-08\\error_64_1794122618176413300.json": "d4786b48ace469a086252c38573badce0bc5a0e9374aa234c21b6d164c4bba50",
+    "fanxing_order_pages_2026-11-08\\error_65_1794122623179119600.json": "c542ff56ca1d79dab5d8811044f2c865dc7e9a473bdb13967fd808c0a259107a",
+    "fanxing_order_pages_2026-11-08\\error_66_1794122628176467200.json": "a6f2bd83a87bd39316b4fe07ac8c487a2755eb199363d311178d1d1bf1eacd55",
+    "fanxing_order_pages_2026-11-08\\error_67_1794122633167154800.json": "e7a12ae76d241edfcfeba5ab9c0ead0f4aa59124b6134cc4481669b689a395bb",
+    "fanxing_order_pages_2026-11-08\\error_67_1794122636516305800.json": "32168bdc3ed69c4d64c5d1fc970e00806034592e794e618428eb22aa17595008",
+    "fanxing_order_pages_2026-11-08\\error_68_1794122645079388400.json": "6f4bd0111a0e60d02f899b4bd4493e55719f09c8886a4d3e5271224f1c2170f9",
+    "fanxing_order_pages_2026-11-08\\error_68_1794122650018956500.json": "d3ef5bd16a555e288e52e72a3eeb1e96d1419d75211e8af6919d6326db594254",
+    "fanxing_order_pages_2026-11-08\\error_6_1794122326589959500.json": "4f3b7d0429c4dd66e0a0f58ff8b8841f026e40ef1c314bf5bdd56e15302927a3",
+    "fanxing_order_pages_2026-11-08\\error_76_1794122674975083900.json": "2bb21c99dc0dafb064cf98cb1cb397ba2ccf3cae22254c047df5b9d4a25f3323",
+    "fanxing_order_pages_2026-11-08\\error_7_1794122331447144800.json": "c8b94c000f498d6908ef60550a45cd44404bcf56a0ff6a32782c6fdf95df9ae5",
+    "fanxing_order_pages_2026-11-08\\error_82_1794122694608295800.json": "5615633c572335d8525d444c18d9f375c1440b1da75810ea7a867ce81f0d750d",
+    "fanxing_order_pages_2026-11-08\\error_85_1794122705302577000.json": "c5db0a982c16fe6680794b955920754101480ca68c4f744e6fa19f67c360ebf2",
+    "fanxing_order_pages_2026-11-08\\error_87_1794122712945525700.json": "b356887f8e755ac8690f7965b8706f0fdc2d5b3548cfe123ed785b5bfc7b9d97",
+    "fanxing_order_pages_2026-11-08\\error_88_1794122718124454800.json": "abff8a5d79085580b1da2ac6d0db4a7761f8aab3f7ca751c37c848d4ad224734",
+    "fanxing_order_pages_2026-11-08\\error_89_1794122723199171700.json": "9c93beb4cb669f6132435b3af01b3f4a5dd179a2e931d8633f968d31905e458d",
+    "fanxing_order_pages_2026-11-08\\error_8_1794122336430969600.json": "62f0f15f6d0f8e96b9ad9fd899b6c019de02d48283dd42e143e25a41bf22592f",
+    "fanxing_order_pages_2026-11-08\\error_90_1794122728418369100.json": "374c3ed2260143ee4d2746c6a32881e894a38628fe93c416b0682274cda22c57",
+    "fanxing_order_pages_2026-11-08\\error_91_1794122733527546300.json": "7d1f64859e96ac3e282655cc08bf158afcfb4dee26b8f9adbf1de4b6606dbf88",
+    "fanxing_order_pages_2026-11-08\\error_92_1794122738772640500.json": "99f145e52e07cb044f64c9eb8b369662f2c343d124cc1b7453822c6cc2bb61c3",
+    "fanxing_order_pages_2026-11-08\\error_93_1794122744025182500.json": "45bf8bd9a52ce9197ae78e3bff323be71fd3844c82dbc424fe7b539bdb7e0519",
+    "fanxing_order_pages_2026-11-08\\error_93_1794122747453673600.json": "478728d6d452d954de92eea97ef689348ae6ca45d00e4fc9085c70e61faab16b",
+    "fanxing_order_pages_2026-11-08\\error_94_1794122756442200300.json": "837ea46d80aeb22d272b13286c6b697746aff07e838457b5cb6cf694e198a62e",
+    "fanxing_order_pages_2026-11-08\\error_96_1794122763817662600.json": "4127c4e8eff5eaada69122bac4fea28ef571efcbdec21e739baab4b2f85227a6",
+    "fanxing_order_pages_2026-11-08\\error_97_1794122769213739200.json": "739367a615a9f3acab6ce73489c0f4994f704caaa09133653d316545e21ccbac",
+    "fanxing_order_pages_2026-11-08\\error_98_1794122774603270900.json": "be714ef506e816fac2b323ea9a83e6f896396abc2fb830326a5549e28890b30e",
+    "fanxing_order_pages_2026-11-08\\error_99_1794122779772931500.json": "49f4fcab7ae3b8828a4226e7ded89bf18f6114cc92b71ed6d1a061e0ae62b475",
+    "fanxing_order_pages_2026-11-08\\error_9_1794122341391639200.json": "eaed80380661b482f8532159b730d2ccaf657656ec3f989e7251a6800e4c72ad",
+    "fanxing_order_pages_2026-11-08\\page_001.json": "31efb1bd1dcc80236f605082c6dac5aa7168233f32f4da333b228dcc2285fd90",
+    "fanxing_order_pages_2026-11-08\\page_002.json": "fdc48962c5fda2c009d3043833122947ee6f7c1c39cc83b7b523b5eaf352cc1e",
+    "fanxing_order_pages_2026-11-08\\page_003.json": "11f721abe4444df9598ada9c38241cb539fa096141d56b1a0e749b321aec3ec2",
+    "fanxing_order_pages_2026-11-08\\page_004.json": "2aba43a7b3205b05606332081bd94d5f6b25f67b0f295e7802fb24e94862b571",
+    "fanxing_order_pages_2026-11-08\\page_005.json": "e58754231316906eb6ee8a3ad3db0d801f5f40f491641aaeb8dcab1750933ed2",
+    "fanxing_order_pages_2026-11-08\\page_006.json": "1cf11c92444fd3a1f04840aa7aa1713d24c42d636e9a527c48bac41757caffd4",
+    "fanxing_order_pages_2026-11-08\\page_007.json": "e6c7b8cc0bcff6d54dd3237e715fc934a5a1f31f5342a2c68a0f7716febcb121",
+    "fanxing_order_pages_2026-11-08\\page_008.json": "25573f88fe4a902be372b6021ef756e15e9d8b974f0aabc5a367a8e68ca02cf2",
+    "fanxing_order_pages_2026-11-08\\page_009.json": "e0a69040f94595660db60c6c863e124b83a77a5b11412ce3d35684c4a1f84ee0",
+    "fanxing_order_pages_2026-11-08\\page_010.json": "56956037b4cec05e486be4c6d85c66d94eb17d32ceddd4cfcb25c4ade76f6eb0",
+    "fanxing_order_pages_2026-11-08\\page_011.json": "047142095eee8c9ed5af1aca59141ab66c750d6584248239a931f4449dfebe7e",
+    "fanxing_order_pages_2026-11-08\\page_012.json": "40f0f44d48d7ac9d534c6a51f68259caf5dc1407c23a5c5ee7a7c1cb58e02e91",
+    "fanxing_order_pages_2026-11-08\\page_013.json": "ef77c1282032b788c4a39e1c564f0f2100168dd23bb93b042df4263e5b40bb27",
+    "fanxing_order_pages_2026-11-08\\page_014.json": "a7c34f627fbe5e610dbb3d66c883152dce9d89c161c82af8d7ffb3eca34e6883",
+    "fanxing_order_pages_2026-11-08\\page_015.json": "e68157b32ddea7dceb49e050c4eb47bf186ab7c57a76f7fe9fb05ac1222b97d2",
+    "fanxing_order_pages_2026-11-08\\page_016.json": "38cb653ba9f8487af05d83a3604f064e272ff668c66290ded0447ce259687b77",
+    "fanxing_order_pages_2026-11-08\\page_017.json": "01a3cd9922f95c4fd85a48fec8bca40ffd033c42261fb8e5c69d8adfa91966f2",
+    "fanxing_order_pages_2026-11-08\\page_018.json": "eb6d84cb497e20b0a68ae34dea2a1d90cdccc2b1fbeb5693002964d517df003d",
+    "fanxing_order_pages_2026-11-08\\page_019.json": "5f515d547e990c8a5181ea54f6f87abb8382dad9ebb2a086b7850ee2e274c3b5",
+    "fanxing_order_pages_2026-11-08\\page_020.json": "f6e9faba7a1da8f638dd13fac0a12f546680b3eda22d7602919e75ffaaaf3004",
+    "fanxing_order_pages_2026-11-08\\page_021.json": "3ea746efecd6a83bd3221c17f11d809b81b17d31ef818884264781038ce29b19",
+    "fanxing_order_pages_2026-11-08\\page_022.json": "33916549abf70f794d754230db22013750f14d8b3026c8c7df0582ff5f71c26c",
+    "fanxing_order_pages_2026-11-08\\page_023.json": "1d80ead3e0e78932b522a07adeb97875b69dae635959afe31d9241ec2e5563fb",
+    "fanxing_order_pages_2026-11-08\\page_024.json": "373b046a82c3f13e638863cf84bc5aecafc19cb96fae26f9af53eb4f913c258d",
+    "fanxing_order_pages_2026-11-08\\page_025.json": "60c5c26f1c9456a9a6da767e2277c59f3ca21a1b0b69018e2188c40ea0662e72",
+    "fanxing_order_pages_2026-11-08\\page_026.json": "c483bd4f2048c06468f88f0ec37e5c0bf7bf536b941cb907b9b5380a7af0b509",
+    "fanxing_order_pages_2026-11-08\\page_027.json": "ca3542fe7fed9343a2af4b6d84ed48e65650e9e8a83c8a6a2efe42c7a783e006",
+    "fanxing_order_pages_2026-11-08\\page_028.json": "6c5b74899450587e019df259ecd4b3a4b14710397fa76eab2c10472f79715d54",
+    "fanxing_order_pages_2026-11-08\\page_029.json": "b41e88597dfeaab46aa4f974de26f5a25c67e30fa4d850a2fd4dbdf060919386",
+    "fanxing_order_pages_2026-11-08\\page_030.json": "1b6ebf9399f69e31332eb4d0d823c1c6c2b885e31fb6c816a4dc5ce7b57761eb",
+    "fanxing_order_pages_2026-11-08\\page_031.json": "691aea1ea6f8c71d1754ec599ab0b16ed09780902fd1cff7bd8906463573c731",
+    "fanxing_order_pages_2026-11-08\\page_032.json": "f151b1ccd33efd1c5d7be3a609f546973f3dfdee5d691a7c35fb970e3dd9c330",
+    "fanxing_order_pages_2026-11-08\\page_033.json": "73f4e2c6800511a46ca174e955652175a7d36c255a60f5626ff961878548db10",
+    "fanxing_order_pages_2026-11-08\\page_034.json": "9ad6bdea02083e0fc331f005d14c416a4d99779437e5326b1f8e52528ac6924d",
+    "fanxing_order_pages_2026-11-08\\page_035.json": "b9e1a366481919aed95f4da97181667b74611a1267bac19cc1bb58569226c709",
+    "fanxing_order_pages_2026-11-08\\page_036.json": "60a6385aec2b2073dbcd24a4c9a25d4e88a4ccdf2b174b8bd447241a99977d3f",
+    "fanxing_order_pages_2026-11-08\\page_037.json": "2e755942c2817bc4702708bd404df09e7994d7ebc1332c527e1c5ff75e457a64",
+    "fanxing_order_pages_2026-11-08\\page_038.json": "60a543d1aaf046928b85cd2c0ca9fc9d348db8b14efa590d8b53a79e77ed117e",
+    "fanxing_order_pages_2026-11-08\\page_039.json": "e9a17458736fccb744fc14bba4901fab9468194a222bf6851e7c1305b02b2945",
+    "fanxing_order_pages_2026-11-08\\page_040.json": "1152409a70867a70cc227c700b328fb4ac74bd8613bb3fc24c0923c2c8739547",
+    "fanxing_order_pages_2026-11-08\\page_041.json": "c22e7890e99135bfb72875665a9ee12b3af85755dd7557fef3cd52d68d0ee88d",
+    "fanxing_order_pages_2026-11-08\\page_042.json": "b3d2a6dbef15c5b2c9a9a479818b0ae21c679f2f4b3abb30938a59f0065c2509",
+    "fanxing_order_pages_2026-11-08\\page_043.json": "92247d0285f810613f33bb7165390ea8aadb591b3db1e5f5b3a9121a8797c5db",
+    "fanxing_order_pages_2026-11-08\\page_044.json": "eaf5792f75d385622ec1631a661ccc9c0e31b295993513b2b77ff017c3346746",
+    "fanxing_order_pages_2026-11-08\\page_045.json": "a1c9b555cd72ed8fba9c6e396021479d360a524d8b32207226f997993308691f",
+    "fanxing_order_pages_2026-11-08\\page_046.json": "cb2145e181904a73061d07daa831a0f242f4d56bd11a65c258030482b324ccb1",
+    "fanxing_order_pages_2026-11-08\\page_047.json": "84e8f8d4a24b65bc20a2ae6dd594c682e72c87fd35a9adfad17b510ed9adbe99",
+    "fanxing_order_pages_2026-11-08\\page_048.json": "8e1a7727a7620aa6d3197958d560c28b38f9c806744801ce8abc38d7566013ae",
+    "fanxing_order_pages_2026-11-08\\page_049.json": "535cf4e55f313c1272051ea3b61df7535c731385a0bde6d9ee947c76fd0496c6",
+    "fanxing_order_pages_2026-11-08\\page_050.json": "33b7019011a901e5991872337e8f728ed601b48d9a2ae46d3b21d4d120b2b6fe",
+    "fanxing_order_pages_2026-11-08\\page_051.json": "54f7b222a4fe8c5acb400b647415fafa7e9e5a18a8aff195102d885a20d41cea",
+    "fanxing_order_pages_2026-11-08\\page_052.json": "5cc66c4ae02cb228762ffdaecf3b8a7e1f6f987bfe02e5b1fe273b6d267472c6",
+    "fanxing_order_pages_2026-11-08\\page_053.json": "b35e68f0f8b320cb7059da91eb99c0e8a64a8c0f8ddda11a3ce27a944798ff7b",
+    "fanxing_order_pages_2026-11-08\\page_054.json": "285fe90f1e9ce2d97e2ed2174bb3c5510036866660e6e5cdc71e81338c8cfdc4",
+    "fanxing_order_pages_2026-11-08\\page_055.json": "dbaa34a4442fc073642f049f9642748276904ce66949c8410e89d3b62c8ed52a",
+    "fanxing_order_pages_2026-11-08\\page_056.json": "c95d1dbd08903653bb1c779770f25f8ca51b10f4e2c973647e790ee9fd4850a9",
+    "fanxing_order_pages_2026-11-08\\page_057.json": "2e4de6d61c980bb83549bb87fb4498a8a75c9746c7112a2ea7dd37ef639b4fe7",
+    "fanxing_order_pages_2026-11-08\\page_058.json": "bc570ef0bd45d744ab5a76db8629b717979f95d1b8a439c4213566b61bc4bc53",
+    "fanxing_order_pages_2026-11-08\\page_059.json": "de031f36935203eaa27f8a26708c4c8d87e71d50de4f046891771a638d9e5a90",
+    "fanxing_order_pages_2026-11-08\\page_060.json": "958a48a04dc2e3b133de95c7327785a976ead8be387f32e34433d8a1095ec948",
+    "fanxing_order_pages_2026-11-08\\page_061.json": "0cc4a9c67c7b6b077fec28f8d2fce505bc61514921d20eb581af722ac3a13067",
+    "fanxing_order_pages_2026-11-08\\page_062.json": "3f2d6a2fb568406cb0e7601034bcf5283b4e068f1ecd7e88da128f50cfc02891",
+    "fanxing_order_pages_2026-11-08\\page_063.json": "7040444154de9bfe6daf553a8158fe5cd9b4cf8278b86e8b58ba789d17200b7e",
+    "fanxing_order_pages_2026-11-08\\page_064.json": "9c3f67303a5b559b4038977660504a8e05fa61b8626a4d229decdf6fd0705608",
+    "fanxing_order_pages_2026-11-08\\page_065.json": "1e71f0bfabc0f1394f7a07bf86ed8a9eec27c2adf59adbf5b35f6fd86f0b1f1e",
+    "fanxing_order_pages_2026-11-08\\page_066.json": "6097485f571fd463d46dcfc0ce031a03d8cdb249feba2d2b3263816f36c48ff0",
+    "fanxing_order_pages_2026-11-08\\page_067.json": "3d35f487579a7637ebdaaba49ad341d3c358e0e90e130b87d6098d31e08c359a",
+    "fanxing_order_pages_2026-11-08\\page_068.json": "16c223149b45944465ecdf3d55e1634653e024d53cf4239893274f65c876befb",
+    "fanxing_order_pages_2026-11-08\\page_069.json": "cdb5db3978e60caf30a3bf360880dea3d453ab609e55137f3cfef976cea5dc4d",
+    "fanxing_order_pages_2026-11-08\\page_070.json": "4341c612c31464fbfbab9839ce7f5c8d7b92c01bd7d2802a42e2bfb7ecc995fe",
+    "fanxing_order_pages_2026-11-08\\page_071.json": "b8917e6394ca4c23a1c552097b6146a53db228bfff711d1e238fb4d5a3ecc75a",
+    "fanxing_order_pages_2026-11-08\\page_072.json": "40efeda14cc4074c2cc151c97b9db35142a8b7a0834158453b0e4a339c2f3517",
+    "fanxing_order_pages_2026-11-08\\page_073.json": "03967d3d35b885196e18c3359456e941729065fa37ff9d5561f70a8ddfa99080",
+    "fanxing_order_pages_2026-11-08\\page_074.json": "fd9abba7121ca9100fddb1f23306936c6b5e4d9655a0f4e749c6d879b2c8f96a",
+    "fanxing_order_pages_2026-11-08\\page_075.json": "7702175bbe21f6a335a9d7a53ff352f382ea3314d8b57e117216c55806bf2208",
+    "fanxing_order_pages_2026-11-08\\page_076.json": "264692e6849a08f141587c829273fba6d346bb36a856d93373468974277aa307",
+    "fanxing_order_pages_2026-11-08\\page_077.json": "42345bcc52b57a66d7fda74d7d23d3cdda1cd2234ea71cf0d7eb2d31eeb39693",
+    "fanxing_order_pages_2026-11-08\\page_078.json": "6806da26547261f93b100e48eb6b3c7a54e239fea6a4af604788e8d7911354e4",
+    "fanxing_order_pages_2026-11-08\\page_079.json": "e756d494c4f2d825b4d15a94d8fc1c05f9d975423fa0fd2d014697125ace35df",
+    "fanxing_order_pages_2026-11-08\\page_080.json": "219638de734df4c2e28f37fb95aa6a24394a79b43f9357e82cb94c3e2a772969",
+    "fanxing_order_pages_2026-11-08\\page_081.json": "3ef78916187f2ca741b6c86e2c8b6c1bcaf715a9e01a48e4791c3788193de513",
+    "fanxing_order_pages_2026-11-08\\page_082.json": "6c9ce49b7ce72c49be687ea5248474712ea7bd6d3bbaa154d89ac5827d6b04e0",
+    "fanxing_order_pages_2026-11-08\\page_083.json": "cbd20b24e20ea8843344260722f2ebdf0b84e5eae14d27285f7fd966bf3a4f45",
+    "fanxing_order_pages_2026-11-08\\page_084.json": "717b59f0fa80934d4df5c913d6b47cf8f4d4e6a779ef5c49c2422a8599f7a432",
+    "fanxing_order_pages_2026-11-08\\page_085.json": "9cb6f797d58c3c55219e5410bf4d6db3c37541962ba9033a62a02d1f71321030",
+    "fanxing_order_pages_2026-11-08\\page_086.json": "3e700942123a9ed024992ea08263092dddfc35f1cb0cb2fdf380148f95dc0296",
+    "fanxing_order_pages_2026-11-08\\page_087.json": "1f9672dff482b0965cbf2d1fb9419faa1cf80351b4d98a8cb59129779a18d945",
+    "fanxing_order_pages_2026-11-08\\page_088.json": "b94a3677f5b611f3d6688c8c561f67badbdda27ca2643fe66c0054f1aaa8c93b",
+    "fanxing_order_pages_2026-11-08\\page_089.json": "2c5fc0a93bd53db0439f8e978eb77c9f40bee9c0118f23587f7ce1e75fdf978e",
+    "fanxing_order_pages_2026-11-08\\page_090.json": "c44dd0a56e2d399a29b2647e27334e8719077987f858bbeb58238bf66bb4200e",
+    "fanxing_order_pages_2026-11-08\\page_091.json": "9f1165f75454c7c96cf7f150b127c8d6355ed034bac14a418449521fa3329c6c",
+    "fanxing_order_pages_2026-11-08\\page_092.json": "8358a0b00c91f3a08320d578fd2aca428bb06dec0c7980180a40ceba126b6951",
+    "fanxing_order_pages_2026-11-08\\page_093.json": "0c12098191f712fbc6d1b2dbfaab7d2b841c926fbae4aa064e9777e69343bf98",
+    "fanxing_order_pages_2026-11-08\\page_094.json": "1e44df0485edcef8c30b8ca6b3a23d5e3cb94525b735ec926ff9516bf33dbff7",
+    "fanxing_order_pages_2026-11-08\\page_095.json": "baff74f265f3f0957eb4b7d289acb87d2c61b53a384925207ceb0ea4ce825d67",
+    "fanxing_order_pages_2026-11-08\\page_096.json": "99dd575f40f6a4088cad1ae255f24293a89b84a8f4148810443c322a5ea3fa58",
+    "fanxing_order_pages_2026-11-08\\page_097.json": "f9df9b54990ba0992566217e1a8fb8550f79b2cd3fadbf5aebcd2d841cd6f18a",
+    "fanxing_order_pages_2026-11-08\\page_098.json": "f53a43ce9e60c4fe29f16ef35d2029c569defe859e1ee4ad5456c7f1d0ad44d7",
+    "fanxing_order_pages_2026-11-08\\page_099.json": "99f2fb6fae058956e76329ec3cf1c8265673c230eb9e9ad842d3e25b349b4f41",
+    "fanxing_order_pages_2026-11-08\\page_100.json": "813cc8da78e21194687439d16795139d1c0337c23434cb90300efcda78bbe680",
+    "fanxing_order_pages_2026-11-08\\page_101.json": "75d6396c7404e0080af3e9754d252861487f46684f6de729d6852948da4233ba",
+    "fanxing_order_pages_2026-11-08\\page_102.json": "42120a15fdd67700765d31b193a6c37659d4f4dd7e4ff4b01edc78a88b2dd313",
+    "fanxing_order_pages_2026-11-08\\page_103.json": "89537eafce26e3544634accbff295f6de777a71186277916d5d0bb95f56dcd30",
+    "fanxing_order_pages_2026-11-08\\page_104.json": "034df2add5414551871469ae1659d62380ef638a86bbfb293d642186b90f8840",
+    "fanxing_order_pages_2026-11-08\\page_105.json": "160c6af1c4fb40f0ab08af32f12f81094ae5adb956af3392988f8d9445fec833",
+    "fanxing_order_pages_2026-11-08\\page_106.json": "3340bd7128e12b7ef10dd9b7a38140fab9a865ea7f1e078ad0f40c6173d3ee47",
+    "fanxing_order_pages_2026-11-08\\page_107.json": "c282e36c105e2f2aca6de1eaa492eb9e0115d4870e758e52af6220c0ba50318c",
+    "fanxing_order_pages_2026-11-08\\page_108.json": "8158b4198622e9da6c36855b6ae96bb0ee63748b8218f3769207997c0cf96e73",
+    "fanxing_order_pages_2026-11-08\\page_109.json": "316c27b85139c50100528b07a93a309324940a7f6f240e60ca5e6fe0ee559120",
+    "fanxing_order_pages_2026-11-08\\page_110.json": "9fe087f36341f0dc4f55a9b05bbf1d36f92736acaecd16bc656268cd5a464fa7",
+    "fanxing_order_pages_2026-11-08\\page_111.json": "d87668aaf015fe6ea87518af898b16840e0cd4e247762ffbe60f1fe05ed62d3c",
+    "fanxing_order_pages_2026-11-08\\page_112.json": "2b25662fe902c322bb9e7760bbfc80a669df4db11fdccf866c8c2c648e2b3ddb",
+    "fanxing_order_pages_2026-11-08\\page_113.json": "36fb93bec9f212f1ff683409b518b35b3bf81787265642f912090e441da031c3",
+    "fanxing_order_pages_2026-11-08\\page_114.json": "a2ea6a17508173d987015fea9cab9ebda21fa4b2807cd77c4a0db45a9739969b",
+    "fanxing_order_pages_2026-11-08\\page_115.json": "ed7f1fdd839ca2b2527ec3fd6649d61a36dc9e381f63e7cc9c39bb102c496d77",
+    "fanxing_order_pages_2026-11-08\\page_116.json": "be0df4e1ebdb8f54bebd5a8ca174f29bb67e297c19eabbb309711475df15402e",
+    "fanxing_order_pages_2026-11-08\\page_117.json": "e9f655e26b4bd45b45a2709d83bc83c64bdd685c82f5995682b59b54695cc639",
+    "fanxing_order_pages_2026-11-08\\page_118.json": "754aafcf461a1c5b1c2b376d305ce406e4afc2f81bb66511942f9c120bb01fb9",
+    "fanxing_order_pages_2026-11-08\\page_119.json": "e5ddd6a082616a70e4f7e457738c29d60e6434f0ae6aa34ebb67fc9f6fce7770",
+    "fanxing_order_pages_2026-11-08\\page_120.json": "dda11419290afa0db0a03e9326a7c9ffea005a69a29b5468675eb6416caa3b2f",
+    "fanxing_order_targeted_2026-11-08\\2026-09-16_0.json": "c260c523d6f91242d8f66d132979ae2cbb38d9d125741b62afe42972638a4249",
+    "fanxing_order_targeted_2026-11-08\\2026-09-16_1.json": "239c36b2b6a5e617c9786b0256252cffb5aab995f78869ebb7fa99d185462761",
+    "fanxing_order_targeted_2026-11-08\\2026-09-23_0.json": "6d32e3a0f263833eabff7696ca37af5db0ac2c4a691d1d1f6bb48f1e5835f3e9",
+    "fanxing_order_targeted_2026-11-08\\2026-09-23_1.json": "bc7cddfb75deaac6904d8854ade56255b28a9d48990daff8884f05ac105c18d9",
+    "fanxing_order_targeted_2026-11-08\\2026-09-28_0.json": "22bbdad70cb74c9d0b17a1c6080d340e919c7218e82156ac835202557883495f",
+    "fanxing_order_targeted_2026-11-08\\2026-10-01_0.json": "fe27302ef57955ae0aad2b8f955e40fbf1d186fe0f5a55100322f244d98c0df7",
+    "fanxing_order_targeted_2026-11-08\\2026-10-05_0.json": "2a5d6c3f2ad3f67a711202f5917fc3029289740292896a1c2edf90d295c8d6f9",
+    "fanxing_order_targeted_2026-11-08\\2026-10-07_0.json": "dafad3c798a45fc353a6398c820083f7dd4a4460d585a1b104007134e504f33a",
+    "fanxing_order_targeted_2026-11-08\\2026-10-08_0.json": "6a7371b2d23273f94daf98728ad6edfbb0ab1407b83d615b3215adae4299aad9",
+    "fanxing_order_targeted_2026-11-08\\2026-10-12_0.json": "4202bd89b756ef0d9254a067845776fc46af9d066af612eaf0b84554b863627b",
+    "fanxing_order_targeted_2026-11-08\\2026-10-16_0.json": "d4803306dfa0172b79b068b9e2d2b25bd38c3a8bb6b41d48a3dc98e1345e9481",
+    "fanxing_order_targeted_2026-11-08\\2026-10-23_0.json": "f4a79a838711550cf898d9345dd008796070c9eaca8547c79492077588dbebea",
+    "fanxing_order_targeted_2026-11-08\\2026-10-24_0.json": "694bf17e16df5c0484f1cc5af270905f4568620c1a2cece135522be772b765b5",
+    "fanxing_order_targeted_2026-11-08\\2026-10-29_0.json": "3e501f3c95038510a62b1b3b50a3bf30ea4e8cb209afa53726b8ea212a87fd2a",
+    "fanxing_order_targeted_2026-11-08\\error_2026-09-16_1_1794123008084094800.json": "97e353ae8eca97a3d893d0cc75d33931d8ce94f9e6b33f7cbc6f726168e45ca2",
+    "fanxing_order_targeted_2026-11-08\\error_2026-09-28_0_1794123019427625100.json": "330446cd27066ce19f7bee046d580c6ab92e4a5ecaedd08c05fc37f7ec2d7da4",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-01_0_1794123025059583000.json": "b26b4bb6f086592f14a4d36f6dd5fd14428b61d9b364d8579e3b67d5cb58ae74",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-05_0_1794123030978719300.json": "32743c8aae3848578b0ea26c3d4e5bab9a73f6485ec803aecf77321cdc047f09",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-07_0_1794123036091133900.json": "30cfdca50d2182c3a16ff7bc7e9a6c706478cbcec00b01732325bfa7b35d1bee",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-08_0_1794123041212025400.json": "c4b16a3c3c34563e7d6ffd14bd9a51534e0fa239b6ec0accabc67b9ac88e99f4",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-12_0_1794123046659601200.json": "f7bc007324b5d0e8f2676ef2d4cbc9b9c2035a0e612517acbdbb96ed5bea77f3",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-16_0_1794123052098860800.json": "8e12a4278edb4997ffbfadb4e9c59d11175423c1698b5673e4fb9d43e8097fb1",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-23_0_1794123057405549400.json": "207292216d8b364bca8b1c853bafcf0cebe8ef19a9666c6f72958e45a2660ce8",
+    "fanxing_order_targeted_2026-11-08\\error_2026-10-29_0_1794123064898588900.json": "494e1f0fc0ea170d7dfa1e5ea30e66ee11253ef5985172bc5a82f202e6489830"
+  },
+  "old_count": 199,
+  "new_count": 12461,
+  "current_total": 12461,
+  "current_complete": true,
+  "union_count": 12461,
+  "old_missing_current": [],
+  "changed_shared": [],
+  "scan_timing": {
+    "n": 200,
+    "first_open": "2026-10-24T00:01:59.906000+00:00",
+    "last_close": "2026-10-24T15:31:15.807000+00:00",
+    "sides": {
+      "Short": 200
+    },
+    "leverage": {
+      "5": 101,
+      "20": 99
+    },
+    "margin": {
+      "Cross": 200
+    },
+    "symbols": 199,
+    "long_symbols": {},
+    "peak_overlap": 200,
+    "duration_min_s": 16546.525,
+    "duration_median_s": 51212.599,
+    "duration_max_s": 55755.873,
+    "opening_days_utc": {
+      "2026-10-24": 200
+    },
+    "features": {
+      "timer_loss_share": 0.78,
+      "timer_loss_mode_s": 55746,
+      "timer_all_share": 0.45,
+      "timer_all_mode_s": 51205
+    }
+  },
+  "all_timing": {
+    "n": 12461,
+    "first_open": "2026-07-09T13:03:00.041000+00:00",
+    "last_close": "2026-11-08T04:37:55.199000+00:00",
+    "sides": {
+      "Short": 12402,
+      "Long": 59
+    },
+    "leverage": {
+      "20": 7451,
+      "5": 5010
+    },
+    "margin": {
+      "Cross": 12461
+    },
+    "symbols": 513,
+    "long_symbols": {
+      "BTCUSDT": 59
+    },
+    "peak_overlap": 329,
+    "duration_min_s": 2395.109,
+    "duration_median_s": 68924.665,
+    "duration_max_s": 1602330.74,
+    "opening_days_utc": {
+      "2026-07-09": 50,
+      "2026-07-10": 105,
+      "2026-07-11": 158,
+      "2026-07-12": 208,
+      "2026-07-13": 237,
+      "2026-07-14": 269,
+      "2026-07-15": 326,
+      "2026-07-19": 281,
+      "2026-07-20": 188,
+      "2026-07-21": 91,
+      "2026-07-22": 278,
+      "2026-07-24": 159,
+      "2026-07-25": 172,
+      "2026-07-28": 281,
+      "2026-07-29": 274,
+      "2026-07-30": 70,
+      "2026-07-31": 221,
+      "2026-08-19": 310,
+      "2026-08-20": 132,
+      "2026-08-21": 307,
+      "2026-08-23": 260,
+      "2026-08-25": 247,
+      "2026-08-26": 326,
+      "2026-08-28": 95,
+      "2026-08-30": 211,
+      "2026-09-01": 81,
+      "2026-09-03": 288,
+      "2026-09-04": 17,
+      "2026-09-05": 143,
+      "2026-09-11": 302,
+      "2026-09-17": 258,
+      "2026-09-18": 78,
+      "2026-09-21": 68,
+      "2026-09-22": 206,
+      "2026-09-23": 75,
+      "2026-09-24": 329,
+      "2026-09-28": 59,
+      "2026-09-29": 288,
+      "2026-10-01": 54,
+      "2026-10-02": 227,
+      "2026-10-03": 123,
+      "2026-10-05": 78,
+      "2026-10-06": 178,
+      "2026-10-07": 105,
+      "2026-10-08": 253,
+      "2026-10-09": 144,
+      "2026-10-10": 1,
+      "2026-10-11": 37,
+      "2026-10-13": 159,
+      "2026-10-14": 223,
+      "2026-10-15": 82,
+      "2026-10-16": 249,
+      "2026-10-17": 53,
+      "2026-10-18": 238,
+      "2026-10-19": 59,
+      "2026-10-20": 46,
+      "2026-10-23": 169,
+      "2026-10-24": 350,
+      "2026-10-25": 88,
+      "2026-10-26": 281,
+      "2026-10-27": 2,
+      "2026-10-28": 3,
+      "2026-10-29": 247,
+      "2026-10-30": 220,
+      "2026-10-31": 5,
+      "2026-11-02": 206,
+      "2026-11-03": 182,
+      "2026-11-04": 381,
+      "2026-11-05": 275,
+      "2026-11-06": 252,
+      "2026-11-07": 43
+    },
+    "features": {
+      "timer_loss_share": 0.08,
+      "timer_loss_mode_s": 41242,
+      "timer_all_share": 0.07,
+      "timer_all_mode_s": 41138
+    }
+  },
+  "regimes": {
+    "2026-07": {
+      "n": 3368,
+      "first_open": "2026-07-09T13:03:00.041000+00:00",
+      "last_close": "2026-08-18T03:55:58.568000+00:00",
+      "sides": {
+        "Short": 3356,
+        "Long": 12
+      },
+      "leverage": {
+        "20": 1990,
+        "5": 1378
+      },
+      "margin": {
+        "Cross": 3368
+      },
+      "symbols": 507,
+      "long_symbols": {
+        "BTCUSDT": 12
+      },
+      "peak_overlap": 326,
+      "duration_min_s": 2954.919,
+      "duration_median_s": 69793.706,
+      "duration_max_s": 1602330.74,
+      "opening_days_utc": {
+        "2026-07-09": 50,
+        "2026-07-10": 105,
+        "2026-07-11": 158,
+        "2026-07-12": 208,
+        "2026-07-13": 237,
+        "2026-07-14": 269,
+        "2026-07-15": 326,
+        "2026-07-19": 281,
+        "2026-07-20": 188,
+        "2026-07-21": 91,
+        "2026-07-22": 278,
+        "2026-07-24": 159,
+        "2026-07-25": 172,
+        "2026-07-28": 281,
+        "2026-07-29": 274,
+        "2026-07-30": 70,
+        "2026-07-31": 221
+      },
+      "features": {
+        "timer_loss_share": 0.12,
+        "timer_loss_mode_s": 51062,
+        "timer_all_share": 0.12,
+        "timer_all_mode_s": 187591
+      }
+    },
+    "2026-08": {
+      "n": 1888,
+      "first_open": "2026-08-19T07:06:53.586000+00:00",
+      "last_close": "2026-08-30T23:01:49.132000+00:00",
+      "sides": {
+        "Short": 1881,
+        "Long": 7
+      },
+      "leverage": {
+        "5": 752,
+        "20": 1136
+      },
+      "margin": {
+        "Cross": 1888
+      },
+      "symbols": 501,
+      "long_symbols": {
+        "BTCUSDT": 7
+      },
+      "peak_overlap": 325,
+      "duration_min_s": 16144.993,
+      "duration_median_s": 40685.783,
+      "duration_max_s": 202574.004,
+      "opening_days_utc": {
+        "2026-08-19": 310,
+        "2026-08-20": 132,
+        "2026-08-21": 307,
+        "2026-08-23": 260,
+        "2026-08-25": 247,
+        "2026-08-26": 326,
+        "2026-08-28": 95,
+        "2026-08-30": 211
+      },
+      "features": {
+        "timer_loss_share": 0.29,
+        "timer_loss_mode_s": 25314,
+        "timer_all_share": 0.22,
+        "timer_all_mode_s": 25314
+      }
+    },
+    "2026-09": {
+      "n": 2192,
+      "first_open": "2026-09-01T10:49:12.708000+00:00",
+      "last_close": "2026-10-01T14:17:09.986000+00:00",
+      "sides": {
+        "Short": 2182,
+        "Long": 10
+      },
+      "leverage": {
+        "5": 832,
+        "20": 1360
+      },
+      "margin": {
+        "Cross": 2192
+      },
+      "symbols": 502,
+      "long_symbols": {
+        "BTCUSDT": 10
+      },
+      "peak_overlap": 329,
+      "duration_min_s": 2830.73,
+      "duration_median_s": 292381.67449999996,
+      "duration_max_s": 553430.619,
+      "opening_days_utc": {
+        "2026-09-01": 81,
+        "2026-09-03": 288,
+        "2026-09-04": 17,
+        "2026-09-05": 143,
+        "2026-09-11": 302,
+        "2026-09-17": 258,
+        "2026-09-18": 78,
+        "2026-09-21": 68,
+        "2026-09-22": 206,
+        "2026-09-23": 75,
+        "2026-09-24": 329,
+        "2026-09-28": 59,
+        "2026-09-29": 288
+      },
+      "features": {
+        "timer_loss_share": 0.26,
+        "timer_loss_mode_s": 377726,
+        "timer_all_share": 0.28,
+        "timer_all_mode_s": 387678
+      }
+    },
+    "2026-10": {
+      "n": 3674,
+      "first_open": "2026-10-01T23:26:13.395000+00:00",
+      "last_close": "2026-11-02T00:20:47.160000+00:00",
+      "sides": {
+        "Short": 3652,
+        "Long": 22
+      },
+      "leverage": {
+        "5": 1529,
+        "20": 2145
+      },
+      "margin": {
+        "Cross": 3674
+      },
+      "symbols": 499,
+      "long_symbols": {
+        "BTCUSDT": 22
+      },
+      "peak_overlap": 295,
+      "duration_min_s": 3677.67,
+      "duration_median_s": 55713.179000000004,
+      "duration_max_s": 361899.679,
+      "opening_days_utc": {
+        "2026-10-01": 54,
+        "2026-10-02": 227,
+        "2026-10-03": 123,
+        "2026-10-05": 78,
+        "2026-10-06": 178,
+        "2026-10-07": 105,
+        "2026-10-08": 253,
+        "2026-10-09": 144,
+        "2026-10-10": 1,
+        "2026-10-11": 37,
+        "2026-10-13": 159,
+        "2026-10-14": 223,
+        "2026-10-15": 82,
+        "2026-10-16": 249,
+        "2026-10-17": 53,
+        "2026-10-18": 238,
+        "2026-10-19": 59,
+        "2026-10-20": 46,
+        "2026-10-23": 169,
+        "2026-10-24": 350,
+        "2026-10-25": 88,
+        "2026-10-26": 281,
+        "2026-10-27": 2,
+        "2026-10-28": 3,
+        "2026-10-29": 247,
+        "2026-10-30": 220,
+        "2026-10-31": 5
+      },
+      "features": {
+        "timer_loss_share": 0.15,
+        "timer_loss_mode_s": 344917,
+        "timer_all_share": 0.11,
+        "timer_all_mode_s": 342456
+      }
+    },
+    "2026-11": {
+      "n": 1339,
+      "first_open": "2026-11-02T01:16:26.028000+00:00",
+      "last_close": "2026-11-08T04:37:55.199000+00:00",
+      "sides": {
+        "Short": 1331,
+        "Long": 8
+      },
+      "leverage": {
+        "5": 519,
+        "20": 820
+      },
+      "margin": {
+        "Cross": 1339
+      },
+      "symbols": 472,
+      "long_symbols": {
+        "BTCUSDT": 8
+      },
+      "peak_overlap": 251,
+      "duration_min_s": 2395.109,
+      "duration_median_s": 48830.516,
+      "duration_max_s": 118153.858,
+      "opening_days_utc": {
+        "2026-11-02": 206,
+        "2026-11-03": 182,
+        "2026-11-04": 381,
+        "2026-11-05": 275,
+        "2026-11-06": 252,
+        "2026-11-07": 43
+      },
+      "features": {
+        "timer_loss_share": 0.29,
+        "timer_loss_mode_s": 46293,
+        "timer_all_share": 0.16,
+        "timer_all_mode_s": 45920
+      }
+    }
+  },
+  "order_count": 17052,
+  "reported_order_total": 6000,
+  "order_observed_totals": [
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000
+  ],
+  "order_raw_count": 19794,
+  "order_duplicates": 2742,
+  "assignment_tolerance_ms": 10,
+  "first_order": "2026-09-09T16:45:02.706000+00:00",
+  "last_order": "2026-11-08T04:37:55.199000+00:00",
+  "order_types": {
+    "MARKET:SHORT:BUY": 6937,
+    "MARKET:LONG:SELL": 639,
+    "MARKET:LONG:BUY": 754,
+    "MARKET:SHORT:SELL": 8721,
+    "LIMIT:SHORT:BUY": 1
+  },
+  "unmatched_order_indices": [],
+  "ambiguous_order_indices": [],
+  "limit_orders": [
+    {
+      "order_index": 3471,
+      "symbol": "STGUSDT",
+      "side": "BUY",
+      "position_side": "SHORT",
+      "placed": "2026-09-24T09:00:08.167000+00:00",
+      "updated": "2026-09-24T09:00:08.167000+00:00",
+      "placement_to_update_ms": 0
+    }
+  ],
+  "close_burst_summary": {
+    "successive_gap_ms": 1000,
+    "descriptive_threshold_positions": 30,
+    "total_groups": 4017,
+    "large_groups": 34,
+    "large_group_positions": 8281,
+    "large_groups_with_one_long": 34,
+    "large_groups_detail": [
+      {
+        "count": 311,
+        "first_close": "2026-07-11T23:41:15.410000+00:00",
+        "last_close": "2026-07-11T23:41:15.494000+00:00",
+        "close_span_ms": 84,
+        "open_span_ms": 178986639,
+        "symbols": 311,
+        "sides": {
+          "Short": 310,
+          "Long": 1
+        }
+      },
+      {
+        "count": 208,
+        "first_close": "2026-07-12T22:45:35.376000+00:00",
+        "last_close": "2026-07-12T22:45:35.424000+00:00",
+        "close_span_ms": 48,
+        "open_span_ms": 9739503,
+        "symbols": 208,
+        "sides": {
+          "Short": 207,
+          "Long": 1
+        }
+      },
+      {
+        "count": 236,
+        "first_close": "2026-07-13T21:10:35.879000+00:00",
+        "last_close": "2026-07-13T21:10:35.916000+00:00",
+        "close_span_ms": 37,
+        "open_span_ms": 52875778,
+        "symbols": 236,
+        "sides": {
+          "Short": 235,
+          "Long": 1
+        }
+      },
+      {
+        "count": 268,
+        "first_close": "2026-07-14T15:38:36.002000+00:00",
+        "last_close": "2026-07-14T15:38:36.041000+00:00",
+        "close_span_ms": 39,
+        "open_span_ms": 7008462,
+        "symbols": 268,
+        "sides": {
+          "Short": 267,
+          "Long": 1
+        }
+      },
+      {
+        "count": 321,
+        "first_close": "2026-07-17T17:07:21.245000+00:00",
+        "last_close": "2026-07-17T17:07:21.312000+00:00",
+        "close_span_ms": 67,
+        "open_span_ms": 2729385,
+        "symbols": 321,
+        "sides": {
+          "Short": 320,
+          "Long": 1
+        }
+      },
+      {
+        "count": 278,
+        "first_close": "2026-07-19T23:08:16.915000+00:00",
+        "last_close": "2026-07-19T23:08:16.974000+00:00",
+        "close_span_ms": 59,
+        "open_span_ms": 31532918,
+        "symbols": 278,
+        "sides": {
+          "Short": 277,
+          "Long": 1
+        }
+      },
+      {
+        "count": 276,
+        "first_close": "2026-07-21T09:42:03.947000+00:00",
+        "last_close": "2026-07-21T09:42:04.007000+00:00",
+        "close_span_ms": 60,
+        "open_span_ms": 27943340,
+        "symbols": 276,
+        "sides": {
+          "Short": 275,
+          "Long": 1
+        }
+      },
+      {
+        "count": 274,
+        "first_close": "2026-07-24T00:54:55.084000+00:00",
+        "last_close": "2026-07-24T00:54:55.143000+00:00",
+        "close_span_ms": 59,
+        "open_span_ms": 9934414,
+        "symbols": 274,
+        "sides": {
+          "Long": 1,
+          "Short": 273
+        }
+      },
+      {
+        "count": 316,
+        "first_close": "2026-07-27T14:45:11.785000+00:00",
+        "last_close": "2026-07-27T14:45:11.854000+00:00",
+        "close_span_ms": 69,
+        "open_span_ms": 116572778,
+        "symbols": 316,
+        "sides": {
+          "Long": 1,
+          "Short": 315
+        }
+      },
+      {
+        "count": 281,
+        "first_close": "2026-07-28T23:05:53.312000+00:00",
+        "last_close": "2026-07-28T23:05:53.379000+00:00",
+        "close_span_ms": 67,
+        "open_span_ms": 1321995,
+        "symbols": 281,
+        "sides": {
+          "Short": 280,
+          "Long": 1
+        }
+      },
+      {
+        "count": 272,
+        "first_close": "2026-07-30T12:09:15.111000+00:00",
+        "last_close": "2026-07-30T12:09:15.169000+00:00",
+        "close_span_ms": 58,
+        "open_span_ms": 2705446,
+        "symbols": 272,
+        "sides": {
+          "Short": 271,
+          "Long": 1
+        }
+      },
+      {
+        "count": 253,
+        "first_close": "2026-08-18T03:55:58.506000+00:00",
+        "last_close": "2026-08-18T03:55:58.568000+00:00",
+        "close_span_ms": 62,
+        "open_span_ms": 84563182,
+        "symbols": 253,
+        "sides": {
+          "Short": 252,
+          "Long": 1
+        }
+      },
+      {
+        "count": 153,
+        "first_close": "2026-08-19T14:13:18.404000+00:00",
+        "last_close": "2026-08-19T14:13:18.442000+00:00",
+        "close_span_ms": 38,
+        "open_span_ms": 547807,
+        "symbols": 153,
+        "sides": {
+          "Short": 152,
+          "Long": 1
+        }
+      },
+      {
+        "count": 282,
+        "first_close": "2026-08-21T01:49:03.085000+00:00",
+        "last_close": "2026-08-21T01:49:03.129000+00:00",
+        "close_span_ms": 44,
+        "open_span_ms": 90235403,
+        "symbols": 282,
+        "sides": {
+          "Short": 281,
+          "Long": 1
+        }
+      },
+      {
+        "count": 305,
+        "first_close": "2026-08-22T05:19:09.774000+00:00",
+        "last_close": "2026-08-22T05:19:09.841000+00:00",
+        "close_span_ms": 67,
+        "open_span_ms": 12625806,
+        "symbols": 305,
+        "sides": {
+          "Short": 304,
+          "Long": 1
+        }
+      },
+      {
+        "count": 260,
+        "first_close": "2026-08-24T02:31:04.083000+00:00",
+        "last_close": "2026-08-24T02:31:04.123000+00:00",
+        "close_span_ms": 40,
+        "open_span_ms": 20730281,
+        "symbols": 260,
+        "sides": {
+          "Short": 259,
+          "Long": 1
+        }
+      },
+      {
+        "count": 247,
+        "first_close": "2026-08-25T07:17:34.894000+00:00",
+        "last_close": "2026-08-25T07:17:34.953000+00:00",
+        "close_span_ms": 59,
+        "open_span_ms": 1836493,
+        "symbols": 247,
+        "sides": {
+          "Short": 246,
+          "Long": 1
+        }
+      },
+      {
+        "count": 325,
+        "first_close": "2026-08-28T04:43:42.978000+00:00",
+        "last_close": "2026-08-28T04:43:43.050000+00:00",
+        "close_span_ms": 72,
+        "open_span_ms": 37825515,
+        "symbols": 325,
+        "sides": {
+          "Long": 1,
+          "Short": 324
+        }
+      },
+      {
+        "count": 306,
+        "first_close": "2026-08-30T23:01:49.059000+00:00",
+        "last_close": "2026-08-30T23:01:49.132000+00:00",
+        "close_span_ms": 73,
+        "open_span_ms": 180027725,
+        "symbols": 306,
+        "sides": {
+          "Long": 1,
+          "Short": 305
+        }
+      },
+      {
+        "count": 233,
+        "first_close": "2026-09-03T14:39:27.411000+00:00",
+        "last_close": "2026-09-03T14:39:27.462000+00:00",
+        "close_span_ms": 51,
+        "open_span_ms": 167943505,
+        "symbols": 233,
+        "sides": {
+          "Short": 232,
+          "Long": 1
+        }
+      },
+      {
+        "count": 280,
+        "first_close": "2026-09-16T14:48:17.091000+00:00",
+        "last_close": "2026-09-16T14:48:17.133000+00:00",
+        "close_span_ms": 42,
+        "open_span_ms": 36670171,
+        "symbols": 280,
+        "sides": {
+          "Short": 279,
+          "Long": 1
+        }
+      },
+      {
+        "count": 187,
+        "first_close": "2026-09-23T14:19:15.345000+00:00",
+        "last_close": "2026-09-23T14:19:15.999000+00:00",
+        "close_span_ms": 654,
+        "open_span_ms": 53883969,
+        "symbols": 187,
+        "sides": {
+          "Short": 186,
+          "Long": 1
+        }
+      },
+      {
+        "count": 40,
+        "first_close": "2026-09-23T22:20:27.133000+00:00",
+        "last_close": "2026-09-23T22:20:27.142000+00:00",
+        "close_span_ms": 9,
+        "open_span_ms": 41265,
+        "symbols": 40,
+        "sides": {
+          "Short": 39,
+          "Long": 1
+        }
+      },
+      {
+        "count": 266,
+        "first_close": "2026-09-28T14:32:16.915000+00:00",
+        "last_close": "2026-09-28T14:32:17.004000+00:00",
+        "close_span_ms": 89,
+        "open_span_ms": 16635425,
+        "symbols": 266,
+        "sides": {
+          "Short": 265,
+          "Long": 1
+        }
+      },
+      {
+        "count": 284,
+        "first_close": "2026-10-01T14:17:09.916000+00:00",
+        "last_close": "2026-10-01T14:17:09.986000+00:00",
+        "close_span_ms": 70,
+        "open_span_ms": 19682686,
+        "symbols": 284,
+        "sides": {
+          "Short": 283,
+          "Long": 1
+        }
+      },
+      {
+        "count": 251,
+        "first_close": "2026-10-04T23:20:15.148000+00:00",
+        "last_close": "2026-10-04T23:20:15.210000+00:00",
+        "close_span_ms": 62,
+        "open_span_ms": 146631485,
+        "symbols": 251,
+        "sides": {
+          "Short": 250,
+          "Long": 1
+        }
+      },
+      {
+        "count": 75,
+        "first_close": "2026-10-05T13:58:40.303000+00:00",
+        "last_close": "2026-10-05T13:58:41.260000+00:00",
+        "close_span_ms": 957,
+        "open_span_ms": 62901,
+        "symbols": 75,
+        "sides": {
+          "Short": 74,
+          "Long": 1
+        }
+      },
+      {
+        "count": 78,
+        "first_close": "2026-10-07T02:21:10.050000+00:00",
+        "last_close": "2026-10-07T02:21:10.296000+00:00",
+        "close_span_ms": 246,
+        "open_span_ms": 2024375,
+        "symbols": 78,
+        "sides": {
+          "Short": 77,
+          "Long": 1
+        }
+      },
+      {
+        "count": 248,
+        "first_close": "2026-10-08T15:30:35.704000+00:00",
+        "last_close": "2026-10-08T15:30:35.765000+00:00",
+        "close_span_ms": 61,
+        "open_span_ms": 47675334,
+        "symbols": 248,
+        "sides": {
+          "Short": 247,
+          "Long": 1
+        }
+      },
+      {
+        "count": 268,
+        "first_close": "2026-10-12T23:02:28.045000+00:00",
+        "last_close": "2026-10-12T23:02:29.002000+00:00",
+        "close_span_ms": 957,
+        "open_span_ms": 276004152,
+        "symbols": 268,
+        "sides": {
+          "Short": 267,
+          "Long": 1
+        }
+      },
+      {
+        "count": 236,
+        "first_close": "2026-10-16T18:51:26.214000+00:00",
+        "last_close": "2026-10-16T18:51:26.272000+00:00",
+        "close_span_ms": 58,
+        "open_span_ms": 99926363,
+        "symbols": 236,
+        "sides": {
+          "Long": 1,
+          "Short": 235
+        }
+      },
+      {
+        "count": 167,
+        "first_close": "2026-10-23T22:46:35.734000+00:00",
+        "last_close": "2026-10-23T22:46:35.772000+00:00",
+        "close_span_ms": 38,
+        "open_span_ms": 18135976,
+        "symbols": 167,
+        "sides": {
+          "Short": 166,
+          "Long": 1
+        }
+      },
+      {
+        "count": 268,
+        "first_close": "2026-10-24T15:31:15.740000+00:00",
+        "last_close": "2026-10-24T15:31:15.807000+00:00",
+        "close_span_ms": 67,
+        "open_span_ms": 39209357,
+        "symbols": 268,
+        "sides": {
+          "Short": 267,
+          "Long": 1
+        }
+      },
+      {
+        "count": 228,
+        "first_close": "2026-10-29T04:13:09.702000+00:00",
+        "last_close": "2026-10-29T04:13:10.626000+00:00",
+        "close_span_ms": 924,
+        "open_span_ms": 161892961,
+        "symbols": 228,
+        "sides": {
+          "Short": 227,
+          "Long": 1
+        }
+      }
+    ]
+  },
+  "incomplete_flow_summary": {
+    "count": 262,
+    "before_first_order": 262
+  },
+  "leg_exceptions": [
+    {
+      "position_id": "1147931521639145472",
+      "entry": true,
+      "side": "BUY",
+      "order_indices": [
+        41
+      ],
+      "qty": "0.257",
+      "qty_error": "-0.502",
+      "price_error": "1042.16126482",
+      "price_precision_compatible": false,
+      "types": {
+        "MARKET": 1
+      }
+    }
+  ],
+  "complete_flow_summary": {
+    "Long": {
+      "count": 38,
+      "multi_entry": 34,
+      "multi_exit": 6,
+      "max_entries": 99,
+      "max_exits": 211,
+      "timestamp_ties": 0
+    },
+    "Short": {
+      "count": 6638,
+      "multi_entry": 1249,
+      "multi_exit": 0,
+      "max_entries": 5,
+      "max_exits": 1,
+      "timestamp_ties": 0
+    }
+  },
+  "independent_verification": {
+    "method": "Fraction quantities, weighted prices and inventories; independent unique assignments",
+    "orders": 17052,
+    "assigned": 17052,
+    "unmatched": 0,
+    "ambiguous": 0,
+    "legs": 13615,
+    "qty_errors": 1,
+    "price_errors": 1,
+    "positions": 12461,
+    "positions_with_both_sides": 6677,
+    "script_sha256": "4d0890675e6ce0ae92b4cd6e04a77e9527ed76bd4ad5ed3abe0299f4a8c15d93"
+  }
+}
