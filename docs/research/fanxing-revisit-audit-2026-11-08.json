@@ -1,0 +1,1060 @@
+{
+  "status": "entry_candidate",
+  "supported_short_entry_conditions": [
+    "H1",
+    "H2"
+  ],
+  "profitability_tested": false,
+  "scope": "Pre-order conditions for sampled complete Short flows only; BTC leg not inferred",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T09:00:26.957570+00:00",
+    "split_sha256": "252ce92d1cf4526d766cb06e40a9d70ec4a5891d6016e0daac887922946b39eb",
+    "benchmark_split_sha256": "fa4fb4ba7a83ebee35db4665bb30b8b476cba6f374224887e3497f0a0ddf5f82",
+    "development_sha256": "6b97e87e37cbc48a07e78c00d3423b55a8207b7215a402beec2fe357597f45d4",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "feature": "coin_return_60m",
+        "operator": "gt",
+        "threshold": "0"
+      },
+      {
+        "id": "H2",
+        "feature": "coin_minus_btc_return_60m",
+        "operator": "gt",
+        "threshold": "0"
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "development_exploration": [
+      {
+        "lag_minutes": 1,
+        "positive_entries": 11,
+        "negative_entries": 13,
+        "n": 30
+      },
+      {
+        "lag_minutes": 5,
+        "positive_entries": 17,
+        "negative_entries": 13,
+        "n": 30
+      },
+      {
+        "lag_minutes": 15,
+        "positive_entries": 20,
+        "negative_entries": 7,
+        "n": 30
+      },
+      {
+        "lag_minutes": 60,
+        "positive_entries": 28,
+        "negative_entries": 1,
+        "n": 30
+      },
+      {
+        "lag_minutes": 1440,
+        "positive_entries": 19,
+        "negative_entries": 11,
+        "n": 30
+      }
+    ],
+    "additional_development_checks": {
+      "coin_return_60m_gt_005_entries": 19,
+      "coin_return_60m_gt_005_background": 94,
+      "relative_60m_positive_entries": 28,
+      "relative_60m_positive_background": 173,
+      "btc_60m_positive_entries": 20,
+      "btc_60m_positive_background": 177
+    },
+    "scope": "Pre-decision state at first MARKET SELL of reconciled complete Short flows only. Not a full entry rule, BTC-long rule, coin selection, neutrality or profitability.",
+    "background": "12 same-symbol and BTC windows 2-24h earlier; not labeled nonentries.",
+    "unknown_policy": "Zero return does not meet strict-positive condition and remains in denominator. No retuning after holdout."
+  },
+  "hypotheses_sha256": "f62fee3b24c15f42959651f8d459df35c0055490ed478f9b877e8fc842190536",
+  "split_sha256": "252ce92d1cf4526d766cb06e40a9d70ec4a5891d6016e0daac887922946b39eb",
+  "benchmark_split_sha256": "fa4fb4ba7a83ebee35db4665bb30b8b476cba6f374224887e3497f0a0ddf5f82",
+  "script_sha256": "38c4ee58a539ff89018a9c9fb59f53e71a48c346f29e7940867bdc9caa574c06",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "phases": {
+    "development": {
+      "sources": {
+        "fanxing_short_revisit_market_development_2026-11-08\\1150665065289375744.json": "dc0535279d7b5ef5e3003eb12c0cf13886d147479d4957966d9505203188ca6b",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1150665065289375744.json": "8833fd98f19ea5a1192a762b3e16e2ab87da5b1b2331dee098b2028e03ae4d11",
+        "fanxing_short_revisit_market_development_2026-11-08\\1152762921869533184.json": "3dd1af80cd62de2f3ce63578b4dff5dae12e7e961898485d2dc23a62a38385a7",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1152762921869533184.json": "64c8c7655cd1da949b6b487336777c550df3506da2dffc1130b124ce14d999d2",
+        "fanxing_short_revisit_market_development_2026-11-08\\1153283148785016832.json": "ce7bed93772f8e2e756ae2729d05c6b0d7286843cbe431ea7b735a438b8eef88",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1153283148785016832.json": "3d8f8dbd13fdb89dbea960a613a657def4dd71de30d10679b0957036c228d171",
+        "fanxing_short_revisit_market_development_2026-11-08\\1153283412619321344.json": "fd8dd400a10e6479b4b1fed364e27955152d7ba8c5327df370183a5af5de7773",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1153283412619321344.json": "ed658a47773b5d73f8d0ef4df402af2b13e0631df9b7c280ea7fb693794f00a9",
+        "fanxing_short_revisit_market_development_2026-11-08\\1154553975627210752.json": "168b71b170a3e32e876cf258c9d8a440443c5ce86644dc048be2b5beaf29f965",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1154553975627210752.json": "499b778affc230f421d99a4a9c6e4029830225c815bceb15d20a2f1687d349b9",
+        "fanxing_short_revisit_market_development_2026-11-08\\1154779734065176576.json": "80acad31f31e013c52aadd2d6812be5f7062e67913a69b1704b6803d4c4d6cc7",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1154779734065176576.json": "6261226a4e1fdc4cdeaebbac81e001193f29c4147dff4ba3d32fc547e1881a07",
+        "fanxing_short_revisit_market_development_2026-11-08\\1155184088278523904.json": "7da4a44cb83bcba6a11b948527a994500461007cd32f7b6b6d48762f30e5cb55",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1155184088278523904.json": "0175eb0670c223070f91a430dbf56aabe523ebad8e59e1c41086886db6ff293a",
+        "fanxing_short_revisit_market_development_2026-11-08\\1155364735878062080.json": "3a6e276785e189624c820d3ed922d1d14e012ce34e0aa6b7e211600792971775",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1155364735878062080.json": "b8edb6497757386ea5de26ac5f888e27f23dbb40ce3dc34d74e82362ae2bb2f7",
+        "fanxing_short_revisit_market_development_2026-11-08\\1157101976694448128.json": "45af4a6ef968e0ae279b0a34b76952108c72253dc6a1d46f564b79ecb3f59a13",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1157101976694448128.json": "4120a2d37602370cf27ba218686b5fe673ec7ce941e5af51456333f4613c2324",
+        "fanxing_short_revisit_market_development_2026-11-08\\1157210171127521280.json": "d3c824a26fb07bfc4c129d13d35e45662a06715e35b8f9636193a1db92746aa8",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1157210171127521280.json": "3bcc3d69d350a5a0fb285f0efd32b2e2df7be7bb315b64582932aaeb2cf802e7",
+        "fanxing_short_revisit_market_development_2026-11-08\\1158183219649470464.json": "52aa440305b3ba0776c6c6c218809c75b4ede0fc679658898573a0a75ec1d2d0",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1158183219649470464.json": "7ad5ca195430a2e652fd3a7c9e1bd38f52494b44376a9b15e69f79a9457a0c01",
+        "fanxing_short_revisit_market_development_2026-11-08\\1158267676905594880.json": "2d790a815d8bfe91461074aa9f6cfe7d22d6de11d833a192399ba1b518362355",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1158267676905594880.json": "8e76afbd46d144ba500e686da5497cf3753bbc328f354c176780f86eb06448f3",
+        "fanxing_short_revisit_market_development_2026-11-08\\1158783558471802880.json": "853ceb29fa2d38ee7b49f657494cecaa69a3395a7119af0c17559b4885899443",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1158783558471802880.json": "370ce0bdbae967ca7b86851c0be8398322643729fd29b343cd5df1d74e536465",
+        "fanxing_short_revisit_market_development_2026-11-08\\1159318865340424192.json": "0a76fbe8b200f441222b131e20f4c5bbb1bc579a8094a908ee2e7eab285757a7",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1159318865340424192.json": "670d61346ae0e4e6f81343f379255b9fe6ff9dfbcc3f59a1802c0c8f0cb1bb35",
+        "fanxing_short_revisit_market_development_2026-11-08\\1159797255650566144.json": "615586e9294cc8593cf6e5aa7c19a88c330dba0406ec58b18432a33fbfdbedc4",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1159797255650566144.json": "4e8eac644c3af7cea7fbc6fc51b59525d1a64d41dc80c62f161e2181db5a7dc3",
+        "fanxing_short_revisit_market_development_2026-11-08\\1160249371619909632.json": "aa98c98ebb26e5db2a18505337884c3924af53def10e0d701cdc3c71162e2f73",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1160249371619909632.json": "a72939fbc8c1ca772ef7b9303fa57fdbd38062b45934725a818a780278fbe3b1",
+        "fanxing_short_revisit_market_development_2026-11-08\\1160366526478835712.json": "5ddb3798f4fe007785c20102b88c25f40d88ec89c435c993d59ccde51bb72b03",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1160366526478835712.json": "f5db9b8b93a33eea826ed4bedff7c9d4c4aa7448ce8a9de2b3b52576fb481762",
+        "fanxing_short_revisit_market_development_2026-11-08\\1160675829760811008.json": "7459a513677ae752d37a815f09d78dccab3a5b8d99f6e28365216649752d3dcb",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1160675829760811008.json": "57fcb76edbf1ea7045b3cfda30fe6c265d4543067a8308aacd1cef64f19decdd",
+        "fanxing_short_revisit_market_development_2026-11-08\\1160970226905800704.json": "e8a6d5e7db3188d31f8c0aab98332cb989f204b0728465990cba862db1117afb",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1160970226905800704.json": "f9717de858f3db7fd9f428f9fbde31c1c427cffa8cba70d092c5d4ef636fff11",
+        "fanxing_short_revisit_market_development_2026-11-08\\1161803014135504896.json": "ee2aa3be13019ee95b6b28bc5106267d8ac78b77785e35134dfd5b9799568a7f",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1161803014135504896.json": "d84e83bbac19d62339b788bd057e97b85684fb5e90c9e57d62cda3514c0d4fe9",
+        "fanxing_short_revisit_market_development_2026-11-08\\1162374689075912704.json": "f1da4b0a1133f97d1b53ac16203fef62e40bf70247d2592058759df4ef58ab1d",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1162374689075912704.json": "dcd3142bf13087b929c46e5cce8d1c4e3b6894b6a30c1e3d84096c557052cc70",
+        "fanxing_short_revisit_market_development_2026-11-08\\1162797354668417024.json": "03f50957bf0ee8b23df2bcf911cda939d833bb47c058dda7b1dea79c5433c49e",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1162797354668417024.json": "0b1b98e33a291f0afab1428989a91fc844a55cb8c66949fd0ed89fa661811593",
+        "fanxing_short_revisit_market_development_2026-11-08\\1163035136577921024.json": "7a64d535a1589355148e93808b6c373d3c89e03e2164db10e987b81ff602d595",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1163035136577921024.json": "304ed0dc80be5b6643769e037eca7b92f13019a98672c19c1cbe4840c2218eb2",
+        "fanxing_short_revisit_market_development_2026-11-08\\1163378294662782976.json": "636d18c4a06cde374cdaaa9c98a0a4058b8af8a9451d2555d381e446a1d8dd0b",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1163378294662782976.json": "9cfb8f30eb174ccb4d23607aa17d920d7a611e9aeda4845e341a82b18f61ad48",
+        "fanxing_short_revisit_market_development_2026-11-08\\1163963759967232000.json": "28a10f6581237f65d9826f522ec29c08a4c2d5c121ea5ca87687cf12a96b75ca",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1163963759967232000.json": "5f03ca3ed47042028ea5b8494f91ac90b2fa1e4b9a6a21f110025c18e79a2069",
+        "fanxing_short_revisit_market_development_2026-11-08\\1164041963226685440.json": "6903448b596b60f0a53723ab9ee3231ed4a81be747f835f76c0ae0000d733062",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1164041963226685440.json": "b144efe3706af79ebd02d6f806fe65916e3fadf24f730c785c543304c5d81b94",
+        "fanxing_short_revisit_market_development_2026-11-08\\1164356441600319488.json": "1f01d6c93ff31ca36398cd64de881a922984dcc7f50891ffd8a3d15e9ebae552",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1164356441600319488.json": "1e9db783cc30aecffa78c2e180c27f1c70eed5e43521e5f316af6c3460c1b441",
+        "fanxing_short_revisit_market_development_2026-11-08\\1164356669028065280.json": "69bf3e3ba638dfe80d82192e90a7edc58abb05fe55ac2e24b49a3c16429f74e5",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1164356669028065280.json": "8ac4843f85b8fa48596fa32bf1ce60d040865439669885486b127350abf62195",
+        "fanxing_short_revisit_market_development_2026-11-08\\1164942523912052736.json": "f3798c5bcd85a070d7647c54d2806c252287fc7f154e6ffeff04af89026f6233",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1164942523912052736.json": "e9443115b47978e04fe369c5a90b8230543ee1ab71bb12ab9849dfd2fa50e1ab",
+        "fanxing_short_revisit_market_development_2026-11-08\\1165919639205994496.json": "f0b9579a8a4388b0a74e4b2978230ed3e67840108fbf7dd310d3254a331ecc5a",
+        "fanxing_benchmark_revisit_market_development_2026-11-08\\1165919639205994496.json": "c5c10c4dc5a7ff11582f610d6ba3320248f7858fa94ed56dc9b6caeb1f3e9ce1"
+      },
+      "summary": {
+        "H1": {
+          "n": 30,
+          "hits": 28,
+          "coverage": 0.9333333333333333,
+          "background_n": 360,
+          "background_hits": 169,
+          "background_rate": 0.46944444444444444,
+          "advantage_over_background": 0.4638888888888889,
+          "frequency_ratio": 1.9881656804733727,
+          "day_counts": {
+            "20707": {
+              "n": 1,
+              "hits": 1
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 2,
+              "hits": 2
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 0
+            },
+            "20719": {
+              "n": 1,
+              "hits": 1
+            },
+            "20720": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20725": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            },
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 1
+            },
+            "20734": {
+              "n": 2,
+              "hits": 2
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 1
+            },
+            "20741": {
+              "n": 1,
+              "hits": 1
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 0
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            },
+            "20745": {
+              "n": 2,
+              "hits": 2
+            },
+            "20746": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.9259259259259259,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 30,
+          "hits": 28,
+          "coverage": 0.9333333333333333,
+          "background_n": 360,
+          "background_hits": 173,
+          "background_rate": 0.48055555555555557,
+          "advantage_over_background": 0.4527777777777778,
+          "frequency_ratio": 1.9421965317919074,
+          "day_counts": {
+            "20707": {
+              "n": 1,
+              "hits": 1
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 2,
+              "hits": 2
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 0
+            },
+            "20719": {
+              "n": 1,
+              "hits": 1
+            },
+            "20720": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20725": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            },
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 0
+            },
+            "20734": {
+              "n": 2,
+              "hits": 2
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 1
+            },
+            "20741": {
+              "n": 1,
+              "hits": 1
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 1
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            },
+            "20745": {
+              "n": 2,
+              "hits": 2
+            },
+            "20746": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.9259259259259259,
+          "meets_frozen_screen": true
+        }
+      }
+    },
+    "holdout": {
+      "sources": {
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1166164654423433216.json": "8d5ca5215e7c64e65294121ae81874ab756c5388c3734b663ef4d0152b156d23",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1166164654423433216.json": "214027757c7989b4fec5cc3efd7e3dea54c2b3f7df8b3ef6d898384c7ecd98c4",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1166423731086974976.json": "dc45ca5b3c97971f74ced6f0deece9ffab09e385f5618a995341ac59235f6650",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1166423731086974976.json": "8593a259389645baded410ff38f9184663d12a8dd3e351af575cc4ae9732e3ff",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1166676798302740480.json": "a1c7689839437d593a2d2f1f1b3e755ef45bf8d6d0702804df7d8ba00a1f5c47",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1166676798302740480.json": "2193d13a12e8b3f116f4c78fae90a3c897e81efd260def787b4060680b8930d0",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1166894423867809792.json": "9b7abdc93967fbf7c45b9b83aa719220e973a1e6e01c57c1c0a678a0d565d488",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1166894423867809792.json": "b94bb493c374a47a927a55b66a11079cce532d77654ed4ad5851572cd704957c",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1167248369698365440.json": "b675a0b56d7c977c7072d04b296211859419aaf3ed2203e136e7a33cc15a5ac8",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1167248369698365440.json": "c49a82510f7bbbaf0c026e320df7c7e8e46c6080c5e74f6a392590e516ca1ce4",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1167643805554728960.json": "259de2ae773b05f0f787dc11b627f0ddd3ecdd90f204ec092958b27ca043deea",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1167643805554728960.json": "7e3f9610cef0151d13ca68f4df6ca573e5a02b74bc27f2e261cee72f1d796f78",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1167643817344917504.json": "17128c55035d308834cf0bb37f0a5ef4e8d4a21b8afba1e6438cda9f4bc269b1",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1167643817344917504.json": "acfb323c9fe9f040ffb46c3e85022011fd6699dd7391837608697f085ec13a97",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1168206928011485184.json": "2e474961144f8f8129f08ba2bbc4aee189700f217f420a34b81eca34fd6206e1",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1168206928011485184.json": "4367218dd096f442e6e739e33bc02a3af2ac7a22ad37b0de71ea96e7f90edac2",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1168350573805068288.json": "8b641b463160dd49c1566d71aa068d3d20942b7cdfc0179ab12745e9d67f6dbf",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1168350573805068288.json": "42edcee813e085256a3d6b771a615cdcc58b19e89235a8b0d5058e85701321f0",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1168639164473040896.json": "bb425c0d57438f5dfa996488d21a2d2a7a527a6f231c9d5e0fe988fb5fa2d678",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1168639164473040896.json": "cc7604f5410945572afd06dd39177235ecc8391cc5e6c61ce1912b0994f43fa8",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1168931767227670528.json": "a98a818bf0bf5c53e761ee754f6b9c733f6115739adfa2cdbf7cd36ef42506ff",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1168931767227670528.json": "94fe2b87c8aeea826536fd1672e8530f32c797b71385faf8ab413b61bc850f7f",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1169444877487202304.json": "552836d8db839a10429929f11d4ab32dc410dc1d393e9baeed2c3358cd724da4",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1169444877487202304.json": "5e538c2b080329649121f88d3a14926e814b9b4f2cb5d160e92cfedf0bedfd13",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1169761453344186368.json": "4ae6c8b1528d0317bf12fbf5462093ce1fc8b76df9e2b06912e7a78eb299fb83",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1169761453344186368.json": "d05c853df1b60498fe690949b3d47a5b94f4588d4166137ce648038f14109a0b",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1169970238713126912.json": "93fbc72dc2e6170cc5a09ab1ef89d3a3bd27711cb92ab87b3d49bee7f7619687",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1169970238713126912.json": "59e7a575d3ac51f0bba288b75a1a895c7a7813c4c121389be130267c7f0cccdc",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1170215102746877952.json": "b7f6bca7d33e2321d3c49f449150075dc579850e7d952b7d36de2066b0be0f4d",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1170215102746877952.json": "4cf70c7fb9089b8c944b55eaa86973cb32c730d6ba023d3d0a5b8bdcebe7c91c",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1170539849271631872.json": "1e0f578c05dbde5320378ecd08413b20c8b31dafac3d039b7868b5b4e8955359",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1170539849271631872.json": "d1e3b07c2f41560cf0407b4b2af6e29934cb23b82306e9d308de7263dfbe39ca",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1170858508900786176.json": "3d3d464c65a90e6ce20fe4256c9bbc2f1de32362c24ea7e311d1e13ee66f1f44",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1170858508900786176.json": "8bfb3f8a80eeea74b71cb1ddbaf2f5d1ccbca9d419f52c6bf16424e2378bacaa",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1170902051497336832.json": "d4152738344da1cbdd80605f2a8ad950b6cc0bbe09e5a20e97e50589ad35d2ad",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1170902051497336832.json": "09b57b87bcf319a0377b8b568d917ff98f2f8641fb206ba229087ee6d2882ae8",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1171577944561573888.json": "3bf361d672a1c55bf1388b27c62229163d01d5e7372c9f4a5f782a77a5000d42",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1171577944561573888.json": "9a972cfe9169839ebd04f08d706b0ae6967e5a3946165099faf4a308e37cb580",
+        "fanxing_short_revisit_market_holdout_2026-11-08\\1171581035923005440.json": "bd2516b8b9b400aec61e260ab2a0eb4106539a4cf9835fa8e306d1c045ef6217",
+        "fanxing_benchmark_revisit_market_holdout_2026-11-08\\1171581035923005440.json": "f1469def817ccfd82f5b0aa7d1ed178eb741aae398f84a2c5298f3c54d9c56a5"
+      },
+      "summary": {
+        "H1": {
+          "n": 20,
+          "hits": 19,
+          "coverage": 0.95,
+          "background_n": 240,
+          "background_hits": 107,
+          "background_rate": 0.44583333333333336,
+          "advantage_over_background": 0.5041666666666667,
+          "frequency_ratio": 2.130841121495327,
+          "day_counts": {
+            "20750": {
+              "n": 2,
+              "hits": 2
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20752": {
+              "n": 2,
+              "hits": 2
+            },
+            "20754": {
+              "n": 2,
+              "hits": 2
+            },
+            "20755": {
+              "n": 1,
+              "hits": 1
+            },
+            "20756": {
+              "n": 2,
+              "hits": 2
+            },
+            "20757": {
+              "n": 1,
+              "hits": 1
+            },
+            "20759": {
+              "n": 2,
+              "hits": 2
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 2,
+              "hits": 2
+            },
+            "20763": {
+              "n": 1,
+              "hits": 0
+            },
+            "20764": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.9230769230769231,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 20,
+          "hits": 17,
+          "coverage": 0.85,
+          "background_n": 240,
+          "background_hits": 122,
+          "background_rate": 0.5083333333333333,
+          "advantage_over_background": 0.3416666666666667,
+          "frequency_ratio": 1.6721311475409837,
+          "day_counts": {
+            "20750": {
+              "n": 2,
+              "hits": 1
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20752": {
+              "n": 2,
+              "hits": 2
+            },
+            "20754": {
+              "n": 2,
+              "hits": 2
+            },
+            "20755": {
+              "n": 1,
+              "hits": 0
+            },
+            "20756": {
+              "n": 2,
+              "hits": 2
+            },
+            "20757": {
+              "n": 1,
+              "hits": 1
+            },
+            "20759": {
+              "n": 2,
+              "hits": 2
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 0
+            },
+            "20762": {
+              "n": 2,
+              "hits": 2
+            },
+            "20763": {
+              "n": 1,
+              "hits": 1
+            },
+            "20764": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.8076923076923077,
+          "meets_frozen_screen": true
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "development": [
+      {
+        "position_id": "1154779734065176576",
+        "symbol": "GWEIUSDT",
+        "day": 20718,
+        "decision_time": 1790085743370,
+        "position_opened": 1790085743371,
+        "return_60m": "-0.0029300962745918794474675596",
+        "btc_return_60m": "0.001446611327489565807453127",
+        "relative_return_60m": "-0.0043767076020814452549206866",
+        "tests": {
+          "H1": {
+            "entry_hit": false,
+            "background_hits": 6,
+            "background": [
+              false,
+              false,
+              true,
+              false,
+              true,
+              false,
+              true,
+              true,
+              true,
+              false,
+              false,
+              true
+            ]
+          },
+          "H2": {
+            "entry_hit": false,
+            "background_hits": 6,
+            "background": [
+              false,
+              false,
+              true,
+              false,
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              true
+            ]
+          }
+        }
+      },
+      {
+        "position_id": "1160249371619909632",
+        "symbol": "USDCUSDT",
+        "day": 20733,
+        "decision_time": 1791389806584,
+        "position_opened": 1791389806585,
+        "return_60m": "0.000099027133434561069733107",
+        "btc_return_60m": "0.005544977062535152914425010",
+        "relative_return_60m": "-0.005445949929100591844691903",
+        "tests": {
+          "H1": {
+            "entry_hit": true,
+            "background_hits": 5,
+            "background": [
+              true,
+              false,
+              false,
+              true,
+              false,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              true
+            ]
+          },
+          "H2": {
+            "entry_hit": false,
+            "background_hits": 7,
+            "background": [
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              true,
+              false,
+              true,
+              false,
+              false,
+              true
+            ]
+          }
+        }
+      },
+      {
+        "position_id": "1163963759967232000",
+        "symbol": "ZILUSDT",
+        "day": 20743,
+        "decision_time": 1792275385777,
+        "position_opened": 1792275385777,
+        "return_60m": "0",
+        "btc_return_60m": "-0.0048381208145783153195316003",
+        "relative_return_60m": "0.0048381208145783153195316003",
+        "tests": {
+          "H1": {
+            "entry_hit": false,
+            "background_hits": 3,
+            "background": [
+              false,
+              false,
+              false,
+              true,
+              false,
+              false,
+              false,
+              true,
+              true,
+              false,
+              false,
+              false
+            ]
+          },
+          "H2": {
+            "entry_hit": true,
+            "background_hits": 3,
+            "background": [
+              false,
+              false,
+              false,
+              true,
+              false,
+              false,
+              false,
+              true,
+              true,
+              false,
+              false,
+              false
+            ]
+          }
+        }
+      }
+    ],
+    "holdout": [
+      {
+        "position_id": "1166164654423433216",
+        "symbol": "USDCUSDT",
+        "day": 20750,
+        "decision_time": 1792800119906,
+        "position_opened": 1792800119906,
+        "return_60m": "0.000013992430095318432727894",
+        "btc_return_60m": "0.003507734703444283790085084",
+        "relative_return_60m": "-0.003493742273348965357357190",
+        "tests": {
+          "H1": {
+            "entry_hit": true,
+            "background_hits": 6,
+            "background": [
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              true,
+              true,
+              false,
+              true,
+              false,
+              true
+            ]
+          },
+          "H2": {
+            "entry_hit": false,
+            "background_hits": 9,
+            "background": [
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              true,
+              true,
+              false,
+              true,
+              true,
+              true
+            ]
+          }
+        }
+      },
+      {
+        "position_id": "1168206928011485184",
+        "symbol": "CROSSUSDT",
+        "day": 20755,
+        "decision_time": 1793287035872,
+        "position_opened": 1793287035873,
+        "return_60m": "0.005351047144570532336931451",
+        "btc_return_60m": "0.013594087753381109566108559",
+        "relative_return_60m": "-0.008243040608810577229177108",
+        "tests": {
+          "H1": {
+            "entry_hit": true,
+            "background_hits": 8,
+            "background": [
+              false,
+              true,
+              true,
+              false,
+              true,
+              true,
+              false,
+              true,
+              true,
+              true,
+              false,
+              true
+            ]
+          },
+          "H2": {
+            "entry_hit": false,
+            "background_hits": 7,
+            "background": [
+              false,
+              true,
+              true,
+              false,
+              true,
+              true,
+              true,
+              false,
+              true,
+              false,
+              false,
+              true
+            ]
+          }
+        }
+      },
+      {
+        "position_id": "1170215102746877952",
+        "symbol": "SIGNUSDT",
+        "day": 20761,
+        "decision_time": 1793765822040,
+        "position_opened": 1793765822040,
+        "return_60m": "0.006209251785159888233467867",
+        "btc_return_60m": "0.010109302558111386516369071",
+        "relative_return_60m": "-0.003900050772951498282901204",
+        "tests": {
+          "H1": {
+            "entry_hit": true,
+            "background_hits": 4,
+            "background": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              false,
+              true,
+              false,
+              true,
+              false,
+              true
+            ]
+          },
+          "H2": {
+            "entry_hit": false,
+            "background_hits": 5,
+            "background": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              true,
+              true,
+              true,
+              false,
+              true,
+              false,
+              true
+            ]
+          }
+        }
+      },
+      {
+        "position_id": "1170902051497336832",
+        "symbol": "MANTAUSDT",
+        "day": 20763,
+        "decision_time": 1793929603385,
+        "position_opened": 1793929603385,
+        "return_60m": "-0.0030114812723508375682288726",
+        "btc_return_60m": "-0.0030945561741175669428587518",
+        "relative_return_60m": "0.0000830749017667293746298792",
+        "tests": {
+          "H1": {
+            "entry_hit": false,
+            "background_hits": 5,
+            "background": [
+              false,
+              false,
+              true,
+              false,
+              false,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              true
+            ]
+          },
+          "H2": {
+            "entry_hit": true,
+            "background_hits": 5,
+            "background": [
+              false,
+              false,
+              true,
+              false,
+              false,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              true
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "cohort": {
+    "eligible_count": 6638,
+    "reported_total": 12461,
+    "complete": false,
+    "definition": "Reconciled complete Short flows only. opened is first MARKET SELL placement time, position_opened preserves original.",
+    "original_source_hashes": {
+      "fanxing_audit_2026-11-08.json": "97797d079029dc2e69d3454f558eb82269081face842458feb53de1ce05e05d5",
+      "fanxing_4997465541846537217_2026-11-08.json": "d5ac2a7fc4ecd37d250b602f704b16f38a849114ca5111a6a769703b62513ece",
+      "fanxing_4997465541846537217_orders_merged_2026-11-08.json": "d0f631a49d08d71378d14403f2ab6f233374f78067d4b75616a5cad6cd1dac27"
+    }
+  },
+  "split_frozen_at": "2026-11-08T08:57:37.203279+00:00",
+  "split": {
+    "development": {
+      "days": [
+        "2026-09-11",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-21",
+        "2026-09-22",
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-23"
+      ],
+      "sample_ids": [
+        "1150665065289375744",
+        "1152762921869533184",
+        "1153283148785016832",
+        "1153283412619321344",
+        "1154553975627210752",
+        "1154779734065176576",
+        "1155184088278523904",
+        "1155364735878062080",
+        "1157101976694448128",
+        "1157210171127521280",
+        "1158183219649470464",
+        "1158267676905594880",
+        "1158783558471802880",
+        "1159318865340424192",
+        "1159797255650566144",
+        "1160249371619909632",
+        "1160366526478835712",
+        "1160675829760811008",
+        "1160970226905800704",
+        "1161803014135504896",
+        "1162374689075912704",
+        "1162797354668417024",
+        "1163035136577921024",
+        "1163378294662782976",
+        "1163963759967232000",
+        "1164041963226685440",
+        "1164356441600319488",
+        "1164356669028065280",
+        "1164942523912052736",
+        "1165919639205994496"
+      ]
+    },
+    "holdout": {
+      "days": [
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-10-31",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07"
+      ],
+      "sample_ids": [
+        "1166164654423433216",
+        "1166423731086974976",
+        "1166676798302740480",
+        "1166894423867809792",
+        "1167248369698365440",
+        "1167643805554728960",
+        "1167643817344917504",
+        "1168206928011485184",
+        "1168350573805068288",
+        "1168639164473040896",
+        "1168931767227670528",
+        "1169444877487202304",
+        "1169761453344186368",
+        "1169970238713126912",
+        "1170215102746877952",
+        "1170539849271631872",
+        "1170858508900786176",
+        "1170902051497336832",
+        "1171577944561573888",
+        "1171581035923005440"
+      ]
+    }
+  },
+  "independent_verification": {
+    "method": "Fraction hourly and relative returns; first-order cohort rebuilt from reconciled legs; pre-decision candles, chronological split and freeze checks",
+    "eligible_short_flows_checked": 6638,
+    "entries_checked": 50,
+    "paired_background_windows_checked": 600,
+    "series_checked": 100,
+    "hypotheses_checked": 2,
+    "holdout_access_after_freeze": true,
+    "script_sha256": "6cfa8d756f10ddcb25073b8c1aab87e7fed2de96ca0cd45e519ca77606a6a508"
+  },
+  "sources": {
+    "fanxing_short_revisit_4997465541846537217_2026-11-08.json": "5ee2ae46436064715a255cc2c3e573a742f53f0054996737b2f9bc5856d1ffcd",
+    "fanxing_short_revisit_entry_split_2026-11-08.json": "252ce92d1cf4526d766cb06e40a9d70ec4a5891d6016e0daac887922946b39eb",
+    "fanxing_short_revisit_entry_development_2026-11-08.json": "6b97e87e37cbc48a07e78c00d3423b55a8207b7215a402beec2fe357597f45d4",
+    "fanxing_short_revisit_entry_hypotheses_2026-11-08.json": "f62fee3b24c15f42959651f8d459df35c0055490ed478f9b877e8fc842190536",
+    "fanxing_benchmark_revisit_entry_split_2026-11-08.json": "fa4fb4ba7a83ebee35db4665bb30b8b476cba6f374224887e3497f0a0ddf5f82",
+    "fanxing_benchmark_revisit_entry_hypotheses_2026-11-08.json": "cf5e6bf253833474523a27c54e76a70f1c38293fc3906d3a04ed530e8940b69e",
+    "fanxing_revisit_verify_2026-11-08.py": "6cfa8d756f10ddcb25073b8c1aab87e7fed2de96ca0cd45e519ca77606a6a508",
+    "fanxing_revisit_verification_2026-11-08.json": "a2a440f1fe62cc9db2bb94d0acaba804d760c7733831e4dfda6271c6fb678654"
+  },
+  "saved_market_errors": {
+    "fanxing_short_revisit_development": 0,
+    "fanxing_short_revisit_holdout": 0,
+    "fanxing_benchmark_revisit_development": 0,
+    "fanxing_benchmark_revisit_holdout": 0
+  }
+}
