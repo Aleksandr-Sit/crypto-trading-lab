@@ -1,0 +1,1082 @@
+{
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "hypotheses": {
+    "frozen_at": "2026-11-08T07:51:31.445964+00:00",
+    "split_sha256": "e919844815acb54805bd0c1f9c2a5730d7eb2a7af3889fb36a6280fbba62518d",
+    "development_report_sha256": "8dfafed3a2b92a39820ba5026880cbe0105291853ee781da75bbd02a79a23fec",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "kind": "completed_minute",
+        "return_1m_lte": -0.002,
+        "relative_volume_gte": 2
+      },
+      {
+        "id": "H2",
+        "kind": "intraminute_execution_drop",
+        "drop": 0.005
+      },
+      {
+        "id": "H3",
+        "kind": "intraminute_execution_drop",
+        "drop": 0.01
+      }
+    ],
+    "threshold_origin": "H1 rounded development median minute drop and relative volume; H2/H3 rounded 0.5/1 percent around development average execution discount 0.86 percent. No holdout market data accessed.",
+    "candidate_criteria": {
+      "min_entry_coverage": 0.5,
+      "min_entry_to_background_ratio": 3
+    },
+    "interpretation": "Candidate means replication of a fill association only, not recovery of order placement rule, filters, weights or profitability.",
+    "background": "12 prior same-symbol minute windows at 2h increments. Event frequency only, not labeled nonentries. Intraminute next-bar lows measure whether a pre-specified standing level was reached, not a future-known decision input.",
+    "holdout_must_not_be_retuned": true
+  },
+  "hypotheses_sha256": "f1c9b8502fbc8592face7b17abcf5a08833b495c0aca62d545ad2d54579f820a",
+  "script_sha256": "f1b949569ca73c983674e75d2f4442f3a51860b3a7ea9cedd897da77de5121d6",
+  "feature_script_sha256": "d817c1a9262d4359d20d59f1a7a4d77ea240836ab83fb3453837129cbd1f1f5a",
+  "sources": {
+    "leonardo_5123905101728837377_2026-11-08.json": "c5ebec52c34ff8a84674c6ca1d11e32d01137debcf2489ee27ba7c92b6832ea9",
+    "leonardo_5123905101728837377_scan_2026-10-25.json": "b1058038789d9e99536b967c14ab8871ad2f0ce7907cd1bb1ac416e63842d9d5",
+    "leonardo_orders_slice_2026-11-08.json": "9e12695d8dd9fce7521a55e81b05a31be30b13c627c2996129e3cb3b132220cc",
+    "leonardo_entry_split_2026-11-08.json": "e919844815acb54805bd0c1f9c2a5730d7eb2a7af3889fb36a6280fbba62518d",
+    "leonardo_entry_hypotheses_2026-11-08.json": "f1c9b8502fbc8592face7b17abcf5a08833b495c0aca62d545ad2d54579f820a",
+    "leonardo_missing_policy_2026-11-08.json": "8c6540cd68aa9e71585a21f143a905f4919aeabf601f3158e2c2a89cc66fe45e",
+    "leonardo_entry_probe_at_split.py": "4b2e5d0151a5274d88dfd46312ac9cc99432d3cf237f224f2ec8bb63229f7b02",
+    "leonardo_verify_2026-11-08.py": "f5c76d5c3f23b4203bd6c7cc747e4b3ee5a609699004b503a040621e8c4f9bb3",
+    "leonardo_fetch_entry_orders_2026-11-08.py": "7263eb91527be6a7cababa3d841648c681bd649b5d7dfacd930971092bedb887",
+    "leonardo_independent_verification_2026-11-08.json": "e4e71f4d76ba31320b2898128ae000c3471dcd82d52003bdf9643e07bc20ef90",
+    "leonardo_pages200_2026-11-08\\detail.json": "2a89f965cd7d90eda9edb7134faef1e8de2fd37a70e35fc9b4cdc9db54fda88d",
+    "leonardo_pages200_2026-11-08\\page_001.json": "5d4445560f57909bb1f27d04d594e3d7ab95264c56df6b1686193d478885b85d",
+    "leonardo_pages200_2026-11-08\\page_002.json": "124eb7750849904ecb2a708f6bc5220c36ebf2681ffe5ed4bba7503cb63c9d1d",
+    "leonardo_pages200_2026-11-08\\page_003.json": "5e4e90599924313fcad846e8f38e89b08f2f28610bb7cf56a274d07c6c196a1f",
+    "leonardo_pages200_2026-11-08\\page_004.json": "c66cc07d68515782aff18fb38abe1ae00a8f5a59a25ce7cd0edc86e728ec5b76",
+    "leonardo_pages200_2026-11-08\\page_005.json": "e23dc4dd9e7e1d1839aa4a84bb569bca0dbeca3ba28732619c17d6b1a2a9a379",
+    "leonardo_pages200_2026-11-08\\page_006.json": "1e7b8a7ad7c8b58245468c81586262342fd0045a0d28641dcc616b81685d6eb5",
+    "leonardo_pages200_2026-11-08\\page_007.json": "2e44f95f7cb367a760151a4f97921094be8f7f9661b5ca214d96c229bb9c559f",
+    "leonardo_pages200_2026-11-08\\page_008.json": "26ea586af6745db2beb4e7449c27a84b48c550b5b11a34b09e22a74ca21fa973",
+    "leonardo_pages200_2026-11-08\\page_009.json": "409da471248a8bf2b5882b46774a14b645f846ac5ef93db5a5b7a3ca055f5529",
+    "leonardo_pages200_2026-11-08\\page_010.json": "1e3477994cfffecd99186e92891b029c5ee09949eeafef686acb1e6ca02ca9e6",
+    "leonardo_market_development_2026-11-08\\1152090196381429760.json": "753bb1e5655974ac2d130e9ec38f3b02b83a2a46da9e6dae63b9b25598983d70",
+    "leonardo_market_development_2026-11-08\\1152395913495736320.json": "832240a880ccbc3e5f9edc989621fa8cbf88abc60982cc8f6f03b42d0b7e2898",
+    "leonardo_market_development_2026-11-08\\1152969878232526848.json": "01d8ba51f240eefd24592414feb63e681cca3f7c0a562eac545c57fb1d748754",
+    "leonardo_market_development_2026-11-08\\1153319622213529600.json": "9d53c3a1a5c476b44157f7522a0076b72da95c2e806b91c9d543b516f1962dcb",
+    "leonardo_market_development_2026-11-08\\1153834454780112896.json": "f22f0891d109d9117ff0796cadd75cb0e2479a93e0991ba788e41436be2999e7",
+    "leonardo_market_development_2026-11-08\\1154198250816172032.json": "a1412440f7152e1c0fccddfdd90796ef959d282bbc6a8d637ee979bb13b8d027",
+    "leonardo_market_development_2026-11-08\\1154569706972540928.json": "f68e999efe19e6d1beb7dd50a21cb90e93cd07eb829f7f98999f74202b9f0450",
+    "leonardo_market_development_2026-11-08\\1154931389310070784.json": "e7167f728e126f72f982cd2113053f597f8b32f6a33ae989e47fbcff0eebfeb8",
+    "leonardo_market_development_2026-11-08\\1155516380171628544.json": "5172c1d7ef39dc5b5a01f6d81fbae9edaf249191351deda69077bfba51a2bba5",
+    "leonardo_market_development_2026-11-08\\1155836953036746752.json": "b50928d5c564dca478386103184cba3b19a9d162568da1c92f7c9b65ac4ace7c",
+    "leonardo_market_development_2026-11-08\\1156293712985616384.json": "93eacc4361a4d272f3e3c05ab80a773abf0232036aa80afed7a127f3a003af9a",
+    "leonardo_market_development_2026-11-08\\1156738763851198464.json": "e9f0f95826ff4e2deff8bf224966e3d4f6f38bf4fa9af149055666e51f19d9ce",
+    "leonardo_market_development_2026-11-08\\1157101846297735168.json": "d1fd90b236b24a088d5dcf6d9b6e05479b18bb097f6cb02b9ffcbee6d97ec3ae",
+    "leonardo_market_development_2026-11-08\\1157470346648383488.json": "ff7c229ec2220945afdfd7d1b4c9675dce09554c4195f9deb3cbed0b78815907",
+    "leonardo_market_development_2026-11-08\\1157830573155577856.json": "59e59b246203c05ba5b17c83c5c990b6307a1b3f581c2b61be4dd9c50a0944f8",
+    "leonardo_market_development_2026-11-08\\1158401157836992512.json": "c5ba7e9a625ac3caf51ebaebd748850055293361ff114f31f63c27cf0c27cf74",
+    "leonardo_market_development_2026-11-08\\1158705388770979840.json": "c66394b8e45a9b6420aad2ba4af87911b0f0d3390e9aeca20fe7cb3847b643d4",
+    "leonardo_market_development_2026-11-08\\1159229599054721024.json": "55b5f54dd177802817cd9bff02e02d321235d4746b307b673a8ef63aec314dac",
+    "leonardo_market_development_2026-11-08\\1159640226655006720.json": "a87fca037bf25fbebe6e26c2a6bb46f0902c9ccdf97a6d3dd57bca629e91050c",
+    "leonardo_market_development_2026-11-08\\1160024513854205952.json": "1e7210f5f46ea4573d1824868a75e747eec4f31277b52f21da15aeb3a93e3851",
+    "leonardo_market_development_2026-11-08\\1160431328249147392.json": "778db019827543793d80d13ecf2476096dc8af33d607acdf0ee0f89c7e6f8da6",
+    "leonardo_market_development_2026-11-08\\1160830025722130432.json": "b710fae278b99669783aa7add2652c6d72baaaffafd9af2e30d5f9e3af33443d",
+    "leonardo_market_development_2026-11-08\\1161327665601736704.json": "51a3367455598d0606962948566edcd85bbdb703de2df7960962e9cdf8369a6f",
+    "leonardo_market_development_2026-11-08\\1161774464133132288.json": "ca04ec133be880028379aa50d338204fa3a48bbb2448f2b0e3fc6d5e6ee9ce95",
+    "leonardo_market_development_2026-11-08\\1162179951743889408.json": "670ae63a8899a58295ad41a3a0cafe53fec0101ffeb9cbf6c2321821dc0b939e",
+    "leonardo_market_development_2026-11-08\\1162568682271305728.json": "ed918ca8e5ed2854088b90f30a90586898b7caf8cbadc6f3319b9c947fde358c",
+    "leonardo_market_development_2026-11-08\\1163091884999340032.json": "c1ffd3b4a5291f94effe2d8f515faa9149612ef4d4ac195e016fac540d48aa16",
+    "leonardo_market_development_2026-11-08\\1163458625189343232.json": "20b811d0f3b941a14286af9899b1d9ef1828350421cb2689307b455ef9acaa2e",
+    "leonardo_market_development_2026-11-08\\1163965528663289856.json": "6fb88a06adccb3584b6eaaf42dfada121e7ee365e7930fbf149f914bd15fc69f",
+    "leonardo_market_development_2026-11-08\\1164313413040893952.json": "dbcf972b90e182137d448db7dcfebd1e5b52a2728c5da987ebf7940fd824ae37",
+    "leonardo_market_holdout_2026-11-08\\1164930219673808896.json": "855bce795ab9e2797f37d09ab7e75f428e05486a9cfb3f2f360e79707495d85e",
+    "leonardo_market_holdout_2026-11-08\\1165010456906461184.json": "2ddd7fe2009ccc6abdba963cbc0f2551b155e973d130e63fc235c773979156e2",
+    "leonardo_market_holdout_2026-11-08\\1165392516892487680.json": "b8cbe6eac846e9975e7b04d0dcc8ac2a0e402ec9440bfa0c5ab35498fbeb29c5",
+    "leonardo_market_holdout_2026-11-08\\1165638166578098176.json": "fd9e4b2812e087c9488f7eb8442e3b296551dc3847d41c0d2261eea83d0a3dec",
+    "leonardo_market_holdout_2026-11-08\\1166002425556267008.json": "51a3f62913302919d6c8f319b587496179bfdec8c72508187cb06a92c9cec7df",
+    "leonardo_market_holdout_2026-11-08\\1166244362792103936.json": "1f9ec0ebf089d2006fe2fb20cb4124e559fc73a2d671b6e829cad0537b0e8556",
+    "leonardo_market_holdout_2026-11-08\\1166381676994392064.json": "70657c406eb2b5a957c88673a701fa8644763efffbd3a78365457fa79fa105f9",
+    "leonardo_market_holdout_2026-11-08\\1166875826680393728.json": "d9673451cae24946a86d4c407e29a9d0d9daf322aed7a3e654407066bc7d6f4d",
+    "leonardo_market_holdout_2026-11-08\\1167808159382138880.json": "3b08ff4568b416d77990249fc1d7537b451751f274755a5a65b48814201f31bf",
+    "leonardo_market_holdout_2026-11-08\\1167922853883310080.json": "ed6645fab7e5c961d85fd15335d8002406b2fd2fca9fde5c598b335592e1634f",
+    "leonardo_market_holdout_2026-11-08\\1168287553301147648.json": "1ec9ed813b83db89acf1edce3024346d1a99963cba59e551b64bdf16dfa8f031",
+    "leonardo_market_holdout_2026-11-08\\1168343198180208640.json": "e1482721d34b237baeee5429c6253916908c8b6e74fbcdea65c41d2add3193a0",
+    "leonardo_market_holdout_2026-11-08\\1169330060030013440.json": "9c168ff161070f2047433ee48aa5901f82b6455e160953f1483eb9bb62123f99",
+    "leonardo_market_holdout_2026-11-08\\1169932454929526784.json": "48c4db03927b668458567fdd64da311a0365c42a283387d5b3242613c8cfd2d8",
+    "leonardo_market_holdout_2026-11-08\\1170127133285445632.json": "c9944e3607ccd9168a7465e11768acc824331426efeee89f11112ffc5d8fc29c",
+    "leonardo_market_holdout_2026-11-08\\1170409876242198528.json": "9291e6d0050d405e21b87deabfde190ba40a9338f1c24c986c220c27d354d03f",
+    "leonardo_market_holdout_2026-11-08\\1170745359035953152.json": "58f3692af877261f16cca4c1676f84de7de29fef35fa2b43c9ad646aadb0e0ba",
+    "leonardo_market_holdout_2026-11-08\\1170892932728123393.json": "88b61ec1454f65871e08750d654e30016af9acd8119a577ee77a9a0aec45e341",
+    "leonardo_market_holdout_2026-11-08\\1171385754568781824.json": "c373cf1a9584a30a27d4143702b3174f0fe56cb2815467c4c0e2564360dc53d2",
+    "leonardo_market_holdout_2026-11-08\\1171551766874320896.json": "0a3427647d562f7ed7f40d66f0e6528f5c65f6c825a8f5494ac2c1e8f418c04d",
+    "leonardo_orders_development_2026-11-08\\1152090196381429760.json": "d91a4e17bb3d333b577058e65defd7bee89bc4366412f70e2484cd9cad4a94e5",
+    "leonardo_orders_development_2026-11-08\\1152395913495736320.json": "cb779f6859276bd779972084741c899cdc06d03871803bb652c72cb2627d1892",
+    "leonardo_orders_development_2026-11-08\\1152969878232526848.json": "1d685f760a014e6a3222e5c1f9942ff9d6ca79e5f499f430e553bfe8ef53a3fb",
+    "leonardo_orders_development_2026-11-08\\1153319622213529600.json": "d64514cffdbf9eba6f6235bee9a03ce1c94f9b1739e217f667e34dab8832a959",
+    "leonardo_orders_development_2026-11-08\\1153834454780112896.json": "3b382a06d7a7e69aca32c702175ea66e9faa1fcd2bf0486ca722295d119ee461",
+    "leonardo_orders_development_2026-11-08\\1154198250816172032.json": "d930809b12f6aaf3554e1a46ae3cb8761312357e594e2d1a6a0bf1bd179c1c15",
+    "leonardo_orders_development_2026-11-08\\1154569706972540928.json": "bfb79c17abbf9cf0a16a0dc6ffd082d6705c409bd6cd9d9f293a7b22063ebf5f",
+    "leonardo_orders_development_2026-11-08\\1154931389310070784.json": "4deee228eca35ae56dc8c55f9f9366a257f243b857f01695b45f1088e7e1733e",
+    "leonardo_orders_development_2026-11-08\\1155516380171628544.json": "2954c010880492f2ac75c71c51fe3e795e2c9e749144be8772e742f19bea4713",
+    "leonardo_orders_development_2026-11-08\\1155836953036746752.json": "addc8626fb2b36e586662d378dee68e085fcddf6d15a16e1016ca07109bf14c5",
+    "leonardo_orders_development_2026-11-08\\1156293712985616384.json": "03a9818f9a44ff39c10885a163e6d1c5050e52300eb8582019354ef1d93de841",
+    "leonardo_orders_development_2026-11-08\\1156738763851198464.json": "4fb409bc76081dd72ada7c31f637b89ae4b67405e25e7414e5705269f39cd3aa",
+    "leonardo_orders_development_2026-11-08\\1157101846297735168.json": "e7f2f98ea707ae5981f06b636f287c4313eb0b3f4ee738e2895ed37f392439ae",
+    "leonardo_orders_development_2026-11-08\\1157470346648383488.json": "dd0350fc4f0710bf221cebca74e6df89b3a1b210fcf1bb5c0156f7419ce43486",
+    "leonardo_orders_development_2026-11-08\\1157830573155577856.json": "30ac93b89f8d8351d769316755a068185f02ecc06968e7ef5c44fe3a88f98760",
+    "leonardo_orders_development_2026-11-08\\1158401157836992512.json": "e26bc062d5194692018281a5a1bc6fa26928ef1f81ff989562a219f1735df613",
+    "leonardo_orders_development_2026-11-08\\1158705388770979840.json": "394ab029d5d9e1157a76392732915376af4c099f5e323e7e8716e2323054a688",
+    "leonardo_orders_development_2026-11-08\\1159229599054721024.json": "472d19c97d15cf7ff0ab6ce9d29afed64f672ab54ed92988994263c428d5b4c3",
+    "leonardo_orders_development_2026-11-08\\1159640226655006720.json": "d2e02fef5e60ccb43b9941567853612173266de62cdc5a12e58ac003adb9c90d",
+    "leonardo_orders_development_2026-11-08\\1160024513854205952.json": "bf9232fd43cbe7d9fdb7697732615fb80f273b67628b52adba932d36bcf33d3a",
+    "leonardo_orders_development_2026-11-08\\1160431328249147392.json": "65d795212663f50e78ac9539b41c071aa3b341d4e212a0b10da90f559396f2f3",
+    "leonardo_orders_development_2026-11-08\\1160830025722130432.json": "7e2eea2b4c1e45fe8d7459f9889c1ec625f8ddee71ce12e619e6f4af783cb880",
+    "leonardo_orders_development_2026-11-08\\1161327665601736704.json": "b6c0cec26d95711d6cc62616f6a047a582246256ab65bad7ad4c53dced38294c",
+    "leonardo_orders_development_2026-11-08\\1161774464133132288.json": "a985935a5aa291cf5a8df92f67acb741d596b39cfa32c806368ae516355d4e8c",
+    "leonardo_orders_development_2026-11-08\\1162179951743889408.json": "d7583c8734d148754ca8e2c3974d7ae145b29ba0d39a0c3cf61c8b339068ffa6",
+    "leonardo_orders_development_2026-11-08\\1162568682271305728.json": "90c1cfd41dc1ab6700d22ecdb3bee09d7c0e76bcf1df825556e80c8f29a95619",
+    "leonardo_orders_development_2026-11-08\\1163091884999340032.json": "f5a671e2c9eb35a996698c5024b0cf1895a186da4cfdb44f053de3d47608c3a1",
+    "leonardo_orders_development_2026-11-08\\1163458625189343232.json": "e5dc059291397c6793197387f6bca88dbdbc6838538c29ff5032273c8a8348cd",
+    "leonardo_orders_development_2026-11-08\\1163965528663289856.json": "55bfa251df59a5950ca31d4eb5e7ae21763116d7da61f17782e4839b0ec25c89",
+    "leonardo_orders_development_2026-11-08\\1164313413040893952.json": "f153b8bff9771e11d22af5f8c9c5e0b443eb509d440e8bf42ffc21f48abf7f4a",
+    "leonardo_orders_development_2026-11-08\\error_1152395913495736320_1794124158040161400.json": "c53631e42e94ea59d13ef9ccfa263f4bd42932759580444d0ce410feaad9e24f",
+    "leonardo_orders_development_2026-11-08\\error_1152969878232526848_1794124163159995900.json": "ebc56678a4d88fe2a213ced50557b76c6ed8929cefae90d75c37c972d445eab4",
+    "leonardo_orders_development_2026-11-08\\error_1153319622213529600_1794124168358963500.json": "2a1c297a80cbdde01bcc736d3f805c11d895bf43b1b6b788c9427d33a930b937",
+    "leonardo_orders_development_2026-11-08\\error_1153834454780112896_1794124173404765800.json": "0aa47ee870ef1feaca9028695de59aabf127bf02c57f193c4b488e7bb79aee00",
+    "leonardo_orders_development_2026-11-08\\error_1154198250816172032_1794124178520617400.json": "759d5a0f354ec75c942dd52c805182a5669426bbd09c766f65ada1605b97cd6c",
+    "leonardo_orders_development_2026-11-08\\error_1154569706972540928_1794124183394888900.json": "0ddd409e8449915ce52fbf6f13e8c9e0c18018a635bd3107db88ebac26c530fe",
+    "leonardo_orders_development_2026-11-08\\error_1154931389310070784_1794124188217015500.json": "56ad3f614f5a43cc21469ea488b3bfcb77988dd34be1ee740bdff758ebd3f310",
+    "leonardo_orders_development_2026-11-08\\error_1155516380171628544_1794124193126402100.json": "0aa066d85e97322d2491c82a0c13813f400de7a0f7573844abe0b795ddbe36b2",
+    "leonardo_orders_development_2026-11-08\\error_1155836953036746752_1794124198127194500.json": "4e0512c059a7945c2d7b61ef9f4cbb2c9d5eedc71bb15315a6a3ce20d7f620de",
+    "leonardo_orders_development_2026-11-08\\error_1156293712985616384_1794124203320379400.json": "d17fff06adb57dd3aaccd6bd8a142a56987a9b1417c6f8747f833b421ebc3700",
+    "leonardo_orders_development_2026-11-08\\error_1156738763851198464_1794124208405188200.json": "5683ed620e3fe1383f4c71cdd7b9a83f6e5bc7d558ba93382f9d44d74eaf024f",
+    "leonardo_orders_development_2026-11-08\\error_1157101846297735168_1794124213481591300.json": "146c3ef56a22378ffa2e554be8a02f5a2675b6dc9c193168576f5d3188733692",
+    "leonardo_orders_development_2026-11-08\\error_1157470346648383488_1794124218680922800.json": "d08b0074f17d6c4a86ceb3ffbdbc6d2467a8980b4582d88258047e9e74a19072",
+    "leonardo_orders_development_2026-11-08\\error_1157830573155577856_1794124223640811800.json": "4fef33df317286ccd5503283f80049d2e374d45049270d56c765780b4243a999",
+    "leonardo_orders_development_2026-11-08\\error_1158401157836992512_1794124228553994100.json": "c22d4337c0a3efd31d4553ef5b26b4c718f57b233f05ddbf131c42d8ea4ee67d",
+    "leonardo_orders_development_2026-11-08\\error_1158705388770979840_1794124233464405500.json": "5ff262cd3ce3398cd35e8e08e7ff16e8dbf2d6eea146833c1dd19b2c6adfd3a5",
+    "leonardo_orders_development_2026-11-08\\error_1159229599054721024_1794124238360783100.json": "d625a290f4ca907863b2016f17d0ecdf0630ab5025ed40f65405a942d126fc18",
+    "leonardo_orders_development_2026-11-08\\error_1159640226655006720_1794124243240756300.json": "6bb802a8e21a8a35c305ad291af53333a5d3a618ea8716e5d1a8bde79dd43365",
+    "leonardo_orders_development_2026-11-08\\error_1160024513854205952_1794124248602523100.json": "e346d1527acd484c8f8b12867a5636cea5966fd056d1e2c73a1c56c48d83b833",
+    "leonardo_orders_development_2026-11-08\\error_1160431328249147392_1794124253419053700.json": "9afc07e11b754670c207656d867f0c882e2d6d06227447d1eba9eff88ab35ee4",
+    "leonardo_orders_development_2026-11-08\\error_1160830025722130432_1794124258346038400.json": "24b00793a023f1861143dfa80da9e1f271c07779c9dadfa2d97fe3ea212c9702",
+    "leonardo_orders_development_2026-11-08\\error_1161327665601736704_1794124263851749600.json": "43f26795b0ecadf65fdb9979ef9dde76c3e02ef28c23017fbac087690dddb2af",
+    "leonardo_orders_development_2026-11-08\\error_1161774464133132288_1794124268842753000.json": "b713418fc3e74709b1228281fad6e1d3f3e409253f494e4e127816b1c973b7f7",
+    "leonardo_orders_development_2026-11-08\\error_1162179951743889408_1794124274202789900.json": "e05ee787205c04402be9c6c19edbb523984124465315b729bd53cd5436d7c3eb",
+    "leonardo_orders_development_2026-11-08\\error_1162568682271305728_1794124279085095900.json": "c85f3b3a5521452e3183f52d4c56615bc87cde8bf11afe7beccef6b48646f788",
+    "leonardo_orders_development_2026-11-08\\error_1163091884999340032_1794124284199017500.json": "34f2463135737710cfc79b8ce0379bc7de757bddd7a73f2d199d644c0c77330b",
+    "leonardo_orders_development_2026-11-08\\error_1163458625189343232_1794124289005046200.json": "e1a0fa1343aa724e6fac7f59bb51eea807813559632cc2c7f98893e71490bacb",
+    "leonardo_orders_development_2026-11-08\\error_1163965528663289856_1794124293786773700.json": "6d93a2e7616fddd1560d5605bee23f507ad9043a8e99ae493911bb93053f39b6",
+    "leonardo_orders_development_2026-11-08\\error_1164313413040893952_1794124298570184400.json": "e13edd7208afca1cca5bac966912481c4258d36a3fefd4d2d2ee0310650fe436",
+    "leonardo_orders_holdout_2026-11-08\\1164930219673808896.json": "0366428097f3cc2ee38b3bffdce5e1e9bc8920a4312c58ca615c3878fd9a8608",
+    "leonardo_orders_holdout_2026-11-08\\1165010456906461184.json": "933560842c9a9ae22504c562b9b619517ffe769c271dee84991097d1efb06f3d",
+    "leonardo_orders_holdout_2026-11-08\\1165392516892487680.json": "4d5d3b41603d19b000ce91c69a7315f40baebb7fd30bb82823bd8325ab725cac",
+    "leonardo_orders_holdout_2026-11-08\\1165638166578098176.json": "510907cb68a3e699c844c70dda302ae39cf039b59af89be5197a39ddedea855d",
+    "leonardo_orders_holdout_2026-11-08\\1166002425556267008.json": "9b0ae9420353055e9cbabaabaf8ed9c505b0ab287e18bbc9e2c21ca63c1e6dab",
+    "leonardo_orders_holdout_2026-11-08\\1166244362792103936.json": "2b10c5eb93c99430596866455b60d700402b50bc1a60aa2726df75e0f3d3432c",
+    "leonardo_orders_holdout_2026-11-08\\1166381676994392064.json": "dc951633bba481cb0388f8ff1ff8682fccd8568b12d3746e01b6d2b5f9f9ab9f",
+    "leonardo_orders_holdout_2026-11-08\\1166875826680393728.json": "522833316fc7d66f6a572da3f85b1fba9239056b5891fbb9de8af3d7147630dc",
+    "leonardo_orders_holdout_2026-11-08\\1167808159382138880.json": "72d2e7b67026dc510ac288f65e76b47199da0e0c03ff8c30adf0c8002bba5715",
+    "leonardo_orders_holdout_2026-11-08\\1167922853883310080.json": "ea69520a21c65b2b6da11633d121dece9dbf770085b0a22f5e717331d3adbf7e",
+    "leonardo_orders_holdout_2026-11-08\\1168287553301147648.json": "2515aadb1f0917ff7d5f1fa7f5026f6702dcb6db9fb615fd2d060dcddd8e04ab",
+    "leonardo_orders_holdout_2026-11-08\\1168343198180208640.json": "fb13003f99e8944be8e5a65691a14fdeb8c5347696bc55fa7bab374cf8e6c6fa",
+    "leonardo_orders_holdout_2026-11-08\\1169330060030013440.json": "6d9dbe1bc34d69515f6a2f6c21ff0c0e7e17d36f50284cf050cc974855d5495e",
+    "leonardo_orders_holdout_2026-11-08\\1169932454929526784.json": "a71f9b927096e17fb1427de55920c7de2b904265b0ce72c93d908964df0c47b8",
+    "leonardo_orders_holdout_2026-11-08\\1170127133285445632.json": "0c32684b66bcabea39a80ef7d1d6352e57b55270c433ce56bb25ce7c2f8a2d2d",
+    "leonardo_orders_holdout_2026-11-08\\1170409876242198528.json": "dc8efcdfc85fa0d0c14e05d921386445134c2115ca41aa22ecd072773b412336",
+    "leonardo_orders_holdout_2026-11-08\\1170745359035953152.json": "7093e6a42b7a2c067721e5c2d67b74be4b32b7707f2183545c8246efc853f23e",
+    "leonardo_orders_holdout_2026-11-08\\1170892932728123393.json": "6117cb6907defc56caa7a8177179ba078a7d4e6c6317550be7e9a622ea3cbda0",
+    "leonardo_orders_holdout_2026-11-08\\1171385754568781824.json": "ce6b16ca69911c5490939f4dbe9ad12870ed098cbe5fc7dc6ffb5b4b67b4e366",
+    "leonardo_orders_holdout_2026-11-08\\1171551766874320896.json": "18993815a5815a28e9675b7ff672a9a371c3266ac386ae76d7a455bbec3e1b1f",
+    "leonardo_orders_holdout_2026-11-08\\error_1164930219673808896_1794124302867117800.json": "95244729cfa9e6f2589af6585e729bf5bd0f7d7676e6b4f5b69ab1e1d6f36bf2",
+    "leonardo_orders_holdout_2026-11-08\\error_1165010456906461184_1794124307897460200.json": "dc4f1c010af61f6019fe5fb9f89b12d7abf5b8e54e337742a089cc3163f95175",
+    "leonardo_orders_holdout_2026-11-08\\error_1165392516892487680_1794124312925135600.json": "9b2c9ea5cfc633353da24d7e4923614b2ae3017146fde1b729068f8981bec2a0",
+    "leonardo_orders_holdout_2026-11-08\\error_1165638166578098176_1794124317781632400.json": "7c6c0cb861172960131e9e00844dde3e991f04ae22d15bac735238127fa072bc",
+    "leonardo_orders_holdout_2026-11-08\\error_1166002425556267008_1794124322600033800.json": "72f41e8183ec73b4b7c75e13d6138ba376e64e47a369b6ad4cd0698e12e82feb",
+    "leonardo_orders_holdout_2026-11-08\\error_1166244362792103936_1794124327383837100.json": "90138791c93df10a1d6e3da5af28ede6f30db7b5e8b56050087388913c64d3f6",
+    "leonardo_orders_holdout_2026-11-08\\error_1166381676994392064_1794124332182299400.json": "4a316d72e9b07842ba0cb5711a382b10e00df0318785793256a1913703702a49",
+    "leonardo_orders_holdout_2026-11-08\\error_1166875826680393728_1794124337038988000.json": "683bed74cc25ed5bb66b15e30279b7868700f2a0d9de9b1f19e91d657c15521d",
+    "leonardo_orders_holdout_2026-11-08\\error_1167808159382138880_1794124342374682500.json": "9ee0a418c5baa194315cfbe97e946bc6509800288f480cd586f7b9c4f306228b",
+    "leonardo_orders_holdout_2026-11-08\\error_1167922853883310080_1794124347171672500.json": "185f9c3d1479ea629368c0d7827d6202fddb4dceeff69edff885d21b905b33bf",
+    "leonardo_orders_holdout_2026-11-08\\error_1168287553301147648_1794124352030137100.json": "51bcbb9b7557b17c24a674b3386daa3f2282caa273243a6b9f0f6ee362980d9b",
+    "leonardo_orders_holdout_2026-11-08\\error_1168343198180208640_1794124356909987700.json": "9484da6898cd0b848e6d02916ede7458d9bb52b77898edfceca0e0d82cd53b6d",
+    "leonardo_orders_holdout_2026-11-08\\error_1169330060030013440_1794124361901789200.json": "bf6e2c0f7cffa69f341482b8ed0e1615966d1c06007520467490359d8dcdbca6",
+    "leonardo_orders_holdout_2026-11-08\\error_1169932454929526784_1794124366727869400.json": "9603c6e9e456973c3267d801b9fe2b81f1645d45bc1bfe0a92facae8ce98c680",
+    "leonardo_orders_holdout_2026-11-08\\error_1170127133285445632_1794124371646341500.json": "a2c50177adc08d42c3ec7f9ba38d30c34f87bf302935e1e4da6f531f0f890dca",
+    "leonardo_orders_holdout_2026-11-08\\error_1170409876242198528_1794124376731349500.json": "e8e1f129ab66d6aa33bf4c24c3433471c00283bb9e71a500a816cc8d5cd6d671",
+    "leonardo_orders_holdout_2026-11-08\\error_1170745359035953152_1794124381846508400.json": "a8ca4521108c4d247057be6a087e680fe1a69d4f56619dd66d57dd210c63addc",
+    "leonardo_orders_holdout_2026-11-08\\error_1170892932728123393_1794124387004643600.json": "aceee6d4293adda6b59b4b7704008ece2c32955e7bfea61e1118b1555326def5",
+    "leonardo_orders_holdout_2026-11-08\\error_1171385754568781824_1794124391776353800.json": "cebb9cd48754790e429a81c6103e2f85cc79a3e06fd1505962ac8ff90a5e69c5",
+    "leonardo_orders_holdout_2026-11-08\\error_1171551766874320896_1794124397164204600.json": "79cabdcf39cc753f50b3904b232ecdffd23f7d8a834223fc9ed538905248c2c2"
+  },
+  "position_slice": {
+    "observed": 2000,
+    "reported_total": 3253,
+    "complete": false,
+    "scan_count": 200,
+    "scan_shared_unchanged": 200,
+    "features": {
+      "n": 2000,
+      "span_d": 53.7,
+      "per_day": 37.2,
+      "symbols": 48,
+      "top_symbol_share": 0.28,
+      "long_share": 1.0,
+      "win_share": 0.98,
+      "median_dur_s": 107,
+      "timer_loss_share": 0.8,
+      "timer_loss_mode_s": 68463,
+      "timer_all_share": 0.03,
+      "timer_all_mode_s": 113,
+      "tp_share": 0.98,
+      "tp_mode_pct": 0.5,
+      "top_minute_share": 0.03,
+      "median_lev": 2.0
+    }
+  },
+  "split": {
+    "development": {
+      "days": [
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-19",
+        "2026-09-20",
+        "2026-09-21",
+        "2026-09-22",
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+        "2026-10-04",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18"
+      ],
+      "sample_ids": [
+        "1152090196381429760",
+        "1152395913495736320",
+        "1152969878232526848",
+        "1153319622213529600",
+        "1153834454780112896",
+        "1154198250816172032",
+        "1154569706972540928",
+        "1154931389310070784",
+        "1155516380171628544",
+        "1155836953036746752",
+        "1156293712985616384",
+        "1156738763851198464",
+        "1157101846297735168",
+        "1157470346648383488",
+        "1157830573155577856",
+        "1158401157836992512",
+        "1158705388770979840",
+        "1159229599054721024",
+        "1159640226655006720",
+        "1160024513854205952",
+        "1160431328249147392",
+        "1160830025722130432",
+        "1161327665601736704",
+        "1161774464133132288",
+        "1162179951743889408",
+        "1162568682271305728",
+        "1163091884999340032",
+        "1163458625189343232",
+        "1163965528663289856",
+        "1164313413040893952"
+      ]
+    },
+    "holdout": {
+      "days": [
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-22",
+        "2026-10-23",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-11-01",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07"
+      ],
+      "sample_ids": [
+        "1164930219673808896",
+        "1165010456906461184",
+        "1165392516892487680",
+        "1165638166578098176",
+        "1166002425556267008",
+        "1166244362792103936",
+        "1166381676994392064",
+        "1166875826680393728",
+        "1167808159382138880",
+        "1167922853883310080",
+        "1168287553301147648",
+        "1168343198180208640",
+        "1169330060030013440",
+        "1169932454929526784",
+        "1170127133285445632",
+        "1170409876242198528",
+        "1170745359035953152",
+        "1170892932728123393",
+        "1171385754568781824",
+        "1171551766874320896"
+      ]
+    }
+  },
+  "split_frozen_at": "2026-11-08T07:46:55.107967+00:00",
+  "holdout_scope": "Entry market features only; position timing, exit prices and initial order slice were already inspected",
+  "phases": {
+    "development": {
+      "phase": "development",
+      "summary": {
+        "H1": {
+          "entries": 30,
+          "entry_hits": 12,
+          "entry_coverage": 0.4,
+          "coverage_lower_bound": 0.4,
+          "coverage_upper_bound": 0.4,
+          "unknown_entries": 0,
+          "background_n": 360,
+          "background_hits": 12,
+          "background_rate": 0.03333333333333333,
+          "frequency_ratio": 12.0,
+          "matched_days": 12,
+          "sampled_days": 30,
+          "day_counts": {
+            "20711": {
+              "n": 1,
+              "hits": 1
+            },
+            "20712": {
+              "n": 1,
+              "hits": 0
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 1,
+              "hits": 0
+            },
+            "20715": {
+              "n": 1,
+              "hits": 0
+            },
+            "20716": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 0
+            },
+            "20719": {
+              "n": 1,
+              "hits": 0
+            },
+            "20720": {
+              "n": 1,
+              "hits": 1
+            },
+            "20721": {
+              "n": 1,
+              "hits": 0
+            },
+            "20722": {
+              "n": 1,
+              "hits": 0
+            },
+            "20723": {
+              "n": 1,
+              "hits": 0
+            },
+            "20724": {
+              "n": 1,
+              "hits": 0
+            },
+            "20726": {
+              "n": 1,
+              "hits": 0
+            },
+            "20727": {
+              "n": 1,
+              "hits": 0
+            },
+            "20728": {
+              "n": 1,
+              "hits": 0
+            },
+            "20729": {
+              "n": 1,
+              "hits": 0
+            },
+            "20730": {
+              "n": 1,
+              "hits": 0
+            },
+            "20731": {
+              "n": 1,
+              "hits": 0
+            },
+            "20733": {
+              "n": 1,
+              "hits": 1
+            },
+            "20734": {
+              "n": 1,
+              "hits": 0
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20736": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 0
+            },
+            "20741": {
+              "n": 1,
+              "hits": 1
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 1
+            },
+            "20744": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "meets_candidate_screen": false
+        },
+        "H2": {
+          "entries": 30,
+          "entry_hits": 18,
+          "entry_coverage": 0.6,
+          "coverage_lower_bound": 0.6,
+          "coverage_upper_bound": 0.6,
+          "unknown_entries": 0,
+          "background_n": 360,
+          "background_hits": 33,
+          "background_rate": 0.09166666666666666,
+          "frequency_ratio": 6.545454545454546,
+          "matched_days": 18,
+          "sampled_days": 30,
+          "day_counts": {
+            "20711": {
+              "n": 1,
+              "hits": 0
+            },
+            "20712": {
+              "n": 1,
+              "hits": 1
+            },
+            "20713": {
+              "n": 1,
+              "hits": 0
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            },
+            "20715": {
+              "n": 1,
+              "hits": 0
+            },
+            "20716": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 1,
+              "hits": 0
+            },
+            "20720": {
+              "n": 1,
+              "hits": 1
+            },
+            "20721": {
+              "n": 1,
+              "hits": 1
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20723": {
+              "n": 1,
+              "hits": 0
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20726": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            },
+            "20730": {
+              "n": 1,
+              "hits": 0
+            },
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 1
+            },
+            "20734": {
+              "n": 1,
+              "hits": 1
+            },
+            "20735": {
+              "n": 1,
+              "hits": 0
+            },
+            "20736": {
+              "n": 1,
+              "hits": 0
+            },
+            "20737": {
+              "n": 1,
+              "hits": 0
+            },
+            "20739": {
+              "n": 1,
+              "hits": 0
+            },
+            "20740": {
+              "n": 1,
+              "hits": 1
+            },
+            "20741": {
+              "n": 1,
+              "hits": 1
+            },
+            "20742": {
+              "n": 1,
+              "hits": 0
+            },
+            "20743": {
+              "n": 1,
+              "hits": 0
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "meets_candidate_screen": true
+        },
+        "H3": {
+          "entries": 30,
+          "entry_hits": 11,
+          "entry_coverage": 0.36666666666666664,
+          "coverage_lower_bound": 0.36666666666666664,
+          "coverage_upper_bound": 0.36666666666666664,
+          "unknown_entries": 0,
+          "background_n": 360,
+          "background_hits": 13,
+          "background_rate": 0.03611111111111111,
+          "frequency_ratio": 10.153846153846153,
+          "matched_days": 11,
+          "sampled_days": 30,
+          "day_counts": {
+            "20711": {
+              "n": 1,
+              "hits": 0
+            },
+            "20712": {
+              "n": 1,
+              "hits": 0
+            },
+            "20713": {
+              "n": 1,
+              "hits": 0
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            },
+            "20715": {
+              "n": 1,
+              "hits": 0
+            },
+            "20716": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 1,
+              "hits": 0
+            },
+            "20720": {
+              "n": 1,
+              "hits": 0
+            },
+            "20721": {
+              "n": 1,
+              "hits": 1
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20723": {
+              "n": 1,
+              "hits": 0
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20726": {
+              "n": 1,
+              "hits": 0
+            },
+            "20727": {
+              "n": 1,
+              "hits": 0
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 0
+            },
+            "20730": {
+              "n": 1,
+              "hits": 0
+            },
+            "20731": {
+              "n": 1,
+              "hits": 0
+            },
+            "20733": {
+              "n": 1,
+              "hits": 1
+            },
+            "20734": {
+              "n": 1,
+              "hits": 1
+            },
+            "20735": {
+              "n": 1,
+              "hits": 0
+            },
+            "20736": {
+              "n": 1,
+              "hits": 0
+            },
+            "20737": {
+              "n": 1,
+              "hits": 0
+            },
+            "20739": {
+              "n": 1,
+              "hits": 0
+            },
+            "20740": {
+              "n": 1,
+              "hits": 1
+            },
+            "20741": {
+              "n": 1,
+              "hits": 0
+            },
+            "20742": {
+              "n": 1,
+              "hits": 0
+            },
+            "20743": {
+              "n": 1,
+              "hits": 0
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "meets_candidate_screen": false
+        }
+      },
+      "first_order_types": {
+        "LIMIT": 30
+      },
+      "placement_to_fill_s": {
+        "min": 0.0,
+        "median": 0.9344999999999999,
+        "max": 89.714
+      },
+      "first_order_covers_closed_volume": 29,
+      "first_fill_association_only": true
+    },
+    "holdout": {
+      "phase": "holdout",
+      "summary": {
+        "H1": {
+          "entries": 20,
+          "entry_hits": 9,
+          "entry_coverage": 0.45,
+          "coverage_lower_bound": 0.45,
+          "coverage_upper_bound": 0.45,
+          "unknown_entries": 0,
+          "background_n": 240,
+          "background_hits": 3,
+          "background_rate": 0.0125,
+          "frequency_ratio": 36.0,
+          "matched_days": 8,
+          "sampled_days": 15,
+          "day_counts": {
+            "20746": {
+              "n": 2,
+              "hits": 1
+            },
+            "20747": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 1
+            },
+            "20750": {
+              "n": 2,
+              "hits": 0
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20754": {
+              "n": 2,
+              "hits": 0
+            },
+            "20755": {
+              "n": 1,
+              "hits": 0
+            },
+            "20756": {
+              "n": 1,
+              "hits": 0
+            },
+            "20758": {
+              "n": 1,
+              "hits": 1
+            },
+            "20760": {
+              "n": 2,
+              "hits": 2
+            },
+            "20761": {
+              "n": 1,
+              "hits": 0
+            },
+            "20762": {
+              "n": 1,
+              "hits": 0
+            },
+            "20763": {
+              "n": 1,
+              "hits": 0
+            },
+            "20764": {
+              "n": 2,
+              "hits": 1
+            }
+          },
+          "meets_candidate_screen": false
+        },
+        "H2": {
+          "entries": 19,
+          "entry_hits": 7,
+          "entry_coverage": 0.3684210526315789,
+          "coverage_lower_bound": 0.35,
+          "coverage_upper_bound": 0.4,
+          "unknown_entries": 1,
+          "background_n": 228,
+          "background_hits": 4,
+          "background_rate": 0.017543859649122806,
+          "frequency_ratio": 21.0,
+          "matched_days": 7,
+          "sampled_days": 14,
+          "day_counts": {
+            "20746": {
+              "n": 2,
+              "hits": 0
+            },
+            "20748": {
+              "n": 1,
+              "hits": 0
+            },
+            "20749": {
+              "n": 1,
+              "hits": 0
+            },
+            "20750": {
+              "n": 2,
+              "hits": 1
+            },
+            "20751": {
+              "n": 1,
+              "hits": 0
+            },
+            "20754": {
+              "n": 2,
+              "hits": 1
+            },
+            "20755": {
+              "n": 1,
+              "hits": 1
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            },
+            "20758": {
+              "n": 1,
+              "hits": 0
+            },
+            "20760": {
+              "n": 2,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 1,
+              "hits": 0
+            },
+            "20763": {
+              "n": 1,
+              "hits": 1
+            },
+            "20764": {
+              "n": 2,
+              "hits": 0
+            }
+          },
+          "meets_candidate_screen": false
+        },
+        "H3": {
+          "entries": 19,
+          "entry_hits": 6,
+          "entry_coverage": 0.3157894736842105,
+          "coverage_lower_bound": 0.3,
+          "coverage_upper_bound": 0.35,
+          "unknown_entries": 1,
+          "background_n": 228,
+          "background_hits": 3,
+          "background_rate": 0.013157894736842105,
+          "frequency_ratio": 24.0,
+          "matched_days": 6,
+          "sampled_days": 14,
+          "day_counts": {
+            "20746": {
+              "n": 2,
+              "hits": 0
+            },
+            "20748": {
+              "n": 1,
+              "hits": 0
+            },
+            "20749": {
+              "n": 1,
+              "hits": 0
+            },
+            "20750": {
+              "n": 2,
+              "hits": 1
+            },
+            "20751": {
+              "n": 1,
+              "hits": 0
+            },
+            "20754": {
+              "n": 2,
+              "hits": 1
+            },
+            "20755": {
+              "n": 1,
+              "hits": 1
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            },
+            "20758": {
+              "n": 1,
+              "hits": 0
+            },
+            "20760": {
+              "n": 2,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 1,
+              "hits": 0
+            },
+            "20763": {
+              "n": 1,
+              "hits": 0
+            },
+            "20764": {
+              "n": 2,
+              "hits": 0
+            }
+          },
+          "meets_candidate_screen": false
+        }
+      },
+      "first_order_types": {
+        "LIMIT": 19
+      },
+      "placement_to_fill_s": {
+        "min": 0.0,
+        "median": 0.0,
+        "max": 275.533
+      },
+      "first_order_covers_closed_volume": 14,
+      "first_fill_association_only": true
+    }
+  },
+  "order_coverage_exceptions": {
+    "development": [
+      {
+        "position_id": "1152090196381429760",
+        "symbol": "ICPUSDT",
+        "matches": 1,
+        "first_order_covers_closed_volume": false
+      }
+    ],
+    "holdout": [
+      {
+        "position_id": "1165392516892487680",
+        "symbol": "LITUSDT",
+        "matches": 0,
+        "first_order_covers_closed_volume": null
+      },
+      {
+        "position_id": "1166002425556267008",
+        "symbol": "DOTUSDT",
+        "matches": 1,
+        "first_order_covers_closed_volume": false
+      },
+      {
+        "position_id": "1166244362792103936",
+        "symbol": "VETUSDT",
+        "matches": 1,
+        "first_order_covers_closed_volume": false
+      },
+      {
+        "position_id": "1168287553301147648",
+        "symbol": "LITUSDT",
+        "matches": 1,
+        "first_order_covers_closed_volume": false
+      },
+      {
+        "position_id": "1168343198180208640",
+        "symbol": "FILUSDT",
+        "matches": 1,
+        "first_order_covers_closed_volume": false
+      },
+      {
+        "position_id": "1171385754568781824",
+        "symbol": "LITUSDT",
+        "matches": 1,
+        "first_order_covers_closed_volume": false
+      }
+    ]
+  },
+  "independent_verification": {
+    "method": "Exact Fraction conditions, all background windows, temporal split and pre-freeze checks",
+    "entries_checked": 50,
+    "background_windows_checked": 600,
+    "hypotheses_checked": 3,
+    "holdout_access_after_freeze": true,
+    "leakage_from_entry_minute_ohlc": false,
+    "script_sha256": "f5c76d5c3f23b4203bd6c7cc747e4b3ee5a609699004b503a040621e8c4f9bb3"
+  },
+  "saved_error_counts": {
+    "leonardo_pages200_2026-11-08": 0,
+    "leonardo_market_development_2026-11-08": 0,
+    "leonardo_market_holdout_2026-11-08": 0,
+    "leonardo_orders_development_2026-11-08": 29,
+    "leonardo_orders_holdout_2026-11-08": 20
+  }
+}
