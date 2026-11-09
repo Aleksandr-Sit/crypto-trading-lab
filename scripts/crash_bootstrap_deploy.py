@@ -80,6 +80,19 @@ def verify_source(repo: Path, cid: str, service: str) -> None:
             raise RuntimeError(f"legacy source differs from audited commit: {service}")
 
 
+def thaw_after_kill(cid: str) -> None:
+    state = inspect(cid)["State"]
+    if not state["Running"] or not state["Paused"]:
+        return
+    try:
+        run("docker", "unpause", cid)
+    except subprocess.CalledProcessError:
+        # SIGKILL can finish the container and auto-thaw it between inspect and unpause.
+        state = inspect(cid)["State"]
+        if state["Running"] and state["Paused"]:
+            raise
+
+
 def main() -> int:
     import fcntl
 
@@ -176,9 +189,7 @@ def main() -> int:
                 pass
         for service in tuple(frozen):
             cid = old[service]["Id"]
-            state = inspect(cid)["State"]
-            if state["Running"] and state["Paused"]:
-                run("docker", "unpause", cid)
+            thaw_after_kill(cid)
             frozen.remove(service)
         for service in SERVICES:
             run("docker", "wait", old[service]["Id"])

@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -52,3 +53,20 @@ def test_unique_python_process_required(monkeypatch):
     monkeypatch.setattr(bootstrap, "run", lambda *args: "PID COMM ARGS\n")
     with pytest.raises(RuntimeError, match="unique"):
         bootstrap.python_pid("container", "crash-paper")
+
+
+@pytest.mark.parametrize("still_paused", [False, True])
+def test_auto_thaw_race_only_ignored_if_container_is_no_longer_frozen(monkeypatch, still_paused):
+    states = iter([{"Running": True, "Paused": True},
+                   {"Running": still_paused, "Paused": still_paused}])
+    monkeypatch.setattr(bootstrap, "inspect", lambda cid: {"State": next(states)})
+
+    def fail(*args):
+        raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(bootstrap, "run", fail)
+    if still_paused:
+        with pytest.raises(subprocess.CalledProcessError):
+            bootstrap.thaw_after_kill("container")
+    else:
+        bootstrap.thaw_after_kill("container")
