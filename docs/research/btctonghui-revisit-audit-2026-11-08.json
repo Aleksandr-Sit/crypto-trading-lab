@@ -1,0 +1,1196 @@
+{
+  "status": "rule_unidentified",
+  "supported_preplacement_conditions": [],
+  "price_signature_replicated": true,
+  "public_execution_consistency": true,
+  "profitability_tested": false,
+  "hypotheses": {
+    "frozen_at": "2026-11-08T09:44:11.860254+00:00",
+    "split_sha256": "27e3e4751e969e0dc039e4fac27ff7b9149c19ea7134468fc51306aeb52a4ec6",
+    "development_sha256": "de8c119bc95e234c650846b985d439d518ad3d24403feba6ccebddce8adebe72",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_1m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "price_hypothesis": {
+      "id": "H3",
+      "reference": "Last completed minute close before first executed LIMIT placement",
+      "target_ratio": "0.97",
+      "absolute_ratio_tolerance": "0.0002",
+      "origin": "Development: 28/30 first fills near -3%, max deviation within this group ~0.012 percentage points; 0.02 pp tolerance fixed before holdout.",
+      "min_coverage": 0.8,
+      "require_both_phases": true,
+      "interpretation": "Execution-price signature only; original limit price and revisions absent. Require independent public OHLC feasibility before any price-rule support."
+    },
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "First executed LIMIT placements, Long x10 Cross; symbol choice, original limit price, size, additions and exit unknown. H1/H2 are pre-placement states, H3 descriptive execution pricing, not a full trading rule.",
+    "background": "12 same-symbol pre-placement windows, 2-24h earlier, not labeled nonentries. H3 has no comparable background labels.",
+    "outcome_check": "Fetch OHLC from minute containing orderTime through minute containing orderUpdateTime. Observed avgPrice must fall between min(low) and max(high). Full minutes give permissive bounds only; reaching price inside them does not prove post-order reach or execution.",
+    "unknown_policy": "No holdout tuning. Preserve all failed hypotheses. Candles after placement used only for feasibility outcome, never as signal."
+  },
+  "hypotheses_sha256": "13c80d3d3a6ad2d971927e9c143a9e062497f73d2a8ecc59076f1dc496bff994",
+  "split_sha256": "27e3e4751e969e0dc039e4fac27ff7b9149c19ea7134468fc51306aeb52a4ec6",
+  "script_sha256": "a3f9078ec15115ebd0d2b1bc4937713fb40f24b5acc995636a15afb8b7ed5324",
+  "return_evaluator_sha256": "bee9227b40e728e09e37dddac983aaeb1f29071248614514f87bfaedab885f88",
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 30,
+          "hits": 23,
+          "coverage": 0.7666666666666667,
+          "background_n": 360,
+          "background_hits": 160,
+          "background_rate": 0.4444444444444444,
+          "advantage_over_background": 0.3222222222222223,
+          "frequency_ratio": 1.7250000000000003,
+          "day_counts": {
+            "20712": {
+              "n": 2,
+              "hits": 1
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 2,
+              "hits": 2
+            },
+            "20715": {
+              "n": 2,
+              "hits": 2
+            },
+            "20716": {
+              "n": 2,
+              "hits": 1
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 2,
+              "hits": 1
+            },
+            "20719": {
+              "n": 3,
+              "hits": 3
+            },
+            "20720": {
+              "n": 2,
+              "hits": 0
+            },
+            "20721": {
+              "n": 1,
+              "hits": 1
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 0
+            },
+            "20728": {
+              "n": 2,
+              "hits": 2
+            },
+            "20731": {
+              "n": 1,
+              "hits": 0
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 2,
+              "hits": 2
+            },
+            "20734": {
+              "n": 2,
+              "hits": 2
+            },
+            "20738": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.7631578947368421,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 30,
+          "hits": 24,
+          "coverage": 0.8,
+          "background_n": 360,
+          "background_hits": 166,
+          "background_rate": 0.46111111111111114,
+          "advantage_over_background": 0.3388888888888889,
+          "frequency_ratio": 1.7349397590361446,
+          "day_counts": {
+            "20712": {
+              "n": 2,
+              "hits": 0
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 2,
+              "hits": 1
+            },
+            "20715": {
+              "n": 2,
+              "hits": 2
+            },
+            "20716": {
+              "n": 2,
+              "hits": 1
+            },
+            "20717": {
+              "n": 1,
+              "hits": 0
+            },
+            "20718": {
+              "n": 2,
+              "hits": 1
+            },
+            "20719": {
+              "n": 3,
+              "hits": 3
+            },
+            "20720": {
+              "n": 2,
+              "hits": 2
+            },
+            "20721": {
+              "n": 1,
+              "hits": 1
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 2,
+              "hits": 2
+            },
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 2,
+              "hits": 2
+            },
+            "20734": {
+              "n": 2,
+              "hits": 2
+            },
+            "20738": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.8157894736842105,
+          "meets_frozen_screen": true
+        }
+      },
+      "sources": {
+        "btctonghui_first_revisit_market_development_2026-11-08\\1152569228188766208.json": "49b7ddea4c610086a8fbeed5c1748ce46e00329655679f2cec3493184b011dba",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1152630865901965312.json": "0ab9180ef7c1f2ccc015f3079d25557797d9a3ef1d784cdfb30c549bee5113b0",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1152983831880192000.json": "e19ea449738d0e23285891059ee617d19d86819249592bbeb15cb6e83ffee9de",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1153135334775377920.json": "52ae0809f6bf98eed1d5bfdbbf920789fe02dbb8d45995ed34475861b5195c85",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1153370683594297344.json": "068b41163e3c59e3319396991d2f9c1a0df0d736576e616b865e541b1a076444",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1153568580881403904.json": "6f3b0d93bbead5b7e39065767a863848a8ffca1bcb0311ffa3765115dc4907c1",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1153715851161817088.json": "d6c5a2d4159075eb755be5825e986562e27417d9929699e239d0ded3da52e37b",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1153891951108214784.json": "9c25f392a0c8e8ed5ade0c6dc7b4e959f59c6e2e2c2cc58c7b4cd4c1930a344e",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1153969710652248064.json": "c8782f231b36403852e5907235086fa5e5b8eddc65685d13bb939ebf00a5a29a",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1154433317311664128.json": "0d96e8d3b47457bcce7db3f60b8a4c124357c40bff3db49f7a8ec1e061c6efd7",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1154583103822155778.json": "5f81cd3afc9e9e1e3107279b144e5f7f869dbb254bc9185dde19dc70c792c2a5",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1154757706926313472.json": "e48478d814bee980f2cec54a9c2af62962ecef918af0f31043cbfd76ac16cad9",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1154957843854315520.json": "27cf9305cea862fb105c2d224db5b5851255b496870a80fa0c8c375b1d98c9a0",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1155144832893374464.json": "4399eeec02f07f72b412d2a5ab5d3b8c22819c5293f1d6b928f046a0bdb7bb72",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1155171596738809856.json": "93f7f01d29b11ce497d2631872a1ae9ff63456a3997069605d9b12df14d884d5",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1155425483634823168.json": "09b5bd4e95a6ed472dfb795a3c2b020677ab7e986901dc2f916e313ad89da811",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1155631260991541248.json": "b0420d7e531664c8665ee01db47725ae90b5120e92c6c34bdb858b6a0d8f8e81",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1155720099110113280.json": "43168858f0ba8dbb85f5098dde6949c79e7aec4f1340009e1ff094263f082251",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1156227051175071744.json": "ba6a762c5401648bf04934aaf934950305ac0f2db2470a4cf91b3905bd4e54a6",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1156860291783118848.json": "26fbcd3fa1c3ec7d14d835b109241ee986ad0020be161a0babe0a41799535b0d",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1157836605767864320.json": "45ff016b3d49172ade70128473504bdcbf767498c7741a040fb7104af3235225",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1158473397449838592.json": "980914f90ba87da5eb245422f0bf5fadf82a7a88a1e857a7e076bd14e6af08b6",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1158473398120927232.json": "ef9120dba05151b2dadaca47eabede683d2726de96dd39c2c977ef29798e4fda",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1159641111186952193.json": "fe02599403986f53ab9db34647061be37f876b102713978c47c0f64c44cc3d62",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1159936900907978752.json": "7cee2a792bf477f2b230c2f5a06fb40f8b48802c2fbd8af1d0cf19bd17f0569d",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1160034004867272704.json": "87c68b1ec22c43d4753b8ec869d07292841464a8775578410dfc578191ed9587",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1160034084093480960.json": "95488aaef81719c46145488a5626931adf5c1db3ca2bb56ae75d732650742f5b",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1160431328613421056.json": "c6281a21c2354ad0a29d2ccfa1593456988a7a6d8f3f1fb3cc2494f8a1ff3f5e",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1160622261875298304.json": "1f287b8b9932287cf270fa58e9ddda23cd144042766ca56b943594b4a056dd39",
+        "btctonghui_first_revisit_market_development_2026-11-08\\1162144089252876288.json": "e6ca3f03da76cde60e96a599e96294f78ce0d2576181391758117db2265dd3b5"
+      },
+      "days": [
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-19",
+        "2026-09-20",
+        "2026-09-21",
+        "2026-09-22",
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-12"
+      ],
+      "sample_position_ids": [
+        "1152569228188766208",
+        "1152630865901965312",
+        "1152983831880192000",
+        "1153135334775377920",
+        "1153370683594297344",
+        "1153568580881403904",
+        "1153715851161817088",
+        "1153891951108214784",
+        "1153969710652248064",
+        "1154433317311664128",
+        "1154583103822155778",
+        "1154757706926313472",
+        "1154957843854315520",
+        "1155144832893374464",
+        "1155171596738809856",
+        "1155425483634823168",
+        "1155631260991541248",
+        "1155720099110113280",
+        "1156227051175071744",
+        "1156860291783118848",
+        "1157836605767864320",
+        "1158473397449838592",
+        "1158473398120927232",
+        "1159641111186952193",
+        "1159936900907978752",
+        "1160034004867272704",
+        "1160034084093480960",
+        "1160431328613421056",
+        "1160622261875298304",
+        "1162144089252876288"
+      ]
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 20,
+          "hits": 10,
+          "coverage": 0.5,
+          "background_n": 240,
+          "background_hits": 113,
+          "background_rate": 0.4708333333333333,
+          "advantage_over_background": 0.029166666666666674,
+          "frequency_ratio": 1.0619469026548674,
+          "day_counts": {
+            "20740": {
+              "n": 3,
+              "hits": 1
+            },
+            "20741": {
+              "n": 3,
+              "hits": 2
+            },
+            "20748": {
+              "n": 1,
+              "hits": 0
+            },
+            "20750": {
+              "n": 1,
+              "hits": 1
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20755": {
+              "n": 3,
+              "hits": 1
+            },
+            "20756": {
+              "n": 3,
+              "hits": 2
+            },
+            "20757": {
+              "n": 3,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.5333333333333333,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 20,
+          "hits": 13,
+          "coverage": 0.65,
+          "background_n": 240,
+          "background_hits": 120,
+          "background_rate": 0.5,
+          "advantage_over_background": 0.15000000000000002,
+          "frequency_ratio": 1.3,
+          "day_counts": {
+            "20740": {
+              "n": 3,
+              "hits": 1
+            },
+            "20741": {
+              "n": 3,
+              "hits": 3
+            },
+            "20748": {
+              "n": 1,
+              "hits": 0
+            },
+            "20750": {
+              "n": 1,
+              "hits": 1
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20755": {
+              "n": 3,
+              "hits": 2
+            },
+            "20756": {
+              "n": 3,
+              "hits": 3
+            },
+            "20757": {
+              "n": 3,
+              "hits": 0
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.7,
+          "meets_frozen_screen": false
+        }
+      },
+      "sources": {
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1162726633895677952.json": "4c88f0f37fff891007ec265fa48e901432f28f74d18eae6234b2b41a9106897a",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1162729130383167489.json": "a04f5babe105a2fa8e46f841840eecb0a57f7d35da7a9ee922b690725bebc3c4",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1162729130416721920.json": "f31370d97f358943e707a7753c5156335b7fcec58a2e97c94a2aeb2a406a4963",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1162937570493779969.json": "4668c393c3fdec8f262f19fc3720165c73e765be52bd684ad8aae8b8c3d75eff",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1162939035203457024.json": "ff764e589525a2439474441c77cdac7fbd1c17e56d103c1915215e98a82a9147",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1162940141824430081.json": "01dacb739b1bde1adf9f87e4d0fcd3407e894cb64cb620ad22347d8c12e4c33d",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1165637882983796736.json": "5c044d1323184d0660853b4355870ec227933830e154a772a50b25927c024d54",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1166379766714781696.json": "6b5b3cf7f039684058db08dfbc85a113540b175abbfb996e0dd73c87cb2218fc",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1166660538193465344.json": "7f6c24cb78934a57964c415e8ddf96cdfb6015e7410da743c1a2abf6c35f841e",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168103136288362496.json": "33278ecd0b4fbd5d74d70484e44fbd6494cda7bf5eb9e564d58e8ae1cdbabeb5",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168288755690033152.json": "408f08fdd50fadbb480fe6673400fd1e0c3fc819919428726b6729d07ef9f0e3",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168306276816179200.json": "2fdd3b5d3f2abf9bf4e2d0f73df78ff0c19e3c06e1389c5116f501dd2792f169",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168343256849502208.json": "3c91e77ec385dad447e767d70beaf37b109c09dd531c5bcf39d92ca7a6d0b027",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168343265338773504.json": "0b98791d750d1a432f6379b4033c693fb1df3ef13dfd74c78112cc37ddbbf639",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168574505413300224.json": "0be6d72cea1c33fc64b2ac4818b5612c9721affd4ce246700ecfa10b648d2bf2",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168706361630707712.json": "f9b5e32a95cb90e5930a0f5438c60a68373ec053e67367b99dc6846656bd4f0d",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168898691176386561.json": "ec5fd95549a809bfa2a37882e11c077b5bc55b9010f6ebd27b4f2996d6dca7a4",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1168949495983820800.json": "b9eb3d11d23e8ed8d59567a3ccca4fb08a64e421db1c41adb4ea176cdbed73f8",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1170409731143815168.json": "2e7cce59555e1f3723a51fc20b917be5d035859b4dbff7d7be6d64726aa56a3b",
+        "btctonghui_first_revisit_market_holdout_2026-11-08\\1170862758518640640.json": "6f216de25634a6046dbe1706d906a92a5daff5efc0a0347531628594325b18c7"
+      },
+      "days": [
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-22",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-10-31",
+        "2026-11-04",
+        "2026-11-05"
+      ],
+      "sample_position_ids": [
+        "1162726633895677952",
+        "1162729130383167489",
+        "1162729130416721920",
+        "1162937570493779969",
+        "1162939035203457024",
+        "1162940141824430081",
+        "1165637882983796736",
+        "1166379766714781696",
+        "1166660538193465344",
+        "1168103136288362496",
+        "1168288755690033152",
+        "1168306276816179200",
+        "1168343256849502208",
+        "1168343265338773504",
+        "1168574505413300224",
+        "1168706361630707712",
+        "1168898691176386561",
+        "1168949495983820800",
+        "1170409731143815168",
+        "1170862758518640640"
+      ]
+    }
+  },
+  "pricing": {
+    "development": {
+      "rows": [
+        {
+          "position_id": "1152569228188766208",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.030005770340450086,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.6724,
+          "public_low": 0.67202,
+          "public_high": 0.69383,
+          "placement_to_update_ms": 29770
+        },
+        {
+          "position_id": "1152630865901965312",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03000315822718181,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.64498,
+          "public_low": 0.64025,
+          "public_high": 0.66874,
+          "placement_to_update_ms": 85118
+        },
+        {
+          "position_id": "1152983831880192000",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.030012137261392475,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.43955,
+          "public_low": 0.43087,
+          "public_high": 0.45362,
+          "placement_to_update_ms": 58519
+        },
+        {
+          "position_id": "1153135334775377920",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.07649025331952161,
+          "price_signature_hit": false,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.39227,
+          "public_low": 0.37738,
+          "public_high": 0.42526,
+          "placement_to_update_ms": 0
+        },
+        {
+          "position_id": "1153370683594297344",
+          "symbol": "WLDUSDT",
+          "first_fill_vs_previous_close": -0.030066559559329815,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.4226,
+          "public_low": 0.4157,
+          "public_high": 0.4359,
+          "placement_to_update_ms": 126335
+        },
+        {
+          "position_id": "1153568580881403904",
+          "symbol": "APTUSDT",
+          "first_fill_vs_previous_close": -0.030122923139267864,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.718,
+          "public_low": 0.7143,
+          "public_high": 0.7419,
+          "placement_to_update_ms": 30862
+        },
+        {
+          "position_id": "1153715851161817088",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03002192223376024,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.42034,
+          "public_low": 0.4111,
+          "public_high": 0.43367,
+          "placement_to_update_ms": 46217
+        },
+        {
+          "position_id": "1153891951108214784",
+          "symbol": "INJUSDT",
+          "first_fill_vs_previous_close": -0.030006439150032194,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 7.532,
+          "public_low": 7.447,
+          "public_high": 7.781,
+          "placement_to_update_ms": 30304
+        },
+        {
+          "position_id": "1153969710652248064",
+          "symbol": "TUSDT",
+          "first_fill_vs_previous_close": -0.03,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.005238,
+          "public_low": 0.005109,
+          "public_high": 0.005422,
+          "placement_to_update_ms": 29304
+        },
+        {
+          "position_id": "1154433317311664128",
+          "symbol": "1000PEPEUSDT",
+          "first_fill_vs_previous_close": -0.030011417387049422,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.0047576,
+          "public_low": 0.0046951,
+          "public_high": 0.0049165,
+          "placement_to_update_ms": 32857
+        },
+        {
+          "position_id": "1154583103822155778",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03000882612533098,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.35168,
+          "public_low": 0.33764,
+          "public_high": 0.36356,
+          "placement_to_update_ms": 55031
+        },
+        {
+          "position_id": "1154757706926313472",
+          "symbol": "PENGUUSDT",
+          "first_fill_vs_previous_close": -0.030001083071591033,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.008956,
+          "public_low": 0.00895,
+          "public_high": 0.009275,
+          "placement_to_update_ms": 39575
+        },
+        {
+          "position_id": "1154957843854315520",
+          "symbol": "INJUSDT",
+          "first_fill_vs_previous_close": -0.030072325846973735,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 7.644,
+          "public_low": 7.55,
+          "public_high": 7.898,
+          "placement_to_update_ms": 59889
+        },
+        {
+          "position_id": "1155144832893374464",
+          "symbol": "ENAUSDT",
+          "first_fill_vs_previous_close": -0.030009211228002132,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.20008,
+          "public_low": 0.19961,
+          "public_high": 0.20637,
+          "placement_to_update_ms": 57303
+        },
+        {
+          "position_id": "1155171596738809856",
+          "symbol": "NEARUSDT",
+          "first_fill_vs_previous_close": -0.03008225616921269,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 4.127,
+          "public_low": 4.104,
+          "public_high": 4.264,
+          "placement_to_update_ms": 21601
+        },
+        {
+          "position_id": "1155425483634823168",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03001663572582395,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.40232,
+          "public_low": 0.3814,
+          "public_high": 0.41703,
+          "placement_to_update_ms": 13159
+        },
+        {
+          "position_id": "1155631260991541248",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.030012610340479192,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.42306,
+          "public_low": 0.42005,
+          "public_high": 0.43638,
+          "placement_to_update_ms": 54888
+        },
+        {
+          "position_id": "1155720099110113280",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.030002557036111033,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.34141,
+          "public_low": 0.3413,
+          "public_high": 0.35318,
+          "placement_to_update_ms": 115695
+        },
+        {
+          "position_id": "1156227051175071744",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.030023923444976078,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.32436,
+          "public_low": 0.32419,
+          "public_high": 0.33443,
+          "placement_to_update_ms": 22114
+        },
+        {
+          "position_id": "1156860291783118848",
+          "symbol": "ONDOUSDT",
+          "first_fill_vs_previous_close": -0.030089153046062408,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.5222,
+          "public_low": 0.5022,
+          "public_high": 0.5384,
+          "placement_to_update_ms": 36467
+        },
+        {
+          "position_id": "1157836605767864320",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03000283045570337,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.27416,
+          "public_low": 0.26862,
+          "public_high": 0.28316,
+          "placement_to_update_ms": 10622
+        },
+        {
+          "position_id": "1158473397449838592",
+          "symbol": "OPUSDT",
+          "first_fill_vs_previous_close": -0.03001406909488823,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.1241,
+          "public_low": 0.12405,
+          "public_high": 0.12792,
+          "placement_to_update_ms": 31094
+        },
+        {
+          "position_id": "1158473398120927232",
+          "symbol": "HBARUSDT",
+          "first_fill_vs_previous_close": -0.030023781212841855,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.09789,
+          "public_low": 0.09562,
+          "public_high": 0.10092,
+          "placement_to_update_ms": 30192
+        },
+        {
+          "position_id": "1159641111186952193",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.030035792037194198,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.26287,
+          "public_low": 0.24647,
+          "public_high": 0.27112,
+          "placement_to_update_ms": 38161
+        },
+        {
+          "position_id": "1159936900907978752",
+          "symbol": "PENGUUSDT",
+          "first_fill_vs_previous_close": -0.030092839611567602,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.009089,
+          "public_low": 0.008936,
+          "public_high": 0.009375,
+          "placement_to_update_ms": 60055
+        },
+        {
+          "position_id": "1160034004867272704",
+          "symbol": "WLDUSDT",
+          "first_fill_vs_previous_close": -0.030084902177925435,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.5255,
+          "public_low": 0.5254,
+          "public_high": 0.5437,
+          "placement_to_update_ms": 51177
+        },
+        {
+          "position_id": "1160034084093480960",
+          "symbol": "DOTUSDT",
+          "first_fill_vs_previous_close": -0.030002608922515002,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 1.1154,
+          "public_low": 1.0808,
+          "public_high": 1.1515,
+          "placement_to_update_ms": 4301
+        },
+        {
+          "position_id": "1160431328613421056",
+          "symbol": "ZECUSDT",
+          "first_fill_vs_previous_close": -0.03000240081162922,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 1252.49,
+          "public_low": 1247.5,
+          "public_high": 1291.37,
+          "placement_to_update_ms": 38116
+        },
+        {
+          "position_id": "1160622261875298304",
+          "symbol": "TAOUSDT",
+          "first_fill_vs_previous_close": -0.030037021487729475,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 254.14,
+          "public_low": 252.58,
+          "public_high": 263.0,
+          "placement_to_update_ms": 79192
+        },
+        {
+          "position_id": "1162144089252876288",
+          "symbol": "NEARUSDT",
+          "first_fill_vs_previous_close": -0.012237093690248566,
+          "price_signature_hit": false,
+          "public_ohlc_feasible": true,
+          "observed_price": 5.166,
+          "public_low": 5.001,
+          "public_high": 5.244,
+          "placement_to_update_ms": 34895
+        }
+      ],
+      "sources": {
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1152569228188766208.json": "5c92a48dcd9f243c47971b4975d2dd72bdb1f0e99bc5192810ec7a95d37a9e46",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1152630865901965312.json": "825dbe090f0c70f423b5adfc4e0db463d8c94c49f287fc7451c5c42fdd0fbfa8",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1152983831880192000.json": "e5f6e8c2430ee4922a049a2e5e892ae52b464194cd98f51a5f4cf738c22066d0",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1153135334775377920.json": "027444324219457c441ebb66fef954318e2525338a28adcf7bab68a9ffdcb3c1",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1153370683594297344.json": "00b886c0b0abe7fe8336c57f39500cb005e1b73163aaa7715f209384b0cefe90",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1153568580881403904.json": "84e670494d25799f9600a2ace0669ae606257928fd42652d41aaa33b2502c588",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1153715851161817088.json": "7ebb5dc9f912e51ed9ea922ba9e8a0076bba505803f4ecc222497f18e2ac8b17",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1153891951108214784.json": "58149f6e87d68f1fd06d0ef636042236261b283fd277b5fdac9224533ea2b959",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1153969710652248064.json": "1b9b4bd0d5ba1ba2743229ad0a55b09fd72f054bdccf25bc72aa110bfd91e953",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1154433317311664128.json": "05b7b0cc23be95855e417b5447a53a20cb5a52718b2340bfe25d9e91bc8d93a1",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1154583103822155778.json": "52fab5afb231649303197198cda259d4df4fc8de5036ed0a839271d219fddfb9",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1154757706926313472.json": "c347ab7107d985a3fbddcb6255f69e720dabde6fedf9e96cb1f14c63def56cb0",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1154957843854315520.json": "af3fe35f760e1a82d9235099921cb6f28c265a63423aacd788865dbfa27d95c9",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1155144832893374464.json": "6e986a91cd05de0673c5d038099966790f0c22ac6be284b98ce1101edbf07d3a",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1155171596738809856.json": "527fdcb06b25520d669a8a8ee0ba30967bf1c70cb204ba78129dedf58e016314",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1155425483634823168.json": "984d3260bab0495b2003a23f6b0b25c6b6931aac94df9955532f17622e12314a",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1155631260991541248.json": "99a5e834e8362d6167a657ba84038838e8d12a48955ec78b575c09d4ec050609",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1155720099110113280.json": "e3313b27ad488435e7aee6bc769c795ef8e1af6752a1a4b8f50441bed30e2f2a",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1156227051175071744.json": "8738a191ec86d3870c91be38bb981e56754bf0f2331b21438212cce47ad8e676",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1156860291783118848.json": "e24ec725283ea074a0540a692e6919eba6cb539360929c3f084e8e2280018a03",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1157836605767864320.json": "110ff9bda7f33c8f87e1321294d069c7f62dfd053443166d88eabba11d0dcc61",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1158473397449838592.json": "c5190998b88534d144a15b78fdff33a50463c1acb9ce116b8838d207401bbfb9",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1158473398120927232.json": "e7e41aad009a6a278c4e2f204e64818db33e0e14f15c4a487f2e6929f0f26050",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1159641111186952193.json": "704c42a39d12eb18b40857605225cefe52698607a45b885ef6547bf2bcf543a1",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1159936900907978752.json": "ff368ea1ec9563c4c3b49be0555599942f9382f076b57e369ac7081eb8642094",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1160034004867272704.json": "180bc2a9699613c0e56ea0a9ffcf7044d95a7a64a412114180f8897f89c0d4c2",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1160034084093480960.json": "4c494e3f37b0d8488af7b35f1a89d7bcf874db241c4f7b67308ecff8cbfe542a",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1160431328613421056.json": "1a1764f65346bce279845b61b4b7572b85686988e68f17766bc2383a1cb0dc16",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1160622261875298304.json": "ea01bf083094848cd8e0375cec21c58d93c9a69942816d8d87e2b50ca983c767",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1162144089252876288.json": "5ced7f2f11dcd99eb15294c3153d02e13f684cfbb8c663f9eb49e767493f4141"
+      },
+      "summary": {
+        "n": 30,
+        "signature_hits": 28,
+        "signature_coverage": 0.9333333333333333,
+        "feasible_executions": 30,
+        "infeasible_executions": 0,
+        "meets_signature_coverage": true
+      }
+    },
+    "holdout": {
+      "rows": [
+        {
+          "position_id": "1162726633895677952",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03003422841440486,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.2012,
+          "public_low": 0.201,
+          "public_high": 0.20755,
+          "placement_to_update_ms": 23679
+        },
+        {
+          "position_id": "1162729130383167489",
+          "symbol": "DOTUSDT",
+          "first_fill_vs_previous_close": -0.03002588438308887,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 1.1242,
+          "public_low": 1.1127,
+          "public_high": 1.1612,
+          "placement_to_update_ms": 14625
+        },
+        {
+          "position_id": "1162729130416721920",
+          "symbol": "AVAXUSDT",
+          "first_fill_vs_previous_close": -0.03002534607135894,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 9.95,
+          "public_low": 9.947,
+          "public_high": 10.278,
+          "placement_to_update_ms": 13075
+        },
+        {
+          "position_id": "1162937570493779969",
+          "symbol": "ZECUSDT",
+          "first_fill_vs_previous_close": -0.030003010927897134,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 1095.34,
+          "public_low": 1090.74,
+          "public_high": 1133.67,
+          "placement_to_update_ms": 33666
+        },
+        {
+          "position_id": "1162939035203457024",
+          "symbol": "NEARUSDT",
+          "first_fill_vs_previous_close": -0.030072003388394747,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 4.58,
+          "public_low": 4.578,
+          "public_high": 4.732,
+          "placement_to_update_ms": 144669
+        },
+        {
+          "position_id": "1162940141824430081",
+          "symbol": "HBARUSDT",
+          "first_fill_vs_previous_close": -0.030043966780654616,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.07942,
+          "public_low": 0.07924,
+          "public_high": 0.08188,
+          "placement_to_update_ms": 45613
+        },
+        {
+          "position_id": "1165637882983796736",
+          "symbol": "FILUSDT",
+          "first_fill_vs_previous_close": -0.030079681274900398,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.9738,
+          "public_low": 0.9428,
+          "public_high": 1.0044,
+          "placement_to_update_ms": 39724
+        },
+        {
+          "position_id": "1166379766714781696",
+          "symbol": "NEARUSDT",
+          "first_fill_vs_previous_close": -0.030212863355458915,
+          "price_signature_hit": false,
+          "public_ohlc_feasible": true,
+          "observed_price": 4.237,
+          "public_low": 4.2,
+          "public_high": 4.368,
+          "placement_to_update_ms": 38435
+        },
+        {
+          "position_id": "1166660538193465344",
+          "symbol": "WLDUSDT",
+          "first_fill_vs_previous_close": -0.030057042562527423,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.4421,
+          "public_low": 0.4418,
+          "public_high": 0.4559,
+          "placement_to_update_ms": 19839
+        },
+        {
+          "position_id": "1168103136288362496",
+          "symbol": "TUSDT",
+          "first_fill_vs_previous_close": -0.030084235860409144,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.004836,
+          "public_low": 0.004818,
+          "public_high": 0.004999,
+          "placement_to_update_ms": 41834
+        },
+        {
+          "position_id": "1168288755690033152",
+          "symbol": "APTUSDT",
+          "first_fill_vs_previous_close": -0.030066988627512073,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.6226,
+          "public_low": 0.616,
+          "public_high": 0.6423,
+          "placement_to_update_ms": 14756
+        },
+        {
+          "position_id": "1168306276816179200",
+          "symbol": "1000PEPEUSDT",
+          "first_fill_vs_previous_close": -0.03000538770773758,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.004681,
+          "public_low": 0.0046655,
+          "public_high": 0.0048264,
+          "placement_to_update_ms": 53160
+        },
+        {
+          "position_id": "1168343256849502208",
+          "symbol": "DOTUSDT",
+          "first_fill_vs_previous_close": -0.03009515379508741,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.8766,
+          "public_low": 0.8752,
+          "public_high": 0.9052,
+          "placement_to_update_ms": 109894
+        },
+        {
+          "position_id": "1168343265338773504",
+          "symbol": "ARBUSDT",
+          "first_fill_vs_previous_close": -0.030038122781648482,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.14757,
+          "public_low": 0.14707,
+          "public_high": 0.15222,
+          "placement_to_update_ms": 52225
+        },
+        {
+          "position_id": "1168574505413300224",
+          "symbol": "1000PEPEUSDT",
+          "first_fill_vs_previous_close": -0.03000985221674877,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.0049227,
+          "public_low": 0.0049198,
+          "public_high": 0.0050763,
+          "placement_to_update_ms": 45069
+        },
+        {
+          "position_id": "1168706361630707712",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03000161082474227,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.24087,
+          "public_low": 0.23517,
+          "public_high": 0.2488,
+          "placement_to_update_ms": 42075
+        },
+        {
+          "position_id": "1168898691176386561",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03002785716869867,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.26811,
+          "public_low": 0.2672,
+          "public_high": 0.27641,
+          "placement_to_update_ms": 56463
+        },
+        {
+          "position_id": "1168949495983820800",
+          "symbol": "LSKUSDT",
+          "first_fill_vs_previous_close": -0.03000262605042017,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.2955,
+          "public_low": 0.29505,
+          "public_high": 0.30466,
+          "placement_to_update_ms": 49613
+        },
+        {
+          "position_id": "1170409731143815168",
+          "symbol": "WLDUSDT",
+          "first_fill_vs_previous_close": -0.030140485312899108,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.3797,
+          "public_low": 0.3783,
+          "public_high": 0.3915,
+          "placement_to_update_ms": 15310
+        },
+        {
+          "position_id": "1170862758518640640",
+          "symbol": "ENAUSDT",
+          "first_fill_vs_previous_close": -0.030034895314057827,
+          "price_signature_hit": true,
+          "public_ohlc_feasible": true,
+          "observed_price": 0.15566,
+          "public_low": 0.15555,
+          "public_high": 0.16047,
+          "placement_to_update_ms": 27037
+        }
+      ],
+      "sources": {
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1162726633895677952.json": "212a87775a4907a735aeb304566aa33f477603572bce19072124e15f8110b18e",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1162729130383167489.json": "9accd96ad022e467cf6e173658ecff9f0d3d70c18e182c46385612aa357bef71",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1162729130416721920.json": "fcb4614f68b406a66a879ba7d5a04c2db6877a51e2c4bc36066bd95cf4544523",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1162937570493779969.json": "5804503bf15d4c88dc2d9f79de1384ccc5db635ab0906fdfc9f81fe3fdde6534",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1162939035203457024.json": "d73e45df7eec1a5c601d48549b7d7e3ef5040b59b077433bf41bb42b2ab410d2",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1162940141824430081.json": "7d97a2db6993289c51e184afb77dc7d08ff309a0a1ddff3048e0f638fd5a8943",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1165637882983796736.json": "ecf4799e117127395597be6512f8ffc9d981d855985ff24cb781c5a85a8f1f11",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1166379766714781696.json": "e7bab3029264537f00fa950c619de4ef49461b87d3a21c0addfb9822443e67f8",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1166660538193465344.json": "9561a982dcbf2da326b1e9fa5416ee99ef0a1c4aa445046c3ff824c661ec38fa",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168103136288362496.json": "7aa0f276d1f9c22a1030549fd60ec50978bbffdc93e7cf67ad4ce902f8081d4a",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168288755690033152.json": "b32fabcbfb859e577e911d8c12dcebe704aca97f19586231eabac27013030afa",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168306276816179200.json": "04868363e25660515c9ce85a39e3af51ed385c47e085815bc50f57e621175800",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168343256849502208.json": "0598321b5cdc3c7bb06c5590b9e427bf603d4ef4a32bcdde20c1cf18caeda74e",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168343265338773504.json": "1c5fcb8a75f68f17bf2d3d4ee1810686660f989f5c56615d792676830dbb2eb5",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168574505413300224.json": "1194585b279a4942fef410dc46b775cfc14b771cb55ab6874be67c0464febe7d",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168706361630707712.json": "b2372fbeff748beb4bf40584fc20d5af3e80cd608d20780638a8a4ddff033259",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168898691176386561.json": "4b1c39652a76b15fb89c4dff5fc1b03b80c7b7f2405159d5bbf306be82ce4e5a",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1168949495983820800.json": "da5b4743af1031d0714ce3c0a8f28b6f2ca6e165094b9aa26030e31c370299f3",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1170409731143815168.json": "887d46b9ac19f3ed3399d8716167d93666161696758197b89c77d9f12a5b3129",
+        "btctonghui_first_revisit_outcomes_2026-11-08\\1170862758518640640.json": "87c2248c8a6516979cbdd8fb9114499dc5c162963e44acaa66181490c51deeac"
+      },
+      "summary": {
+        "n": 20,
+        "signature_hits": 19,
+        "signature_coverage": 0.95,
+        "feasible_executions": 20,
+        "infeasible_executions": 0,
+        "meets_signature_coverage": true
+      }
+    }
+  },
+  "cohort": {
+    "n": 139,
+    "excluded_position_ids": [
+      "1152609884869283840",
+      "1152859702967455744",
+      "1153373092739600384",
+      "1153390240237146112",
+      "1154028365900730368",
+      "1154078615105490944",
+      "1154098255936409600",
+      "1154131284088115200",
+      "1154158316247371777",
+      "1154175368303529984",
+      "1154206614962360320",
+      "1154479759300546560",
+      "1154664705961021440",
+      "1154782613965950976",
+      "1155058582719090688",
+      "1155127958294024192",
+      "1155144243518164992",
+      "1155144904297205760",
+      "1155168659136368640",
+      "1155381982553493504",
+      "1155614173980053504",
+      "1155630679405154304",
+      "1155655969879674880",
+      "1155911046624235520",
+      "1156053625693065216",
+      "1156070426657214464",
+      "1156086017166200832",
+      "1156246788315598848",
+      "1156466942962094080",
+      "1156482798072942592",
+      "1158452050191503360",
+      "1159440976653897728",
+      "1159745458713448448",
+      "1159768010462646272",
+      "1160034034403561472",
+      "1160034080230526976",
+      "1160598264529866752",
+      "1160598342338400256",
+      "1162729031510839296",
+      "1162939033257299968",
+      "1162939120909864960",
+      "1168288972493606912",
+      "1168343240151977984",
+      "1168343248137932800"
+    ],
+    "additional_buys_excluded": 8,
+    "sources": {
+      "btctonghui_5108763538520982528_2026-11-07.json": "17354881582e8d4e64413036a2fbfe1ac5c19c6a558c98bab2289790cba88eec",
+      "btctonghui_5108763538520982528_orders_rawpass_2026-11-07.json": "5a05613b326d2fa742b4e31902ba53771372e8cfa417584ecf42a42fee63f9a6"
+    },
+    "cohort_sha256": "3b57ed811e51793a7bb0a02fff6ba1b38744a07f35f21e1f738718c9a30b124c"
+  },
+  "independent_verification": {
+    "method": "Independent Decimal, original 375 order assignments, 139 first LIMIT orders, raw continuity, freeze timing and public OHLC feasibility",
+    "entries_checked": 50,
+    "cohort_positions_checked": 139,
+    "additional_buys_excluded": 8,
+    "background_windows_checked": 600,
+    "hypotheses_checked": 3,
+    "holdout_access_after_freeze": true,
+    "script_sha256": "cf5a08ef77f07cbe794568bdccc6a49afe8cad3b2754cc48e350c1eb4c79389a"
+  },
+  "full_audit_sha256": "1c6517cfb801159d3958afa3ced0a64019f2755eb01f31666bcb18e29bc5f3bf",
+  "prepare_script_sha256": "f6a849a01e895db9715229eeb1049f5fec9fab4a1c95591c2cbf67df93ce28d9"
+}

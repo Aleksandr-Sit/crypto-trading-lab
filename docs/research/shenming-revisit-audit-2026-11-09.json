@@ -1,0 +1,334 @@
+{
+  "status": "entry_candidate",
+  "supported_conditions": [
+    "H1"
+  ],
+  "profitability_tested": false,
+  "scope": "September Short x10 Isolated first LIMIT SELL placement only; no overlap with prior 318 October Long rank diagnostics. Other month/side/leverage/type regimes untested. Ten development and seven holdout placements over five/three days.",
+  "hypotheses": {
+    "frozen_at": "2026-11-09T07:04:50.684222+00:00",
+    "split_sha256": "917c0693afbefd36a03d99c08c3c930e175a0bad707e51f5bf06e91b46b3f1fe",
+    "development_sha256": "01fce741f1f9db4588f0ede1a83bc0b9c6ca8f7967dd06c3af21370c679cc998",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "gt",
+            "threshold": "0"
+          },
+          {
+            "feature": "return_1440m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "September Short x10 Isolated first LIMIT SELL placement only; no overlap with prior 318 October Long rank diagnostics. Other month/side/leverage/type regimes untested. Ten development and seven holdout placements over five/three days.",
+    "threshold_origin": "Natural positive hourly and daily signs, development medians +1.257% and +4.061%. H3 conjunction; all three frozen before holdout, no fitted magnitude or rank.",
+    "background": "12 same-symbol windows 2-24h before placement; dependent, not confirmed nonentries.",
+    "unknown_policy": "Strict zero fails. Completed bars before first LIMIT SELL orderTime. AvgCost with adds not first-fill evidence. Original limit price, amendments/cancels, selection, sizing and exits unknown. Prior 43/318 top10 result preserved; no holdout tuning. Artifact suffix 2026-11-08 is the shared helper campaign interface, actual timestamps are 2026-11-09."
+  },
+  "hypotheses_sha256": "28970691086cd8419c1010f4978fbf772e7860d46bcace43fd9b14239a48db0e",
+  "split_sha256": "917c0693afbefd36a03d99c08c3c930e175a0bad707e51f5bf06e91b46b3f1fe",
+  "script_sha256": "bee9227b40e728e09e37dddac983aaeb1f29071248614514f87bfaedab885f88",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "full_rule_status": "rule_unidentified",
+  "symbol_selection_recovered": false,
+  "validation_limitation": "7 holdout placements across 3 days; original LIMIT price and cancellations unknown",
+  "cohort_sources": {
+    "shenming_5220829154176782593_scan_2026-10-25.json": "484d8b9514076580bd3a8f26e9ad103a9e5982e32a88b90ef9f60f119a6ec0ac",
+    "shenming_5220829154176782593_2026-11-07.json": "1f287f9672305fabe11131d16952071bb3f5ad716c5a0537fa33c83b9c19f4a9",
+    "shenming_5220829154176782593_orders_2026-11-07.json": "6f13d687ada6ada7879db9d1b077e5f2aae19a20d5475c81b9266c75ca072a57"
+  },
+  "prepare_script_sha256": "e3cb3d4f173a906c23dfb7a65e74ed969322d8d0b10a9a000ac8b045b1fb5383",
+  "old_audit_sha256": "5a30789ba7dac56116909738a666846718ef8b2aa1a81eafebdec546f082509f",
+  "old_rank_count": 318,
+  "old_rank_top10": 43,
+  "strata": {
+    "2026-09_Short_x10_Isolated_MARKET": {
+      "n": 6,
+      "days": [
+        "2026-09-12",
+        "2026-09-13",
+        "2026-09-14"
+      ]
+    },
+    "2026-09_Short_x10_Isolated_LIMIT": {
+      "n": 81,
+      "days": [
+        "2026-09-14",
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29"
+      ]
+    },
+    "2026-09_Long_x20_Cross_LIMIT": {
+      "n": 1,
+      "days": [
+        "2026-09-16"
+      ]
+    },
+    "2026-09_Short_x5_Isolated_LIMIT": {
+      "n": 32,
+      "days": [
+        "2026-09-19",
+        "2026-09-20",
+        "2026-09-21"
+      ]
+    },
+    "2026-10_Long_x10_Isolated_LIMIT": {
+      "n": 354,
+      "days": [
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17"
+      ]
+    },
+    "2026-10_Long_x5_Isolated_LIMIT": {
+      "n": 5,
+      "days": [
+        "2026-10-12"
+      ]
+    },
+    "2026-10_Long_x10_Isolated_MARKET": {
+      "n": 6,
+      "days": [
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16"
+      ]
+    }
+  },
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 10,
+          "hits": 9,
+          "coverage": 0.9,
+          "background_n": 120,
+          "background_hits": 59,
+          "background_rate": 0.49166666666666664,
+          "advantage_over_background": 0.4083333333333334,
+          "frequency_ratio": 1.8305084745762714,
+          "day_counts": {
+            "20710": {
+              "n": 2,
+              "hits": 2
+            },
+            "20711": {
+              "n": 1,
+              "hits": 1
+            },
+            "20712": {
+              "n": 3,
+              "hits": 3
+            },
+            "20713": {
+              "n": 3,
+              "hits": 2
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.9333333333333333,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 10,
+          "hits": 8,
+          "coverage": 0.8,
+          "background_n": 120,
+          "background_hits": 33,
+          "background_rate": 0.275,
+          "advantage_over_background": 0.525,
+          "frequency_ratio": 2.909090909090909,
+          "day_counts": {
+            "20710": {
+              "n": 2,
+              "hits": 2
+            },
+            "20711": {
+              "n": 1,
+              "hits": 1
+            },
+            "20712": {
+              "n": 3,
+              "hits": 2
+            },
+            "20713": {
+              "n": 3,
+              "hits": 2
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.8666666666666667,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 10,
+          "hits": 7,
+          "coverage": 0.7,
+          "background_n": 120,
+          "background_hits": 17,
+          "background_rate": 0.14166666666666666,
+          "advantage_over_background": 0.5583333333333333,
+          "frequency_ratio": 4.9411764705882355,
+          "day_counts": {
+            "20710": {
+              "n": 2,
+              "hits": 2
+            },
+            "20711": {
+              "n": 1,
+              "hits": 1
+            },
+            "20712": {
+              "n": 3,
+              "hits": 2
+            },
+            "20713": {
+              "n": 3,
+              "hits": 1
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.8,
+          "meets_frozen_screen": false
+        }
+      },
+      "market_files": 10
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 7,
+          "hits": 6,
+          "coverage": 0.8571428571428571,
+          "background_n": 84,
+          "background_hits": 38,
+          "background_rate": 0.4523809523809524,
+          "advantage_over_background": 0.4047619047619047,
+          "frequency_ratio": 1.894736842105263,
+          "day_counts": {
+            "20723": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 3,
+              "hits": 2
+            },
+            "20725": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 0.8888888888888888,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 7,
+          "hits": 3,
+          "coverage": 0.42857142857142855,
+          "background_n": 84,
+          "background_hits": 5,
+          "background_rate": 0.05952380952380952,
+          "advantage_over_background": 0.369047619047619,
+          "frequency_ratio": 7.2,
+          "day_counts": {
+            "20723": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 3,
+              "hits": 1
+            },
+            "20725": {
+              "n": 3,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.5555555555555556,
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 7,
+          "hits": 2,
+          "coverage": 0.2857142857142857,
+          "background_n": 84,
+          "background_hits": 3,
+          "background_rate": 0.03571428571428571,
+          "advantage_over_background": 0.25,
+          "frequency_ratio": 8.0,
+          "day_counts": {
+            "20723": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 3,
+              "hits": 0
+            },
+            "20725": {
+              "n": 3,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.4444444444444444,
+          "meets_frozen_screen": false
+        }
+      },
+      "market_files": 7
+    }
+  },
+  "independent_verifier_sha256": "29e0fc1e47f8394828970e6c39bbcc628bd19b5242ece9883712350c0ae22d69",
+  "cohort_positions_with_additional_entries": 20
+}

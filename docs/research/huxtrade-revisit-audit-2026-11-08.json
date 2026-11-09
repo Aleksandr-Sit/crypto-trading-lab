@@ -1,0 +1,1058 @@
+{
+  "status": "rule_unidentified",
+  "supported_conditions": [],
+  "profitability_tested": false,
+  "scope": "Pre-order conditions in archived Long x2 16 UTC regime only. Binance USDT perpetual symbol universe at observed entries; symbol selection, allocation and exits unidentified. Not a complete rule or profitability test.",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T09:34:03.634658+00:00",
+    "split_sha256": "49ff4b8e99848bf137881b29a6b2e5ec1f9e196a47895247ea5b8a10e9c32afa",
+    "development_sha256": "dacbe8de51c5ac49777acd62ee9d313fd7b60c764bdcf9836eb71612c6c4899c",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "gt",
+            "threshold": "0"
+          },
+          {
+            "feature": "return_1440m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "Pre-order conditions in archived Long x2 16 UTC regime only. Binance USDT perpetual symbol universe at observed entries; symbol selection, allocation and exits unidentified. Not a complete rule or profitability test.",
+    "threshold_origin": "Natural zero-return sign, chosen after bounded development review. H1 hourly continuation, H2 daily continuation, H3 both. No numerical threshold fitting.",
+    "background": "12 same-symbol windows 2-24h before each order; dependent and not labeled nonentries. Does not control cross-sectional symbol selection at 16 UTC.",
+    "timing": "Exclude entire minute of first MARKET BUY orderTime; order fills do not establish exact signal decision time.",
+    "unknown_policy": "Strict positive returns; zero fails. No holdout tuning. All three hypotheses retained even if development screen fails.",
+    "development_exploration": [
+      {
+        "feature": "return_1m",
+        "positive": 14,
+        "negative": 16,
+        "n": 30
+      },
+      {
+        "feature": "return_5m",
+        "positive": 14,
+        "negative": 16,
+        "n": 30
+      },
+      {
+        "feature": "return_15m",
+        "positive": 15,
+        "negative": 15,
+        "n": 30
+      },
+      {
+        "feature": "return_60m",
+        "positive": 24,
+        "negative": 6,
+        "n": 30
+      },
+      {
+        "feature": "return_1440m",
+        "positive": 27,
+        "negative": 3,
+        "n": 30
+      }
+    ]
+  },
+  "hypotheses_sha256": "a4516496b8c2cb5163d04b978273a210f1e8464e8b9ebdf3b73fe394d011a3ec",
+  "split_sha256": "49ff4b8e99848bf137881b29a6b2e5ec1f9e196a47895247ea5b8a10e9c32afa",
+  "script_sha256": "bee9227b40e728e09e37dddac983aaeb1f29071248614514f87bfaedab885f88",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 30,
+          "hits": 24,
+          "coverage": 0.8,
+          "background_n": 360,
+          "background_hits": 209,
+          "background_rate": 0.5805555555555556,
+          "advantage_over_background": 0.21944444444444444,
+          "frequency_ratio": 1.3779904306220094,
+          "day_counts": {
+            "20705": {
+              "n": 1,
+              "hits": 1
+            },
+            "20706": {
+              "n": 1,
+              "hits": 0
+            },
+            "20707": {
+              "n": 1,
+              "hits": 1
+            },
+            "20709": {
+              "n": 1,
+              "hits": 1
+            },
+            "20710": {
+              "n": 1,
+              "hits": 1
+            },
+            "20712": {
+              "n": 1,
+              "hits": 1
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            },
+            "20716": {
+              "n": 1,
+              "hits": 1
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 1
+            },
+            "20720": {
+              "n": 1,
+              "hits": 1
+            },
+            "20721": {
+              "n": 1,
+              "hits": 1
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 0
+            },
+            "20725": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 1,
+              "hits": 0
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            },
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 0
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20736": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 0
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 0
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.8,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 30,
+          "hits": 27,
+          "coverage": 0.9,
+          "background_n": 360,
+          "background_hits": 304,
+          "background_rate": 0.8444444444444444,
+          "advantage_over_background": 0.05555555555555558,
+          "frequency_ratio": 1.0657894736842106,
+          "day_counts": {
+            "20705": {
+              "n": 1,
+              "hits": 1
+            },
+            "20706": {
+              "n": 1,
+              "hits": 1
+            },
+            "20707": {
+              "n": 1,
+              "hits": 1
+            },
+            "20709": {
+              "n": 1,
+              "hits": 1
+            },
+            "20710": {
+              "n": 1,
+              "hits": 0
+            },
+            "20712": {
+              "n": 1,
+              "hits": 1
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            },
+            "20716": {
+              "n": 1,
+              "hits": 1
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 0
+            },
+            "20720": {
+              "n": 1,
+              "hits": 1
+            },
+            "20721": {
+              "n": 1,
+              "hits": 1
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20725": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            },
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 0
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20736": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 1
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 1
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.9,
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 30,
+          "hits": 22,
+          "coverage": 0.7333333333333333,
+          "background_n": 360,
+          "background_hits": 185,
+          "background_rate": 0.5138888888888888,
+          "advantage_over_background": 0.21944444444444444,
+          "frequency_ratio": 1.427027027027027,
+          "day_counts": {
+            "20705": {
+              "n": 1,
+              "hits": 1
+            },
+            "20706": {
+              "n": 1,
+              "hits": 0
+            },
+            "20707": {
+              "n": 1,
+              "hits": 1
+            },
+            "20709": {
+              "n": 1,
+              "hits": 1
+            },
+            "20710": {
+              "n": 1,
+              "hits": 0
+            },
+            "20712": {
+              "n": 1,
+              "hits": 1
+            },
+            "20713": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            },
+            "20716": {
+              "n": 1,
+              "hits": 1
+            },
+            "20717": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 0
+            },
+            "20720": {
+              "n": 1,
+              "hits": 1
+            },
+            "20721": {
+              "n": 1,
+              "hits": 1
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 0
+            },
+            "20725": {
+              "n": 1,
+              "hits": 1
+            },
+            "20727": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 1,
+              "hits": 0
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            },
+            "20731": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 0
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20736": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 0
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 0
+            },
+            "20744": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.7333333333333333,
+          "meets_frozen_screen": false
+        }
+      },
+      "sources": {
+        "huxtrade_revisit_market_development_2026-11-08\\1150098638577975296.json": "e1196912e0d31e3509e84c351cc00ad41cec3e6cadb86f8bd0eae46ecd5158c7",
+        "huxtrade_revisit_market_development_2026-11-08\\1150460819190431744.json": "a2362210c7812e7b7a20b923cba31e5e772accb2eba213d34288cf51baa8acfa",
+        "huxtrade_revisit_market_development_2026-11-08\\1150823179231019008.json": "e78c13c296d0676ecbc8b7cd98178e356a7bac1ba88b1fb7874e48bef414eb24",
+        "huxtrade_revisit_market_development_2026-11-08\\1151547933810343936.json": "ee89d37edbb1759aa180237036064ccfa13fbf6e3b1f229c366326dd31dc7d46",
+        "huxtrade_revisit_market_development_2026-11-08\\1151910329208913920.json": "4f49e481e3df50b921d13ca1e5803a9b8859c1d1ae7e89c8549b3eb4646a99bc",
+        "huxtrade_revisit_market_development_2026-11-08\\1152635175396032512.json": "c000c904b8f08341b7205313823149d8a25cbba8a88de8e9eaf6177ae02bde66",
+        "huxtrade_revisit_market_development_2026-11-08\\1152997519829614592.json": "53abff9a3af193d0047b55c55971dd377d8a68b349775f66c2a3271b6e087b74",
+        "huxtrade_revisit_market_development_2026-11-08\\1153359921054072832.json": "0c4274453ae5ca1e1d55bf5d2f84ebadb5a7d311649ac0c7637dd41bea36accd",
+        "huxtrade_revisit_market_development_2026-11-08\\1154084648374616064.json": "d46e419197e8f5751c797145fa88349dd033a8e345003c9e99ff0c21c14796c2",
+        "huxtrade_revisit_market_development_2026-11-08\\1154447128372297728.json": "932dfbc5072d6d0b7303eaec391d42ee6fec36e078ee4466eab0c797a46c8f34",
+        "huxtrade_revisit_market_development_2026-11-08\\1154809465793003520.json": "ad27de5dc6337c2ee51736d02cb9223a77861e7c923ee6813eb703a1cebde5ea",
+        "huxtrade_revisit_market_development_2026-11-08\\1155534189812629504.json": "4c69721f0b80be346b2bc41861c25c2837e354dd90fedcf04d942d0169cac1e2",
+        "huxtrade_revisit_market_development_2026-11-08\\1155896633688965120.json": "7e139336708fb940222cd61436c3bcb627b08f58833cd10172e8d5ef21a41a37",
+        "huxtrade_revisit_market_development_2026-11-08\\1156259026080219136.json": "c3925fc0262046518bd6390f13c91ccd505a616ac0dba53115922802b159d2d6",
+        "huxtrade_revisit_market_development_2026-11-08\\1156983835596537856.json": "ce0bf26f030271f129447cb4a7856459d805f6b47188819701c71a9efc065211",
+        "huxtrade_revisit_market_development_2026-11-08\\1157346207997739008.json": "66da47b14760c4a526a59811898cdfdb5b41f9d75c1c864c897d060663d4c0de",
+        "huxtrade_revisit_market_development_2026-11-08\\1158070926808039424.json": "c9c67d92fb1e55a36ccb71ebfa67033a7ef245ec47b463fef3a951abfcf13cc9",
+        "huxtrade_revisit_market_development_2026-11-08\\1158433363298205696.json": "952949e14444d490de34840fb7126e721de9fa5052c5612caf876f6c2550585b",
+        "huxtrade_revisit_market_development_2026-11-08\\1158795725578551296.json": "0ff00a622d887de56b09155260d1b6427cb30c3aa589295a2ec26724beb0ddc9",
+        "huxtrade_revisit_market_development_2026-11-08\\1159520488580038656.json": "e9685434bda8077fbd38268fe48b2fa78c7d124e7f2f3323d203d8fed47be0ee",
+        "huxtrade_revisit_market_development_2026-11-08\\1159882886163841024.json": "27a985da679d3cd1ade9e9fbdae5ccf2a58932e98fb087b645f957d9b40f33f9",
+        "huxtrade_revisit_market_development_2026-11-08\\1160245326596653056.json": "1b6c8569dd8f0afd3c3ed22bc5724dbd9e2ac5011e341e88c63792fd6779a79f",
+        "huxtrade_revisit_market_development_2026-11-08\\1160970039866277888.json": "bd9973cae6b10c5e66d50f12d31e00ebd899f21219a2ce40abc4e31da7a8dda7",
+        "huxtrade_revisit_market_development_2026-11-08\\1161332416168181760.json": "55dca4a0638c005971ca14f15996d860b55f94f6f24d9585927d6d128cf03d9f",
+        "huxtrade_revisit_market_development_2026-11-08\\1161694931729367040.json": "7bd80c9d45c8de04ad009468444c5bebd2f32173dda93eb92ab8126606964bb7",
+        "huxtrade_revisit_market_development_2026-11-08\\1162419618306441216.json": "4da0b15f8cf0249243ea40c4e1c9ade31b7ed2134648b6d304c4978fe2da27c7",
+        "huxtrade_revisit_market_development_2026-11-08\\1162781995598200832.json": "165850f7c2e0eba1c4ecfcf17f0c88ede86a90267c436f87c31c8b270cf7e4e6",
+        "huxtrade_revisit_market_development_2026-11-08\\1163506759899922432.json": "adc41864a8d1d396ee3e2bb1ccab45dcc210113d980a4a46aafe89bff66bd706",
+        "huxtrade_revisit_market_development_2026-11-08\\1163869216036208640.json": "bc93e917b0307b3d5fae66c32336a4462c6af1844a69d5dffc53225c9a780839",
+        "huxtrade_revisit_market_development_2026-11-08\\1164231610331676672.json": "21daf607c6744b9a1920bfed171177c6857ff460e295638da2a1efdf51e2c319"
+      },
+      "days": [
+        "2026-09-09",
+        "2026-09-10",
+        "2026-09-11",
+        "2026-09-12",
+        "2026-09-13",
+        "2026-09-14",
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-19",
+        "2026-09-20",
+        "2026-09-21",
+        "2026-09-22",
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+        "2026-10-04",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18"
+      ],
+      "sample_position_ids": [
+        "1150098638577975296",
+        "1150460819190431744",
+        "1150823179231019008",
+        "1151547933810343936",
+        "1151910329208913920",
+        "1152635175396032512",
+        "1152997519829614592",
+        "1153359921054072832",
+        "1154084648374616064",
+        "1154447128372297728",
+        "1154809465793003520",
+        "1155534189812629504",
+        "1155896633688965120",
+        "1156259026080219136",
+        "1156983835596537856",
+        "1157346207997739008",
+        "1158070926808039424",
+        "1158433363298205696",
+        "1158795725578551296",
+        "1159520488580038656",
+        "1159882886163841024",
+        "1160245326596653056",
+        "1160970039866277888",
+        "1161332416168181760",
+        "1161694931729367040",
+        "1162419618306441216",
+        "1162781995598200832",
+        "1163506759899922432",
+        "1163869216036208640",
+        "1164231610331676672"
+      ]
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 20,
+          "hits": 15,
+          "coverage": 0.75,
+          "background_n": 240,
+          "background_hits": 133,
+          "background_rate": 0.5541666666666667,
+          "advantage_over_background": 0.1958333333333333,
+          "frequency_ratio": 1.3533834586466165,
+          "day_counts": {
+            "20745": {
+              "n": 1,
+              "hits": 1
+            },
+            "20746": {
+              "n": 1,
+              "hits": 1
+            },
+            "20747": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 1
+            },
+            "20750": {
+              "n": 1,
+              "hits": 0
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20752": {
+              "n": 1,
+              "hits": 1
+            },
+            "20753": {
+              "n": 1,
+              "hits": 1
+            },
+            "20754": {
+              "n": 1,
+              "hits": 1
+            },
+            "20755": {
+              "n": 1,
+              "hits": 0
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            },
+            "20757": {
+              "n": 1,
+              "hits": 0
+            },
+            "20758": {
+              "n": 1,
+              "hits": 0
+            },
+            "20759": {
+              "n": 1,
+              "hits": 1
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 0
+            },
+            "20762": {
+              "n": 1,
+              "hits": 1
+            },
+            "20763": {
+              "n": 1,
+              "hits": 1
+            },
+            "20764": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.75,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 20,
+          "hits": 14,
+          "coverage": 0.7,
+          "background_n": 240,
+          "background_hits": 214,
+          "background_rate": 0.8916666666666667,
+          "advantage_over_background": -0.19166666666666676,
+          "frequency_ratio": 0.7850467289719625,
+          "day_counts": {
+            "20745": {
+              "n": 1,
+              "hits": 1
+            },
+            "20746": {
+              "n": 1,
+              "hits": 1
+            },
+            "20747": {
+              "n": 1,
+              "hits": 0
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 1
+            },
+            "20750": {
+              "n": 1,
+              "hits": 0
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20752": {
+              "n": 1,
+              "hits": 0
+            },
+            "20753": {
+              "n": 1,
+              "hits": 1
+            },
+            "20754": {
+              "n": 1,
+              "hits": 0
+            },
+            "20755": {
+              "n": 1,
+              "hits": 0
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            },
+            "20757": {
+              "n": 1,
+              "hits": 1
+            },
+            "20758": {
+              "n": 1,
+              "hits": 1
+            },
+            "20759": {
+              "n": 1,
+              "hits": 0
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 1,
+              "hits": 1
+            },
+            "20763": {
+              "n": 1,
+              "hits": 1
+            },
+            "20764": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.7,
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 20,
+          "hits": 11,
+          "coverage": 0.55,
+          "background_n": 240,
+          "background_hits": 125,
+          "background_rate": 0.5208333333333334,
+          "advantage_over_background": 0.029166666666666674,
+          "frequency_ratio": 1.056,
+          "day_counts": {
+            "20745": {
+              "n": 1,
+              "hits": 1
+            },
+            "20746": {
+              "n": 1,
+              "hits": 1
+            },
+            "20747": {
+              "n": 1,
+              "hits": 0
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 1
+            },
+            "20750": {
+              "n": 1,
+              "hits": 0
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20752": {
+              "n": 1,
+              "hits": 0
+            },
+            "20753": {
+              "n": 1,
+              "hits": 1
+            },
+            "20754": {
+              "n": 1,
+              "hits": 0
+            },
+            "20755": {
+              "n": 1,
+              "hits": 0
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            },
+            "20757": {
+              "n": 1,
+              "hits": 0
+            },
+            "20758": {
+              "n": 1,
+              "hits": 0
+            },
+            "20759": {
+              "n": 1,
+              "hits": 0
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 0
+            },
+            "20762": {
+              "n": 1,
+              "hits": 1
+            },
+            "20763": {
+              "n": 1,
+              "hits": 1
+            },
+            "20764": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.55,
+          "meets_frozen_screen": false
+        }
+      },
+      "sources": {
+        "huxtrade_revisit_market_holdout_2026-11-08\\1164593912675418112.json": "158e25e6d4aab68414fa00bbf5f3be253840ffa23279f7d3e75bc4e26a69cc20",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1164956306010390528.json": "a781510efa4c875e135c9b3c0669e0a6a56f3b0a75233f1757dc9c43b5a69957",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1165318720404963328.json": "454290c90d1255d3582cd7a44285ad83190a6a31c1911a034108cf1d0ad745ec",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1165681290131390464.json": "00d43e226fca04c8cdb83a7f62a7949d5d09448e8e2ea79201ba1a74c4d6116e",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1166043473650499584.json": "02fe607e13b06d43c18ec084c5d000cd90372d84d2af2539c544f7d41baf7727",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1166405840854958080.json": "d3e772fffa4a9b65c4b68e7b192bf29cfe0a5098c6ca325fb98625ce69649478",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1166768283162624000.json": "ed4133686b9d8ba445d43d34cf61ff2ee2722edaea9a4b46f4e7907aaff89c64",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1167130632809725952.json": "8ca19564417c3473420e4d96e7b56b03ef4800ffa6688e5d86bad4b504f036bd",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1167493079760486400.json": "22d2d9ad253962a3147bab055bf22cc705c0514c16a4ee41efe3b297fd994c44",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1167855442619645952.json": "bf279dd991824281e5b7ed902c25913c471d28143cfa15c564d077bc1fbc9d88",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1168217824214761472.json": "99a5facc83da5c5c491cbb99df52913a048612550c2ddea9e8e1c1dea3d182b7",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1168580218434732032.json": "f29cd8c5a2e033c6248b09e0965ea4c68db4e1a0ab2d3c124d5804d92441486c",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1168942559986827264.json": "0275854006d70d6f843403f3149352710934f4e21425a975a5fa507e2b34480f",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1169305252262428672.json": "155fa97f1aca1730ba5ed16bc2d92cc5282ab538367a76b87ca223eb72f8eed8",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1169667371910676480.json": "a893825a84107eb6d09efc3c7bf1311a2be666071c84551228748aa9238914d2",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1170029769381232640.json": "3c5d774ab713d5e59bd02e09a16a88cf69f9422731e32d382f0ceff8a01cde6e",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1170394135670669312.json": "ae81bd4f2bb4081ee5e9b7e75e3c445734ea441efb28740f0255ba85bd7232e4",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1170754492561997824.json": "83e7ce3364b3b81d8b351293065dfc527a8d49b5798f77ccc3f75a4f6f4eff92",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1171116911746465792.json": "941a97cc2a3bd300e30b1ccde5f0536aa03966b2077541fc37359743b0e50f0b",
+        "huxtrade_revisit_market_holdout_2026-11-08\\1171479299108749312.json": "dcfb32ab0f97590e5f71512f3d9b4036ecad8852dd39c596ebd6d72ec549934b"
+      },
+      "days": [
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-22",
+        "2026-10-23",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-10-31",
+        "2026-11-01",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07"
+      ],
+      "sample_position_ids": [
+        "1164593912675418112",
+        "1164956306010390528",
+        "1165318720404963328",
+        "1165681290131390464",
+        "1166043473650499584",
+        "1166405840854958080",
+        "1166768283162624000",
+        "1167130632809725952",
+        "1167493079760486400",
+        "1167855442619645952",
+        "1168217824214761472",
+        "1168580218434732032",
+        "1168942559986827264",
+        "1169305252262428672",
+        "1169667371910676480",
+        "1170029769381232640",
+        "1170394135670669312",
+        "1170754492561997824",
+        "1171116911746465792",
+        "1171479299108749312"
+      ]
+    }
+  },
+  "cohort": {
+    "n": 236,
+    "excluded_position_ids": [
+      "1143837680570318848",
+      "1143837683049152512",
+      "1143837685481848832",
+      "1143837687901962240",
+      "1143943001200508928",
+      "1143943003796783104",
+      "1143943006468554752",
+      "1143943009148715008",
+      "1144298984682668032",
+      "1144298989711638528",
+      "1144298992895115264",
+      "1144298995394920448",
+      "1144661353359327232",
+      "1144661355901075456",
+      "1144661358388297728",
+      "1144661361940873216",
+      "1145023691698585600",
+      "1145023694160642048",
+      "1145023696643670016",
+      "1145023699726483456",
+      "1145386140218015744",
+      "1145386142701043712",
+      "1145386145158905856",
+      "1145386148333993984",
+      "1145748544646922240",
+      "1145748547654238208",
+      "1145748550279872512",
+      "1145748552867758080",
+      "1146110882700967936",
+      "1146110886505201664",
+      "1146110889021784064",
+      "1146110891500617728",
+      "1146473298169282560",
+      "1146473300748779520",
+      "1146473304519458816",
+      "1146473307585495040",
+      "1146835669287026688",
+      "1146835671946215424",
+      "1146835678002790400",
+      "1146835680955580416",
+      "1147201427078758400",
+      "1147201429654061056",
+      "1147201432162254848",
+      "1147201435609972736",
+      "1147561755448819712",
+      "1147561759450185728",
+      "1147561762830794752",
+      "1147561766031048704",
+      "1147924112461119488",
+      "1147924115128696832",
+      "1147924118215704576",
+      "1147924123538276352",
+      "1148286577564827648",
+      "1148286580312096768",
+      "1148286582837067776",
+      "1148286586096041984",
+      "1148648855514497024",
+      "1148648859394228224",
+      "1148648861873061888",
+      "1148648864368672768",
+      "1149011217350246400",
+      "1149011221653602304",
+      "1149011292998713344",
+      "1149011295641124864",
+      "1149373592439996416",
+      "1149373595065630720",
+      "1149373598261690368",
+      "1149373601168343040",
+      "1149736011297308672",
+      "1149736013767753728",
+      "1149736016171089920",
+      "1149736018561843200"
+    ],
+    "source_sha256": {
+      "huxtrade_5192646545574438913_2026-11-07.json": "827ce21091c0f0ac05f7d2445a263fdfbf7e3b9e59affab45ea8315e25f1de0a",
+      "huxtrade_5192646545574438913_orders_rawpass_2026-11-07.json": "81249a38dc9e3906e07371d25d7f87d5e66030d4199344033f7fc69e8a7f8045"
+    },
+    "cohort_sha256": "5ebc419dca3fe820833f120ff68cc9689bd34a296edb2ff742d80c310f6eb8f2"
+  },
+  "independent_verification": {
+    "method": "Independent Decimal comparisons, original first BUY orders, raw candle reconstruction, chronology and screen recomputation",
+    "cohort_positions_checked": 236,
+    "entries_checked": 50,
+    "background_windows_checked": 600,
+    "hypotheses_checked": 3,
+    "holdout_access_after_freeze": true,
+    "supported_conditions": [],
+    "first_fill_vs_previous_close_min": -0.022785727590221187,
+    "first_fill_vs_previous_close_max": 0.0202527854318917,
+    "script_sha256": "cc6e068d9f8699edd47413c43e902f6c173f0d254e66702eab9772169c1af184"
+  },
+  "full_audit_sha256": "c644370bbbc231405bc4a52bf869294da4e1a89abb4678c8296ab414db823b0e",
+  "prepare_script_sha256": "d9a2f85c31d4ec223c91bd82dee052767a30ef270605c48334ce277318e47277"
+}

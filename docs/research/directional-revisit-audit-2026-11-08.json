@@ -1,0 +1,74 @@
+{
+  "portfolio_id": "5095694990932973056",
+  "status": "rule_unidentified",
+  "profitability_tested": false,
+  "market_test_performed": false,
+  "independent_holdout_available": false,
+  "decision": "Insufficient placement days in every side/leverage/margin stratum",
+  "min_active_days": 6,
+  "matched_orders": 52,
+  "covered_positions": 26,
+  "pooled_days": [
+    "2026-09-12",
+    "2026-09-13",
+    "2026-09-14",
+    "2026-09-15",
+    "2026-10-22"
+  ],
+  "sources": {
+    "directional_5095694990932973056_merged_2026-11-07.json": "0cb1854a32d5d5753381a948e40cf5b48ff7c667e7fc627f1f300f5026c3fc43",
+    "directional_5095694990932973056_orders_2026-11-07.json": "ff264f7500aea1efefbbca6e8b86242452679406d88af828fe5d36362c21f771"
+  },
+  "script_sha256": "5680aabd7e9c20bbe029a4ca8eecebfa7dd1202d815b39bf1af43a1ebc7e97cf",
+  "limitations": [
+    "Coverage is not the full entry universe; cancelled placements absent",
+    "First fill avgPrice does not identify the original LIMIT price",
+    "August common-close mechanism has no order coverage",
+    "No hypotheses rejected by market evidence in this revisit",
+    "Return requires new same-regime active days or independent configuration"
+  ],
+  "excluded_positions": 1660,
+  "strata": {
+    "Long_x10_Isolated": {
+      "n": 1,
+      "days": [
+        "2026-10-22"
+      ],
+      "eligible": false
+    },
+    "Long_x20_Isolated": {
+      "n": 5,
+      "days": [
+        "2026-09-12",
+        "2026-09-13",
+        "2026-09-14"
+      ],
+      "eligible": false
+    },
+    "Long_x5_Isolated": {
+      "n": 4,
+      "days": [
+        "2026-09-12",
+        "2026-09-13",
+        "2026-09-14"
+      ],
+      "eligible": false
+    },
+    "Short_x20_Isolated": {
+      "n": 14,
+      "days": [
+        "2026-09-14",
+        "2026-09-15"
+      ],
+      "eligible": false
+    },
+    "Short_x5_Isolated": {
+      "n": 2,
+      "days": [
+        "2026-09-14",
+        "2026-09-15"
+      ],
+      "eligible": false
+    }
+  }
+}

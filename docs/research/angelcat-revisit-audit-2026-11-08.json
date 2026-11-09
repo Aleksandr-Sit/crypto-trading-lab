@@ -1,0 +1,293 @@
+{
+  "status": "entry_candidate",
+  "supported_conditions": [
+    "H2"
+  ],
+  "profitability_tested": false,
+  "scope": "First MARKET BUY Long x5 Cross only; additional BUYs and other entry types/leverages separate. Six days, holdout only two days and three entries. Full rule, symbol selection, sizing, adds and exits unknown.",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T10:42:23.048536+00:00",
+    "split_sha256": "49ff79cb55096eb815aad43db63d9e7d298e077a98c537c41f5c83d1c56085b8",
+    "development_sha256": "87dab241207c1965cb74182da35872b3ddadbc2484b3346c08341c0712892d6a",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_15m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_60m",
+            "operator": "gt",
+            "threshold": "0"
+          },
+          {
+            "feature": "return_1m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "First MARKET BUY Long x5 Cross only; additional BUYs and other entry types/leverages separate. Six days, holdout only two days and three entries. Full rule, symbol selection, sizing, adds and exits unknown.",
+    "threshold_origin": "Natural zero-return boundaries. H1/H2 hourly and 15m positive development medians; H3 hourly rise plus last-minute pullback. No fitted magnitude or window search beyond bounded protocol features; all three retained.",
+    "background": "12 same-symbol windows 2-24h before first order; dependent, not labeled nonentries.",
+    "unknown_policy": "Strict zero fails; features use only fully closed minutes before orderTime. Position AvgCost includes adds and is ignored as first-fill evidence. Closed-position selection omits 51 residual BUYs; no open account snapshot. No holdout tuning."
+  },
+  "hypotheses_sha256": "37c9f28a306cf57c56d64335edb36fc46cc52116f6decf91d60541654fc5eba4",
+  "split_sha256": "49ff79cb55096eb815aad43db63d9e7d298e077a98c537c41f5c83d1c56085b8",
+  "script_sha256": "bee9227b40e728e09e37dddac983aaeb1f29071248614514f87bfaedab885f88",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "full_rule_status": "rule_unidentified",
+  "validation_limitation": "Only 3 holdout entries across 2 days; exploratory market-state candidate only",
+  "cohort_sources": {
+    "angelcat_5262575735183470080_scan_2026-10-25.json": "158c57e057f80d1cca9e5788296b1709d905fec10aa6beb651f01d3421356e39",
+    "angelcat_5262575735183470080_2026-11-07.json": "50540bea87f0780f1702d24971f258f84e575f4e273f966e5300f0b8df29573f",
+    "angelcat_5262575735183470080_orders_2026-11-07.json": "35fe7b74a3e57f9d73f17d775ba16f71da842c2449e445b95518eebbb0d5722e"
+  },
+  "prepare_script_sha256": "2845bee3213acb39b7a39e7c351dd5a9ed254423c0368c255a04ca0334bd8f6e",
+  "strata": {
+    "Long_x3_Cross_MARKET": {
+      "n": 7,
+      "days": [
+        "2026-10-10",
+        "2026-10-16",
+        "2026-10-21"
+      ]
+    },
+    "Long_x10_Cross_LIMIT": {
+      "n": 1,
+      "days": [
+        "2026-10-11"
+      ]
+    },
+    "Long_x5_Cross_MARKET": {
+      "n": 150,
+      "days": [
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-22"
+      ]
+    },
+    "Long_x3_Cross_LIMIT": {
+      "n": 2,
+      "days": [
+        "2026-10-22"
+      ]
+    },
+    "Long_x5_Cross_LIMIT": {
+      "n": 22,
+      "days": [
+        "2026-10-22",
+        "2026-10-23",
+        "2026-10-26",
+        "2026-10-27"
+      ]
+    },
+    "Long_x20_Cross_LIMIT": {
+      "n": 5,
+      "days": [
+        "2026-10-23",
+        "2026-10-26",
+        "2026-10-27"
+      ]
+    }
+  },
+  "additional_entries_in_cohort": 34,
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 12,
+          "hits": 11,
+          "coverage": 0.9166666666666666,
+          "background_n": 144,
+          "background_hits": 77,
+          "background_rate": 0.5347222222222222,
+          "advantage_over_background": 0.3819444444444444,
+          "frequency_ratio": 1.7142857142857142,
+          "day_counts": {
+            "20741": {
+              "n": 3,
+              "hits": 2
+            },
+            "20742": {
+              "n": 3,
+              "hits": 3
+            },
+            "20743": {
+              "n": 3,
+              "hits": 3
+            },
+            "20746": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 0.9166666666666666,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 12,
+          "hits": 10,
+          "coverage": 0.8333333333333334,
+          "background_n": 144,
+          "background_hits": 70,
+          "background_rate": 0.4861111111111111,
+          "advantage_over_background": 0.34722222222222227,
+          "frequency_ratio": 1.7142857142857144,
+          "day_counts": {
+            "20741": {
+              "n": 3,
+              "hits": 3
+            },
+            "20742": {
+              "n": 3,
+              "hits": 2
+            },
+            "20743": {
+              "n": 3,
+              "hits": 2
+            },
+            "20746": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 0.8333333333333333,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 12,
+          "hits": 5,
+          "coverage": 0.4166666666666667,
+          "background_n": 144,
+          "background_hits": 39,
+          "background_rate": 0.2708333333333333,
+          "advantage_over_background": 0.14583333333333337,
+          "frequency_ratio": 1.5384615384615385,
+          "day_counts": {
+            "20741": {
+              "n": 3,
+              "hits": 1
+            },
+            "20742": {
+              "n": 3,
+              "hits": 2
+            },
+            "20743": {
+              "n": 3,
+              "hits": 2
+            },
+            "20746": {
+              "n": 3,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.41666666666666663,
+          "meets_frozen_screen": false
+        }
+      },
+      "market_files": 12
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 3,
+          "hits": 1,
+          "coverage": 0.3333333333333333,
+          "background_n": 36,
+          "background_hits": 21,
+          "background_rate": 0.5833333333333334,
+          "advantage_over_background": -0.25000000000000006,
+          "frequency_ratio": 0.5714285714285714,
+          "day_counts": {
+            "20747": {
+              "n": 2,
+              "hits": 0
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.5,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 3,
+          "hits": 3,
+          "coverage": 1.0,
+          "background_n": 36,
+          "background_hits": 23,
+          "background_rate": 0.6388888888888888,
+          "advantage_over_background": 0.36111111111111116,
+          "frequency_ratio": 1.565217391304348,
+          "day_counts": {
+            "20747": {
+              "n": 2,
+              "hits": 2
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 3,
+          "hits": 0,
+          "coverage": 0.0,
+          "background_n": 36,
+          "background_hits": 13,
+          "background_rate": 0.3611111111111111,
+          "advantage_over_background": -0.3611111111111111,
+          "frequency_ratio": 0.0,
+          "day_counts": {
+            "20747": {
+              "n": 2,
+              "hits": 0
+            },
+            "20748": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.0,
+          "meets_frozen_screen": false
+        }
+      },
+      "market_files": 3
+    }
+  },
+  "independent_verifier_sha256": "73b9688b5607c4a1fb8d7beedc13e458bfd6771b0d0513ac9ae84aeefad340f0"
+}

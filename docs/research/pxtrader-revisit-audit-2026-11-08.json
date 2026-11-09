@@ -1,0 +1,393 @@
+{
+  "status": "entry_candidate",
+  "full_rule_status": "rule_unidentified",
+  "supported_conditions": [
+    "H2"
+  ],
+  "profitability_tested": false,
+  "order_timing_known": false,
+  "symbol_selection_recovered": false,
+  "scope": "Early Long x2 Cross only; features before position opening, not known order placement. Symbol ranks, sizing, adds, exits and order type unknown.",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T10:37:06.301009+00:00",
+    "split_sha256": "c1cfef3622eb1c0833a76fef8b574b1f97b277db173d1c07cb25e2db5aa55a55",
+    "development_sha256": "6f675c1e967769f7a9a3e7d321c5402840048b9e474c0a26c260e6762bdf55e1",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "gte",
+            "threshold": "0.2"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "gte",
+            "threshold": "0.2"
+          },
+          {
+            "feature": "return_60m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "Early Long x2 Cross only; features before position opening, not known order placement. Symbol ranks, sizing, adds, exits and order type unknown.",
+    "threshold_origin": "H1 natural daily sign; H2 round +20% from development minimum +22.9%, not author configuration. H3 adds natural hourly continuation sign. At most three hypotheses; all retained.",
+    "background": "12 same-symbol windows 2-24h earlier; dependent, not confirmed nonentries.",
+    "unknown_policy": "No order evidence. Position AvgCost is not known first fill. No execution compatibility or full rule claim; no holdout tuning."
+  },
+  "hypotheses_sha256": "f951797144c461d3a3acf0cd29b0c971df8772837c11024409f70528bc4cd627",
+  "split_sha256": "c1cfef3622eb1c0833a76fef8b574b1f97b277db173d1c07cb25e2db5aa55a55",
+  "script_sha256": "fc424c94ba856bc7342e2d0917e7a6bb6b1569b888aceee452daf0045ff3c4f5",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 30,
+          "hits": 30,
+          "coverage": 1.0,
+          "background_n": 360,
+          "background_hits": 282,
+          "background_rate": 0.7833333333333333,
+          "advantage_over_background": 0.21666666666666667,
+          "frequency_ratio": 1.2765957446808511,
+          "day_counts": {
+            "20630": {
+              "n": 1,
+              "hits": 1
+            },
+            "20631": {
+              "n": 1,
+              "hits": 1
+            },
+            "20632": {
+              "n": 3,
+              "hits": 3
+            },
+            "20633": {
+              "n": 2,
+              "hits": 2
+            },
+            "20634": {
+              "n": 3,
+              "hits": 3
+            },
+            "20635": {
+              "n": 3,
+              "hits": 3
+            },
+            "20636": {
+              "n": 2,
+              "hits": 2
+            },
+            "20637": {
+              "n": 3,
+              "hits": 3
+            },
+            "20638": {
+              "n": 3,
+              "hits": 3
+            },
+            "20639": {
+              "n": 3,
+              "hits": 3
+            },
+            "20640": {
+              "n": 3,
+              "hits": 3
+            },
+            "20641": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 30,
+          "hits": 30,
+          "coverage": 1.0,
+          "background_n": 360,
+          "background_hits": 140,
+          "background_rate": 0.3888888888888889,
+          "advantage_over_background": 0.6111111111111112,
+          "frequency_ratio": 2.571428571428571,
+          "day_counts": {
+            "20630": {
+              "n": 1,
+              "hits": 1
+            },
+            "20631": {
+              "n": 1,
+              "hits": 1
+            },
+            "20632": {
+              "n": 3,
+              "hits": 3
+            },
+            "20633": {
+              "n": 2,
+              "hits": 2
+            },
+            "20634": {
+              "n": 3,
+              "hits": 3
+            },
+            "20635": {
+              "n": 3,
+              "hits": 3
+            },
+            "20636": {
+              "n": 2,
+              "hits": 2
+            },
+            "20637": {
+              "n": 3,
+              "hits": 3
+            },
+            "20638": {
+              "n": 3,
+              "hits": 3
+            },
+            "20639": {
+              "n": 3,
+              "hits": 3
+            },
+            "20640": {
+              "n": 3,
+              "hits": 3
+            },
+            "20641": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 30,
+          "hits": 23,
+          "coverage": 0.7666666666666667,
+          "background_n": 360,
+          "background_hits": 94,
+          "background_rate": 0.2611111111111111,
+          "advantage_over_background": 0.5055555555555555,
+          "frequency_ratio": 2.9361702127659575,
+          "day_counts": {
+            "20630": {
+              "n": 1,
+              "hits": 0
+            },
+            "20631": {
+              "n": 1,
+              "hits": 1
+            },
+            "20632": {
+              "n": 3,
+              "hits": 2
+            },
+            "20633": {
+              "n": 2,
+              "hits": 2
+            },
+            "20634": {
+              "n": 3,
+              "hits": 0
+            },
+            "20635": {
+              "n": 3,
+              "hits": 3
+            },
+            "20636": {
+              "n": 2,
+              "hits": 2
+            },
+            "20637": {
+              "n": 3,
+              "hits": 3
+            },
+            "20638": {
+              "n": 3,
+              "hits": 2
+            },
+            "20639": {
+              "n": 3,
+              "hits": 2
+            },
+            "20640": {
+              "n": 3,
+              "hits": 3
+            },
+            "20641": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 0.75,
+          "meets_frozen_screen": false
+        }
+      },
+      "market_files": 30
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 20,
+          "hits": 20,
+          "coverage": 1.0,
+          "background_n": 240,
+          "background_hits": 184,
+          "background_rate": 0.7666666666666667,
+          "advantage_over_background": 0.23333333333333328,
+          "frequency_ratio": 1.3043478260869565,
+          "day_counts": {
+            "20642": {
+              "n": 3,
+              "hits": 3
+            },
+            "20643": {
+              "n": 3,
+              "hits": 3
+            },
+            "20644": {
+              "n": 3,
+              "hits": 3
+            },
+            "20645": {
+              "n": 2,
+              "hits": 2
+            },
+            "20646": {
+              "n": 3,
+              "hits": 3
+            },
+            "20647": {
+              "n": 3,
+              "hits": 3
+            },
+            "20648": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 20,
+          "hits": 20,
+          "coverage": 1.0,
+          "background_n": 240,
+          "background_hits": 65,
+          "background_rate": 0.2708333333333333,
+          "advantage_over_background": 0.7291666666666667,
+          "frequency_ratio": 3.6923076923076925,
+          "day_counts": {
+            "20642": {
+              "n": 3,
+              "hits": 3
+            },
+            "20643": {
+              "n": 3,
+              "hits": 3
+            },
+            "20644": {
+              "n": 3,
+              "hits": 3
+            },
+            "20645": {
+              "n": 2,
+              "hits": 2
+            },
+            "20646": {
+              "n": 3,
+              "hits": 3
+            },
+            "20647": {
+              "n": 3,
+              "hits": 3
+            },
+            "20648": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 20,
+          "hits": 17,
+          "coverage": 0.85,
+          "background_n": 240,
+          "background_hits": 44,
+          "background_rate": 0.18333333333333332,
+          "advantage_over_background": 0.6666666666666666,
+          "frequency_ratio": 4.636363636363637,
+          "day_counts": {
+            "20642": {
+              "n": 3,
+              "hits": 3
+            },
+            "20643": {
+              "n": 3,
+              "hits": 3
+            },
+            "20644": {
+              "n": 3,
+              "hits": 3
+            },
+            "20645": {
+              "n": 2,
+              "hits": 1
+            },
+            "20646": {
+              "n": 3,
+              "hits": 2
+            },
+            "20647": {
+              "n": 3,
+              "hits": 3
+            },
+            "20648": {
+              "n": 3,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.8333333333333334,
+          "meets_frozen_screen": true
+        }
+      },
+      "market_files": 20
+    }
+  },
+  "independent_verifier_sha256": "bcb82d668178848c6b8d40a0f3b082ceba57b3283cfa5a2dfb45427129def4ef"
+}

@@ -1,0 +1,315 @@
+{
+  "status": "entry_candidate",
+  "full_rule_status": "rule_unidentified",
+  "supported_conditions": [
+    "H1",
+    "H3"
+  ],
+  "profitability_tested": false,
+  "order_timing_known": false,
+  "symbol_selection_recovered": false,
+  "scope": "Early ETH Long x20 Cross position-opening context only. No orders, placement time unknown. Nine positions on seven days, holdout three entries on three days. No execution or profitability claim.",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T10:53:57.994790+00:00",
+    "split_sha256": "79fd627390285724085030d10e0b98246d3f7a618139124e801816620d333c3a",
+    "development_sha256": "9dffa65c11d92abbf834b9fbffa753a7d4798a6e1b274dc92fbba9e9d87e1f03",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_15m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_15m",
+            "operator": "lte",
+            "threshold": "-0.005"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_15m",
+            "operator": "lt",
+            "threshold": "0"
+          },
+          {
+            "feature": "return_1440m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "Early ETH Long x20 Cross position-opening context only. No orders, placement time unknown. Nine positions on seven days, holdout three entries on three days. No execution or profitability claim.",
+    "threshold_origin": "H1 natural 15m negative sign: 6/6 development. H2 round -0.5% from development range -0.697% to -0.485%, not author configuration. H3 adds natural positive 24h context. Three versions fixed before holdout.",
+    "background": "12 same-symbol windows 2-24h earlier, dependent, not known nonentries. 15m windows aligned to the quarter-hour grid as are entries.",
+    "unknown_policy": "Strict zeros fail; -0.5% included. Only completed minutes before position opened, not proven before placement. AvgCost not first-fill evidence. Disjoint IDs from prior 70 short-entry event tests; old 2%/5% negatives preserved. No holdout tuning."
+  },
+  "hypotheses_sha256": "f812ce62aec0bf03cb0708df4e07ef9e72535f9ab66e6dd877a2fbbdbac0d630",
+  "split_sha256": "79fd627390285724085030d10e0b98246d3f7a618139124e801816620d333c3a",
+  "script_sha256": "fc424c94ba856bc7342e2d0917e7a6bb6b1569b888aceee452daf0045ff3c4f5",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "validation_limitation": "Only 3 holdout position openings on 3 days; no order placement evidence",
+  "cohort_sources": {
+    "ctscanner_5030491098292789505_scan_2026-10-25.json": "9c3e93b761b73f98453aa50489b87ae83c4aba8039514b5247ac366414c397df",
+    "ctscanner_5030491098292789505_2026-11-07.json": "3ea8ee91c0caad0da94c07a643c9459e7dd2c8ee6f1289c58b8cf26a8ef76328",
+    "ctscanner_5030491098292789505_orders_2026-11-07.json": "600f1c92b1e899965f9c0fb734abf81f60ebd5e55874392f5c1c454475ec0cad"
+  },
+  "prepare_script_sha256": "cde5f990e167273445450ab57810fa174d041a1ea4adfb34a5f8bbccaf1e6a33",
+  "old_audit_sha256": "b1bc7a640ce35cc801e25cc3143df1b990ad54cc6bb7165df1229635f95d2582",
+  "old_thresholds_pct": [
+    2,
+    5
+  ],
+  "old_test_count": 70,
+  "strata": {
+    "early_Long_x20_Cross": {
+      "n": 9,
+      "days": [
+        "2026-06-27",
+        "2026-07-04",
+        "2026-07-05",
+        "2026-07-11",
+        "2026-07-13",
+        "2026-07-16",
+        "2026-09-06"
+      ]
+    },
+    "early_Short_x20_Cross": {
+      "n": 3,
+      "days": [
+        "2026-07-09",
+        "2026-07-28",
+        "2026-08-02"
+      ]
+    },
+    "sep15_16_Long_x10_Cross": {
+      "n": 13,
+      "days": [
+        "2026-09-15",
+        "2026-09-16"
+      ]
+    },
+    "sep15_16_Short_x10_Cross": {
+      "n": 8,
+      "days": [
+        "2026-09-15",
+        "2026-09-16"
+      ]
+    },
+    "sep25_29_Long_x5_Cross": {
+      "n": 52,
+      "days": [
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29"
+      ]
+    },
+    "oct15_Short_x20_Cross": {
+      "n": 2,
+      "days": [
+        "2026-10-15"
+      ]
+    }
+  },
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 6,
+          "hits": 6,
+          "coverage": 1.0,
+          "background_n": 72,
+          "background_hits": 34,
+          "background_rate": 0.4722222222222222,
+          "advantage_over_background": 0.5277777777777778,
+          "frequency_ratio": 2.1176470588235294,
+          "day_counts": {
+            "20631": {
+              "n": 1,
+              "hits": 1
+            },
+            "20638": {
+              "n": 1,
+              "hits": 1
+            },
+            "20639": {
+              "n": 2,
+              "hits": 2
+            },
+            "20645": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 6,
+          "hits": 4,
+          "coverage": 0.6666666666666666,
+          "background_n": 72,
+          "background_hits": 1,
+          "background_rate": 0.013888888888888888,
+          "advantage_over_background": 0.6527777777777778,
+          "frequency_ratio": 48.0,
+          "day_counts": {
+            "20631": {
+              "n": 1,
+              "hits": 1
+            },
+            "20638": {
+              "n": 1,
+              "hits": 1
+            },
+            "20639": {
+              "n": 2,
+              "hits": 1
+            },
+            "20645": {
+              "n": 2,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.75,
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 6,
+          "hits": 5,
+          "coverage": 0.8333333333333334,
+          "background_n": 72,
+          "background_hits": 32,
+          "background_rate": 0.4444444444444444,
+          "advantage_over_background": 0.38888888888888895,
+          "frequency_ratio": 1.8750000000000002,
+          "day_counts": {
+            "20631": {
+              "n": 1,
+              "hits": 1
+            },
+            "20638": {
+              "n": 1,
+              "hits": 1
+            },
+            "20639": {
+              "n": 2,
+              "hits": 1
+            },
+            "20645": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.875,
+          "meets_frozen_screen": true
+        }
+      },
+      "market_files": 6
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 3,
+          "hits": 3,
+          "coverage": 1.0,
+          "background_n": 36,
+          "background_hits": 16,
+          "background_rate": 0.4444444444444444,
+          "advantage_over_background": 0.5555555555555556,
+          "frequency_ratio": 2.25,
+          "day_counts": {
+            "20647": {
+              "n": 1,
+              "hits": 1
+            },
+            "20650": {
+              "n": 1,
+              "hits": 1
+            },
+            "20702": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 3,
+          "hits": 3,
+          "coverage": 1.0,
+          "background_n": 36,
+          "background_hits": 0,
+          "background_rate": 0.0,
+          "advantage_over_background": 1.0,
+          "frequency_ratio": null,
+          "day_counts": {
+            "20647": {
+              "n": 1,
+              "hits": 1
+            },
+            "20650": {
+              "n": 1,
+              "hits": 1
+            },
+            "20702": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 3,
+          "hits": 3,
+          "coverage": 1.0,
+          "background_n": 36,
+          "background_hits": 14,
+          "background_rate": 0.3888888888888889,
+          "advantage_over_background": 0.6111111111111112,
+          "frequency_ratio": 2.571428571428571,
+          "day_counts": {
+            "20647": {
+              "n": 1,
+              "hits": 1
+            },
+            "20650": {
+              "n": 1,
+              "hits": 1
+            },
+            "20702": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        }
+      },
+      "market_files": 3
+    }
+  },
+  "independent_verifier_sha256": "f5f34e1ebe284357b8e8d1c691957480ea94f156ba8d1d123a604e0784f08f69"
+}

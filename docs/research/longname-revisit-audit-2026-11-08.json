@@ -1,0 +1,486 @@
+{
+  "status": "rule_unidentified",
+  "supported_conditions": [],
+  "profitability_tested": false,
+  "scope": "Pre-first-MARKET-BUY states in chronological long-duration x10 Cross regime only. Ten active days, holdout only four days/five entries. Not pooled with x5, x3, early x20 or late75m. Symbol choice, risk sizing, additional buys and exit exceptions unknown.",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T09:59:33.522484+00:00",
+    "split_sha256": "0f503931777d6a76bd02ebf560dd7b1dfc066c4da5bd555e4ccfa977235bc012",
+    "development_sha256": "5ab676057f1bfd685b592b9f514409c8a7c02ffdb7d6052482b571354a820e58",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "lte",
+            "threshold": "-0.05"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_1440m",
+            "operator": "lte",
+            "threshold": "-0.05"
+          },
+          {
+            "feature": "return_5m",
+            "operator": "gt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "Pre-first-MARKET-BUY states in chronological long-duration x10 Cross regime only. Ten active days, holdout only four days/five entries. Not pooled with x5, x3, early x20 or late75m. Symbol choice, risk sizing, additional buys and exit exceptions unknown.",
+    "threshold_origin": "H1 natural daily return sign. H2 round -5% based on development range -29.24% to -5.85%, not an author setting. H3 adds natural 5m rebound sign after 6/10 development positives; all three hypotheses retained.",
+    "background": "12 same-symbol windows 2-24h before entry; dependent, not labeled nonentries. Daily returns heavily overlap.",
+    "unknown_policy": "Zeros fail strict conditions; -5% boundary included. No holdout tuning. Regimes assigned by chronology and leverage before market, not by exact realized hold duration. Small sample descriptive support only."
+  },
+  "hypotheses_sha256": "c15fd0165cc8a444ae1dc9f080f50dc261a34ff900aa5815e7ba260936efdaa0",
+  "split_sha256": "0f503931777d6a76bd02ebf560dd7b1dfc066c4da5bd555e4ccfa977235bc012",
+  "script_sha256": "bee9227b40e728e09e37dddac983aaeb1f29071248614514f87bfaedab885f88",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 10,
+          "hits": 10,
+          "coverage": 1.0,
+          "background_n": 120,
+          "background_hits": 100,
+          "background_rate": 0.8333333333333334,
+          "advantage_over_background": 0.16666666666666663,
+          "frequency_ratio": 1.2,
+          "day_counts": {
+            "20733": {
+              "n": 1,
+              "hits": 1
+            },
+            "20735": {
+              "n": 2,
+              "hits": 2
+            },
+            "20738": {
+              "n": 2,
+              "hits": 2
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 1
+            },
+            "20741": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 10,
+          "hits": 10,
+          "coverage": 1.0,
+          "background_n": 120,
+          "background_hits": 54,
+          "background_rate": 0.45,
+          "advantage_over_background": 0.55,
+          "frequency_ratio": 2.2222222222222223,
+          "day_counts": {
+            "20733": {
+              "n": 1,
+              "hits": 1
+            },
+            "20735": {
+              "n": 2,
+              "hits": 2
+            },
+            "20738": {
+              "n": 2,
+              "hits": 2
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 1
+            },
+            "20741": {
+              "n": 3,
+              "hits": 3
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 10,
+          "hits": 6,
+          "coverage": 0.6,
+          "background_n": 120,
+          "background_hits": 19,
+          "background_rate": 0.15833333333333333,
+          "advantage_over_background": 0.44166666666666665,
+          "frequency_ratio": 3.7894736842105265,
+          "day_counts": {
+            "20733": {
+              "n": 1,
+              "hits": 0
+            },
+            "20735": {
+              "n": 2,
+              "hits": 2
+            },
+            "20738": {
+              "n": 2,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20740": {
+              "n": 1,
+              "hits": 0
+            },
+            "20741": {
+              "n": 3,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.5277777777777778,
+          "meets_frozen_screen": false
+        }
+      },
+      "sources": {
+        "longname_long10_revisit_market_development_2026-11-08\\1160064026315821056.json": "af51014779ed0ab70409af4caf55a7c75c176b14e4f06770f55035dbd17a6bb4",
+        "longname_long10_revisit_market_development_2026-11-08\\1160788737878364160.json": "035a27aec705b161826ff967d7d40a0f38cb03362fa8735fc4f0a93eef3f934f",
+        "longname_long10_revisit_market_development_2026-11-08\\1160849193162739712.json": "0c2cf6daa07d6a42f02d8f69c7d60fac7fc99d27ec5001580bf2ccaf5cc7a20e",
+        "longname_long10_revisit_market_development_2026-11-08\\1161936357451599872.json": "6ee5784c0eaaf038af6aafdf54d4656332886d607f8ffe12a5b166fc200ebad7",
+        "longname_long10_revisit_market_development_2026-11-08\\1162057137904652288.json": "65558e440d828a9c24a6b18eee18e5ba5dd69232d5b2aaa5d84b2be008b4f13d",
+        "longname_long10_revisit_market_development_2026-11-08\\1162238351735230464.json": "456cefa66eedb776e526428c9aaae4c0e77ba92bd9dd1c4f962b8bc690473f05",
+        "longname_long10_revisit_market_development_2026-11-08\\1162781927221202944.json": "387dd62971b8c029ce1d2c9dba8f94bf3dc65b1b8b1f55258275534335c2ed09",
+        "longname_long10_revisit_market_development_2026-11-08\\1162963149046124544.json": "587a885adc3e9ee85f5d60e002db2a34cc60cbbddaad077e9552a939be5c20cb",
+        "longname_long10_revisit_market_development_2026-11-08\\1162963150862258176.json": "8cfd327f1aab57a9fd551c68fae233f1c31f9996ccaf97bb6524a962fec5f04b",
+        "longname_long10_revisit_market_development_2026-11-08\\1162963152422539264.json": "c4bcdb583bcbd7f33d14ec3931e10d0efd3b0d5ed4e250ccc86a2008a6b372a9"
+      },
+      "days": [
+        "2026-10-07",
+        "2026-10-09",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15"
+      ],
+      "sample_position_ids": [
+        "1160064026315821056",
+        "1160788737878364160",
+        "1160849193162739712",
+        "1161936357451599872",
+        "1162057137904652288",
+        "1162238351735230464",
+        "1162781927221202944",
+        "1162963149046124544",
+        "1162963150862258176",
+        "1162963152422539264"
+      ]
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 5,
+          "hits": 5,
+          "coverage": 1.0,
+          "background_n": 60,
+          "background_hits": 60,
+          "background_rate": 1.0,
+          "advantage_over_background": 0.0,
+          "frequency_ratio": 1.0,
+          "day_counts": {
+            "20744": {
+              "n": 2,
+              "hits": 2
+            },
+            "20745": {
+              "n": 1,
+              "hits": 1
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 5,
+          "hits": 3,
+          "coverage": 0.6,
+          "background_n": 60,
+          "background_hits": 19,
+          "background_rate": 0.31666666666666665,
+          "advantage_over_background": 0.2833333333333333,
+          "frequency_ratio": 1.8947368421052633,
+          "day_counts": {
+            "20744": {
+              "n": 2,
+              "hits": 2
+            },
+            "20745": {
+              "n": 1,
+              "hits": 0
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.5,
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 5,
+          "hits": 0,
+          "coverage": 0.0,
+          "background_n": 60,
+          "background_hits": 6,
+          "background_rate": 0.1,
+          "advantage_over_background": -0.1,
+          "frequency_ratio": 0.0,
+          "day_counts": {
+            "20744": {
+              "n": 2,
+              "hits": 0
+            },
+            "20745": {
+              "n": 1,
+              "hits": 0
+            },
+            "20760": {
+              "n": 1,
+              "hits": 0
+            },
+            "20761": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.0,
+          "meets_frozen_screen": false
+        }
+      },
+      "sources": {
+        "longname_long10_revisit_market_holdout_2026-11-08\\1164291870810148864.json": "c4ea529d9a21ed4f05c6321927896c67d23e5e2c60eb719d639af61524d3606f",
+        "longname_long10_revisit_market_holdout_2026-11-08\\1164291875134476288.json": "2f1d3643531d6ae48a365e1d16ad051753a9a6533ef354ce44fd4bd412f67e10",
+        "longname_long10_revisit_market_holdout_2026-11-08\\1164352266887729152.json": "ba7afa840ee2592a3989e25efa4ab02a6e03d255891365a6e856fdfbec339fbf",
+        "longname_long10_revisit_market_holdout_2026-11-08\\1169908876729094144.json": "8c32a9d1f8af42ab032f8607b01b4201f57a7cb82235a9a4f0ace6a8fe7abc39",
+        "longname_long10_revisit_market_holdout_2026-11-08\\1170210874821152768.json": "825327f96853e3ddba9b36ab9499d5b5c76bf722c071e24dc9aa253c7ada3271"
+      },
+      "days": [
+        "2026-10-18",
+        "2026-10-19",
+        "2026-11-03",
+        "2026-11-04"
+      ],
+      "sample_position_ids": [
+        "1164291870810148864",
+        "1164291875134476288",
+        "1164352266887729152",
+        "1169908876729094144",
+        "1170210874821152768"
+      ]
+    }
+  },
+  "cohort": {
+    "n": 15,
+    "all_regime_position_ids": {
+      "early_x20": [
+        "1155823552570822656",
+        "1158372857986912256",
+        "1159170595167113216",
+        "1159241058761281536",
+        "1159587346577068032"
+      ],
+      "long60h_x10": [
+        "1160064026315821056",
+        "1160788737878364160",
+        "1160849193162739712",
+        "1161936357451599872",
+        "1162057137904652288",
+        "1162238351735230464",
+        "1162781927221202944",
+        "1162963149046124544",
+        "1162963150862258176",
+        "1162963152422539264",
+        "1164291870810148864",
+        "1164291875134476288",
+        "1164352266887729152",
+        "1169908876729094144",
+        "1170210874821152768"
+      ],
+      "long60h_x5": [
+        "1160486818567917568",
+        "1162842321566535680",
+        "1162963121325969408",
+        "1162963122886250496",
+        "1162963124501057536",
+        "1164110673857449984",
+        "1164231480789143552",
+        "1164291872773083136",
+        "1164291877038690304",
+        "1164291900572930048",
+        "1164352265373585408"
+      ],
+      "long60h_x3": [
+        "1162781928953450496"
+      ],
+      "late75m_x5": [
+        "1170378247565971456"
+      ],
+      "late75m_x10": [
+        "1170378251596697600",
+        "1170378254700482560",
+        "1170378256864743424",
+        "1170378258987061248",
+        "1170378305254428672",
+        "1170378307322220544",
+        "1170378308857335808",
+        "1170378352993996800",
+        "1170378356064227328",
+        "1170378357582565376",
+        "1170378381355880448",
+        "1170515349100269568"
+      ]
+    },
+    "regime_boundary_ms": {
+      "start": 1791331200000,
+      "late75m_start": 1793804700000
+    },
+    "boundary_origin": "Previous execution audit; fixed before new market features",
+    "sources": {
+      "longname_5240250023760188416_2026-11-07.json": "b9451c6accf1cade0156f89223b7759610c28863d8e37eb3d7a2389b2d35de67",
+      "longname_5240250023760188416_orders_rawpass_2026-11-07.json": "4974586a770c19eb2b8cd214831d941afb61ee5c7e5a9114614ed104b0c6e5ec"
+    },
+    "cohort_sha256": "c386b62a0c55ee82d5e695983e85324d4b756b4883b0e9b79f3f410f93454928"
+  },
+  "independent_verification": {
+    "method": "Independent Decimal comparisons, all original order assignments, fixed chronological/leverage strata, raw/freeze and day-screen recomputation",
+    "original_orders_checked": 110,
+    "cohort_positions_checked": 15,
+    "entries_checked": 15,
+    "background_windows_checked": 180,
+    "hypotheses_checked": 3,
+    "strata": [
+      {
+        "group": "early_x20",
+        "n": 5,
+        "active_days": 4,
+        "days": [
+          "2026-09-25",
+          "2026-10-02",
+          "2026-10-04",
+          "2026-10-05"
+        ],
+        "market_validation_performed": false
+      },
+      {
+        "group": "long60h_x10",
+        "n": 15,
+        "active_days": 10,
+        "days": [
+          "2026-10-07",
+          "2026-10-09",
+          "2026-10-12",
+          "2026-10-13",
+          "2026-10-14",
+          "2026-10-15",
+          "2026-10-18",
+          "2026-10-19",
+          "2026-11-03",
+          "2026-11-04"
+        ],
+        "market_validation_performed": true
+      },
+      {
+        "group": "long60h_x5",
+        "n": 11,
+        "active_days": 5,
+        "days": [
+          "2026-10-08",
+          "2026-10-14",
+          "2026-10-15",
+          "2026-10-18",
+          "2026-10-19"
+        ],
+        "market_validation_performed": false
+      },
+      {
+        "group": "long60h_x3",
+        "n": 1,
+        "active_days": 1,
+        "days": [
+          "2026-10-14"
+        ],
+        "market_validation_performed": false
+      },
+      {
+        "group": "late75m_x5",
+        "n": 1,
+        "active_days": 1,
+        "days": [
+          "2026-11-04"
+        ],
+        "market_validation_performed": false
+      },
+      {
+        "group": "late75m_x10",
+        "n": 12,
+        "active_days": 2,
+        "days": [
+          "2026-11-04",
+          "2026-11-05"
+        ],
+        "market_validation_performed": false
+      }
+    ],
+    "holdout_access_after_freeze": true,
+    "script_sha256": "f2c3f6a96b9112aeb3d1ea853d1b83473d49fa5eeb953bc3248e006f9bc2a34e"
+  },
+  "full_audit_sha256": "4085e8497498f73b922e68b2ae2e582e0b89105e0a623f28742c3e9b31a9ae84",
+  "prepare_script_sha256": "baf1f1faf5124b2b0db6d4586c18a4d3bbebe51b2eaaa2729686e3e74dfd591f"
+}

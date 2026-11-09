@@ -1,0 +1,681 @@
+{
+  "status": "entry_candidate",
+  "supported_conditions": [
+    "H1",
+    "H2"
+  ],
+  "profitability_tested": false,
+  "scope": "First MARKET SELL Short x20 Cross only; largest stratum selected by count before market. Other leverage, Long, LIMIT strata untested. Symbol selection, size, early exits and stop/timer exceptions unknown.",
+  "hypotheses": {
+    "frozen_at": "2026-11-08T10:48:38.552599+00:00",
+    "split_sha256": "63c1bc0f6f4a7df55bf39ee934d09483aa33f5df053f3665a0fac9246c29954d",
+    "development_sha256": "5166f1ef4403d980f03ead58984ee0d0280fc6f98b344a752bb1f76b9ff1ec11",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "clauses": [
+          {
+            "feature": "return_15m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      },
+      {
+        "id": "H2",
+        "clauses": [
+          {
+            "feature": "return_15m",
+            "operator": "lte",
+            "threshold": "-0.01"
+          }
+        ]
+      },
+      {
+        "id": "H3",
+        "clauses": [
+          {
+            "feature": "return_15m",
+            "operator": "lte",
+            "threshold": "-0.01"
+          },
+          {
+            "feature": "return_1m",
+            "operator": "lt",
+            "threshold": "0"
+          }
+        ]
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "First MARKET SELL Short x20 Cross only; largest stratum selected by count before market. Other leverage, Long, LIMIT strata untested. Symbol selection, size, early exits and stop/timer exceptions unknown.",
+    "threshold_origin": "H1 natural negative 15m sign (30/30 development). H2 round -1% from development range -5.39% to -0.38%, median -2.25%; not author configuration. H3 adds natural 1m negative continuation. All three versions retained; no holdout tuning.",
+    "background": "12 same-symbol windows 2-24h earlier; dependent, not labeled nonentries.",
+    "unknown_policy": "Strict zero fails sign conditions, -1% included. Fully closed bars before first SELL orderTime; no duration or PnL selection. Existing Long deficits and JCT residual pair unresolved. No full execution or profitability claim."
+  },
+  "hypotheses_sha256": "54a578f907bedaa014fb6d41d5c7e04885a0f5cf7557e3a7ad111dc8621b1d24",
+  "split_sha256": "63c1bc0f6f4a7df55bf39ee934d09483aa33f5df053f3665a0fac9246c29954d",
+  "script_sha256": "bee9227b40e728e09e37dddac983aaeb1f29071248614514f87bfaedab885f88",
+  "market_script_sha256": "9e3231aa7965bae86a04a7a421380d92037e39c94cc0b7556c228704a93e955b",
+  "full_rule_status": "rule_unidentified",
+  "symbol_selection_recovered": false,
+  "cohort_sources": {
+    "yang_5238239613252372224_scan_2026-10-25.json": "28ea70accd6c9f8494e14df9f46d729a40ebf7cd981aa9fdab2f3497d862073d",
+    "yang_5238239613252372224_2026-11-07.json": "5c73704b2163e815e6097e9ef1de77fba1e24bb26938a8e48814d9b5e347d5cd",
+    "yang_5238239613252372224_orders_2026-11-07.json": "bf16ab8c819ebb25286c76907c903abe0cae5c1308a13f4433a8c6af4fbface5",
+    "yang_5238239613252372224_orders_rawpass_2026-11-07.json": "44c7569406c371f34dd816d086b68cc5060a3d94c72826c0cb2bf52ed3303270"
+  },
+  "frozen_prepare_script_sha256": "40f9d3da37d522abb66abdd97bef4f125d0515e2a508dde35f395378970f808a",
+  "current_prepare_script_sha256": "eb319beead409ac3aa565bb3325f797f5688a2329ce9c50e546e5786901e5a75",
+  "strata": {
+    "Long_x10_Cross_MARKET": {
+      "n": 32,
+      "days": [
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-27",
+        "2026-10-02",
+        "2026-10-05",
+        "2026-10-09",
+        "2026-10-11",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-11-01",
+        "2026-11-03",
+        "2026-11-04"
+      ]
+    },
+    "Long_x5_Cross_MARKET": {
+      "n": 84,
+      "days": [
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-27",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+        "2026-10-04",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-16",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-11-01",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05"
+      ]
+    },
+    "Long_x20_Cross_MARKET": {
+      "n": 247,
+      "days": [
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+        "2026-10-04",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-11-01",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05"
+      ]
+    },
+    "Short_x10_Cross_MARKET": {
+      "n": 249,
+      "days": [
+        "2026-09-28",
+        "2026-10-08",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-22",
+        "2026-10-23",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-30",
+        "2026-10-31",
+        "2026-11-01",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07"
+      ]
+    },
+    "Short_x20_Cross_MARKET": {
+      "n": 410,
+      "days": [
+        "2026-09-28",
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-22",
+        "2026-10-23",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07"
+      ]
+    },
+    "Long_x5_Cross_LIMIT": {
+      "n": 9,
+      "days": [
+        "2026-10-04",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-09"
+      ]
+    },
+    "Short_x5_Cross_MARKET": {
+      "n": 167,
+      "days": [
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17",
+        "2026-10-18",
+        "2026-10-20",
+        "2026-10-22",
+        "2026-10-23",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-31",
+        "2026-11-01",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-07"
+      ]
+    },
+    "Short_x20_Cross_LIMIT": {
+      "n": 1,
+      "days": [
+        "2026-10-08"
+      ]
+    }
+  },
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 30,
+          "hits": 30,
+          "coverage": 1.0,
+          "background_n": 360,
+          "background_hits": 201,
+          "background_rate": 0.5583333333333333,
+          "advantage_over_background": 0.44166666666666665,
+          "frequency_ratio": 1.791044776119403,
+          "day_counts": {
+            "20724": {
+              "n": 2,
+              "hits": 2
+            },
+            "20734": {
+              "n": 2,
+              "hits": 2
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20736": {
+              "n": 2,
+              "hits": 2
+            },
+            "20737": {
+              "n": 2,
+              "hits": 2
+            },
+            "20740": {
+              "n": 2,
+              "hits": 2
+            },
+            "20741": {
+              "n": 2,
+              "hits": 2
+            },
+            "20742": {
+              "n": 2,
+              "hits": 2
+            },
+            "20743": {
+              "n": 2,
+              "hits": 2
+            },
+            "20744": {
+              "n": 2,
+              "hits": 2
+            },
+            "20745": {
+              "n": 2,
+              "hits": 2
+            },
+            "20746": {
+              "n": 2,
+              "hits": 2
+            },
+            "20747": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 2,
+              "hits": 2
+            },
+            "20749": {
+              "n": 2,
+              "hits": 2
+            },
+            "20750": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 30,
+          "hits": 26,
+          "coverage": 0.8666666666666667,
+          "background_n": 360,
+          "background_hits": 61,
+          "background_rate": 0.16944444444444445,
+          "advantage_over_background": 0.6972222222222222,
+          "frequency_ratio": 5.114754098360656,
+          "day_counts": {
+            "20724": {
+              "n": 2,
+              "hits": 1
+            },
+            "20734": {
+              "n": 2,
+              "hits": 1
+            },
+            "20735": {
+              "n": 1,
+              "hits": 1
+            },
+            "20736": {
+              "n": 2,
+              "hits": 2
+            },
+            "20737": {
+              "n": 2,
+              "hits": 2
+            },
+            "20740": {
+              "n": 2,
+              "hits": 2
+            },
+            "20741": {
+              "n": 2,
+              "hits": 2
+            },
+            "20742": {
+              "n": 2,
+              "hits": 2
+            },
+            "20743": {
+              "n": 2,
+              "hits": 2
+            },
+            "20744": {
+              "n": 2,
+              "hits": 2
+            },
+            "20745": {
+              "n": 2,
+              "hits": 2
+            },
+            "20746": {
+              "n": 2,
+              "hits": 1
+            },
+            "20747": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 2,
+              "hits": 1
+            },
+            "20749": {
+              "n": 2,
+              "hits": 2
+            },
+            "20750": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.875,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 30,
+          "hits": 18,
+          "coverage": 0.6,
+          "background_n": 360,
+          "background_hits": 38,
+          "background_rate": 0.10555555555555556,
+          "advantage_over_background": 0.4944444444444444,
+          "frequency_ratio": 5.684210526315789,
+          "day_counts": {
+            "20724": {
+              "n": 2,
+              "hits": 0
+            },
+            "20734": {
+              "n": 2,
+              "hits": 1
+            },
+            "20735": {
+              "n": 1,
+              "hits": 0
+            },
+            "20736": {
+              "n": 2,
+              "hits": 1
+            },
+            "20737": {
+              "n": 2,
+              "hits": 2
+            },
+            "20740": {
+              "n": 2,
+              "hits": 2
+            },
+            "20741": {
+              "n": 2,
+              "hits": 2
+            },
+            "20742": {
+              "n": 2,
+              "hits": 0
+            },
+            "20743": {
+              "n": 2,
+              "hits": 2
+            },
+            "20744": {
+              "n": 2,
+              "hits": 1
+            },
+            "20745": {
+              "n": 2,
+              "hits": 1
+            },
+            "20746": {
+              "n": 2,
+              "hits": 1
+            },
+            "20747": {
+              "n": 1,
+              "hits": 0
+            },
+            "20748": {
+              "n": 2,
+              "hits": 1
+            },
+            "20749": {
+              "n": 2,
+              "hits": 2
+            },
+            "20750": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.5625,
+          "meets_frozen_screen": false
+        }
+      },
+      "market_files": 30
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 20,
+          "hits": 20,
+          "coverage": 1.0,
+          "background_n": 240,
+          "background_hits": 132,
+          "background_rate": 0.55,
+          "advantage_over_background": 0.44999999999999996,
+          "frequency_ratio": 1.8181818181818181,
+          "day_counts": {
+            "20751": {
+              "n": 2,
+              "hits": 2
+            },
+            "20752": {
+              "n": 3,
+              "hits": 3
+            },
+            "20753": {
+              "n": 1,
+              "hits": 1
+            },
+            "20759": {
+              "n": 2,
+              "hits": 2
+            },
+            "20760": {
+              "n": 3,
+              "hits": 3
+            },
+            "20761": {
+              "n": 2,
+              "hits": 2
+            },
+            "20762": {
+              "n": 2,
+              "hits": 2
+            },
+            "20763": {
+              "n": 3,
+              "hits": 3
+            },
+            "20764": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 1.0,
+          "meets_frozen_screen": true
+        },
+        "H2": {
+          "n": 20,
+          "hits": 18,
+          "coverage": 0.9,
+          "background_n": 240,
+          "background_hits": 47,
+          "background_rate": 0.19583333333333333,
+          "advantage_over_background": 0.7041666666666667,
+          "frequency_ratio": 4.595744680851064,
+          "day_counts": {
+            "20751": {
+              "n": 2,
+              "hits": 2
+            },
+            "20752": {
+              "n": 3,
+              "hits": 2
+            },
+            "20753": {
+              "n": 1,
+              "hits": 1
+            },
+            "20759": {
+              "n": 2,
+              "hits": 2
+            },
+            "20760": {
+              "n": 3,
+              "hits": 3
+            },
+            "20761": {
+              "n": 2,
+              "hits": 2
+            },
+            "20762": {
+              "n": 2,
+              "hits": 1
+            },
+            "20763": {
+              "n": 3,
+              "hits": 3
+            },
+            "20764": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.9074074074074074,
+          "meets_frozen_screen": true
+        },
+        "H3": {
+          "n": 20,
+          "hits": 15,
+          "coverage": 0.75,
+          "background_n": 240,
+          "background_hits": 29,
+          "background_rate": 0.12083333333333333,
+          "advantage_over_background": 0.6291666666666667,
+          "frequency_ratio": 6.206896551724138,
+          "day_counts": {
+            "20751": {
+              "n": 2,
+              "hits": 1
+            },
+            "20752": {
+              "n": 3,
+              "hits": 2
+            },
+            "20753": {
+              "n": 1,
+              "hits": 1
+            },
+            "20759": {
+              "n": 2,
+              "hits": 2
+            },
+            "20760": {
+              "n": 3,
+              "hits": 1
+            },
+            "20761": {
+              "n": 2,
+              "hits": 2
+            },
+            "20762": {
+              "n": 2,
+              "hits": 1
+            },
+            "20763": {
+              "n": 3,
+              "hits": 3
+            },
+            "20764": {
+              "n": 2,
+              "hits": 2
+            }
+          },
+          "macro_day_coverage": 0.7777777777777778,
+          "meets_frozen_screen": false
+        }
+      },
+      "market_files": 20
+    }
+  },
+  "independent_verifier_sha256": "800db3e464c03ee5e327e8e6bef72644c812adb3c4c1d24c183ac0f462129c96"
+}

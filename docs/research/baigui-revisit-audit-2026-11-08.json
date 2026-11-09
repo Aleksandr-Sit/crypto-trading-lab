@@ -1,0 +1,1768 @@
+{
+  "status": "rule_unidentified",
+  "supported_conditions": [],
+  "profitability_tested": false,
+  "symbol_selection_recovered": false,
+  "hypotheses": {
+    "frozen_at": "2026-11-08T10:14:47.054437+00:00",
+    "split_sha256": "a91898ba1c83cb049a09cc1cde79fa1666159b64efb78c985e1d65b446d29bb8",
+    "development_sha256": "e20af9b1faf5cb68dd4e8ba2758020f62616826fc66d03d35ec10546f395af31",
+    "hypotheses": [
+      {
+        "id": "H1",
+        "lag_minutes": 1,
+        "relationship": "continuation"
+      },
+      {
+        "id": "H2",
+        "lag_minutes": 15,
+        "relationship": "continuation"
+      },
+      {
+        "id": "H3",
+        "lag_minutes": 1440,
+        "relationship": "continuation"
+      }
+    ],
+    "candidate_criteria": {
+      "min_entry_coverage": 0.8,
+      "min_advantage_over_background": 0.2,
+      "min_frequency_ratio": 1.5,
+      "min_macro_day_coverage": 0.75,
+      "min_side_coverage": 0.75,
+      "require_both_phases": true
+    },
+    "scope": "Side prediction conditional on observed symbols and complete archived x5 Cross flows; not cross-sectional coin selection or complete entry rule.",
+    "threshold_origin": "Natural zero-return signs after bounded development review. H1/H2 positive association 18/30 and 20/30; daily H3 16/30 as daily schedule reference. All are weak on development and retained as explicit limited checks; no side-specific window fitting.",
+    "side_mapping": "Positive return -> Long; negative -> Short; zero gives no prediction and fails. Identical window/mapping on both sides.",
+    "background": "12 same-symbol windows 2-24h before entry, compared with the actual entry side held fixed; dependent reference frequency, not labeled background direction decisions or false signals.",
+    "symbol_selection": "Not recovered: historical eligible universe and labeled nonentries unavailable; no ranks or precision claims.",
+    "unknown_policy": "No post-holdout tuning. First orderTime only. Additional entries/exits and avgCost not used as signals. No claim of profitability."
+  },
+  "hypotheses_sha256": "12fbf585a5b6f48bc6008e3d818b5c6fd279436cced75f75f673d504b98cacfa",
+  "split_sha256": "a91898ba1c83cb049a09cc1cde79fa1666159b64efb78c985e1d65b446d29bb8",
+  "script_sha256": "4bf05f8627a9bd84820d372a066cab3fd3f87861483ca87a69b10b6ae9fbf98f",
+  "phases": {
+    "development": {
+      "summary": {
+        "H1": {
+          "n": 30,
+          "hits": 18,
+          "coverage": 0.6,
+          "background_n": 360,
+          "background_hits": 180,
+          "background_rate": 0.5,
+          "advantage_over_background": 0.09999999999999998,
+          "frequency_ratio": 1.2,
+          "day_counts": {
+            "20705": {
+              "n": 1,
+              "hits": 1
+            },
+            "20706": {
+              "n": 1,
+              "hits": 0
+            },
+            "20707": {
+              "n": 1,
+              "hits": 1
+            },
+            "20709": {
+              "n": 1,
+              "hits": 0
+            },
+            "20710": {
+              "n": 1,
+              "hits": 0
+            },
+            "20711": {
+              "n": 1,
+              "hits": 0
+            },
+            "20712": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 1,
+              "hits": 0
+            },
+            "20715": {
+              "n": 1,
+              "hits": 0
+            },
+            "20716": {
+              "n": 1,
+              "hits": 0
+            },
+            "20718": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 1,
+              "hits": 1
+            },
+            "20720": {
+              "n": 1,
+              "hits": 0
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20723": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20725": {
+              "n": 1,
+              "hits": 0
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 1
+            },
+            "20730": {
+              "n": 1,
+              "hits": 0
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 1
+            },
+            "20734": {
+              "n": 1,
+              "hits": 0
+            },
+            "20736": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20738": {
+              "n": 1,
+              "hits": 0
+            },
+            "20739": {
+              "n": 1,
+              "hits": 1
+            },
+            "20741": {
+              "n": 1,
+              "hits": 1
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.6,
+          "by_side": {
+            "Long": {
+              "n": 14,
+              "hits": 8,
+              "coverage": 0.5714285714285714
+            },
+            "Short": {
+              "n": 16,
+              "hits": 10,
+              "coverage": 0.625
+            }
+          },
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 30,
+          "hits": 20,
+          "coverage": 0.6666666666666666,
+          "background_n": 360,
+          "background_hits": 190,
+          "background_rate": 0.5277777777777778,
+          "advantage_over_background": 0.13888888888888884,
+          "frequency_ratio": 1.263157894736842,
+          "day_counts": {
+            "20705": {
+              "n": 1,
+              "hits": 1
+            },
+            "20706": {
+              "n": 1,
+              "hits": 1
+            },
+            "20707": {
+              "n": 1,
+              "hits": 1
+            },
+            "20709": {
+              "n": 1,
+              "hits": 0
+            },
+            "20710": {
+              "n": 1,
+              "hits": 1
+            },
+            "20711": {
+              "n": 1,
+              "hits": 0
+            },
+            "20712": {
+              "n": 1,
+              "hits": 1
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            },
+            "20715": {
+              "n": 1,
+              "hits": 1
+            },
+            "20716": {
+              "n": 1,
+              "hits": 0
+            },
+            "20718": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 1,
+              "hits": 0
+            },
+            "20720": {
+              "n": 1,
+              "hits": 0
+            },
+            "20722": {
+              "n": 1,
+              "hits": 0
+            },
+            "20723": {
+              "n": 1,
+              "hits": 1
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20725": {
+              "n": 1,
+              "hits": 1
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 0
+            },
+            "20730": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 0
+            },
+            "20734": {
+              "n": 1,
+              "hits": 1
+            },
+            "20736": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20738": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 0
+            },
+            "20741": {
+              "n": 1,
+              "hits": 0
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.6666666666666666,
+          "by_side": {
+            "Long": {
+              "n": 14,
+              "hits": 9,
+              "coverage": 0.6428571428571429
+            },
+            "Short": {
+              "n": 16,
+              "hits": 11,
+              "coverage": 0.6875
+            }
+          },
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 30,
+          "hits": 16,
+          "coverage": 0.5333333333333333,
+          "background_n": 360,
+          "background_hits": 182,
+          "background_rate": 0.5055555555555555,
+          "advantage_over_background": 0.02777777777777779,
+          "frequency_ratio": 1.054945054945055,
+          "day_counts": {
+            "20705": {
+              "n": 1,
+              "hits": 0
+            },
+            "20706": {
+              "n": 1,
+              "hits": 0
+            },
+            "20707": {
+              "n": 1,
+              "hits": 0
+            },
+            "20709": {
+              "n": 1,
+              "hits": 1
+            },
+            "20710": {
+              "n": 1,
+              "hits": 0
+            },
+            "20711": {
+              "n": 1,
+              "hits": 1
+            },
+            "20712": {
+              "n": 1,
+              "hits": 0
+            },
+            "20714": {
+              "n": 1,
+              "hits": 1
+            },
+            "20715": {
+              "n": 1,
+              "hits": 1
+            },
+            "20716": {
+              "n": 1,
+              "hits": 1
+            },
+            "20718": {
+              "n": 1,
+              "hits": 1
+            },
+            "20719": {
+              "n": 1,
+              "hits": 1
+            },
+            "20720": {
+              "n": 1,
+              "hits": 0
+            },
+            "20722": {
+              "n": 1,
+              "hits": 1
+            },
+            "20723": {
+              "n": 1,
+              "hits": 0
+            },
+            "20724": {
+              "n": 1,
+              "hits": 1
+            },
+            "20725": {
+              "n": 1,
+              "hits": 0
+            },
+            "20728": {
+              "n": 1,
+              "hits": 1
+            },
+            "20729": {
+              "n": 1,
+              "hits": 0
+            },
+            "20730": {
+              "n": 1,
+              "hits": 1
+            },
+            "20732": {
+              "n": 1,
+              "hits": 1
+            },
+            "20733": {
+              "n": 1,
+              "hits": 0
+            },
+            "20734": {
+              "n": 1,
+              "hits": 0
+            },
+            "20736": {
+              "n": 1,
+              "hits": 1
+            },
+            "20737": {
+              "n": 1,
+              "hits": 1
+            },
+            "20738": {
+              "n": 1,
+              "hits": 1
+            },
+            "20739": {
+              "n": 1,
+              "hits": 0
+            },
+            "20741": {
+              "n": 1,
+              "hits": 0
+            },
+            "20742": {
+              "n": 1,
+              "hits": 1
+            },
+            "20743": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.5333333333333333,
+          "by_side": {
+            "Long": {
+              "n": 14,
+              "hits": 8,
+              "coverage": 0.5714285714285714
+            },
+            "Short": {
+              "n": 16,
+              "hits": 8,
+              "coverage": 0.5
+            }
+          },
+          "meets_frozen_screen": false
+        }
+      },
+      "sources": {
+        "baigui_side_revisit_market_development_2026-11-08\\1149858616355237888.json": "6a4b7aede84c7090638d5fcbe0e9a375dc67f33c26d0c05939d98c16afb4aaf0",
+        "baigui_side_revisit_market_development_2026-11-08\\1150221215269826560.json": "f71058d10e157d0fb414478e6514c691213ada0db57766b3dbaae750df5d83d3",
+        "baigui_side_revisit_market_development_2026-11-08\\1150583837802541056.json": "056cf4129d63a892ea111e5b7b5da67298bd04915c42d990dfe468de7cb026ec",
+        "baigui_side_revisit_market_development_2026-11-08\\1151308975707697152.json": "0d13dcae9405a77be82537146137b7b7bdebaa378c1602ac77c68541a1fae168",
+        "baigui_side_revisit_market_development_2026-11-08\\1151671589629505536.json": "829500df9bab1dc51ff1c2723cb45aa57a64e92dbcb71a76e2d3cb9db7df494c",
+        "baigui_side_revisit_market_development_2026-11-08\\1152034206990643200.json": "de93e797b18956b3c5e8cf79079e3c9df9ba5009a52436db8a6f35a10a86f302",
+        "baigui_side_revisit_market_development_2026-11-08\\1152395571987132416.json": "62595bf05dfdd9965cf3e5a4a50429eee26a2e4e05787a8b9e83351d2b0d0228",
+        "baigui_side_revisit_market_development_2026-11-08\\1153120784534122496.json": "57dc0628b51cbf598125b8bdaba9a5ed48e0fc8c8bc6df6847f96ae6ea711616",
+        "baigui_side_revisit_market_development_2026-11-08\\1153483400691494912.json": "dc6ef062aa83d830b7154fb8ad3f3af0fb007d6058beb5edfc10299832fa2955",
+        "baigui_side_revisit_market_development_2026-11-08\\1153846067755134976.json": "33e13acb4d683f8ff8855714d465bde94cbfa9e754dd6a5ca542ecce47247897",
+        "baigui_side_revisit_market_development_2026-11-08\\1154569986724245504.json": "0b28be360f1f696280eb9860f453c1ede94082a89dca30ef05012acdad6ebf31",
+        "baigui_side_revisit_market_development_2026-11-08\\1154932612117475328.json": "5be240358682dcd7a5a4c7b529cc6ed2c25f618821f28c3f141a49b7e6382688",
+        "baigui_side_revisit_market_development_2026-11-08\\1155295283752906752.json": "a3b643403ce48b65ecb119cca633544bd91ce4acb7814253c9477b8c1ddfcd9c",
+        "baigui_side_revisit_market_development_2026-11-08\\1156019245050933248.json": "d97d48c62619b2fd807b39aa7f5a59800ea1d599bdb14a75d17596f3bdecdb70",
+        "baigui_side_revisit_market_development_2026-11-08\\1156381840756879360.json": "92e2b75ee2e37dba5dff9b20113635eff4def078c9036ec3cb625bde9f62a6b7",
+        "baigui_side_revisit_market_development_2026-11-08\\1156744424358064128.json": "62c8881e79b9bb128bd57816cb39aa1553aa2f28d8b483ba84e4940fc60ec490",
+        "baigui_side_revisit_market_development_2026-11-08\\1157107037503926272.json": "075ebbcce72aea0af57deb545b05b8b3277a86c88ae830c1f2ef233b5b5cd7bf",
+        "baigui_side_revisit_market_development_2026-11-08\\1158194656778301440.json": "f469e419076461ba47919511b1dfc25f0ad2eb8e867b9fe343848b659eec65d1",
+        "baigui_side_revisit_market_development_2026-11-08\\1158555996286005248.json": "70e6e1dcfd67e7507f1cc20b2c245c8177153d2c3061fd197ccc7a39b981884d",
+        "baigui_side_revisit_market_development_2026-11-08\\1158918600955179008.json": "c3527b29dc0bd5f1d70c00c7a97186873084dd1c7b41e28fc1e3626bb8bcc31a",
+        "baigui_side_revisit_market_development_2026-11-08\\1159643797861609472.json": "120c07c258ae857bcd1a8da92d58b91152941c10b7f10be2b9c3d35819974360",
+        "baigui_side_revisit_market_development_2026-11-08\\1160006458486992896.json": "d36faacd713311573b0f50c28269a2004553368dfcec1d14228eb94f75cc21a6",
+        "baigui_side_revisit_market_development_2026-11-08\\1160369048488685568.json": "a42660ede9c278033525f3c93cd8456981fe30794354af892fd2d5acfa772bfc",
+        "baigui_side_revisit_market_development_2026-11-08\\1161093798835957760.json": "a5f2ff14f28fd10eb22e96b110413814a306e0000b901c61dbd3aeca5a828574",
+        "baigui_side_revisit_market_development_2026-11-08\\1161455085059223552.json": "e6bafc7025845f14a2db3adc8e0b42d5d20244fa3f9d245d2626b16614a1d8f0",
+        "baigui_side_revisit_market_development_2026-11-08\\1161817947971694592.json": "ac01623d05d88cd183abcb4fdad7bdff076a2defbefe7e0eb88fc3dd82b37769",
+        "baigui_side_revisit_market_development_2026-11-08\\1162180618235588608.json": "4892792d137e6f96e8943bc885ff3c33c2821a14f0f1d76b8ad4d0109ca99e34",
+        "baigui_side_revisit_market_development_2026-11-08\\1162905435934994432.json": "1032be6074fcf045983d9d0b9b738754655e088cbc71ba307ae245a6e3dd0a42",
+        "baigui_side_revisit_market_development_2026-11-08\\1163268041120067584.json": "a76c2731b9c88b76c259e6d8931c2050a14da0dbdf5504bc07bc161c4136d7a9",
+        "baigui_side_revisit_market_development_2026-11-08\\1163629403960684544.json": "367866c28776e700f99a3636f03681045711ae4e37be8d6394ea5d7e0a31aa69"
+      },
+      "side_counts": {
+        "Short": 16,
+        "Long": 14
+      },
+      "majority_side_baseline": 0.5333333333333333,
+      "days": [
+        "2026-09-09",
+        "2026-09-10",
+        "2026-09-11",
+        "2026-09-12",
+        "2026-09-13",
+        "2026-09-14",
+        "2026-09-15",
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-18",
+        "2026-09-19",
+        "2026-09-20",
+        "2026-09-21",
+        "2026-09-22",
+        "2026-09-23",
+        "2026-09-24",
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-10-01",
+        "2026-10-02",
+        "2026-10-03",
+        "2026-10-04",
+        "2026-10-05",
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09",
+        "2026-10-10",
+        "2026-10-11",
+        "2026-10-12",
+        "2026-10-13",
+        "2026-10-14",
+        "2026-10-15",
+        "2026-10-16",
+        "2026-10-17"
+      ],
+      "sample_position_ids": [
+        "1149858616355237888",
+        "1150221215269826560",
+        "1150583837802541056",
+        "1151308975707697152",
+        "1151671589629505536",
+        "1152034206990643200",
+        "1152395571987132416",
+        "1153120784534122496",
+        "1153483400691494912",
+        "1153846067755134976",
+        "1154569986724245504",
+        "1154932612117475328",
+        "1155295283752906752",
+        "1156019245050933248",
+        "1156381840756879360",
+        "1156744424358064128",
+        "1157107037503926272",
+        "1158194656778301440",
+        "1158555996286005248",
+        "1158918600955179008",
+        "1159643797861609472",
+        "1160006458486992896",
+        "1160369048488685568",
+        "1161093798835957760",
+        "1161455085059223552",
+        "1161817947971694592",
+        "1162180618235588608",
+        "1162905435934994432",
+        "1163268041120067584",
+        "1163629403960684544"
+      ],
+      "execution_diagnostics": [
+        {
+          "position_id": "1149858616355237888",
+          "first_fill_vs_previous_close": 0.0,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1150221215269826560",
+          "first_fill_vs_previous_close": -0.0011123470522803114,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1150583837802541056",
+          "first_fill_vs_previous_close": 0.00018231540565177758,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1151308975707697152",
+          "first_fill_vs_previous_close": 0.0016501650165016502,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1151671589629505536",
+          "first_fill_vs_previous_close": -0.009366823652537938,
+          "additional_entry_order_count": 1
+        },
+        {
+          "position_id": "1152034206990643200",
+          "first_fill_vs_previous_close": 0.005602498767055729,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1152395571987132416",
+          "first_fill_vs_previous_close": -0.004486450918226955,
+          "additional_entry_order_count": 1
+        },
+        {
+          "position_id": "1153120784534122496",
+          "first_fill_vs_previous_close": -0.00025383931971062316,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1153483400691494912",
+          "first_fill_vs_previous_close": 0.0,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1153846067755134976",
+          "first_fill_vs_previous_close": 0.0,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1154569986724245504",
+          "first_fill_vs_previous_close": -0.0015126447648310091,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1154932612117475328",
+          "first_fill_vs_previous_close": 0.0003154574132492114,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1155295283752906752",
+          "first_fill_vs_previous_close": -2.923463719815237e-05,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1156019245050933248",
+          "first_fill_vs_previous_close": 0.0016083634901487736,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1156381840756879360",
+          "first_fill_vs_previous_close": 0.000427715996578272,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1156744424358064128",
+          "first_fill_vs_previous_close": -0.000421822272215973,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1157107037503926272",
+          "first_fill_vs_previous_close": -0.0006080875646093037,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1158194656778301440",
+          "first_fill_vs_previous_close": -0.00046860356138706655,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1158555996286005248",
+          "first_fill_vs_previous_close": -0.00027285129604365623,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1158918600955179008",
+          "first_fill_vs_previous_close": -6.854436689930209e-05,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1159643797861609472",
+          "first_fill_vs_previous_close": 0.0013984616921386475,
+          "additional_entry_order_count": 1
+        },
+        {
+          "position_id": "1160006458486992896",
+          "first_fill_vs_previous_close": -0.00024796974769078175,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1160369048488685568",
+          "first_fill_vs_previous_close": -0.00025759917568263783,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1161093798835957760",
+          "first_fill_vs_previous_close": -0.0058309037900874635,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1161455085059223552",
+          "first_fill_vs_previous_close": 0.0017987514548725003,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1161817947971694592",
+          "first_fill_vs_previous_close": 0.0003291097581043278,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1162180618235588608",
+          "first_fill_vs_previous_close": -0.003146853146853147,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1162905435934994432",
+          "first_fill_vs_previous_close": -0.0012142237640936687,
+          "additional_entry_order_count": 1
+        },
+        {
+          "position_id": "1163268041120067584",
+          "first_fill_vs_previous_close": -0.001024665154065725,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1163629403960684544",
+          "first_fill_vs_previous_close": 0.0,
+          "additional_entry_order_count": 0
+        }
+      ]
+    },
+    "holdout": {
+      "summary": {
+        "H1": {
+          "n": 20,
+          "hits": 9,
+          "coverage": 0.45,
+          "background_n": 240,
+          "background_hits": 108,
+          "background_rate": 0.45,
+          "advantage_over_background": 0.0,
+          "frequency_ratio": 1.0,
+          "day_counts": {
+            "20744": {
+              "n": 1,
+              "hits": 1
+            },
+            "20745": {
+              "n": 1,
+              "hits": 0
+            },
+            "20746": {
+              "n": 1,
+              "hits": 0
+            },
+            "20747": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 1,
+              "hits": 0
+            },
+            "20749": {
+              "n": 1,
+              "hits": 0
+            },
+            "20750": {
+              "n": 1,
+              "hits": 1
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20752": {
+              "n": 1,
+              "hits": 1
+            },
+            "20753": {
+              "n": 2,
+              "hits": 2
+            },
+            "20754": {
+              "n": 1,
+              "hits": 0
+            },
+            "20755": {
+              "n": 1,
+              "hits": 0
+            },
+            "20756": {
+              "n": 1,
+              "hits": 0
+            },
+            "20757": {
+              "n": 1,
+              "hits": 0
+            },
+            "20759": {
+              "n": 1,
+              "hits": 0
+            },
+            "20760": {
+              "n": 1,
+              "hits": 0
+            },
+            "20761": {
+              "n": 1,
+              "hits": 0
+            },
+            "20762": {
+              "n": 1,
+              "hits": 1
+            },
+            "20763": {
+              "n": 1,
+              "hits": 1
+            }
+          },
+          "macro_day_coverage": 0.42105263157894735,
+          "by_side": {
+            "Long": {
+              "n": 11,
+              "hits": 5,
+              "coverage": 0.45454545454545453
+            },
+            "Short": {
+              "n": 9,
+              "hits": 4,
+              "coverage": 0.4444444444444444
+            }
+          },
+          "meets_frozen_screen": false
+        },
+        "H2": {
+          "n": 20,
+          "hits": 9,
+          "coverage": 0.45,
+          "background_n": 240,
+          "background_hits": 123,
+          "background_rate": 0.5125,
+          "advantage_over_background": -0.062499999999999944,
+          "frequency_ratio": 0.878048780487805,
+          "day_counts": {
+            "20744": {
+              "n": 1,
+              "hits": 0
+            },
+            "20745": {
+              "n": 1,
+              "hits": 0
+            },
+            "20746": {
+              "n": 1,
+              "hits": 0
+            },
+            "20747": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 0
+            },
+            "20750": {
+              "n": 1,
+              "hits": 1
+            },
+            "20751": {
+              "n": 1,
+              "hits": 1
+            },
+            "20752": {
+              "n": 1,
+              "hits": 0
+            },
+            "20753": {
+              "n": 2,
+              "hits": 1
+            },
+            "20754": {
+              "n": 1,
+              "hits": 0
+            },
+            "20755": {
+              "n": 1,
+              "hits": 0
+            },
+            "20756": {
+              "n": 1,
+              "hits": 1
+            },
+            "20757": {
+              "n": 1,
+              "hits": 0
+            },
+            "20759": {
+              "n": 1,
+              "hits": 1
+            },
+            "20760": {
+              "n": 1,
+              "hits": 1
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 1,
+              "hits": 0
+            },
+            "20763": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.4473684210526316,
+          "by_side": {
+            "Long": {
+              "n": 11,
+              "hits": 4,
+              "coverage": 0.36363636363636365
+            },
+            "Short": {
+              "n": 9,
+              "hits": 5,
+              "coverage": 0.5555555555555556
+            }
+          },
+          "meets_frozen_screen": false
+        },
+        "H3": {
+          "n": 20,
+          "hits": 12,
+          "coverage": 0.6,
+          "background_n": 240,
+          "background_hits": 133,
+          "background_rate": 0.5541666666666667,
+          "advantage_over_background": 0.04583333333333328,
+          "frequency_ratio": 1.0827067669172932,
+          "day_counts": {
+            "20744": {
+              "n": 1,
+              "hits": 0
+            },
+            "20745": {
+              "n": 1,
+              "hits": 1
+            },
+            "20746": {
+              "n": 1,
+              "hits": 1
+            },
+            "20747": {
+              "n": 1,
+              "hits": 1
+            },
+            "20748": {
+              "n": 1,
+              "hits": 1
+            },
+            "20749": {
+              "n": 1,
+              "hits": 0
+            },
+            "20750": {
+              "n": 1,
+              "hits": 0
+            },
+            "20751": {
+              "n": 1,
+              "hits": 0
+            },
+            "20752": {
+              "n": 1,
+              "hits": 0
+            },
+            "20753": {
+              "n": 2,
+              "hits": 2
+            },
+            "20754": {
+              "n": 1,
+              "hits": 1
+            },
+            "20755": {
+              "n": 1,
+              "hits": 1
+            },
+            "20756": {
+              "n": 1,
+              "hits": 0
+            },
+            "20757": {
+              "n": 1,
+              "hits": 1
+            },
+            "20759": {
+              "n": 1,
+              "hits": 1
+            },
+            "20760": {
+              "n": 1,
+              "hits": 0
+            },
+            "20761": {
+              "n": 1,
+              "hits": 1
+            },
+            "20762": {
+              "n": 1,
+              "hits": 1
+            },
+            "20763": {
+              "n": 1,
+              "hits": 0
+            }
+          },
+          "macro_day_coverage": 0.5789473684210527,
+          "by_side": {
+            "Long": {
+              "n": 11,
+              "hits": 7,
+              "coverage": 0.6363636363636364
+            },
+            "Short": {
+              "n": 9,
+              "hits": 5,
+              "coverage": 0.5555555555555556
+            }
+          },
+          "meets_frozen_screen": false
+        }
+      },
+      "sources": {
+        "baigui_side_revisit_market_holdout_2026-11-08\\1163992058693070848.json": "bbde4bf0365646b62cf7bd7474f4922caf52834ab6552805ef76e412dc712c48",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1164354644068446208.json": "d003c7a75e5cfbd2f62e48ce7de1d8876c9e384a93f84cbbf0fe9401d2302903",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1164717253108084736.json": "c2fa2457d0664cbf13faa70a683b331d7677533671c76961f7b9b7b21a0a8811",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1165079859605975040.json": "166b611ba97f7b9c24c3462cf7ed08a05da7fb19a822502a0550e29a5dd46dcd",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1165442461376884736.json": "df13520b433d1545d870d12fb3a7b520eeb6472878c2bda49ad416335425a511",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1165803784820404224.json": "b170ab95c6da1bdf0ff5bee30e90fb3fc27799a239fb04e5803a1a86635ce3ac",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1166166395265134592.json": "55f65c1d3cd8129f6e7d52353ee0cbabcabb6bef15a921915fc643d1da8a9364",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1166529038899392512.json": "940e0bf4dc869c455f1526684966cbab7ee53e63d033492fb9fd90b72b63c4b3",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1166891612539105280.json": "9b6938a48d4f96c8ce5eb318188ddcd803a6427d55be09d39ce3d2bc98547959",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1167254096433295360.json": "acc1da8687d70d02ec7aa76137ebe6be17a7e8fd4fb83d2d53a86b9ea0af81f1",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1167254131745140736.json": "64c7e083d728172093b7e6c504e0208677cffff478622dcf47308a190aadc92e",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1167616731519561728.json": "15930e17b90d4b7be6e643875a6bfb3769bb309c8890d965bfd2eaedb47f8006",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1167978027578470400.json": "c95e0a75786698fa967a20e84940e1ad5305ab6bb3a83617c904eb20ab0b4f5d",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1168340595581038592.json": "c8122794fcc82a816e3b367f5fe77e65600db24ef29645b7873e8d47436d107e",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1168703170743283712.json": "4bd450cc8981950b2bd871cbc4ee73daf57e4f8026d78e0e3cc492800e3a4592",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1169428123906125824.json": "cecb10601c0c38803cfaa4a2b63a8d9c01b03a50d3e3330fb1a0b466535b7c1e",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1169790665631379456.json": "7a0e4c788cd1efb81178f33c24f0d30a71905e078d1d8c6f5bb011eba7f35322",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1170153293423751168.json": "6e8fdbd71f8a52e68a8e440f9790c016fb7e2896175d79ec04dddc525a0c77f6",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1170515930254848000.json": "7d49cd228fd320d870e9814346ca45cadea4ec9d855d825d4df3d2f0c112fb53",
+        "baigui_side_revisit_market_holdout_2026-11-08\\1170877228176027648.json": "51f00db172e63b6f95fa2e060e20b7a69d330430f00f39dcee95db8599aa19d8"
+      },
+      "side_counts": {
+        "Long": 11,
+        "Short": 9
+      },
+      "majority_side_baseline": 0.55,
+      "days": [
+        "2026-10-18",
+        "2026-10-19",
+        "2026-10-20",
+        "2026-10-21",
+        "2026-10-22",
+        "2026-10-23",
+        "2026-10-24",
+        "2026-10-25",
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-10-31",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06"
+      ],
+      "sample_position_ids": [
+        "1163992058693070848",
+        "1164354644068446208",
+        "1164717253108084736",
+        "1165079859605975040",
+        "1165442461376884736",
+        "1165803784820404224",
+        "1166166395265134592",
+        "1166529038899392512",
+        "1166891612539105280",
+        "1167254096433295360",
+        "1167254131745140736",
+        "1167616731519561728",
+        "1167978027578470400",
+        "1168340595581038592",
+        "1168703170743283712",
+        "1169428123906125824",
+        "1169790665631379456",
+        "1170153293423751168",
+        "1170515930254848000",
+        "1170877228176027648"
+      ],
+      "execution_diagnostics": [
+        {
+          "position_id": "1163992058693070848",
+          "first_fill_vs_previous_close": 0.0006435696664163896,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1164354644068446208",
+          "first_fill_vs_previous_close": -0.0026595744680851063,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1164717253108084736",
+          "first_fill_vs_previous_close": 0.003986332574031891,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1165079859605975040",
+          "first_fill_vs_previous_close": -0.008339343815614431,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1165442461376884736",
+          "first_fill_vs_previous_close": -0.00023341580691844453,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1165803784820404224",
+          "first_fill_vs_previous_close": -0.00022021581149526536,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1166166395265134592",
+          "first_fill_vs_previous_close": -0.0034482758620689655,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1166529038899392512",
+          "first_fill_vs_previous_close": -0.0034031413612565444,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1166891612539105280",
+          "first_fill_vs_previous_close": 0.001283865220353194,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1167254096433295360",
+          "first_fill_vs_previous_close": 0.0004219409282700422,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1167254131745140736",
+          "first_fill_vs_previous_close": 0.0005550159567087554,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1167616731519561728",
+          "first_fill_vs_previous_close": 0.00027442795299938155,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1167978027578470400",
+          "first_fill_vs_previous_close": 0.0,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1168340595581038592",
+          "first_fill_vs_previous_close": 9.927036283317616e-05,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1168703170743283712",
+          "first_fill_vs_previous_close": 0.003216911764705882,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1169428123906125824",
+          "first_fill_vs_previous_close": 0.002717391304347826,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1169790665631379456",
+          "first_fill_vs_previous_close": -0.0009633911368015414,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1170153293423751168",
+          "first_fill_vs_previous_close": -0.001403283499954141,
+          "additional_entry_order_count": 1
+        },
+        {
+          "position_id": "1170515930254848000",
+          "first_fill_vs_previous_close": 0.005749687630154102,
+          "additional_entry_order_count": 0
+        },
+        {
+          "position_id": "1170877228176027648",
+          "first_fill_vs_previous_close": 0.0006811473548777719,
+          "additional_entry_order_count": 0
+        }
+      ]
+    }
+  },
+  "cohort": {
+    "n": 459,
+    "excluded_position_ids": [
+      "1127391532375519232",
+      "1127391558791245824",
+      "1127754089812635648",
+      "1127754096414470144",
+      "1127754107458072576",
+      "1127754114059907072",
+      "1127754120670130176",
+      "1127754131709538304",
+      "1127754138302984192",
+      "1127754144929984512",
+      "1128115419086237696",
+      "1128115425696460800",
+      "1128115432281518080",
+      "1128115436735868928",
+      "1128115443337703424",
+      "1128115449964703744",
+      "1128115456579121152",
+      "1128115463130624000",
+      "1128478015731707904",
+      "1128478022367096832",
+      "1128478028985708544",
+      "1128478033440059392",
+      "1128478037894410240",
+      "1128478044517216256",
+      "1128478051119050752",
+      "1128478057704108032",
+      "1128840586796118016",
+      "1128840591242080256",
+      "1128840597852303360",
+      "1128840602298265600",
+      "1128840606748422144",
+      "1128840613337673728",
+      "1128840617779441664",
+      "1128840622233792512",
+      "1128840628835627008",
+      "1129203185903644672",
+      "1129203190357995520",
+      "1129203196976607232",
+      "1129203203578441728",
+      "1129203212491337728",
+      "1129203219093172224",
+      "1129203225703395328",
+      "1129203232305229824",
+      "1129203236763774976",
+      "1129565744917819392",
+      "1129565755986587648",
+      "1129565760445132800",
+      "1129565769337057280",
+      "1129565773791408128",
+      "1129565787154460672",
+      "1129928329869570048",
+      "1129928334315532288",
+      "1129928338744717312",
+      "1129928345271054336",
+      "1129928349691850752",
+      "1129928354108452864",
+      "1129928360689315840",
+      "1129928367253401600",
+      "1129928371682586624",
+      "1130290896605458432",
+      "1130290903211487232",
+      "1130290914330587136",
+      "1130290923230900224",
+      "1130290927693639680",
+      "1130290936623312896",
+      "1130652191716454400",
+      "1130652196166610944",
+      "1130652202743279616",
+      "1130652207197630464",
+      "1130652211635204096",
+      "1130652216097943552",
+      "1130652220556488704",
+      "1130652225015033856",
+      "1130652229448413184",
+      "1131014682271199232",
+      "1131014695395176448",
+      "1131014715133571072",
+      "1131014721701851136",
+      "1131014728261742592",
+      "1131014734825828352",
+      "1131739720339337216",
+      "1131739726916005888",
+      "1131739731357773824",
+      "1131739737926053888",
+      "1131739744527888384",
+      "1131739748961267712",
+      "1131739757609922560",
+      "1131739764174008320",
+      "1131739770763259904",
+      "1131739775209222144",
+      "1132102307790893056",
+      "1132102312220078080",
+      "1132102318771580928",
+      "1132102325331472384",
+      "1132102331908141056",
+      "1132102336328937472",
+      "1132102342901411840",
+      "1132102349440331776",
+      "1132102353865322496",
+      "1132102358290313216",
+      "1132464190498713600",
+      "1132464197062799360",
+      "1132464203614302208",
+      "1132464210153222144",
+      "1132464216687947776",
+      "1132464223247839232",
+      "1132464229790953472",
+      "1132464236317290496",
+      "1132464242881376256",
+      "1132826756139888640",
+      "1132826760594239488",
+      "1132826767166713856",
+      "1132826778206121984",
+      "1132826784799567872",
+      "1132826791413985280",
+      "1132826797990653952",
+      "1132826804571516928",
+      "1133189407864958976",
+      "1133189414533902336",
+      "1133189421186068480",
+      "1133189427821457408",
+      "1133189434465234944",
+      "1133189441075458048",
+      "1133189449820581888",
+      "1133189456468553728",
+      "1133189463095554048",
+      "1133552044477952000",
+      "1133552055508971520",
+      "1133552062085640192",
+      "1133552068666503168",
+      "1133552075238977536",
+      "1133552081798868992",
+      "1133552088362954752",
+      "1133552092787945472",
+      "1133552097242296320",
+      "1133914631271002112",
+      "1133914637851865088",
+      "1133914648874496000",
+      "1133914655484719104",
+      "1133914662032027648",
+      "1133914668625473536",
+      "1133914675193753600",
+      "1133914681778810880",
+      "1133914688368062464",
+      "1134275987874689024",
+      "1134275992324845568",
+      "1134275996783390720",
+      "1134276003435556864",
+      "1134276010033197056",
+      "1134276014479159296",
+      "1134276021089382400",
+      "1134276025552121856",
+      "1134276032153956352",
+      "1134638563389255680",
+      "1134638574474801152",
+      "1134638578924957696",
+      "1134638583375114240",
+      "1134638587829465088",
+      "1134638592279621632",
+      "1134638598860484608",
+      "1134638604392771584",
+      "1135001194998444032",
+      "1135001201646415872",
+      "1135001206184652800",
+      "1135001210672558080",
+      "1135001215089160192",
+      "1135001219493179392",
+      "1135001226044682240",
+      "1135001230566141952",
+      "1135001234982744064",
+      "1135363744759984128",
+      "1135363751336652800",
+      "1135363755765837824",
+      "1135363764615819264",
+      "1135363771184099328",
+      "1135363775604895744",
+      "1135363786589777920",
+      "1135726292348874752",
+      "1135726296769671168",
+      "1135726303354728448",
+      "1135726307771330560",
+      "1135726312204709888",
+      "1135726318789767168",
+      "1135726323214757888",
+      "1135726331821469696",
+      "1136088854806573056",
+      "1136088861362270208",
+      "1136088865783066624",
+      "1136088872334569472",
+      "1136088876772143104",
+      "1136088881192939520",
+      "1136088885617930240",
+      "1136088890030338048",
+      "1136088894476300288",
+      "1136088898918068224",
+      "1136451368862003200",
+      "1136451373299576832",
+      "1136451379846885376",
+      "1136451386389999616",
+      "1136451395244175360",
+      "1136451399656583168",
+      "1136451404081573888",
+      "1136451410628882432",
+      "1136813342846267392",
+      "1136813349389381632",
+      "1136813355961856000",
+      "1136813362492387328",
+      "1136813369022918656",
+      "1136813375549255680",
+      "1136813382079787008",
+      "1136813388639678464",
+      "1136813395174404096",
+      "1137175893014654976",
+      "1137175899578740736",
+      "1137175906142826496",
+      "1137175912677552128",
+      "1137175919224860672",
+      "1137175923658240000",
+      "1137175930213937152",
+      "1137175934638927872",
+      "1137538495582482432",
+      "1137538500032638976",
+      "1137538506575753216",
+      "1137538513135644672",
+      "1137538519687147520",
+      "1137538526226067456",
+      "1137538532781764608",
+      "1137538537206755328",
+      "1137538541644328960",
+      "1137538546069319680",
+      "1137901039862067200",
+      "1137901044274475008",
+      "1137901050809200640",
+      "1137901055234191360",
+      "1137901061781499904",
+      "1137901066193907712",
+      "1137901070623092736",
+      "1138262318141321216",
+      "1138262324751544320",
+      "1138262331298852864",
+      "1138262337850355712",
+      "1138262344397664256",
+      "1138262348818460672",
+      "1138262357425172480",
+      "1138262363993452544",
+      "1138262368414248960",
+      "1138624869022740480",
+      "1138624877881110528",
+      "1138624882314489856",
+      "1138624893290983424",
+      "1138624899863457792",
+      "1138624904275865600",
+      "1138624910839951360",
+      "1139349818880471040",
+      "1139349825444556800",
+      "1139349829873741824",
+      "1139349834298732544",
+      "1139349838748889088",
+      "1139349845304586240",
+      "1139349851835117568",
+      "1139349856251719680",
+      "1139349862786445312",
+      "1139349867203047424",
+      "1139712406403330048",
+      "1139712413030330368",
+      "1139712424023601152",
+      "1139712430562521088",
+      "1139712437172744192",
+      "1139712443711664128",
+      "1139712452574228480",
+      "1139712456999219200",
+      "1140075191024922624",
+      "1140075195445719040",
+      "1140075199858126848",
+      "1140075206426406912",
+      "1140075210843009024",
+      "1140075215251222528",
+      "1140075219676213248",
+      "1140075224088621056",
+      "1140075230619152384",
+      "1140075237153878016",
+      "1140436891255353344",
+      "1140436897823633408",
+      "1140436910918250496",
+      "1140436917465559040",
+      "1140436924033839104",
+      "1140436930610507776",
+      "1140436937162010624",
+      "1140436943726096384",
+      "1140436950277599232",
+      "1140799449921400832",
+      "1140799454346391552",
+      "1140799458762993664",
+      "1140799465314496512",
+      "1140799469739487232",
+      "1140799476290990080",
+      "1140799482821521408",
+      "1140799489368829952",
+      "1140799495903555584",
+      "1141161313993928704",
+      "1141161320566403072",
+      "1141161327134683136",
+      "1141161333677797376",
+      "1141161340225105920",
+      "1141161346776608768",
+      "1141161353340694528",
+      "1141161359871225856",
+      "1141161366431117312",
+      "1141523901483233280",
+      "1141523908122816512",
+      "1141523914686902272",
+      "1141523919103504384",
+      "1141523923528495104",
+      "1141523927995428864",
+      "1141523932424613888",
+      "1141523943493382144",
+      "1141523950120382464",
+      "1141886460623237120",
+      "1141886465048227840",
+      "1141886484895674368",
+      "1141886497965125632",
+      "1141886504529211392",
+      "1141886511076519936",
+      "1142249028508364800",
+      "1142249037106688000",
+      "1142249047781191680",
+      "1142249052260708352",
+      "1142249058816405504",
+      "1142249065376296960",
+      "1142249069809676288",
+      "1142249082707161088",
+      "1142611547777314816",
+      "1142611554387537920",
+      "1142611567704453120",
+      "1142611574251761664",
+      "1142611578676752384",
+      "1142611585232449536",
+      "1142611591796535296",
+      "1142611598343843840",
+      "1142974184658743296",
+      "1142974191730339840",
+      "1142974198780964864",
+      "1142974205844172800",
+      "1142974210583736320",
+      "1142974217625972736",
+      "1142974224705957888",
+      "1142974231785943040",
+      "1142974236504535040",
+      "1142974243567742976",
+      "1143335708468359168",
+      "1143335715569315840",
+      "1143335720317267968",
+      "1143335725077803008",
+      "1143335729821560832",
+      "1143335736951877632",
+      "1143335744031862784",
+      "1143335751153790976",
+      "1143698351909679104",
+      "1143698358486347776",
+      "1143698365016879104",
+      "1143698369450258432",
+      "1143698376014344192",
+      "1143698382574235648",
+      "1143698389117349888",
+      "1143698393588477952",
+      "1143698400119009280",
+      "1143698406683095040",
+      "1144060986450685952",
+      "1144060990863093760",
+      "1144060997397819392",
+      "1144061003949322240",
+      "1144061010505019392",
+      "1144061014988730368",
+      "1144061019413721088",
+      "1144061025965223936",
+      "1144061032537698304",
+      "1144061039101784064",
+      "1144423580080451584",
+      "1144423584497053696",
+      "1144423593116348416",
+      "1144423599588159488",
+      "1144423604008955904",
+      "1144423608421363712",
+      "1144423612842160128",
+      "1144423619414634496",
+      "1144786157767667712",
+      "1144786162217824256",
+      "1144786168819658752",
+      "1144786175354384384",
+      "1144786184187588608",
+      "1144786192735580160",
+      "1144786203707879424",
+      "1145148842418024448",
+      "1145148849510592512",
+      "1145148854292099072",
+      "1145148859040051200",
+      "1145148866124230656",
+      "1145148870855405568",
+      "1145148877885059072",
+      "1145148887271911424",
+      "1145510216860086272",
+      "1145510223419977728",
+      "1145510227844968448",
+      "1145510232265764864",
+      "1145510236699144192",
+      "1145510243263229952",
+      "1145510249818927104",
+      "1145510256349458432",
+      "1145510260782837760",
+      "1145510265207828480",
+      "1145872822502338560",
+      "1145872826939912192",
+      "1145872833545940992",
+      "1145872837987708928",
+      "1145872844606320640",
+      "1145872849048088576",
+      "1145872855649923072",
+      "1145872860100079616",
+      "1145872864537653248",
+      "1146235456116404224",
+      "1146235467067731968",
+      "1146235473577291776",
+      "1146235486835486720",
+      "1146235495698051072",
+      "1146235500123041792",
+      "1146598114036461568",
+      "1146598118474035200",
+      "1146598122882248704",
+      "1146598127282073600",
+      "1146598131698675712",
+      "1146598138225012736",
+      "1146598144776515584",
+      "1146598151311241216",
+      "1146598155723649024",
+      "1146598162208043008",
+      "1146959472296898560",
+      "1146959483260809216",
+      "1146959489808117760",
+      "1146959496380592128",
+      "1146959502936289280",
+      "1146959509479403520",
+      "1146959516022517760",
+      "1146959522615963648",
+      "1147322853918945280",
+      "1147322862546628608",
+      "1147322871165923328",
+      "1147322877759369216",
+      "1147322884298289152",
+      "1147322890853986304",
+      "1147322897397100544",
+      "1147322903956992000",
+      "1147685473863774208",
+      "1147685482457903104",
+      "1147685493107240960",
+      "1147685501692981248",
+      "1147685510291304448",
+      "1147685516851195904",
+      "1147685521271992320",
+      "1147685527789940736",
+      "1147685534316277760",
+      "1148046830261940224",
+      "1148046847932542976",
+      "1148046852386893824",
+      "1148046856824467456",
+      "1148046863413719040",
+      "1148046870002970624",
+      "1148046874620899328",
+      "1148046879058472960",
+      "1148409398574886912",
+      "1148409405118001152",
+      "1148409411644338176",
+      "1148409418179063808",
+      "1148409424713789440",
+      "1148409429147168768",
+      "1148409435686088704",
+      "1148772038442659840",
+      "1148772047275864064",
+      "1148772062660571136",
+      "1148772069254017024",
+      "1149134633079058432",
+      "1149134637504049152",
+      "1149134644047163392",
+      "1149134650590277632",
+      "1149134657129197568",
+      "1149134663672311808",
+      "1149134668093108224",
+      "1149134674644611072",
+      "1149134681217085440",
+      "1149134687764393984",
+      "1149497288243458048",
+      "1149497294778183680",
+      "1149497301321297920",
+      "1149497307851829248",
+      "1149497316483706880",
+      "1149497320896114688",
+      "1149497325346271232",
+      "1149497331935522816",
+      "1149497336419233792"
+    ],
+    "unmatched_order_indices": [
+      968,
+      983,
+      986,
+      987,
+      989,
+      995,
+      996,
+      997,
+      998,
+      999,
+      1000,
+      1001,
+      1002,
+      1003
+    ],
+    "sources": {
+      "baigui_5073563794731136000_2026-11-07.json": "a2ec41b3f50736a4c0f9ccbbea0e4e24a2162d298689c8560a6e61e64364aec5",
+      "baigui_5073563794731136000_orders_rawpass_2026-11-07.json": "dbdf82c7a3d066798f5294431904ab25f6910a411baca4e0eb07cf90307d1af1"
+    },
+    "cohort_sha256": "6909a5c4338bf17e59f483d6fec3b9f5ffed3abd49a80d8927a6fa667014b24f"
+  },
+  "independent_verification": {
+    "method": "Independent Fraction complete-flow selection and Decimal return direction, raw/freeze/day/side-screen checks",
+    "original_orders_checked": 1004,
+    "cohort_positions_checked": 459,
+    "entries_checked": 50,
+    "background_windows_checked": 600,
+    "hypotheses_checked": 3,
+    "holdout_access_after_freeze": true,
+    "script_sha256": "909d00882a45bfa3f574f03042625e174692a80822b43726d894208166e708a8"
+  },
+  "full_audit_sha256": "957d1bb19bcfb96f5e69342a6c99373bd52944e0b5bf14c6e37ef2797e58fe5e",
+  "prepare_script_sha256": "4e349fe744b0e0509c8c0286a3bb9bc1aa7935495a1b7ee273168511b78e0194"
+}
