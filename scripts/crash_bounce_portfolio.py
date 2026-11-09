@@ -583,10 +583,15 @@ def _forward_cell(rows: list[dict], period: tuple[date, date], start: date,
               f"{low_s}")
     k1 = total > 0 and t >= FWD_MIN_T
     k2 = drop <= max_drop
-    ready = n_days >= FWD_WEEKS * 7 and b.taken >= FWD_TRADES
+    sample_ready = n_days >= FWD_WEEKS * 7 and b.taken >= FWD_TRADES
+    archive_passed = sample_ready and k1 and k2
+    # Archive performance cannot certify live execution (K3–K5).
+    ready = False
     print(f"К1 итог > 0 и t ≥ {FWD_MIN_T:g} — {'да' if k1 else 'нет'}; К2 падение ниже D0 "
           f"{drop * 100:.2f}% ≤ {max_drop * 100:g}% — {'да' if k2 else 'НЕТ'}")
-    print("ВЕРДИКТ: " + ("можно выносить (К3–К5 — по боту)" if ready else
+    print("ВЕРДИКТ: " + ("архивные критерии пройдены; К3–К5 требуют проверки по боту"
+          if archive_passed else
+          "выборка набрана; архивные критерии не пройдены" if sample_ready else
           f"рано — до вердикта {max(0, FWD_WEEKS * 7 - n_days)} сут. и "
           f"{max(0, FWD_TRADES - b.taken)} сделок (К2 следится и сейчас)"))
     return {
@@ -597,6 +602,8 @@ def _forward_cell(rows: list[dict], period: tuple[date, date], start: date,
         "last_day": {"day": days[-1], "pnl": pnl[-1],
                      "trades": b.day_taken.get(days[-1], 0)} if days else None,
         "weekly": weekly, "k1": k1, "k2": k2, "ready": ready,
+        "sample_ready": sample_ready, "archive_passed": archive_passed,
+        "execution_verified": False,
     }
 
 

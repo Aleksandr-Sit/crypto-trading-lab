@@ -10,7 +10,7 @@
     python scripts/crash_bounce_paper.py report --out D --archive A --from Д1 --to Д2
     python scripts/crash_bounce_paper.py open --out D     # открытых позиций (перед выкладкой)
 
-Выкладка новой версии бота — `scripts/crash-paper-deploy.sh` (ждёт ноль открытых позиций).
+Выкладка — `scripts/crash-paper-deploy.sh`: подтверждённая пауза входов и ноль позиций.
 
 Ключей нет: только публичный поток `aggTrade` (`wss://fstream.binance.com/market/ws` —
 старый адрес `/ws` принимает подписку и молча НЕ присылает сделок, проверено 09.10.2026).
@@ -61,7 +61,7 @@ import urllib.parse
 import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -177,6 +177,18 @@ def _day(ms: int) -> str:
 
 def level_of(prev_close: float) -> float:
     return prev_close * (1 - DROP)  # та же формула, что в `_play`: иначе разойдутся края
+
+
+def quality_health(state: dict, now: int) -> bool:
+    """Health means fresh input on every expected stream and a current consumer."""
+    expected = state.get("expected_connections", [])
+    latest = state.get("latest_event_ms", {})
+    return bool(expected) and (
+        0 <= now - state.get("checked_at", 0) <= 5000
+        and all(0 <= now - latest.get(str(i), 0) <= LAG_MS for i in expected)
+        and 0 <= now - state.get("consumer_at", 0) <= LAG_MS
+        and state.get("queue_delay_ms", LAG_MS + 1) <= LAG_MS
+    )
 
 
 @dataclass
@@ -332,6 +344,7 @@ class Engine:
         self.mirror: dict[str, list[Pos]] = defaultdict(list)
         self.accts = [X1Acct(n, s, o, p) for n, s, o, p in ALL_X1]
         self.rank: list[str] = list(x1_rank or [])
+        self.entries_paused = False
         self.backfill_need: set[str] = set()
         self._recalc_eligible(0)
 
@@ -432,6 +445,9 @@ class Engine:
                 if len(acc.book.open) == SLOTS - 1:
                     acc.reopen_at = tr.recv + SWITCH_MS  # был полон: заявки сняты, ставим снова
                 acc.recalc(self.rank, tr.recv)
+        if self.entries_paused:
+            st.last_px, st.last_t = tr.px, tr.T
+            return  # Existing positions still exit above; every account stops new entries.
         # зеркало: уровень с начала минуты, одно событие на минуту
         if st.close is not None and st.valid_from <= m and st.fired_m != m:
             lvl = level_of(st.close)
@@ -491,7 +507,7 @@ class Journal:
         # Сброс на диск — только решения. После обрыва связи пишутся сотни записей о пропусках, и
         # fsync каждой (десятки мс на Windows) останавливал чтение потока: биржа рвала медленного
         # читателя, обрыв давал новые пропуски — за час 63 обрыва и задержка 20 с (09.10.2026).
-        if rec.get("k") in ("fill", "exit"):
+        if rec.get("k") in ("fill", "exit", "drain"):
             self.fh.flush()
             os.fsync(self.fh.fileno())
         elif rec.get("k") != "gap":  # редкие записи (связь, задержки раз в минуту) — сразу видны
@@ -625,12 +641,25 @@ class Runner:
         self.conns: dict[int, set[str]] = {}
         self.last_msg = time.time()
         self.lat: list[int] = []
+        self.quality_samples = 0
+        self.stale_samples = 0
+        self.queue_lag_max = 0
+        self.stale_from_ms: int | None = None
+        self.stale_to_ms: int | None = None
         self.lat_minute = 0
         self.alarm_at = 0.0
         self.rank_day: str | None = None
         self.down: dict[int, float] = {}
         self.down_s = 0.0
+        self.latest_event_ms: dict[str, int] = {}
+        self.consumer_at = 0
+        self.consumer_queue_delay_ms = 0
+        self.quality_written_at = 0
+        self.quality_seconds = 0
+        self.degraded_seconds = 0
         self.queue: asyncio.Queue = asyncio.Queue()
+        self.control = _load("crash_bounce_control").Control("paper")
+        self.engine.entries_paused = bool(self.control.requested(time.time()))
 
     def log(self, msg: str) -> None:
         print(f"{datetime.now(UTC):%Y-%m-%d %H:%M:%S} {msg}", flush=True)
@@ -653,6 +682,7 @@ class Runner:
         """Одно соединение; рвётся — переподключение. Через ROTATE_S — новое внахлёст, дубли
         отсекаются номером сделки."""
         import aiohttp
+        self.conns[idx] = set(syms)
         while True:
             started = time.time()
             try:
@@ -683,7 +713,14 @@ class Runner:
                         await self.queue.put(Trade(d["s"], d["a"], float(d["p"]), d["T"],
                                                    d["m"], recv))
                         lag = recv - d["E"]
+                        self.latest_event_ms[str(idx)] = max(
+                            self.latest_event_ms.get(str(idx), 0), d["E"])
                         self.lat.append(lag)
+                        self.quality_samples += 1
+                        self.stale_samples += lag > LAG_MS
+                        if lag > LAG_MS:
+                            self.stale_from_ms = self.stale_from_ms or recv
+                            self.stale_to_ms = recv
                         if watch.update(lag, time.time()):
                             # закрытие тем же путём, что обрыв: журнал `close`, `down_s`,
                             # переподключение; дыра в номерах ловится и докачивается как всегда
@@ -716,6 +753,14 @@ class Runner:
         eng = self.engine
         while True:
             tr: Trade = await self.queue.get()
+            self.consumer_at = now_ms()
+            queue_lag = max(0, now_ms() - tr.recv)
+            self.consumer_queue_delay_ms = queue_lag
+            self.queue_lag_max = max(self.queue_lag_max, queue_lag)
+            if queue_lag > LAG_MS:
+                # Aggregate once per minute: per-trade disk writes can stall consumption.
+                self.stale_from_ms = self.stale_from_ms or now_ms()
+                self.stale_to_ms = now_ms()
             self.last_msg = time.time()
             st = eng.st.get(tr.sym)
             if st and st.last_a is not None and tr.a > st.last_a + 1 and eng.has_open(tr.sym):
@@ -729,6 +774,21 @@ class Runner:
                     self.log(f"докачка {tr.sym}: {type(e).__name__}")
             eng.on_trade(tr)
 
+    def sync_control(self, now: int) -> None:
+        previous_pause = self.engine.entries_paused
+        # No await between blocking entries and acknowledging the position count.
+        request = self.control.requested(time.time())
+        self.engine.entries_paused = bool(request)
+        if previous_pause != self.engine.entries_paused:
+            self.journal.write({"k": "drain", "paused": self.engine.entries_paused,
+                                "token": request.get("token")})
+        if now // 250 != getattr(self, "control_checked_at", 0) // 250:
+            opened = sum(len(v) for v in self.engine.mirror.values())
+            opened += sum(len(a.pos) for a in self.engine.accts)
+            books = {a.name: _book_state(a.book) for a in self.engine.accts}
+            self.control.tick(opened, time.time(), books)
+            self.control_checked_at = now
+
     async def clock(self) -> None:
         """Такт: снимки уровней ×1, задержки по минутам, тишина, выбор монет в 00:00 UTC,
         итог суток в бот, пульс для healthcheck."""
@@ -736,15 +796,26 @@ class Runner:
         hb.parent.mkdir(parents=True, exist_ok=True)
         while True:
             now = now_ms()
+            self.sync_control(now)
             self.engine.tick(now)
             m = now // 60_000 * 60_000
             if m != self.lat_minute:
-                if self.lat:
-                    s = sorted(self.lat)
-                    self.journal.write({"k": "lat", "t": self.lat_minute, "n": len(s),
+                if self.lat_minute:
+                    s = sorted(self.lat) or [None]
+                    self.journal.write({"k": "lat", "t": self.lat_minute, "n": len(self.lat),
                                         "p50": s[len(s) // 2], "p99": s[int(len(s) * 0.99)],
-                                        "max": s[-1], "down_s": round(self.down_s, 1)})
+                                        "max": s[-1], "down_s": round(self.down_s, 1),
+                                        "quality_samples": self.quality_samples,
+                                        "stale_samples": self.stale_samples,
+                                        "queue_lag_max": self.queue_lag_max,
+                                        "stale_from_ms": self.stale_from_ms,
+                                        "stale_to_ms": self.stale_to_ms,
+                                        "quality_seconds": self.quality_seconds,
+                                        "degraded_seconds": self.degraded_seconds})
                 self.lat, self.lat_minute = [], m
+                self.quality_samples = self.stale_samples = self.queue_lag_max = 0
+                self.stale_from_ms = self.stale_to_ms = None
+                self.quality_seconds = self.degraded_seconds = 0
             if time.time() - self.last_msg > SILENCE_S and time.time() - self.alarm_at > 1800:
                 self.alarm_at = time.time()
                 self.journal.write({"k": "silence", "s": round(time.time() - self.last_msg)})
@@ -755,6 +826,20 @@ class Runner:
                 await self.refresh_rank()
             if time.time() - self.last_msg < SILENCE_S:
                 hb.write_text(str(int(time.time())))
+            if now // 1000 != self.quality_written_at // 1000:
+                state = {"checked_at": now, "expected_connections": sorted(self.conns),
+                         "latest_event_ms": self.latest_event_ms,
+                         "consumer_at": self.consumer_at, "queue_size": self.queue.qsize(),
+                         "queue_delay_ms": self.consumer_queue_delay_ms}
+                bit = 1 << ((now % 60_000) // 1000)
+                self.quality_seconds |= bit
+                if not quality_health(state, now):
+                    self.degraded_seconds |= bit
+                target = hb.with_suffix(".quality.json")
+                temporary = target.with_suffix(".tmp")
+                temporary.write_text(json.dumps(state), encoding="utf-8")
+                temporary.replace(target)
+                self.quality_written_at = now
             await asyncio.sleep(0.05)
 
     async def day_report(self, d: str) -> None:
@@ -837,93 +922,25 @@ class Runner:
 
 # --- отчёт: сверка зеркала с архивом и счёт --------------------------------------------------
 
-def read_journal(out: Path, d1: str, d2: str) -> list[dict]:
-    rows = []
-    for p in sorted((out / "journal").glob("*.jsonl")):
-        if not (d1 <= p.stem <= (date.fromisoformat(d2) + timedelta(days=1)).isoformat()):
-            continue
-        for line in p.read_text(encoding="utf-8").splitlines():
-            try:
-                rows.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-    return rows
-
-
-def report(out: Path, archive: Path, d1: str, d2: str) -> int:
-    pf = _load("crash_bounce_portfolio")
-    rows = read_journal(out, d1, d2)
-    exits = {(r["acct"], r["sym"], r["t"], r["t_in"]): r for r in rows if r.get("k") == "exit"}
-    fills = [r for r in rows if r.get("k") == "fill"]
-    in_win = lambda r: d1 <= _day(r["t"]) <= d2  # noqa: E731
-    mirror = [exits[k] for k in exits if k[0] == "m" and in_win(exits[k])]
-    by_acct = {n: [exits[k] for k in exits if k[0] == n and in_win(exits[k])]
-               for n, _, _, _ in ALL_X1}
-    open_m = [f for f in fills if f["acct"] == "m" and in_win(f)
-              and ("m", f["sym"], f["t"], f["t_in"]) not in exits]
-    gaps = [r for r in rows if r.get("k") == "gap" and d1 <= _day(r["T1"]) <= d2]
-    lat = [r for r in rows if r.get("k") == "lat" and d1 <= _day(r["t"]) <= d2]
-    print(f"Бумажный бот, {d1}…{d2} UTC: зеркало — сделок {len(mirror)} (не закрыто "
-          f"{len(open_m)}), ×1 — " + ", ".join(f"{n} {len(v)}" for n, v in by_acct.items())
-          + f"; дыр в номерах {len(gaps)}")
-    if lat:
-        p50 = sorted(x["p50"] for x in lat)[len(lat) // 2]
-        print(f"задержка биржа→бот, мс: медиана минутных p50 {p50}, худший p99 "
-              f"{max(x['p99'] for x in lat)}, max {max(x['max'] for x in lat)}; "
-              f"без связи всего {max(x['down_s'] for x in lat):.0f} с")
-    # К3: зеркало против розыгрыша архива тех же суток
-    arch = {}
-    with (archive / "sim.jsonl").open() as fh:
-        for line in fh:
-            r = json.loads(line)
-            if r.get("var") == "limit5|side" and d1 <= r["day"] <= d2:
-                arch[(r["sym"], r["t"])] = r
-    days_done = {tuple(k.rsplit(":", 1))[1] for k in (archive / "sim_done.txt").read_text().split()}
-    blind = defaultdict(list)
-    for g in gaps:
-        blind[g["sym"]].append((g["T0"], g["T1"]))
-    def seen(sym: str, t: int) -> bool:  # noqa: E306
-        return not any(a <= t + 60_000 + HOLD_MS and t <= b for a, b in blind.get(sym, ()))
-    bot = {(r["sym"], r["t"]): r for r in mirror}
-    keys = [k for k in arch if _day(k[1]) in days_done and seen(*k)]
-    same = [k for k in keys if k in bot and bot[k]["how"] == arch[k]["how"]
-            and abs(bot[k]["net"] - arch[k]["net"]) < 1e-9]
-    found = [k for k in keys if k in bot]
-    extra = [k for k in bot if k not in arch and _day(k[1]) in days_done]
-    s_a = sum(arch[k]["net"] for k in found)
-    s_b = sum(bot[k]["net"] for k in found)
-    share = len(found) / len(keys) if keys else float("nan")
-    print(f"К3 зеркало↔архив (сутки, разыгранные архивом; без дыр бота): архив {len(keys)}, "
-          f"найдено ботом {len(found)} ({share:.1%}), из них тот же выход и итог {len(same)}; "
-          f"у бота лишних {len(extra)}; сумма итогов найденных: архив {s_a * 100:+.2f}, "
-          f"бот {s_b * 100:+.2f} п.")
-    for k in [k for k in keys if k not in bot][:10]:
-        print(f"  нет у бота: {k[0]} {datetime.fromtimestamp(k[1] / 1000, UTC):%m-%d %H:%M} "
-              f"вход {arch[k]['entry']} {arch[k]['how']} {arch[k]['net'] * 100:+.2f}%")
-    for k in extra[:10]:
-        print(f"  лишнее у бота: {k[0]} {datetime.fromtimestamp(k[1] / 1000, UTC):%m-%d %H:%M} "
-              f"{bot[k]['how']} {bot[k]['net'] * 100:+.2f}%")
-    # счета
-    period = (date.fromisoformat(d1), date.fromisoformat(d2))
-    days = pf._period_days(period)
-    for size, cap, max_drop in pf.FWD_CELLS:
-        for name, trades in (("зеркало", mirror), ("архив", [arch[k] for k in arch])):
-            rows_b = sorted(({**r, "day": _day(r["t"])} for r in trades),
-                            key=lambda r: (r["t_in"], r["sym"]))
-            b = pf.run_book(rows_b, size, cap, None, True, fixed=True)
-            pnl = [b.day_pnl.get(d, 0.0) for d in days]
-            print(f"счёт {name} (run_book, D0, {size * 100:g}% × {cap}): сделок {b.taken}, итог "
-                  f"{(b.withdrawn + b.equity - 1) * 100:+.2f}% D0, t {pf._t(pnl):+.2f}, "
-                  f"падение ниже D0 {(1 - b.min_bal) * 100:.2f}% (К2 ≤ {max_drop * 100:g}%)")
-    for (name, size, orders, pull), x1 in zip(ALL_X1, by_acct.values(), strict=True):
-        tot = sum(r["pnl"] for r in x1)
-        bal = min((r["bal"] for r in x1), default=1.0)
-        seam = ("" if pull is None
-                else ", без стыка минуты — свой счёт с выкладки починки; наблюдение, не К5")
-        print(f"счёт ×1 {name} ({size * 100:g}% × {SLOTS}, {orders} монет, на ходу{seam}): "
-              f"сделок {len(x1)} (сверх предела {sum(r['over'] for r in x1)}), итог "
-              f"{tot * 100:+.2f}% D0, наименьший баланс {bal * 100:.2f}% (итог > 0 — "
-              f"{'да' if tot > 0 else 'нет'})")
+def report(out: Path, archive: Path, d1: str, d2: str, *,
+           as_of: str | None = None, json_path: Path | None = None) -> int:
+    audit = _load("crash_bounce_audit")
+    cutoff = audit.ms(as_of) if as_of else now_ms()
+    result = audit.build(out, archive, d1, d2, cutoff)
+    if json_path:
+        json_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Бумажный отчёт {d1}…{d2} UTC; срез исключительно до "
+          f"{datetime.fromtimestamp(result['through_exclusive_ms'] / 1000, UTC).isoformat()}")
+    print("Прибыль — по времени закрытия; записи после среза исключены.")
+    for name, st in result["accounts"].items():
+        print(f"{name}: закрыто {st['closed_trades']}, "
+              f"итог {st['realized_pnl_d0'] * 100:+.2f}% D0; "
+              f"просадка по закрытиям {st['max_realized_drawdown_d0'] * 100:.2f}% D0; "
+              f"открыто {st['pending_positions']}, потеряно {st['lost_positions']}")
+    print("Качество данных: " + json.dumps(result["quality"], ensure_ascii=False))
+    print("K3: " + json.dumps(result["reconciliation"]["counts"]))
+    print("Плавающий итог, очередь лимиток и ёмкость не проверены; К3–К5 требуют проверки.")
+    print("ВЕРДИКТ: исполнение не подтверждено; разрешения на переход нет.")
     return 0
 
 
@@ -932,6 +949,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("health", help="freshness of all streams and consumer")
     r = sub.add_parser("run")
     r.add_argument("--out", type=Path, required=True)
     r.add_argument("--counts", type=Path, help="crash_counts.json слоя А (по умолчанию рядом)")
@@ -940,11 +958,34 @@ def main() -> int:
     p.add_argument("--archive", type=Path, required=True, help="каталог слоя А (sim.jsonl)")
     p.add_argument("--from", dest="d1", required=True)
     p.add_argument("--to", dest="d2", required=True)
+    p.add_argument("--as-of", help="ISO timestamp with timezone; exclusive receipt cutoff")
+    p.add_argument("--json", type=Path, help="structured diagnostics and cost sensitivity")
     o = sub.add_parser("open", help="число открытых позиций по журналу (перед перезапуском)")
     o.add_argument("--out", type=Path, required=True)
+    startup = sub.add_parser("startup", help="verify restored startup against drained accounts")
+    startup.add_argument("--out", type=Path, required=True)
     a = ap.parse_args()
+    if a.cmd == "health":
+        try:
+            state = json.loads(Path("/tmp/lab/crash-paper.quality.json").read_text())
+            return 0 if quality_health(state, now_ms()) else 1
+        except (OSError, ValueError, TypeError):
+            return 1
+    if a.cmd == "startup":
+        expected = json.load(sys.stdin)
+        last = None
+        for path in sorted((a.out / "journal").glob("*.jsonl")):
+            for line in path.open(encoding="utf-8"):
+                if line.startswith('{"k": "start"'):
+                    last = json.loads(line)
+        valid = bool(last and last.get("open_lost") == 0
+                     and expected.get("books")
+                     and last.get("restored", {}).get("books") == expected["books"])
+        print(json.dumps({"restored_matches": valid,
+                          "open_lost": last.get("open_lost") if last else None}))
+        return 0 if valid else 1
     if a.cmd == "report":
-        return report(a.out, a.archive, a.d1, a.d2)
+        return report(a.out, a.archive, a.d1, a.d2, as_of=a.as_of, json_path=a.json)
     if a.cmd == "open":
         print(restore_state(a.out / "journal", {})["open_lost"])
         return 0

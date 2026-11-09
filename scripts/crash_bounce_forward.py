@@ -99,21 +99,27 @@ def snapshot_trader(out: Path) -> str:
                "--portfolio", PORTFOLIO_ID, "--out", str(snap)])
     if rc != 0 or not snap.exists():
         return "CryptosMX: снимок не снят"
-    new = json.loads(snap.read_text(encoding="utf-8"))["positions"]
+    audit = __import__("crash_bounce_audit")
+    snapshot = json.loads(snap.read_text(encoding="utf-8"))
+    new = snapshot["positions"]
     acc_p = out / "cryptosmx-positions.json"
     acc = json.loads(acc_p.read_text(encoding="utf-8")) if acc_p.exists() else []
-    key = lambda p: (p["symbol"], p["opened"], str(p.get("positionId")))  # noqa: E731
-    known = {key(p): i for i, p in enumerate(acc)}
-    added = 0
-    for p in new:
-        if key(p) in known:
-            acc[known[key(p)]] = p  # частично закрытая позиция дописывается
-        else:
-            acc.append(p)
-            added += 1
-    acc.sort(key=lambda p: p["opened"])
-    acc_p.write_text(json.dumps(acc, ensure_ascii=False), encoding="utf-8")
-    return f"CryptosMX: в выдаче {len(new)}, новых {added}, всего собрано {len(acc)}"
+    merged = audit.merge_positions(acc, new)
+    history = out / "cryptosmx-snapshots"
+    history.mkdir(exist_ok=True)
+    stamp = snapshot["fetched_at"].replace(":", "-").replace("/", "-")
+    history_path = history / f"{stamp}.json"
+    if not history_path.exists():
+        history_path.write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
+    temporary = acc_p.with_suffix(".tmp")
+    temporary.write_text(json.dumps(merged, ensure_ascii=False), encoding="utf-8")
+    temporary.replace(acc_p)
+    summary = audit.trader_summary(merged, snapshot["fetched_at"])
+    (out / "cryptosmx-coverage.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    return (f"CryptosMX: в выдаче {len(new)}, новых {len(merged) - len(acc)}, "
+            f"собрано {len(merged)}, закрыто {summary['closed']['count']}; "
+            "история неполная; быстрые Long ×1 — только кандидаты автомата")
 
 
 def telegram(text: str) -> None:
@@ -145,7 +151,20 @@ def report(s: dict | None, last: date, trader: str) -> str:
             f"{ld['pnl'] * 100:+.2f}%; окно {c['total'] * 100:+.2f}% D0, t {c['t']:+.2f}; "
             f"ниже D0 {c['drop'] * 100:.2f}% (порог {c['max_drop'] * 100:g}%) — "
             f"{'ок' if c['k2'] else 'ПРЕВЫШЕН'}; худший день {c['worst_day'] * 100:+.2f}%")
-    lines += ["вердикт: " + ("можно выносить" if s["ready"] else "рано"), trader]
+    cells = s.get("cells") or [s]
+    passed = all(c.get("archive_passed") is True for c in cells)
+    lines += ["вердикт: " + ("архивные критерии пройдены; требуется проверка К3–К5"
+                             if passed else "рано или архивные критерии не пройдены"), trader]
+    diagnostics = s.get("diagnostics")
+    if diagnostics:
+        for cell in diagnostics.get("cell_criteria", []):
+            checks = cell["checks"]
+            lines.append(f"{cell['account']}: К3 {checks['k3_observed']}, "
+                         f"К4 {checks['k4']}, К5 {checks['k5']} "
+                         "(None — данных недостаточно)")
+        lines.append("Очередь лимиток и реальное исполнение не подтверждены.")
+    else:
+        lines.append("Диагностика исполнения недоступна; переход не разрешён.")
     return "\n".join(lines)
 
 
@@ -193,6 +212,17 @@ def once(out: Path, today: date, send: bool = True) -> bool:
         if rc != 0:
             return False
         summary = json.loads(js.read_text(encoding="utf-8"))
+        paper_dir = out.parent / "crash-bounce-paper"
+        if (paper_dir / "journal").exists():
+            try:
+                import crash_bounce_audit as audit
+                diagnostics = audit.build(paper_dir, out, START.isoformat(), last.isoformat(),
+                                          int(time.time() * 1000))
+                (out / "execution_diagnostics.json").write_text(
+                    json.dumps(diagnostics, ensure_ascii=False, indent=2), encoding="utf-8")
+                summary["diagnostics"] = diagnostics
+            except Exception as error:  # noqa: BLE001 — never turn missing evidence into approval
+                log(f"диагностика исполнения недоступна: {type(error).__name__}")
     trader = snapshot_trader(out)
     text = report(summary, last, trader)
     log(text.replace("\n", " | "))
@@ -204,11 +234,23 @@ def once(out: Path, today: date, send: bool = True) -> bool:
 
 
 def loop(out: Path) -> int:
+    from crash_bounce_control import Control
+
+    control = Control("forward")
     log(f"слой А: окно с {START}, сутки D разбираются на D+{LAG_DAYS} после "
         f"{RUN_AFTER_UTC[0]:02d}:{RUN_AFTER_UTC[1]:02d} UTC")
+    next_run = 0.0
     while True:
+        if control.tick(0, time.time()):
+            time.sleep(1)
+            continue
+        if time.monotonic() < next_run:
+            time.sleep(1)
+            continue
         now = datetime.now(UTC)
         if (now.hour, now.minute) >= RUN_AFTER_UTC:
+            if control.tick(0, time.time(), busy=True):
+                continue  # A request arriving just before work must be acknowledged idle first.
             try:
                 ok = once(out, now.date())
             except Exception as e:  # noqa: BLE001 — сервис не падает, сутки повторятся
@@ -216,7 +258,7 @@ def loop(out: Path) -> int:
                 ok = False
             if not ok:
                 log("повтор через час")
-        time.sleep(3600 if (now.hour, now.minute) >= RUN_AFTER_UTC else 600)
+        next_run = time.monotonic() + (3600 if (now.hour, now.minute) >= RUN_AFTER_UTC else 600)
 
 
 def main() -> int:

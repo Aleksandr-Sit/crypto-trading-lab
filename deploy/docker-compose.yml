@@ -138,7 +138,7 @@ services:
     mem_limit: 400m
     cpus: "1.0"
     healthcheck:
-      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(cat /tmp/lab/crash-paper.heartbeat) )) -lt 120"]
+      test: ["CMD", "/app/.venv/bin/python", "scripts/crash_bounce_paper.py", "health"]
       interval: 30s
       timeout: 3s
       retries: 3
